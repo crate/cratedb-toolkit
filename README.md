@@ -15,9 +15,20 @@ Each DAG is accompanied by a tutorial:
 * [data_retention_snapshot_dag.py](dags/data_retention_snapshot_dag.py): implements a retention policy algorithm that snapshots expired partitions to a repository
 
 
-## Testing
+## Development
 
+Install project.
 ```shell
 pip install --editable=.[develop,test]
+```
+
+Run tests.
+```shell
+export TC_KEEPALIVE=true
 poe check
+```
+
+Format code.
+```shell
+poe format
 ```
