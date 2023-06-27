@@ -34,7 +34,7 @@ def help_run():
     ========
 
     # Invoke data retention workflow using the `delete` strategy.
-    cratedb-rollup run --day=2023-06-27 --strategy=delete "crate://localhost/testdrive/data"
+    cratedb-rollup run --cutoff-day=2023-06-27 --strategy=delete "crate://localhost/testdrive/data"
 
     """  # noqa: E501
 
@@ -70,10 +70,10 @@ def setup(ctx: click.Context, dburi: str):
     context_settings={"max_content_width": 120},
 )
 @click.argument("dburi")
-@click.option("--day", type=str, required=True, help="Select day parameter")
+@click.option("--cutoff-day", type=str, required=True, help="Select day parameter")
 @click.option("--strategy", type=str, required=True, help="Select retention strategy")
 @click.pass_context
-def run(ctx: click.Context, dburi: str, day: str, strategy: str):
+def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str):
     strategy_choices = ["delete", "reallocate", "snapshot"]
     if not dburi:
         logger.error("Unable to operate without database")
@@ -81,8 +81,8 @@ def run(ctx: click.Context, dburi: str, day: str, strategy: str):
     if strategy not in strategy_choices:
         logger.error(f"Unknown strategy. Select one of {strategy_choices}")
         sys.exit(1)
-    logger.info(f"Starting data retention with strategy '{strategy}' up to day '{day}' on: {dburi}")
+    logger.info(f"Starting data retention with strategy '{strategy}' up to day '{cutoff_day}' on: {dburi}")
     if strategy == "delete":
-        run_delete_job(dburi, day)
+        run_delete_job(dburi, cutoff_day)
     else:
         raise NotImplementedError(f"Retention strategy {strategy} not implemented yet")
