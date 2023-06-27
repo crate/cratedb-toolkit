@@ -1,3 +1,5 @@
+-- Set up `retention_policies` table schema.
+
 CREATE TABLE IF NOT EXISTS doc.retention_policies (
    "table_schema" TEXT,
    "table_name" TEXT,

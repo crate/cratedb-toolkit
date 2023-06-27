@@ -6,7 +6,7 @@ A detailed tutorial is available at https://community.crate.io/t/cratedb-and-apa
 Prerequisites
 -------------
 In CrateDB, tables for storing retention policies need to be created once manually.
-See the file setup/data_retention_schema.sql in this repository.
+See the file setup/schema.sql in this repository.
 """
 from pathlib import Path
 

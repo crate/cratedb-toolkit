@@ -4,6 +4,7 @@
 from click.testing import CliRunner
 
 from cratedb_retentions.cli import cli
+from cratedb_retentions.util.database import run_sql
 
 
 def test_version():
@@ -20,15 +21,38 @@ def test_version():
     assert result.exit_code == 0
 
 
-def test_run_delete():
+def test_setup(cratedb):
     """
-    CLI test: Invoke `cratedb-retentions run --strategy=delete`.
+    CLI test: Invoke `cratedb-retentions setup`.
     """
+    database_url = cratedb.get_connection_url()
     runner = CliRunner()
 
     result = runner.invoke(
         cli,
-        args='run --strategy=delete "crate://localhost/testdrive/data"',
+        args=f'setup "{database_url}"',
         catch_exceptions=False,
     )
     assert result.exit_code == 0
+
+
+def test_run_delete(cratedb, provision_database):
+    """
+    CLI test: Invoke `cratedb-retentions run --strategy=delete`.
+    """
+
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    result = runner.invoke(
+        cli,
+        args=f'run --day=2024-12-31 --strategy=delete "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify that records have been deleted.
+    sql = "SELECT COUNT(*) AS count FROM doc.raw_metrics;"
+    results = run_sql(dburi=database_url, sql=sql)
+    assert results[0] == (0,)

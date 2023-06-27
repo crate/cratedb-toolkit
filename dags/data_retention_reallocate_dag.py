@@ -7,7 +7,7 @@ Prerequisites
 -------------
 - CrateDB 5.2.0 or later
 - Tables for storing retention policies need to be created once manually in
-  CrateDB. See the file setup/data_retention_schema.sql in this repository.
+  CrateDB. See the file setup/schema.sql in this repository.
 """
 from pathlib import Path
 
