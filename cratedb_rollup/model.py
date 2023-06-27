@@ -40,7 +40,10 @@ class GenericRetention:
     # Retention cutoff timestamp.
     cutoff_day: str
 
+    # File name of SQL statement to load retention policies.
     _tasks_sql: str = dataclasses.field(init=False)
+
+    # Which action class to use for deserializing records.
     _action_class: t.Any = dataclasses.field(init=False)
 
     def start(self):
@@ -49,10 +52,17 @@ class GenericRetention:
         """
         for policy in self.get_policies():
             logger.info(f"Executing data retention policy: {policy}")
-            sql = policy.to_sql()
+            sql_bunch: t.Iterable = policy.to_sql()
+            if not isinstance(sql_bunch, t.List):
+                sql_bunch = [sql_bunch]
 
-            logger.info(f"Running data retention SQL statement: {sql}")
-            run_sql(dburi=self.dburi, sql=sql)
+            for sql in sql_bunch:
+                logger.info(f"Running data retention SQL statement: {sql}")
+                try:
+                    run_sql(dburi=self.dburi, sql=sql)
+                except:
+                    logger.exception(f"Data retention SQL statement failed: {sql}")
+                    raise
 
     def get_policies(self):
         """
@@ -63,7 +73,7 @@ class GenericRetention:
         if self._action_class is None:
             raise ValueError("Loading retention policies needs an action class")
 
-        # Read SQL DDL statement.
+        # Read SQL statement.
         sql = read_text("cratedb_rollup.strategy", self._tasks_sql)
         sql = sql.format(day=self.cutoff_day)
 

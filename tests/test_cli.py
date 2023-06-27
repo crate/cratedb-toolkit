@@ -1,7 +1,8 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-
+import pytest
 from click.testing import CliRunner
+from sqlalchemy.exc import ProgrammingError
 
 from cratedb_rollup.cli import cli
 from cratedb_rollup.util.database import run_sql
@@ -82,3 +83,22 @@ def test_run_reallocate(cratedb, provision_database):
     #        The reason is probably, because the scenario can't easily be simulated on
     #        a single-node cluster.
     assert results[0] == (2,)
+
+
+def test_run_snapshot(cratedb, provision_database):
+    """
+    CLI test: Invoke `cratedb-rollup run --strategy=snapshot`.
+    """
+
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    # FIXME: This currently can not be tested, because it needs a snapshot repository.
+    # TODO: Provide an embedded MinIO S3 instance.
+    with pytest.raises(ProgrammingError):
+        runner.invoke(
+            cli,
+            args=f'run --cutoff-day=2024-12-31 --strategy=snapshot "{database_url}"',
+            catch_exceptions=False,
+        )
