@@ -1,20 +1,25 @@
-# Data roll-up and retention manager for CrateDB
+# Data roll-up, expiration, and retention manager for CrateDB
 
 [![Tests](https://github.com/crate-workbench/cratedb-rollup/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-rollup/actions/workflows/main.yml)
 
 ## About
 
-A data roll-up and retention management subsystem for CrateDB, implementing different
-strategies.
+A data roll-up, expiration, and retention management subsystem for CrateDB,
+implementing different strategies.
 
 > A [roll-up], as an OLAP data operation, involves summarizing the data along a
 > dimension. The summarization rule might be an aggregate function, such as
 > computing totals along a hierarchy or by applying a set of formulas.
 
-From other database vendors, this technique, or variants thereof, are called [rolling
-up historical data], [downsampling a time series data stream], [downsampling and data
+With other databases, this technique, or variants thereof, is known as [rolling up
+historical data], [downsampling a time series data stream], [downsampling and data
 retention], or just [downsampling].
 
+It is useful to reduce the storage size of historical data, by decreasing its
+resolution.
+
+When rolling up timeseries-data, [time bucketing] is often used for segmenting records
+into groups, before applying the resampling function.
 
 ## Strategies
 
@@ -23,20 +28,55 @@ Other strategies can be added.
 
 ### DELETE
 
-Implements a retention policy algorithm that drops records from expired partitions.
+A basic retention policy algorithm that drops records from expired partitions.
+
+```sql
+-- A policy using the DELETE strategy.
+INSERT INTO retention_policies
+  (table_schema, table_name, partition_column, retention_period, strategy)
+VALUES
+  ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+```
 
 [implementation](cratedb_rollup/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
 
 ### REALLOCATE
 
-Implements a retention policy algorithm that reallocates expired partitions from
-hot nodes to cold nodes.
+A retention policy algorithm that reallocates expired partitions from hot nodes
+to cold nodes.
+
+Because each cluster member is assigned a designated node type by using the
+`-Cnode.attr.storage=hot|cold` parameter, this strategy is only applicable in
+cluster/multi-node scenarios.
+
+On the data expiration run, corresponding partitions will get physically moved to
+cluster nodes of the `cold` type, which are mostly designated archive nodes, with
+large amounts of storage space.
+
+```sql
+-- A policy using the REALLOCATE strategy.
+INSERT INTO retention_policies VALUES
+  ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
+```
 
 [implementation](cratedb_rollup/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
 
 ### SNAPSHOT
 
-Implements a retention policy algorithm that snapshots expired partitions to a repository.
+A retention policy algorithm that snapshots expired partitions to a repository,
+and prunes them from the database afterwards. It is suitable for long-term
+data archival purposes.
+
+In CrateDB jargon, a repository is a bucket on an S3-compatible object store,
+where data in form of snapshots can be exported to, and imported from.
+
+```sql
+-- A policy using the SNAPSHOT strategy.
+INSERT INTO retention_policies
+  (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
+VALUES
+  ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
+```
 
 [implementation](cratedb_rollup/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
 
@@ -56,8 +96,9 @@ cratedb-rollup setup "crate://localhost/"
 
 ## Usage
 
-Define a retention policy rule using SQL.
+Define a few retention policy rules using SQL.
 ```shell
+# A policy using the DELETE strategy.
 docker run --rm -i --network=host crate crash <<SQL
     INSERT INTO retention_policies (
       table_schema, table_name, partition_column, retention_period, strategy)
@@ -110,3 +151,4 @@ poe format
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
+[time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009
