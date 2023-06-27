@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Crate.io Inc.
+# Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 
 import pytest
@@ -73,24 +73,43 @@ def provision_database(cratedb):
            "quality" INTEGER,
            PRIMARY KEY ("variable", "timestamp", "ts_day")
         )
-        PARTITIONED BY ("ts_day");
+        PARTITIONED BY ("ts_day")
+        WITH ("routing.allocation.require.storage" = 'hot')
+        ;
     """
     run_sql(database_url, sql)
-    sql = """
+    data = [
+        """
         INSERT INTO doc.raw_metrics
             (variable, timestamp, value, quality)
         VALUES
             ('temperature', '2023-06-27T12:00:00', 42.42, 0);
-    """
-    run_sql(database_url, sql)
+        """,
+        """
+        INSERT INTO doc.raw_metrics
+            (variable, timestamp, value, quality)
+        VALUES
+            ('water-flow', NOW() - '5 months'::INTERVAL, 12, 1);
+        """,
+    ]
+    for sql in data:
+        run_sql(database_url, sql)
 
-    sql = """
-    -- Provision a single retention policy using the `delete` strategy.
-    INSERT INTO retention_policies (
-      table_schema, table_name, partition_column, retention_period, strategy)
-    VALUES ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
-"""
-    run_sql(database_url, sql)
+    rules = [
+        """
+        -- Provision retention policy rule for the DELETE strategy.
+        INSERT INTO retention_policies (
+          table_schema, table_name, partition_column, retention_period, strategy)
+        VALUES ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+        """,
+        """
+        -- Provision retention policy rule for the REALLOCATE strategy.
+        INSERT INTO retention_policies
+        VALUES ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
+        """,
+    ]
+    for sql in rules:
+        run_sql(database_url, sql)
 
     # Synchronize data.
     run_sql(database_url, 'REFRESH TABLE "doc"."raw_metrics";')

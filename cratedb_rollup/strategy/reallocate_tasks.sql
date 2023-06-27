@@ -1,3 +1,6 @@
+-- Copyright (c) 2021-2023, Crate.io Inc.
+-- Distributed under the terms of the AGPLv3 license, see LICENSE.
+
 WITH partition_allocations AS (
   SELECT DISTINCT s.schema_name AS table_schema,
                   s.table_name,
@@ -16,7 +19,7 @@ SELECT QUOTE_IDENT(p.table_schema),
 FROM information_schema.table_partitions p
 JOIN doc.retention_policies r ON p.table_schema = r.table_schema
   AND p.table_name = r.table_name
-  AND p.values[r.partition_column] < %(day)s::TIMESTAMP - (r.retention_period || ' days')::INTERVAL
+  AND p.values[r.partition_column] < '{day}'::TIMESTAMP - (r.retention_period || ' days')::INTERVAL
 JOIN partition_allocations a ON a.table_schema = p.table_schema
   AND a.table_name = p.table_name
   AND p.partition_ident = a.partition_ident
