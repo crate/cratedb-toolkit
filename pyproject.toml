@@ -20,6 +20,7 @@ keywords = [
 license = { text = "AGPL 3, EUPL 1.2" }
 authors = [
   { name = "Niklas Schmidtmer", email = "niklas@crate.io" },
+  { name = "Marija Selakovic", email = "marija@crate.io" },
   { name = "Andreas Motl", email = "andreas.motl@crate.io" },
 ]
 requires-python = ">=3.8"
@@ -83,6 +84,7 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crate[sqlalchemy]",
+  "sqlalchemy>=2",
 ]
 [project.optional-dependencies]
 develop = [
