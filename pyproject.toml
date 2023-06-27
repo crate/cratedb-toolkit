@@ -1,0 +1,241 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=42", # At least v42 of setuptools required.
+  "versioningit",
+]
+
+[tool.versioningit.vcs]
+method = "git"
+default-tag = "0.0.0"
+
+[project]
+name = "cratedb-retentions"
+description = "Data retention for CrateDB."
+readme = "README.md"
+keywords = [
+  "cratedb",
+  "retention",
+]
+license = { text = "AGPL 3, EUPL 1.2" }
+authors = [
+  { name = "Niklas Schmidtmer", email = "niklas@crate.io" },
+  { name = "Andreas Motl", email = "andreas.motl@crate.io" },
+]
+requires-python = ">=3.8"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Customer Service",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Manufacturing",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Telecommunications Industry",
+  "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Unix",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Adaptive Technologies",
+  "Topic :: Communications",
+  "Topic :: Database",
+  "Topic :: Documentation",
+  "Topic :: Education",
+  "Topic :: Internet",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Office/Business",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Embedded Systems",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Object Brokering",
+  "Topic :: Software Development :: Pre-processors",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Version Control",
+  "Topic :: System :: Archiving",
+  "Topic :: System :: Benchmark",
+  "Topic :: System :: Clustering",
+  "Topic :: System :: Distributed Computing",
+  "Topic :: System :: Hardware",
+  "Topic :: System :: Logging",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Networking",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Text Processing",
+  "Topic :: Utilities",
+]
+dynamic = [
+  "version",
+]
+dependencies = [
+  "click<9",
+  "colorama<1",
+  "colorlog",
+  "crate",
+]
+[project.optional-dependencies]
+develop = [
+  "black<24",
+  "mypy==1.4.1",
+  "poethepoet<0.21",
+  "pyproject-fmt<0.13",
+  "ruff==0.0.261",
+  "validate-pyproject<0.14",
+]
+release = [
+  "build<1",
+  'minibump<1; python_version >= "3.10"',
+  "twine<5",
+]
+test = [
+  "pytest<8",
+  "pytest-cov<5",
+  "testcontainers",
+]
+[project.urls]
+changelog = "https://github.com/crate-workbench/cratedb-retentions/blob/main/CHANGES.rst"
+documentation = "https://github.com/crate-workbench/cratedb-retentions"
+homepage = "https://github.com/crate-workbench/cratedb-retentions"
+repository = "https://github.com/crate-workbench/cratedb-retentions"
+[project.scripts]
+cratedb-retentions = "cratedb_retentions.cli:cli"
+
+[tool.black]
+line-length = 120
+
+[tool.coverage.run]
+branch = false
+omit = [
+  "tests/*",
+]
+source = ["cratedb_retentions"]
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+
+[tool.mypy]
+packages = ["cratedb_retentions"]
+exclude = [
+]
+check_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = true
+install_types = true
+non_interactive = true
+
+[tool.pytest.ini_options]
+#addopts = "-rA --verbosity=3 --cov --cov-report=term-missing --cov-report=xml"
+addopts = "-rA --verbosity=3"
+minversion = "2.0"
+log_level = "DEBUG"
+log_cli_level = "DEBUG"
+log_format = "%(asctime)-15s [%(name)-24s] %(levelname)-8s: %(message)s"
+testpaths = [
+  "cratedb_retentions",
+  "tests",
+]
+xfail_strict = true
+markers = [
+  "slow",
+]
+
+[tool.ruff]
+line-length = 120
+
+select = [
+  # Bandit
+  "S",
+  # Bugbear
+  "B",
+  # Builtins
+  "A",
+  # comprehensions
+  "C4",
+  # eradicate
+  "ERA",
+  # flake8-2020
+  "YTT",
+  # isort
+  "I",
+  # pandas-vet
+  "PD",
+  # print
+  "T20",
+  # Pycodestyle
+  "E",
+  "W",
+  # Pyflakes
+  "F",
+  # return
+  "RET",
+]
+
+extend-ignore = [
+  # zip() without an explicit strict= parameter
+  "B905",
+  # df is a bad variable name. Be kinder to your future self.
+  "PD901",
+  # Unnecessary variable assignment before `return` statement
+  "RET504",
+  # Unnecessary `elif` after `return` statement
+  "RET505",
+]
+
+extend-exclude = [
+  "amqp-to-mqtt.py",
+  "workbench.py",
+]
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["S101"]  # Use of `assert` detected
+"examples/*" = ["T201"]  # Allow `print`
+
+[tool.setuptools.packages.find]
+namespaces = false
+
+
+# ===================
+# Tasks configuration
+# ===================
+
+[tool.poe.tasks]
+
+check = [
+  "lint",
+  "test",
+]
+
+format = [
+  { cmd = "black ." },
+  # Configure Ruff not to auto-fix (remove!):
+  # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
+  { cmd = "ruff --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
+  { cmd = "pyproject-fmt pyproject.toml" },
+]
+
+lint = [
+  # { cmd = "ruff ." },
+  { cmd = "black --check ." },
+  { cmd = "validate-pyproject pyproject.toml" },
+  { cmd = "mypy" },
+]
+
+release = [
+  { cmd = "minibump bump --relax minor" },
+  { cmd = "python -m build" },
+  { cmd = "twine upload dist/*" },
+]
+
+test = { cmd = "pytest" }
