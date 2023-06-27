@@ -6,9 +6,9 @@ import sys
 
 import click
 
-from cratedb_retentions.setup.schema import setup_schema
-from cratedb_retentions.strategy.delete import run_delete_job
-from cratedb_retentions.util.cli import boot_click, docstring_format_verbatim
+from cratedb_rollup.setup.schema import setup_schema
+from cratedb_rollup.strategy.delete import run_delete_job
+from cratedb_rollup.util.cli import boot_click, docstring_format_verbatim
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def help_setup():
     ========
 
     # Materialize `retention_policies` database schema.
-    cratedb-retentions setup "crate://localhost/"
+    cratedb-rollup setup "crate://localhost/"
 
     """  # noqa: E501
 
@@ -34,13 +34,13 @@ def help_run():
     ========
 
     # Invoke data retention workflow using the `delete` strategy.
-    cratedb-retentions run --day=2023-06-27 --strategy=delete "crate://localhost/testdrive/data"
+    cratedb-rollup run --day=2023-06-27 --strategy=delete "crate://localhost/testdrive/data"
 
     """  # noqa: E501
 
 
 @click.group()
-@click.version_option(package_name="cratedb-retentions")
+@click.version_option(package_name="cratedb-rollup")
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.pass_context

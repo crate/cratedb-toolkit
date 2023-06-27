@@ -4,9 +4,9 @@
 import pytest
 import sqlalchemy as sa
 
-from cratedb_retentions.setup.schema import setup_schema
-from cratedb_retentions.util.common import setup_logging
-from cratedb_retentions.util.database import run_sql
+from cratedb_rollup.setup.schema import setup_schema
+from cratedb_rollup.util.common import setup_logging
+from cratedb_rollup.util.database import run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
 RESET_TABLES = ["testdrive", "retention_policies", "raw_metrics"]

@@ -12,7 +12,7 @@ import dataclasses
 import logging
 from importlib.resources import read_text
 
-from cratedb_retentions.util.database import run_sql
+from cratedb_rollup.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class DeleteRetention:
         Resolve retention policy items.
         """
         # Read SQL DDL statement.
-        sql = read_text("cratedb_retentions.strategy", "delete_policies.sql")
+        sql = read_text("cratedb_rollup.strategy", "delete_policies.sql")
         sql = sql.format(day=self.day)
 
         # Resolve retention policies.
