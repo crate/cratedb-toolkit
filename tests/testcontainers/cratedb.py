@@ -66,6 +66,8 @@ class CrateDBContainer(DbContainer):
 
         self._name = "testcontainers-cratedb"  # -{os.getpid()}
         self._command = "-Cdiscovery.type=single-node -Ccluster.routing.allocation.disk.threshold_enabled=false"
+        # TODO: Generalize by obtaining more_opts from caller.
+        self._command += " -Cnode.attr.storage=hot"
 
         self.CRATEDB_USER = user or self.CRATEDB_USER
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
