@@ -1,3 +1,5 @@
+# Copyright (c) 2021-2023, Crate.io Inc.
+# Distributed under the terms of the AGPLv3 license, see LICENSE.
 """
 Implements a retention policy by dropping expired partitions
 
@@ -64,7 +66,7 @@ class DeleteRetention:
     dburi: str
 
     # Retention cutoff timestamp.
-    day: str
+    cutoff_day: str
 
     def start(self):
         """
@@ -83,7 +85,7 @@ class DeleteRetention:
         """
         # Read SQL DDL statement.
         sql = read_text("cratedb_rollup.strategy", "delete_tasks.sql")
-        sql = sql.format(day=self.day)
+        sql = sql.format(day=self.cutoff_day)
 
         # Resolve retention policies.
         policy_records = run_sql(self.dburi, sql)
@@ -93,10 +95,10 @@ class DeleteRetention:
             yield policy
 
 
-def run_delete_job(dburi: str, day: str):
+def run_delete_job(dburi: str, cutoff_day: str):
     """
-    Invoke data retention using `delete` strategy.
+    Invoke data retention using the `delete` strategy.
     """
 
-    ret = DeleteRetention(dburi=dburi, day=day)
+    ret = DeleteRetention(dburi=dburi, cutoff_day=cutoff_day)
     ret.start()
