@@ -9,6 +9,7 @@ import click
 from cratedb_rollup.setup.schema import setup_schema
 from cratedb_rollup.strategy.delete import run_delete_job
 from cratedb_rollup.strategy.reallocate import run_reallocate_job
+from cratedb_rollup.strategy.snapshot import run_snapshot_job
 from cratedb_rollup.util.cli import boot_click, docstring_format_verbatim
 
 logger = logging.getLogger(__name__)
@@ -87,5 +88,7 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str):
         run_delete_job(dburi, cutoff_day)
     elif strategy == "reallocate":
         run_reallocate_job(dburi, cutoff_day)
+    elif strategy == "snapshot":
+        run_snapshot_job(dburi, cutoff_day)
     else:
         raise NotImplementedError(f"Retention strategy {strategy} not implemented yet")

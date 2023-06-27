@@ -9,7 +9,7 @@ from cratedb_rollup.util.common import setup_logging
 from cratedb_rollup.util.database import run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
-RESET_TABLES = ["testdrive", "retention_policies", "raw_metrics"]
+RESET_TABLES = ["testdrive", "retention_policies", "raw_metrics", "sensor_readings"]
 
 
 class CrateDBFixture:
@@ -64,7 +64,8 @@ def provision_database(cratedb):
     database_url = cratedb.get_connection_url()
 
     setup_schema(database_url)
-    sql = """
+    ddls = [
+        """
         CREATE TABLE "doc"."raw_metrics" (
            "variable" TEXT,
            "timestamp" TIMESTAMP WITH TIME ZONE,
@@ -76,8 +77,22 @@ def provision_database(cratedb):
         PARTITIONED BY ("ts_day")
         WITH ("routing.allocation.require.storage" = 'hot')
         ;
-    """
-    run_sql(database_url, sql)
+        """,
+        """
+        CREATE TABLE doc.sensor_readings (
+           time TIMESTAMP WITH TIME ZONE NOT NULL,
+           time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
+           sensor_id TEXT NOT NULL,
+           battery_level DOUBLE PRECISION,
+           battery_status TEXT,
+           battery_temperature DOUBLE PRECISION
+        )
+        PARTITIONED BY (time_month);
+        """,
+    ]
+    for sql in ddls:
+        run_sql(database_url, sql)
+
     data = [
         """
         INSERT INTO doc.raw_metrics
@@ -90,6 +105,18 @@ def provision_database(cratedb):
             (variable, timestamp, value, quality)
         VALUES
             ('water-flow', NOW() - '5 months'::INTERVAL, 12, 1);
+        """,
+        """
+        INSERT INTO doc.sensor_readings
+            (time, sensor_id, battery_level, battery_status, battery_temperature)
+        VALUES
+            (NOW() - '6 years'::INTERVAL, 'batt01', 98.99, 'FULL', 42.42);
+        """,
+        """
+        INSERT INTO doc.sensor_readings
+            (time, sensor_id, battery_level, battery_status, battery_temperature)
+        VALUES
+            (NOW() - '5 years'::INTERVAL, 'batt01', 83.82, 'ALMOST FULL', 18.42);
         """,
     ]
     for sql in data:
@@ -106,6 +133,12 @@ def provision_database(cratedb):
         -- Provision retention policy rule for the REALLOCATE strategy.
         INSERT INTO retention_policies
         VALUES ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
+        """,
+        """
+        -- Provision retention policy rule for the SNAPSHOT strategy.
+        INSERT INTO retention_policies
+          (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
+        VALUES ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
         """,
     ]
     for sql in rules:
