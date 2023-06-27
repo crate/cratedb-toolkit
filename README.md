@@ -16,7 +16,10 @@ up historical data], [downsampling a time series data stream], [downsampling and
 retention], or just [downsampling].
 
 
-## Details
+## Strategies
+
+This section enumerates the different data roll-up and retention strategies implemented.
+Other strategies can be added.
 
 ### DELETE
 
@@ -29,13 +32,13 @@ Implements a retention policy algorithm that drops records from expired partitio
 Implements a retention policy algorithm that reallocates expired partitions from
 hot nodes to cold nodes.
 
-[implementation](dags/data_retention_reallocate_dag.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
+[implementation](cratedb_rollup/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
 
 ### SNAPSHOT
 
 Implements a retention policy algorithm that snapshots expired partitions to a repository.
 
-[implementation](dags/data_retention_snapshot_dag.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
+[implementation](cratedb_rollup/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
 
 
 ## Install
