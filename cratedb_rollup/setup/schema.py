@@ -2,7 +2,7 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 from importlib.resources import read_text
 
-from cratedb_retentions.util.database import run_sql
+from cratedb_rollup.util.database import run_sql
 
 
 def setup_schema(dburi: str):
@@ -11,7 +11,7 @@ def setup_schema(dburi: str):
     """
 
     # Read SQL DDL statement.
-    sql = read_text("cratedb_retentions.setup", "schema.sql")
+    sql = read_text("cratedb_rollup.setup", "schema.sql")
 
     # Materialize table schema.
     run_sql(dburi, sql)

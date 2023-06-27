@@ -3,13 +3,13 @@
 
 from click.testing import CliRunner
 
-from cratedb_retentions.cli import cli
-from cratedb_retentions.util.database import run_sql
+from cratedb_rollup.cli import cli
+from cratedb_rollup.util.database import run_sql
 
 
 def test_version():
     """
-    CLI test: Invoke `cratedb-retentions --version`.
+    CLI test: Invoke `cratedb-rollup --version`.
     """
     runner = CliRunner()
 
@@ -23,7 +23,7 @@ def test_version():
 
 def test_setup(cratedb):
     """
-    CLI test: Invoke `cratedb-retentions setup`.
+    CLI test: Invoke `cratedb-rollup setup`.
     """
     database_url = cratedb.get_connection_url()
     runner = CliRunner()
@@ -38,7 +38,7 @@ def test_setup(cratedb):
 
 def test_run_delete(cratedb, provision_database):
     """
-    CLI test: Invoke `cratedb-retentions run --strategy=delete`.
+    CLI test: Invoke `cratedb-rollup run --strategy=delete`.
     """
 
     database_url = cratedb.get_connection_url()
