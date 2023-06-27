@@ -9,10 +9,11 @@ In CrateDB, tables for storing retention policies need to be created once manual
 See the file setup/data_retention_schema.sql in this repository.
 """
 from pathlib import Path
+
 import pendulum
+from airflow.decorators import dag, task
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.decorators import dag, task
 
 
 def map_policy(policy):
