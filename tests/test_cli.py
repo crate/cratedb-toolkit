@@ -47,7 +47,7 @@ def test_run_delete(cratedb, provision_database):
     # Invoke data retention through CLI interface.
     result = runner.invoke(
         cli,
-        args=f'run --day=2024-12-31 --strategy=delete "{database_url}"',
+        args=f'run --cutoff-day=2024-12-31 --strategy=delete "{database_url}"',
         catch_exceptions=False,
     )
     assert result.exit_code == 0
