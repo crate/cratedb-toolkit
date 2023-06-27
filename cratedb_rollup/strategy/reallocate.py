@@ -13,15 +13,14 @@ Prerequisites
 """
 import dataclasses
 import logging
-from importlib.resources import read_text
 
-from cratedb_rollup.util.database import run_sql
+from cratedb_rollup.model import GenericAction, GenericRetention
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class ReallocateAction:
+class ReallocateAction(GenericAction):
     """
     Manage metadata representing a data retention operation on a single table.
     """
@@ -33,13 +32,6 @@ class ReallocateAction:
     value: str
     attribute_name: str
     attribute_value: str
-
-    @classmethod
-    def from_record(cls, record):
-        """
-        Factory for creating instance from database record.
-        """
-        return cls(**cls.record_mapper(record))
 
     def to_sql(self):
         """
@@ -69,42 +61,13 @@ class ReallocateAction:
 
 
 @dataclasses.dataclass
-class ReallocateRetention:
+class ReallocateRetention(GenericRetention):
     """
-    Represent a complete data retention job, using the `delete` strategy.
+    Represent a complete data retention job, using the `reallocate` strategy.
     """
 
-    # Database connection URI.
-    dburi: str
-
-    # Retention cutoff timestamp.
-    cutoff_day: str
-
-    def start(self):
-        """
-        Evaluate retention policies, and invoke actions.
-        """
-        for policy in self.get_policies():
-            logger.info(f"Executing data retention: {self}")
-            sql = policy.to_sql()
-
-            logger.info(f"Running data retention SQL statement: {sql}")
-            run_sql(dburi=self.dburi, sql=sql)
-
-    def get_policies(self):
-        """
-        Resolve retention policy items.
-        """
-        # Read SQL DDL statement.
-        sql = read_text("cratedb_rollup.strategy", "reallocate_tasks.sql")
-        sql = sql.format(day=self.cutoff_day)
-
-        # Resolve retention policies.
-        policy_records = run_sql(self.dburi, sql)
-        logger.info(f"Policies: {policy_records}")
-        for record in policy_records:
-            policy = ReallocateAction.from_record(record)
-            yield policy
+    _tasks_sql = "reallocate_tasks.sql"
+    _action_class = ReallocateAction
 
 
 def run_reallocate_job(dburi: str, cutoff_day: str):
