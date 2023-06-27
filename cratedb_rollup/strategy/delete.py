@@ -82,7 +82,7 @@ class DeleteRetention:
         Resolve retention policy items.
         """
         # Read SQL DDL statement.
-        sql = read_text("cratedb_rollup.strategy", "delete_policies.sql")
+        sql = read_text("cratedb_rollup.strategy", "delete_tasks.sql")
         sql = sql.format(day=self.day)
 
         # Resolve retention policies.
