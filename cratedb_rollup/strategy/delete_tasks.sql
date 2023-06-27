@@ -1,3 +1,6 @@
+-- Copyright (c) 2021-2023, Crate.io Inc.
+-- Distributed under the terms of the AGPLv3 license, see LICENSE.
+
 SELECT QUOTE_IDENT(p.table_schema) || '.' || QUOTE_IDENT(p.table_name),
        QUOTE_IDENT(r.partition_column),
        TRY_CAST(p.values[r.partition_column] AS BIGINT)
