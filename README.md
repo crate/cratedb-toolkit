@@ -1,38 +1,59 @@
-# Data retention for CrateDB
+# Data roll-up and retention manager for CrateDB
 
+[![Tests](https://github.com/crate-workbench/cratedb-rollup/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-rollup/actions/workflows/main.yml)
 
 ## About
 
-A data retention subsystem for CrateDB, providing different strategies.
+A data roll-up and retention management subsystem for CrateDB, implementing different
+strategies.
 
-In the [dags](dags) directory you can find a subset of our DAG examples.
-Each DAG is accompanied by a tutorial:
+> A [roll-up], as an OLAP data operation, involves summarizing the data along a
+> dimension. The summarization rule might be an aggregate function, such as
+> computing totals along a hierarchy or by applying a set of formulas.
 
-* [data_retention_delete_dag.py](cratedb_retentions/strategy/delete.py) ([tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913)): implements a retention policy algorithm that drops expired partitions
-* [data_retention_reallocate_dag.py](dags/data_retention_reallocate_dag.py) ([tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)): implements a retention policy algorithm that reallocates expired partitions from hot nodes to cold nodes
-* [data_retention_snapshot_dag.py](dags/data_retention_snapshot_dag.py): implements a retention policy algorithm that snapshots expired partitions to a repository
+From other database vendors, this technique, or variants thereof, are called [rolling
+up historical data], [downsampling a time series data stream], [downsampling and data
+retention], or just [downsampling].
 
 
-## Setup
+## Details
 
-Acquire sources.
+### DELETE
+
+Implements a retention policy algorithm that drops records from expired partitions.
+
+[implementation](cratedb_rollup/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
+
+### REALLOCATE
+
+Implements a retention policy algorithm that reallocates expired partitions from
+hot nodes to cold nodes.
+
+[implementation](dags/data_retention_reallocate_dag.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
+
+### SNAPSHOT
+
+Implements a retention policy algorithm that snapshots expired partitions to a repository.
+
+[implementation](dags/data_retention_snapshot_dag.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
+
+
+## Install
+
+Install package.
 ```shell
-git clone https://github.com/crate-workbench/cratedb-retentions
-cd cratedb-retentions
-```
-
-Install project.
-```shell
-pip install --editable=.[develop,test]
+pip install --upgrade git+https://github.com/crate-workbench/cratedb-rollup
 ```
 
 Install retention policy bookkeeping tables.
 ```shell
-cratedb-retentions setup "crate://localhost/"
+cratedb-rollup setup "crate://localhost/"
 ```
 
 
 ## Usage
+
+Define a retention policy rule using SQL.
 ```shell
 docker run --rm -i --network=host crate crash <<SQL
     INSERT INTO retention_policies (
@@ -41,13 +62,35 @@ docker run --rm -i --network=host crate crash <<SQL
 SQL
 ```
 
+Run the roll-up job.
 ```shell
-cratedb-retentions run --day=2023-06-27 --strategy=delete "crate://localhost"
+cratedb-rollup run --cutoff-day=2023-06-27 --strategy=delete "crate://localhost"
 ```
+
 
 ## Development
 
-Run tests.
+It is recommended to use a Python virtualenv for the subsequent operations.
+If you something gets messed up during development, it is easy to nuke the
+installation, and start from scratch.
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Acquire sources.
+```shell
+git clone https://github.com/crate-workbench/cratedb-rollup
+cd cratedb-rollup
+```
+
+Install project in sandbox mode.
+```shell
+pip install --editable=.[develop,test]
+```
+
+Run tests. `TC_KEEPALIVE` keeps the auxiliary service containers running, which
+speeds up runtime on subsequent invocations.
 ```shell
 export TC_KEEPALIVE=true
 poe check
@@ -57,3 +100,10 @@ Format code.
 ```shell
 poe format
 ```
+
+
+[downsampling]: https://docs.victoriametrics.com/#downsampling
+[downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
+[downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
+[rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
+[roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
