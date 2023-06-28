@@ -154,7 +154,8 @@ pip install --editable=.[develop,test]
 
 Run tests. `TC_KEEPALIVE` keeps the auxiliary service containers running, which
 speeds up runtime on subsequent invocations. Note that the test suite uses the
-`testdrive-ext` schema for storing the retention policy table.
+`testdrive-ext` schema for storing the retention policy table, and the
+`testdrive-data` schema for storing data tables.
 ```shell
 export TC_KEEPALIVE=true
 poe check
