@@ -69,12 +69,3 @@ class SnapshotRetention(GenericRetention):
 
     _tasks_sql = "snapshot_tasks.sql"
     _action_class = SnapshotAction
-
-
-def run_snapshot_job(dburi: str, cutoff_day: str):
-    """
-    Invoke data retention using the `snapshot` strategy.
-    """
-
-    ret = SnapshotRetention(dburi=dburi, cutoff_day=cutoff_day)
-    ret.start()

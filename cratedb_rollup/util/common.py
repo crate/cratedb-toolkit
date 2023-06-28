@@ -22,7 +22,9 @@ def setup_logging(level=logging.INFO):
     if SQLALCHEMY_LOGGING:
         logging.getLogger("sqlalchemy").setLevel(level)
 
+    """
     if SQLALCHEMY_LOGGING:
         logging.getLogger("crate.client").setLevel(logging.INFO)
         logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
         logging.getLogger("docker.auth").setLevel(logging.INFO)
+    """

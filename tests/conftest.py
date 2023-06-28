@@ -4,12 +4,22 @@
 import pytest
 import sqlalchemy as sa
 
+from cratedb_rollup.model import Settings
 from cratedb_rollup.setup.schema import setup_schema
 from cratedb_rollup.util.common import setup_logging
 from cratedb_rollup.util.database import run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
-RESET_TABLES = ["testdrive", "retention_policies", "raw_metrics", "sensor_readings"]
+# Use another schema for storing the retention policy table,
+# so that it does not accidentally touch a production system.
+TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
+
+RESET_TABLES = [
+    f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policies"',
+    '"doc"."raw_metrics"',
+    '"doc"."sensor_readings"',
+    '"doc"."testdrive"',
+]
 
 
 class CrateDBFixture:
@@ -57,13 +67,16 @@ def cratedb():
 @pytest.fixture(scope="function")
 def provision_database(cratedb):
     """
-    Populate `raw_metrics` and `retention_policies` tables.
+    Populate `retention_policies` table, and data tables.
     """
     cratedb.reset()
 
     database_url = cratedb.get_connection_url()
 
-    setup_schema(database_url)
+    settings = Settings(dburi=database_url)
+    settings.policy_table.schema = TESTDRIVE_EXT_SCHEMA
+    setup_schema(settings=settings)
+
     ddls = [
         """
         CREATE TABLE "doc"."raw_metrics" (
@@ -79,7 +92,7 @@ def provision_database(cratedb):
         ;
         """,
         """
-        CREATE TABLE doc.sensor_readings (
+        CREATE TABLE "doc"."sensor_readings" (
            time TIMESTAMP WITH TIME ZONE NOT NULL,
            time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
            sensor_id TEXT NOT NULL,
@@ -95,25 +108,25 @@ def provision_database(cratedb):
 
     data = [
         """
-        INSERT INTO doc.raw_metrics
+        INSERT INTO "doc"."raw_metrics"
             (variable, timestamp, value, quality)
         VALUES
             ('temperature', '2023-06-27T12:00:00', 42.42, 0);
         """,
         """
-        INSERT INTO doc.raw_metrics
+        INSERT INTO "doc"."raw_metrics"
             (variable, timestamp, value, quality)
         VALUES
             ('water-flow', NOW() - '5 months'::INTERVAL, 12, 1);
         """,
         """
-        INSERT INTO doc.sensor_readings
+        INSERT INTO "doc"."sensor_readings"
             (time, sensor_id, battery_level, battery_status, battery_temperature)
         VALUES
             (NOW() - '6 years'::INTERVAL, 'batt01', 98.99, 'FULL', 42.42);
         """,
         """
-        INSERT INTO doc.sensor_readings
+        INSERT INTO "doc"."sensor_readings"
             (time, sensor_id, battery_level, battery_status, battery_temperature)
         VALUES
             (NOW() - '5 years'::INTERVAL, 'batt01', 83.82, 'ALMOST FULL', 18.42);
@@ -123,30 +136,31 @@ def provision_database(cratedb):
         run_sql(database_url, sql)
 
     rules = [
-        """
+        f"""
         -- Provision retention policy rule for the DELETE strategy.
-        INSERT INTO retention_policies (
+        INSERT INTO {settings.policy_table.fullname} (
           table_schema, table_name, partition_column, retention_period, strategy)
         VALUES ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
-        """,
-        """
+        """,  # noqa: S608
+        f"""
         -- Provision retention policy rule for the REALLOCATE strategy.
-        INSERT INTO retention_policies
+        INSERT INTO {settings.policy_table.fullname}
         VALUES ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
-        """,
-        """
+        """,  # noqa: S608
+        f"""
         -- Provision retention policy rule for the SNAPSHOT strategy.
-        INSERT INTO retention_policies
+        INSERT INTO {settings.policy_table.fullname}
           (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
         VALUES ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
-        """,
+        """,  # noqa: S608
     ]
     for sql in rules:
         run_sql(database_url, sql)
 
     # Synchronize data.
     run_sql(database_url, 'REFRESH TABLE "doc"."raw_metrics";')
-    run_sql(database_url, 'REFRESH TABLE "doc"."retention_policies";')
+    run_sql(database_url, 'REFRESH TABLE "doc"."sensor_readings";')
+    run_sql(database_url, f"REFRESH TABLE {settings.policy_table.fullname};")
 
 
 setup_logging()
