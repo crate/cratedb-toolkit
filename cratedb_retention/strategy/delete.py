@@ -13,39 +13,27 @@ See the file setup/schema.sql in this repository.
 import dataclasses
 import logging
 
-from cratedb_retention.model import GenericAction, GenericRetention
+from cratedb_retention.model import GenericRetention, RetentionPolicy
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class DeleteAction(GenericAction):
+class DeleteAction(RetentionPolicy):
     """
     Manage metadata representing a data retention operation on a single table.
     """
-
-    table_fqn: str
-    column: str
-    value: int
 
     def to_sql(self):
         """
         Render as SQL statement.
         """
         # FIXME: S608 Possible SQL injection vector through string-based query construction
-        sql = f"""DELETE FROM {self.table_fqn} WHERE {self.column} = {self.value};"""  # noqa: S608
+        sql = f"""
+            DELETE FROM {self.table_fullname}
+            WHERE {self.partition_column} = {self.partition_value};
+        """  # noqa: S608
         return sql
-
-    @staticmethod
-    def record_mapper(record):
-        """
-        Map database record to instance attributes.
-        """
-        return {
-            "table_fqn": record[0],
-            "column": record[1],
-            "value": record[2],
-        }
 
 
 @dataclasses.dataclass
