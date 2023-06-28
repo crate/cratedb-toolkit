@@ -13,7 +13,7 @@ and processing large amounts of data, it is crucial to manage data flows between
 hot and cold storage types better than using ad hoc solutions.
 
 Data retention policies can be flexibly configured by adding records to the
-`retention_policies` database table, which is also stored within CrateDB.
+retention policy database table, which is also stored within CrateDB.
 
 ### Background
 
@@ -49,10 +49,10 @@ resolution of data.
 
 ### Details
 
-> The `retention_policies` database table is also stored within CrateDB.
+> The retention policy database table is also stored within CrateDB.
 
 By default, the `ext` schema is used for that, so the effective full-qualified database
-table name is `"ext"."retention_policies"`. It is configurable by using the `--schema`
+table name is `"ext"."retention_policy"`. It is configurable by using the `--schema`
 command-line option, or the `CRATEDB_EXT_SCHEMA` environment variable.
 
 
@@ -67,7 +67,7 @@ A basic retention policy algorithm that drops records from expired partitions.
 
 ```sql
 -- A policy using the DELETE strategy.
-INSERT INTO retention_policies
+INSERT INTO "ext"."retention_policy"
   (table_schema, table_name, partition_column, retention_period, strategy)
 VALUES
   ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
@@ -90,7 +90,8 @@ large amounts of storage space.
 
 ```sql
 -- A policy using the REALLOCATE strategy.
-INSERT INTO retention_policies VALUES
+INSERT INTO "ext"."retention_policy"
+VALUES
   ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
 ```
 
@@ -107,7 +108,7 @@ where data in form of snapshots can be exported to, and imported from.
 
 ```sql
 -- A policy using the SNAPSHOT strategy.
-INSERT INTO retention_policies
+INSERT INTO "ext"."retention_policy"
   (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
 VALUES
   ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
@@ -135,9 +136,10 @@ Define a few retention policy rules using SQL.
 ```shell
 # A policy using the DELETE strategy.
 docker run --rm -i --network=host crate crash <<SQL
-    INSERT INTO retention_policies (
-      table_schema, table_name, partition_column, retention_period, strategy)
-    VALUES ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+    INSERT INTO "ext"."retention_policy"
+      (table_schema, table_name, partition_column, retention_period, strategy)
+    VALUES
+      ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
 SQL
 ```
 

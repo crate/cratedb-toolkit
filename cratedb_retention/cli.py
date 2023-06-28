@@ -21,7 +21,7 @@ def help_setup():
     Synopsis
     ========
 
-    # Materialize `retention_policies` database schema.
+    # Set up the retention policy database table schema.
     cratedb-retention setup "crate://localhost/"
 
     """  # noqa: E501
