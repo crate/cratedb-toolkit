@@ -3,7 +3,7 @@
 import dataclasses
 import logging
 import typing as t
-from abc import abstractmethod
+from collections import OrderedDict
 from enum import Enum
 from importlib.resources import read_text
 
@@ -20,6 +20,41 @@ class RetentionStrategy(Enum):
     DELETE = "DELETE"
     REALLOCATE = "REALLOCATE"
     SNAPSHOT = "SNAPSHOT"
+
+
+@dataclasses.dataclass
+class RetentionPolicy:
+    """
+    Manage a retention policy entity.
+    """
+
+    strategy: str
+    table_schema: str
+    table_name: str
+    table_fullname: str
+    partition_column: str
+    partition_value: str
+    reallocation_attribute_name: str
+    reallocation_attribute_value: str
+    target_repository_name: str
+
+    @classmethod
+    def from_record(cls, record):
+        """
+        Factory for creating instance from database record.
+        """
+        return cls(**cls.record_mapper(record))
+
+    @classmethod
+    def record_mapper(cls, record):
+        """
+        Map database record to instance attributes.
+        """
+        fields = dataclasses.fields(cls)
+        out = OrderedDict()
+        for index, field in enumerate(fields):
+            out[field.name] = record[index]
+        return out
 
 
 @dataclasses.dataclass
@@ -60,23 +95,6 @@ class Settings:
         data = dataclasses.asdict(self)
         data["policy_table"] = self.policy_table
         return data
-
-
-class GenericAction:
-    @classmethod
-    def from_record(cls, record):
-        """
-        Factory for creating instance from database record.
-        """
-        return cls(**cls.record_mapper(record))
-
-    @abstractmethod
-    def to_sql(self):
-        pass
-
-    @abstractmethod
-    def record_mapper(record):
-        pass
 
 
 @dataclasses.dataclass
@@ -125,14 +143,23 @@ class GenericRetention:
         if self._action_class is None:
             raise ValueError("Loading retention policies needs an action class")
 
-        # Read SQL statement.
+        # Read baseline SQL clause, for selecting records from the retention policy
+        # database table, to be interpolated into the other templates.
+        policy_dql = read_text("cratedb_retention.strategy", "policy.sql")
+
+        # Read SQL statement, and interpolate runtime settings as template variables.
         sql = read_text("cratedb_retention.strategy", self._tasks_sql)
         tplvars = self.settings.to_dict()
-        sql = sql.format(**tplvars)
+        try:
+            sql = sql.format(policy_dql=policy_dql)
+        except KeyError:
+            pass
+        sql = sql.format_map(tplvars)
 
-        # Resolve retention policies.
+        # Load retention policies.
         policy_records = run_sql(self.settings.dburi, sql)
         logger.info(f"Loaded retention policies: {policy_records}")
         for record in policy_records:
+            # Unmarshal entity from database table record to Python object.
             policy = self._action_class.from_record(record)
             yield policy

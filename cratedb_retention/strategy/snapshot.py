@@ -13,23 +13,16 @@ See the file setup/schema.sql in this repository.
 import dataclasses
 import logging
 
-from cratedb_retention.model import GenericAction, GenericRetention
+from cratedb_retention.model import GenericRetention, RetentionPolicy
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class SnapshotAction(GenericAction):
+class SnapshotAction(RetentionPolicy):
     """
     Manage metadata representing a data retention operation on a single table.
     """
-
-    schema: str
-    table: str
-    table_fqn: str
-    column: str
-    value: str
-    target_repository_name: str
 
     def to_sql(self):
         """
@@ -37,28 +30,14 @@ class SnapshotAction(GenericAction):
         """
         # FIXME: S608 Possible SQL injection vector through string-based query construction
         sql = f"""
-            CREATE SNAPSHOT {self.target_repository_name}."{self.schema}.{self.table}-{self.value}"
-            TABLE {self.table_fqn} PARTITION ({self.column} = {self.value})
-            WITH ("wait_for_completion" = true);
+        CREATE SNAPSHOT "{self.target_repository_name}"."{self.table_schema}.{self.table_name}-{self.partition_value}"
+        TABLE {self.table_fullname} PARTITION ({self.partition_column} = {self.partition_value})
+        WITH ("wait_for_completion" = true);
         """  # noqa: S608
         sql2 = f"""
-        DELETE FROM {self.schema}.{self.table} WHERE {self.column} = {self.value};
+        DELETE FROM {self.table_fullname} WHERE {self.partition_column} = {self.partition_value};
         """  # noqa: S608
         return [sql, sql2]
-
-    @staticmethod
-    def record_mapper(record):
-        """
-        Map database record to instance attributes.
-        """
-        return {
-            "schema": record[0],
-            "table": record[1],
-            "table_fqn": record[2],
-            "column": record[3],
-            "value": record[4],
-            "target_repository_name": record[5],
-        }
 
 
 @dataclasses.dataclass

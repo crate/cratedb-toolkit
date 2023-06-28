@@ -23,7 +23,7 @@ def setup_schema(settings: Settings):
     sql = read_text("cratedb_retention.setup", "schema.sql")
 
     tplvars = settings.to_dict()
-    sql = sql.format(**tplvars)
+    sql = sql.format_map(tplvars)
 
     # Materialize table schema.
     run_sql(settings.dburi, sql)

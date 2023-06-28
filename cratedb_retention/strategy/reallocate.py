@@ -14,24 +14,16 @@ Prerequisites
 import dataclasses
 import logging
 
-from cratedb_retention.model import GenericAction, GenericRetention
+from cratedb_retention.model import GenericRetention, RetentionPolicy
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class ReallocateAction(GenericAction):
+class ReallocateAction(RetentionPolicy):
     """
     Manage metadata representing a data retention operation on a single table.
     """
-
-    schema: str
-    table: str
-    table_fqn: str
-    column: str
-    value: str
-    attribute_name: str
-    attribute_value: str
 
     def to_sql(self):
         """
@@ -39,25 +31,10 @@ class ReallocateAction(GenericAction):
         """
         # FIXME: S608 Possible SQL injection vector through string-based query construction
         sql = f"""
-            ALTER TABLE {self.table_fqn} PARTITION ({self.column} = {self.value})
-            SET ("routing.allocation.require.{self.attribute_name}" = '{self.attribute_value}');
+        ALTER TABLE {self.table_fullname} PARTITION ({self.partition_column} = {self.partition_value})
+        SET ("routing.allocation.require.{self.reallocation_attribute_name}" = '{self.reallocation_attribute_value}');
         """  # noqa: S608
         return sql
-
-    @staticmethod
-    def record_mapper(record):
-        """
-        Map database record to instance attributes.
-        """
-        return {
-            "schema": record[0],
-            "table": record[1],
-            "table_fqn": record[2],
-            "column": record[3],
-            "value": record[4],
-            "attribute_name": record[5],
-            "attribute_value": record[6],
-        }
 
 
 @dataclasses.dataclass
