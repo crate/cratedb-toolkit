@@ -4,7 +4,7 @@
 - Use a dedicated schema for retention policy tables, other than `doc`.
 - Document library and Docker usage
 - Connect to CrateDB Cloud
-- Use SQLAlchemy as query builder, to prevent SQL injection.
+- Use SQLAlchemy as query builder, to prevent SQL injection (S608).
 - Provide a solid (considering best-practices, DWIM) cascaded/multi-level
   downsampling implementation/toolkit, similar to RRDtool or Munin.
   - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
@@ -48,3 +48,5 @@
   records. The reason is probably, because the scenario can't easily be simulated
   on a single-node cluster.
 - Ship more package variants: rpm, deb, snap, buildpack?
+- Job progress
+- Tags for data model

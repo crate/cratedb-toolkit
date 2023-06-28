@@ -7,6 +7,13 @@
 A data roll-up, expiration, and retention management subsystem for CrateDB,
 implementing different strategies.
 
+The application manages the life-cycle of data stored in CrateDB, handling concerns
+of data expiry, size reduction, and archival. Retention policies can be flexibly
+configured, by adding records to the `retention_policies` database table, which is
+also stored within CrateDB.
+
+### Background
+
 > A [roll-up], as an OLAP data operation, involves summarizing the data along a
 > dimension. The summarization rule might be an aggregate function, such as
 > computing totals along a hierarchy or by applying a set of formulas.
@@ -15,11 +22,13 @@ With other databases, this technique, or variants thereof, is known as [rolling 
 historical data], [downsampling a time series data stream], [downsampling and data
 retention], or just [downsampling].
 
-It is useful to reduce the storage size of historical data, by decreasing its
-resolution.
+It is useful to reduce the storage size of historical data by decreasing its
+resolution, if you don't need it.
 
-When rolling up timeseries-data, [time bucketing] is often used for segmenting records
-into groups, before applying the resampling function.
+When rolling up timeseries-data, [time bucketing] is often used for grouping records
+into equal-sized time ranges, before applying a resampling function on them.
+
+
 
 ## Strategies
 
