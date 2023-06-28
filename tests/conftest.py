@@ -17,7 +17,7 @@ TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
 TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 
 RESET_TABLES = [
-    f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policies"',
+    f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policy"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
@@ -69,7 +69,7 @@ def cratedb():
 @pytest.fixture(scope="function")
 def provision_database(cratedb):
     """
-    Populate `retention_policies` table, and data tables.
+    Populate the retention policy table, and the data tables.
     """
     cratedb.reset()
 

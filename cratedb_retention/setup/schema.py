@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def setup_schema(settings: Settings):
     """
-    Set up `retention_policies` table schema.
+    Set up the retention policy table schema.
     """
 
     logger.info(

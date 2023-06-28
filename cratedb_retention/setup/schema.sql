@@ -1,4 +1,4 @@
--- Set up `retention_policies` table schema.
+-- Set up the retention policy database table schema.
 
 CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
    "table_schema" TEXT,

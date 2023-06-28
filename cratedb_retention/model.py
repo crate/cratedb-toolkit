@@ -51,9 +51,9 @@ class Settings:
     # Retention cutoff timestamp.
     cutoff_day: t.Optional[str] = None
 
-    # Where the `retention_policies` is stored.
+    # Where the retention policy table is stored.
     policy_table: TableAddress = dataclasses.field(
-        default_factory=lambda: TableAddress(schema="ext", table="retention_policies")
+        default_factory=lambda: TableAddress(schema="ext", table="retention_policy")
     )
 
     def to_dict(self):
