@@ -7,7 +7,7 @@ from abc import abstractmethod
 from enum import Enum
 from importlib.resources import read_text
 
-from cratedb_rollup.util.database import run_sql
+from cratedb_retention.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class GenericRetention:
             raise ValueError("Loading retention policies needs an action class")
 
         # Read SQL statement.
-        sql = read_text("cratedb_rollup.strategy", self._tasks_sql)
+        sql = read_text("cratedb_retention.strategy", self._tasks_sql)
         tplvars = self.settings.to_dict()
         sql = sql.format(**tplvars)
 

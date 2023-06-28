@@ -6,7 +6,7 @@ import typing as t
 
 import click
 
-from cratedb_rollup.util.common import setup_logging
+from cratedb_retention.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
 

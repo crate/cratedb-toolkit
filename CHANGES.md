@@ -1,4 +1,4 @@
-# Changes for cratedb-rollup
+# Changes for cratedb-retention
 
 ## Unreleased
 

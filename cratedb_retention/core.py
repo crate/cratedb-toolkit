@@ -3,10 +3,10 @@
 import logging
 import typing as t
 
-from cratedb_rollup.model import GenericRetention, RetentionStrategy, Settings
-from cratedb_rollup.strategy.delete import DeleteRetention
-from cratedb_rollup.strategy.reallocate import ReallocateRetention
-from cratedb_rollup.strategy.snapshot import SnapshotRetention
+from cratedb_retention.model import GenericRetention, RetentionStrategy, Settings
+from cratedb_retention.strategy.delete import DeleteRetention
+from cratedb_retention.strategy.reallocate import ReallocateRetention
+from cratedb_retention.strategy.snapshot import SnapshotRetention
 
 logger = logging.getLogger(__name__)
 

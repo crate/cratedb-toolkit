@@ -10,8 +10,8 @@ method = "git"
 default-tag = "0.0.0"
 
 [project]
-name = "cratedb-rollup"
-description = "Data roll-up and retention manager for CrateDB."
+name = "cratedb-retention"
+description = "Data retention and expiration manager for CrateDB."
 readme = "README.md"
 keywords = [
   "cratedb",
@@ -107,12 +107,12 @@ test = [
   "testcontainers",
 ]
 [project.urls]
-changelog = "https://github.com/crate-workbench/cratedb-rollup/blob/main/CHANGES.rst"
-documentation = "https://github.com/crate-workbench/cratedb-rollup"
-homepage = "https://github.com/crate-workbench/cratedb-rollup"
-repository = "https://github.com/crate-workbench/cratedb-rollup"
+changelog = "https://github.com/crate-workbench/cratedb-retention/blob/main/CHANGES.rst"
+documentation = "https://github.com/crate-workbench/cratedb-retention"
+homepage = "https://github.com/crate-workbench/cratedb-retention"
+repository = "https://github.com/crate-workbench/cratedb-retention"
 [project.scripts]
-cratedb-rollup = "cratedb_rollup.cli:cli"
+cratedb-retention = "cratedb_retention.cli:cli"
 
 [tool.black]
 line-length = 120
@@ -122,14 +122,14 @@ branch = false
 omit = [
   "tests/*",
 ]
-source = ["cratedb_rollup"]
+source = ["cratedb_retention"]
 
 [tool.coverage.report]
 fail_under = 0
 show_missing = true
 
 [tool.mypy]
-packages = ["cratedb_rollup"]
+packages = ["cratedb_retention"]
 exclude = [
 ]
 check_untyped_defs = true
@@ -146,7 +146,7 @@ log_level = "DEBUG"
 log_cli_level = "DEBUG"
 log_format = "%(asctime)-15s [%(name)-24s] %(levelname)-8s: %(message)s"
 testpaths = [
-  "cratedb_rollup",
+  "cratedb_retention",
   "tests",
 ]
 xfail_strict = true
@@ -204,7 +204,7 @@ extend-exclude = [
 [tool.ruff.per-file-ignores]
 "tests/*" = ["S101", "T201"]  # Allow use of `assert`, and `print`.
 "examples/*" = ["T201"]  # Allow `print`
-"cratedb_rollup/cli.py" = ["T201"]  # Allow `print`
+"cratedb_retention/cli.py" = ["T201"]  # Allow `print`
 
 [tool.setuptools.packages.find]
 namespaces = false
