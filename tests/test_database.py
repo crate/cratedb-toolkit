@@ -3,6 +3,8 @@
 
 import sqlalchemy as sa
 
+from tests.conftest import TESTDRIVE_DATA_SCHEMA
+
 
 def test_cratedb_summits(cratedb):
     """
@@ -39,6 +41,7 @@ def test_database_insert(cratedb):
             meta,
             sa.Column("username", sa.String),
             sa.Column("fullname", sa.String),
+            schema=TESTDRIVE_DATA_SCHEMA,
         )
         meta.create_all(sa_engine)
 
@@ -48,8 +51,9 @@ def test_database_insert(cratedb):
         conn.execute(insertable.values(username="bar", fullname="Full Bar"))
 
         # Synchronize data.
-        conn.exec_driver_sql("REFRESH TABLE testdrive;")
+        conn.exec_driver_sql(f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."testdrive";')
 
         # Verify data.
-        with conn.execute(sa.text("SELECT COUNT(*) FROM testdrive;")) as result:
+        sql = f'SELECT COUNT(*) FROM "{TESTDRIVE_DATA_SCHEMA}"."testdrive";'  # noqa: S608
+        with conn.execute(sa.text(sql)) as result:
             assert result.scalar_one() == 2

@@ -10,15 +10,17 @@ from cratedb_rollup.util.common import setup_logging
 from cratedb_rollup.util.database import run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
-# Use another schema for storing the retention policy table,
-# so that it does not accidentally touch a production system.
+# Use different schemas both for storing the retention policy table, and
+# the test data, so that they do not accidentally touch the default `doc`
+# schema of CrateDB.
 TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
+TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 
 RESET_TABLES = [
     f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policies"',
-    '"doc"."raw_metrics"',
-    '"doc"."sensor_readings"',
-    '"doc"."testdrive"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
 ]
 
 
@@ -78,8 +80,8 @@ def provision_database(cratedb):
     setup_schema(settings=settings)
 
     ddls = [
-        """
-        CREATE TABLE "doc"."raw_metrics" (
+        f"""
+        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics" (
            "variable" TEXT,
            "timestamp" TIMESTAMP WITH TIME ZONE,
            "ts_day" TIMESTAMP GENERATED ALWAYS AS date_trunc('day', "timestamp"),
@@ -91,8 +93,8 @@ def provision_database(cratedb):
         WITH ("routing.allocation.require.storage" = 'hot')
         ;
         """,
-        """
-        CREATE TABLE "doc"."sensor_readings" (
+        f"""
+        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings" (
            time TIMESTAMP WITH TIME ZONE NOT NULL,
            time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
            sensor_id TEXT NOT NULL,
@@ -107,26 +109,26 @@ def provision_database(cratedb):
         run_sql(database_url, sql)
 
     data = [
-        """
-        INSERT INTO "doc"."raw_metrics"
+        f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
             (variable, timestamp, value, quality)
         VALUES
             ('temperature', '2023-06-27T12:00:00', 42.42, 0);
         """,
-        """
-        INSERT INTO "doc"."raw_metrics"
+        f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
             (variable, timestamp, value, quality)
         VALUES
             ('water-flow', NOW() - '5 months'::INTERVAL, 12, 1);
         """,
-        """
-        INSERT INTO "doc"."sensor_readings"
+        f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
             (time, sensor_id, battery_level, battery_status, battery_temperature)
         VALUES
             (NOW() - '6 years'::INTERVAL, 'batt01', 98.99, 'FULL', 42.42);
         """,
-        """
-        INSERT INTO "doc"."sensor_readings"
+        f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
             (time, sensor_id, battery_level, battery_status, battery_temperature)
         VALUES
             (NOW() - '5 years'::INTERVAL, 'batt01', 83.82, 'ALMOST FULL', 18.42);
@@ -140,26 +142,26 @@ def provision_database(cratedb):
         -- Provision retention policy rule for the DELETE strategy.
         INSERT INTO {settings.policy_table.fullname} (
           table_schema, table_name, partition_column, retention_period, strategy)
-        VALUES ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 1, 'delete');
         """,  # noqa: S608
         f"""
         -- Provision retention policy rule for the REALLOCATE strategy.
         INSERT INTO {settings.policy_table.fullname}
-        VALUES ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
+        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
         """,  # noqa: S608
         f"""
         -- Provision retention policy rule for the SNAPSHOT strategy.
         INSERT INTO {settings.policy_table.fullname}
           (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
-        VALUES ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
+        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
         """,  # noqa: S608
     ]
     for sql in rules:
         run_sql(database_url, sql)
 
     # Synchronize data.
-    run_sql(database_url, 'REFRESH TABLE "doc"."raw_metrics";')
-    run_sql(database_url, 'REFRESH TABLE "doc"."sensor_readings";')
+    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";')
+    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings";')
     run_sql(database_url, f"REFRESH TABLE {settings.policy_table.fullname};")
 
 

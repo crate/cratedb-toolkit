@@ -6,7 +6,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from cratedb_rollup.cli import cli
 from cratedb_rollup.util.database import run_sql
-from tests.conftest import TESTDRIVE_EXT_SCHEMA
+from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -66,7 +66,7 @@ def test_run_delete(cratedb, provision_database):
     assert result.exit_code == 0
 
     # Verify that records have been deleted.
-    sql = 'SELECT COUNT(*) AS count FROM "doc"."raw_metrics";'
+    sql = f'SELECT COUNT(*) AS count FROM "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";'  # noqa: S608
     results = run_sql(dburi=database_url, sql=sql)
     assert results[0] == (0,)
 
@@ -88,7 +88,7 @@ def test_run_reallocate(cratedb, provision_database):
     assert result.exit_code == 0
 
     # Verify that records have been deleted.
-    sql = 'SELECT COUNT(*) AS count FROM "doc"."raw_metrics";'
+    sql = f'SELECT COUNT(*) AS count FROM "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";'  # noqa: S608
     results = run_sql(dburi=database_url, sql=sql)
 
     # FIXME: Currently, the test for this strategy apparently does not remove any records.
