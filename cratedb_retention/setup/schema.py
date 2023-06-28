@@ -3,8 +3,8 @@
 import logging
 from importlib.resources import read_text
 
-from cratedb_rollup.model import Settings
-from cratedb_rollup.util.database import run_sql
+from cratedb_retention.model import Settings
+from cratedb_retention.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def setup_schema(settings: Settings):
     )
 
     # Read SQL DDL statement.
-    sql = read_text("cratedb_rollup.setup", "schema.sql")
+    sql = read_text("cratedb_retention.setup", "schema.sql")
 
     tplvars = settings.to_dict()
     sql = sql.format(**tplvars)

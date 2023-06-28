@@ -4,10 +4,10 @@
 import pytest
 import sqlalchemy as sa
 
-from cratedb_rollup.model import Settings
-from cratedb_rollup.setup.schema import setup_schema
-from cratedb_rollup.util.common import setup_logging
-from cratedb_rollup.util.database import run_sql
+from cratedb_retention.model import Settings
+from cratedb_retention.setup.schema import setup_schema
+from cratedb_retention.util.common import setup_logging
+from cratedb_retention.util.database import run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
 # Use different schemas both for storing the retention policy table, and

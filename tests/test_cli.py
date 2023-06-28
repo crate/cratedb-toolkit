@@ -4,8 +4,8 @@ import pytest
 from click.testing import CliRunner
 from sqlalchemy.exc import ProgrammingError
 
-from cratedb_rollup.cli import cli
-from cratedb_rollup.util.database import run_sql
+from cratedb_retention.cli import cli
+from cratedb_retention.util.database import run_sql
 from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
 
 
@@ -22,7 +22,7 @@ def configure_database_schema(module_mocker):
 
 def test_version():
     """
-    CLI test: Invoke `cratedb-rollup --version`.
+    CLI test: Invoke `cratedb-retention --version`.
     """
     runner = CliRunner()
 
@@ -36,7 +36,7 @@ def test_version():
 
 def test_setup(cratedb):
     """
-    CLI test: Invoke `cratedb-rollup setup`.
+    CLI test: Invoke `cratedb-retention setup`.
     """
     database_url = cratedb.get_connection_url()
     runner = CliRunner()
@@ -51,7 +51,7 @@ def test_setup(cratedb):
 
 def test_run_delete(cratedb, provision_database):
     """
-    CLI test: Invoke `cratedb-rollup run --strategy=delete`.
+    CLI test: Invoke `cratedb-retention run --strategy=delete`.
     """
 
     database_url = cratedb.get_connection_url()
@@ -73,7 +73,7 @@ def test_run_delete(cratedb, provision_database):
 
 def test_run_reallocate(cratedb, provision_database):
     """
-    CLI test: Invoke `cratedb-rollup run --strategy=reallocate`.
+    CLI test: Invoke `cratedb-retention run --strategy=reallocate`.
     """
 
     database_url = cratedb.get_connection_url()
@@ -99,7 +99,7 @@ def test_run_reallocate(cratedb, provision_database):
 
 def test_run_snapshot(cratedb, provision_database):
     """
-    CLI test: Invoke `cratedb-rollup run --strategy=snapshot`.
+    CLI test: Invoke `cratedb-retention run --strategy=snapshot`.
     """
 
     database_url = cratedb.get_connection_url()

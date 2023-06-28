@@ -8,5 +8,5 @@ set -e
 
 flavor=$1
 
-echo "Invoking cratedb-rollup"
-cratedb-rollup --version
+echo "Invoking cratedb-retention"
+cratedb-retention --version

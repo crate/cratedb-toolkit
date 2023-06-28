@@ -13,7 +13,7 @@ See the file setup/schema.sql in this repository.
 import dataclasses
 import logging
 
-from cratedb_rollup.model import GenericAction, GenericRetention
+from cratedb_retention.model import GenericAction, GenericRetention
 
 logger = logging.getLogger(__name__)
 
