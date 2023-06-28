@@ -1,6 +1,6 @@
 -- Set up `retention_policies` table schema.
 
-CREATE TABLE IF NOT EXISTS doc.retention_policies (
+CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
    "table_schema" TEXT,
    "table_name" TEXT,
    "partition_column" TEXT NOT NULL,

@@ -56,12 +56,3 @@ class DeleteRetention(GenericRetention):
 
     _tasks_sql = "delete_tasks.sql"
     _action_class = DeleteAction
-
-
-def run_delete_job(dburi: str, cutoff_day: str):
-    """
-    Invoke data retention using the `delete` strategy.
-    """
-
-    ret = DeleteRetention(dburi=dburi, cutoff_day=cutoff_day)
-    ret.start()

@@ -68,12 +68,3 @@ class ReallocateRetention(GenericRetention):
 
     _tasks_sql = "reallocate_tasks.sql"
     _action_class = ReallocateAction
-
-
-def run_reallocate_job(dburi: str, cutoff_day: str):
-    """
-    Invoke data retention using the `reallocate` strategy.
-    """
-
-    ret = ReallocateRetention(dburi=dburi, cutoff_day=cutoff_day)
-    ret.start()

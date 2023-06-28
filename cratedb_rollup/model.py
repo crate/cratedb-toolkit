@@ -4,11 +4,62 @@ import dataclasses
 import logging
 import typing as t
 from abc import abstractmethod
+from enum import Enum
 from importlib.resources import read_text
 
 from cratedb_rollup.util.database import run_sql
 
 logger = logging.getLogger(__name__)
+
+
+class RetentionStrategy(Enum):
+    """
+    Enumerate list of retention strategies.
+    """
+
+    DELETE = "DELETE"
+    REALLOCATE = "REALLOCATE"
+    SNAPSHOT = "SNAPSHOT"
+
+
+@dataclasses.dataclass
+class TableAddress:
+    """
+    Manage a table address, which is made of "<schema>"."<table>".
+    """
+
+    schema: str
+    table: str
+
+    @property
+    def fullname(self):
+        return f'"{self.schema}"."{self.table}"'
+
+
+@dataclasses.dataclass
+class Settings:
+    """
+    Bundle all configuration and runtime settings.
+    """
+
+    # Database connection URI.
+    dburi: str
+
+    # Retention strategy.
+    strategy: t.Optional[RetentionStrategy] = None
+
+    # Retention cutoff timestamp.
+    cutoff_day: t.Optional[str] = None
+
+    # Where the `retention_policies` is stored.
+    policy_table: TableAddress = dataclasses.field(
+        default_factory=lambda: TableAddress(schema="ext", table="retention_policies")
+    )
+
+    def to_dict(self):
+        data = dataclasses.asdict(self)
+        data["policy_table"] = self.policy_table
+        return data
 
 
 class GenericAction:
@@ -34,11 +85,8 @@ class GenericRetention:
     Represent a complete generic data retention job.
     """
 
-    # Database connection URI.
-    dburi: str
-
-    # Retention cutoff timestamp.
-    cutoff_day: str
+    # Runtime context settings.
+    settings: Settings
 
     # File name of SQL statement to load retention policies.
     _tasks_sql: str = dataclasses.field(init=False)
@@ -50,18 +98,22 @@ class GenericRetention:
         """
         Evaluate retention policies, and invoke actions.
         """
+
         for policy in self.get_policies():
             logger.info(f"Executing data retention policy: {policy}")
             sql_bunch: t.Iterable = policy.to_sql()
             if not isinstance(sql_bunch, t.List):
                 sql_bunch = [sql_bunch]
 
+            # Run a sequence of SQL statements for this task.
+            # Stop the sequence once anyone fails.
             for sql in sql_bunch:
                 logger.info(f"Running data retention SQL statement: {sql}")
                 try:
-                    run_sql(dburi=self.dburi, sql=sql)
-                except:
+                    run_sql(dburi=self.settings.dburi, sql=sql)
+                except Exception:
                     logger.exception(f"Data retention SQL statement failed: {sql}")
+                    # TODO: Do not `raise`, but `break`. Other policies should be executed.
                     raise
 
     def get_policies(self):
@@ -75,10 +127,11 @@ class GenericRetention:
 
         # Read SQL statement.
         sql = read_text("cratedb_rollup.strategy", self._tasks_sql)
-        sql = sql.format(day=self.cutoff_day)
+        tplvars = self.settings.to_dict()
+        sql = sql.format(**tplvars)
 
         # Resolve retention policies.
-        policy_records = run_sql(self.dburi, sql)
+        policy_records = run_sql(self.settings.dburi, sql)
         logger.info(f"Loaded retention policies: {policy_records}")
         for record in policy_records:
             policy = self._action_class.from_record(record)

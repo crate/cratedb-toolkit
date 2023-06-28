@@ -1,15 +1,14 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-
 import logging
 import sys
+import typing as t
 
 import click
 
+from cratedb_rollup.core import Engine
+from cratedb_rollup.model import RetentionStrategy, Settings
 from cratedb_rollup.setup.schema import setup_schema
-from cratedb_rollup.strategy.delete import run_delete_job
-from cratedb_rollup.strategy.reallocate import run_reallocate_job
-from cratedb_rollup.strategy.snapshot import run_snapshot_job
 from cratedb_rollup.util.cli import boot_click, docstring_format_verbatim
 
 logger = logging.getLogger(__name__)
@@ -41,6 +40,15 @@ def help_run():
     """  # noqa: E501
 
 
+schema_option = click.option(
+    "--schema",
+    type=str,
+    required=False,
+    envvar="CRATEDB_EXT_SCHEMA",
+    help="Select schema where extension tables are created",
+)
+
+
 @click.group()
 @click.version_option(package_name="cratedb-rollup")
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
@@ -57,13 +65,21 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
     context_settings={"max_content_width": 120},
 )
 @click.argument("dburi")
+@schema_option
 @click.pass_context
-def setup(ctx: click.Context, dburi: str):
+def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
     if not dburi:
         logger.error("Unable to operate without database")
         sys.exit(1)
-    logger.info(f"Installing retention policy bookkeeping tables at: {dburi}")
-    setup_schema(dburi)
+
+    # Create `Settings` instance.
+    # It is the single source of truth about configuration and runtime settings.
+    settings = Settings(dburi=dburi)
+    if schema is not None:
+        settings.policy_table.schema = schema
+
+    # Install database schema.
+    setup_schema(settings=settings)
 
 
 @cli.command(
@@ -74,21 +90,24 @@ def setup(ctx: click.Context, dburi: str):
 @click.argument("dburi")
 @click.option("--cutoff-day", type=str, required=True, help="Select day parameter")
 @click.option("--strategy", type=str, required=True, help="Select retention strategy")
+@schema_option
 @click.pass_context
-def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str):
-    strategy_choices = ["delete", "reallocate", "snapshot"]
+def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: t.Optional[str]):
+    strategy = strategy.upper()
+    strategy_choices = ["DELETE", "REALLOCATE", "SNAPSHOT"]
     if not dburi:
         logger.error("Unable to operate without database")
         sys.exit(1)
     if strategy not in strategy_choices:
         logger.error(f"Unknown strategy. Select one of {strategy_choices}")
         sys.exit(1)
-    logger.info(f"Starting data retention with strategy '{strategy}' up to day '{cutoff_day}' on: {dburi}")
-    if strategy == "delete":
-        run_delete_job(dburi, cutoff_day)
-    elif strategy == "reallocate":
-        run_reallocate_job(dburi, cutoff_day)
-    elif strategy == "snapshot":
-        run_snapshot_job(dburi, cutoff_day)
-    else:
-        raise NotImplementedError(f"Retention strategy {strategy} not implemented yet")
+
+    # Create `Settings` instance.
+    # It is the single source of truth about configuration and runtime settings.
+    settings = Settings(dburi=dburi, strategy=RetentionStrategy(strategy), cutoff_day=cutoff_day)
+    if schema is not None:
+        settings.policy_table.schema = schema
+
+    # Invoke the engine.
+    engine = Engine(settings=settings)
+    engine.start()

@@ -7,10 +7,13 @@
 A data roll-up, expiration, and retention management subsystem for CrateDB,
 implementing different strategies.
 
-The application manages the life-cycle of data stored in CrateDB, handling concerns
-of data expiry, size reduction, and archival. Retention policies can be flexibly
-configured, by adding records to the `retention_policies` database table, which is
-also stored within CrateDB.
+The application manages the life-cycle of data stored in CrateDB, handling
+concerns of data expiry, size reduction, and archival. Within a system storing
+and processing large amounts of data, it is crucial to manage data flows between
+hot and cold storage types better than using ad hoc solutions.
+
+Data retention policies can be flexibly configured by adding records to the
+`retention_policies` database table, which is also stored within CrateDB.
 
 ### Background
 
@@ -28,6 +31,13 @@ resolution, if you don't need it.
 When rolling up timeseries-data, [time bucketing] is often used for grouping records
 into equal-sized time ranges, before applying a resampling function on them.
 
+### Details
+
+> The `retention_policies` database table is also stored within CrateDB.
+
+By default, the `ext` schema is used for that, so the effective full-qualified database
+table name is `"ext"."retention_policies"`. It is configurable by using the `--schema`
+command-line option, or the `CRATEDB_EXT_SCHEMA` environment variable.
 
 
 ## Strategies
@@ -143,7 +153,8 @@ pip install --editable=.[develop,test]
 ```
 
 Run tests. `TC_KEEPALIVE` keeps the auxiliary service containers running, which
-speeds up runtime on subsequent invocations.
+speeds up runtime on subsequent invocations. Note that the test suite uses the
+`testdrive-ext` schema for storing the retention policy table.
 ```shell
 export TC_KEEPALIVE=true
 poe check

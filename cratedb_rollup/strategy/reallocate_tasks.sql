@@ -17,9 +17,9 @@ SELECT QUOTE_IDENT(p.table_schema),
        reallocation_attribute_name,
        reallocation_attribute_value
 FROM information_schema.table_partitions p
-JOIN doc.retention_policies r ON p.table_schema = r.table_schema
+JOIN {policy_table.fullname} r ON p.table_schema = r.table_schema
   AND p.table_name = r.table_name
-  AND p.values[r.partition_column] < '{day}'::TIMESTAMP - (r.retention_period || ' days')::INTERVAL
+  AND p.values[r.partition_column] < '{cutoff_day}'::TIMESTAMP - (r.retention_period || ' days')::INTERVAL
 JOIN partition_allocations a ON a.table_schema = p.table_schema
   AND a.table_name = p.table_name
   AND p.partition_ident = a.partition_ident
