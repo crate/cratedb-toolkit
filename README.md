@@ -2,6 +2,15 @@
 
 [![Tests](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml)
 
+» [Documentation]
+| [Changelog]
+| [Community Forum]
+| [PyPI]
+| [Issues]
+| [Source code]
+| [License]
+| [CrateDB]
+
 ## About
 
 A data retention and expiration management subsystem for CrateDB, implementing
@@ -320,11 +329,19 @@ poe format
 ```
 
 
+[Changelog]: https://github.com/crate-workbench/cratedb-retention/blob/main/CHANGES.md
+[Community Forum]: https://community.crate.io/
+[CrateDB]: https://crate.io/products/cratedb
 [CrateDB Cloud]: https://console.cratedb.cloud/
+[Documentation]: https://cratedb-retention.readthedocs.io/
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
 [`examples/basic.py`]: examples/basic.py
+[Issues]: https://github.com/crate-workbench/cratedb-retention/issues
+[License]: https://github.com/crate-workbench/cratedb-retention/blob/main/LICENSE
+[PyPI]: https://pypi.org/project/cratedb-retention/
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
+[Source code]: https://github.com/crate-workbench/cratedb-retention
 [time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009
