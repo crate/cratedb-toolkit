@@ -83,6 +83,11 @@ VALUES
   ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 ```
 
+This retention policy implements the following directive.
+
+> **Delete** all data from the `"doc"."raw_metrics"` table, on partitions defined by
+> the column `ts_day`, which is older than **1** day at the given cut-off date.
+
 [implementation](cratedb_retention/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
 
 ### REALLOCATE
@@ -106,6 +111,12 @@ VALUES
   ('reallocate', 'doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold');
 ```
 
+This retention policy implements the following directive.
+
+> **Reallocate** data from the `"doc"."raw_metrics"` table, on partitions defined by
+> the column `ts_day`, which is older than **60** days at the given cut-off date, to
+> nodes tagged with the `storage=cold` attribute.
+
 [implementation](cratedb_retention/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
 
 ### SNAPSHOT
@@ -114,8 +125,11 @@ A retention policy algorithm that snapshots expired partitions to a repository,
 and prunes them from the database afterwards. It is suitable for long-term
 data archival purposes.
 
-In CrateDB jargon, a repository is a bucket on an S3-compatible object store,
-where data in form of snapshots can be exported to, and imported from.
+In CrateDB jargon, a repository is a storage unit, where data in form of snapshots
+can be exported to, and imported from. A repository can be located on a filesystem,
+or on a supported object storage backend. CrateDB is able to use buckets on S3-compatible
+storage backends, or on Azure blob storage, using the `CREATE REPOSITORY ... TYPE = 
+s3|azure|fs` SQL statement.
 
 ```sql
 -- A policy using the SNAPSHOT strategy.
@@ -124,6 +138,13 @@ INSERT INTO "ext"."retention_policy"
 VALUES
   ('snapshot', 'doc', 'sensor_readings', 'time_month', 365, 'export_cold');
 ```
+
+This retention policy implements the following directive.
+
+> Run a **snapshot** on the data within the `"doc"."sensor_readings"` table, on partitions
+> defined by the column `time_month`, which is older than **365** days at the given cut-off
+> date, to a previously created repository called `export_cold`. Delete the corresponding
+> data afterwards.
 
 [implementation](cratedb_retention/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
 
@@ -156,7 +177,7 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     "reallocation_attribute_name" TEXT,         -- Name of the node-specific custom attribute.
     "reallocation_attribute_value" TEXT,        -- Value of the node-specific custom attribute.
 
-    -- Targeting an S3 repository.
+    -- Targeting a repository.
     "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
 
     -- Strategy to apply for data retention.
@@ -175,8 +196,6 @@ INSERT INTO "ext"."retention_policy"
 VALUES
   ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 ```
-This retention policy will delete all data from `"doc"."raw_metrics"`
-that is older than one day.
 
 
 ## Install
@@ -374,6 +393,12 @@ speeds up runtime on subsequent invocations. Note that the test suite uses the
 ```shell
 export TC_KEEPALIVE=true
 poe check
+```
+
+In order to shut down and destroy the CrateDB container, which was started by
+the test suite, and was kept running by using `TC_KEEPALIVE`, use this command.
+```shell
+docker rm --force testcontainers-cratedb
 ```
 
 Format code.
