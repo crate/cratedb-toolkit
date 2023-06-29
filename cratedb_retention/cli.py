@@ -7,7 +7,7 @@ import typing as t
 import click
 
 from cratedb_retention.core import Engine
-from cratedb_retention.model import RetentionStrategy, Settings
+from cratedb_retention.model import DatabaseAddress, RetentionStrategy, Settings
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.util.cli import boot_click, docstring_format_verbatim
 
@@ -74,7 +74,7 @@ def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
 
     # Create `Settings` instance.
     # It is the single source of truth about configuration and runtime settings.
-    settings = Settings(dburi=dburi)
+    settings = Settings(database=DatabaseAddress.from_string(dburi))
     if schema is not None:
         settings.policy_table.schema = schema
 
@@ -104,7 +104,11 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: 
 
     # Create `Settings` instance.
     # It is the single source of truth about configuration and runtime settings.
-    settings = Settings(dburi=dburi, strategy=RetentionStrategy(strategy), cutoff_day=cutoff_day)
+    settings = Settings(
+        database=DatabaseAddress.from_string(dburi),
+        strategy=RetentionStrategy(strategy),
+        cutoff_day=cutoff_day,
+    )
     if schema is not None:
         settings.policy_table.schema = schema
 

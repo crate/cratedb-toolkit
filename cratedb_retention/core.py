@@ -23,12 +23,10 @@ class Engine:
         self.settings = settings
 
     def start(self):
-        logger.info(f"Effective settings: {self.settings}")
+        logger.info(f"Connecting to database: {self.settings.database.safe}")
 
         logger.info(
-            f"Starting data retention with strategy '{self.settings.strategy}' "
-            f"up to cutoff day '{self.settings.cutoff_day}' "
-            f"on database '{self.settings.dburi}'"
+            f"Starting data retention using '{self.settings.strategy}' " f"and cut-off day '{self.settings.cutoff_day}'"
         )
 
         strategy = self.settings.strategy

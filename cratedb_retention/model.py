@@ -4,8 +4,11 @@ import dataclasses
 import logging
 import typing as t
 from collections import OrderedDict
+from copy import deepcopy
 from enum import Enum
 from importlib.resources import read_text
+
+from boltons.urlutils import URL
 
 from cratedb_retention.util.database import run_sql
 
@@ -58,6 +61,40 @@ class RetentionPolicy:
 
 
 @dataclasses.dataclass
+class DatabaseAddress:
+    """
+    Manage a database address, which is either a SQLAlchemy-
+    compatible database URI, or a regular HTTP URL.
+    """
+
+    uri: URL
+
+    @classmethod
+    def from_string(cls, url):
+        """
+        Factory method to create an instance from a URI in string format.
+        """
+        return cls(uri=URL(url))
+
+    @property
+    def dburi(self):
+        """
+        Return a string representation of the database URI.
+        """
+        return str(self.uri)
+
+    @property
+    def safe(self):
+        """
+        Return a string representation of the database URI, safe for printing.
+        The password is stripped from the URL, and replaced by `REDACTED`.
+        """
+        uri = deepcopy(self.uri)
+        uri.password = "REDACTED"  # noqa: S105
+        return str(uri)
+
+
+@dataclasses.dataclass
 class TableAddress:
     """
     Manage a table address, which is made of "<schema>"."<table>".
@@ -78,7 +115,7 @@ class Settings:
     """
 
     # Database connection URI.
-    dburi: str
+    database: DatabaseAddress = dataclasses.field(default_factory=lambda: DatabaseAddress(uri="crate://localhost/"))
 
     # Retention strategy.
     strategy: t.Optional[RetentionStrategy] = None
@@ -128,7 +165,7 @@ class GenericRetention:
             for sql in sql_bunch:
                 logger.info(f"Running data retention SQL statement: {sql}")
                 try:
-                    run_sql(dburi=self.settings.dburi, sql=sql)
+                    run_sql(dburi=self.settings.database.dburi, sql=sql)
                 except Exception:
                     logger.exception(f"Data retention SQL statement failed: {sql}")
                     # TODO: Do not `raise`, but `break`. Other policies should be executed.
@@ -157,7 +194,7 @@ class GenericRetention:
         sql = sql.format_map(tplvars)
 
         # Load retention policies.
-        policy_records = run_sql(self.settings.dburi, sql)
+        policy_records = run_sql(self.settings.database.dburi, sql)
         logger.info(f"Loaded retention policies: {policy_records}")
         for record in policy_records:
             # Unmarshal entity from database table record to Python object.

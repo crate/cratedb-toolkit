@@ -80,9 +80,11 @@ dynamic = [
   "version",
 ]
 dependencies = [
+  "boltons<24",
   "click<9",
   "colorama<1",
   "colorlog",
+  "crash",
   "crate[sqlalchemy]",
   "sqlalchemy>=2",
 ]

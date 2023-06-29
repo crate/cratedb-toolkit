@@ -16,7 +16,7 @@ def setup_schema(settings: Settings):
 
     logger.info(
         f"Installing retention policy bookkeeping table at "
-        f"database '{settings.dburi}', table {settings.policy_table}"
+        f"database '{settings.database.safe}', table {settings.policy_table}"
     )
 
     # Read SQL DDL statement.
@@ -26,4 +26,4 @@ def setup_schema(settings: Settings):
     sql = sql.format_map(tplvars)
 
     # Materialize table schema.
-    run_sql(settings.dburi, sql)
+    run_sql(settings.database.dburi, sql)
