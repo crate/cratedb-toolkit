@@ -42,5 +42,5 @@ class DeleteRetention(GenericRetention):
     Represent a complete data retention job, using the `delete` strategy.
     """
 
-    _tasks_sql = "delete_tasks.sql"
+    _tasks_sql_file = None
     _action_class = DeleteAction

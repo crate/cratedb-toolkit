@@ -46,5 +46,5 @@ class SnapshotRetention(GenericRetention):
     Represent a complete data retention job, using the `snapshot` strategy.
     """
 
-    _tasks_sql = "snapshot_tasks.sql"
+    _tasks_sql_file = None
     _action_class = SnapshotAction

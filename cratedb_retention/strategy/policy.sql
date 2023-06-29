@@ -8,6 +8,7 @@
 -- The retention policy database table is called `"ext"."retention_policy"` by default.
 
 SELECT strategy,
+       r.tags,
        p.table_schema,
        p.table_name,
        QUOTE_IDENT(p.table_schema) || '.' || QUOTE_IDENT(p.table_name),

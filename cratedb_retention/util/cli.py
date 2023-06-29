@@ -1,6 +1,7 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
+import sys
 import textwrap
 import typing as t
 
@@ -57,3 +58,16 @@ def docstring_format_verbatim(text: t.Optional[str]) -> str:
     text = textwrap.dedent(text)
     lines = [line if line.strip() else "\b" for line in text.splitlines()]
     return "\n".join(lines)
+
+
+def boot_with_dburi():
+    """
+    Obtain a single positional argument from the command line,
+    the database URI, in SQLAlchemy-compatible string format.
+    """
+    setup_logging()
+    try:
+        dburi = sys.argv[1]
+    except IndexError:
+        dburi = "crate://localhost/"
+    return dburi

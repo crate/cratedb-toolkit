@@ -5,7 +5,6 @@ from click.testing import CliRunner
 from sqlalchemy.exc import ProgrammingError
 
 from cratedb_retention.cli import cli
-from cratedb_retention.util.database import run_sql
 from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
 
 
@@ -49,9 +48,9 @@ def test_setup(cratedb):
     assert result.exit_code == 0
 
 
-def test_run_delete(cratedb, provision_database):
+def test_run_delete_basic(cratedb, provision_database, database):
     """
-    CLI test: Invoke `cratedb-retention run --strategy=delete`.
+    Verify a basic DELETE retention policy through the CLI.
     """
 
     database_url = cratedb.get_connection_url()
@@ -66,12 +65,50 @@ def test_run_delete(cratedb, provision_database):
     assert result.exit_code == 0
 
     # Verify that records have been deleted.
-    sql = f'SELECT COUNT(*) AS count FROM "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";'  # noqa: S608
-    results = run_sql(dburi=database_url, sql=sql)
-    assert results[0] == (0,)
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 0
 
 
-def test_run_reallocate(cratedb, provision_database):
+def test_run_delete_with_tags_match(cratedb, provision_database, database):
+    """
+    Verify a basic DELETE retention policy through the CLI, with using correct (matching) tags.
+    """
+
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    result = runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-12-31 --strategy=delete --tags=foo,bar "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify that records have been deleted.
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 0
+
+
+def test_run_delete_with_tags_unknown(cratedb, provision_database, database):
+    """
+    Verify a basic DELETE retention policy through the CLI, with using wrong (not matching) tags.
+    """
+
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    result = runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-12-31 --strategy=delete --tags=foo,unknown "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify that records have not been deleted, because the tags did not match.
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 2
+
+
+def test_run_reallocate(cratedb, provision_database, database):
     """
     CLI test: Invoke `cratedb-retention run --strategy=reallocate`.
     """
@@ -88,13 +125,10 @@ def test_run_reallocate(cratedb, provision_database):
     assert result.exit_code == 0
 
     # Verify that records have been deleted.
-    sql = f'SELECT COUNT(*) AS count FROM "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";'  # noqa: S608
-    results = run_sql(dburi=database_url, sql=sql)
-
     # FIXME: Currently, the test for this strategy apparently does not remove any records.
     #        The reason is probably, because the scenario can't easily be simulated on
     #        a single-node cluster.
-    assert results[0] == (2,)
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 2
 
 
 def test_run_snapshot(cratedb, provision_database):

@@ -9,7 +9,7 @@ import click
 from cratedb_retention.core import RetentionJob
 from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
-from cratedb_retention.util.cli import boot_click, docstring_format_verbatim
+from cratedb_retention.util.cli import boot_click, docstring_format_verbatim, split_list
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +90,10 @@ def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
 @click.argument("dburi")
 @click.option("--cutoff-day", type=str, required=True, help="Select day parameter")
 @click.option("--strategy", type=str, required=True, help="Select retention strategy")
+@click.option("--tags", type=str, required=False, help="Select tags to filter retention policies")
 @schema_option
 @click.pass_context
-def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: t.Optional[str]):
+def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, tags: str, schema: t.Optional[str]):
     strategy = strategy.upper()
     strategy_choices = ["DELETE", "REALLOCATE", "SNAPSHOT"]
     if not dburi:
@@ -107,6 +108,7 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: 
     settings = JobSettings(
         database=DatabaseAddress.from_string(dburi),
         strategy=RetentionStrategy(strategy),
+        tags=split_list(tags),
         cutoff_day=cutoff_day,
     )
     if schema is not None:
