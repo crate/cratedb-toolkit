@@ -23,7 +23,8 @@ env:
   IMAGE_NAME: "${{ github.repository }}"
 
 jobs:
-  build_and_test:
+
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -59,8 +60,8 @@ jobs:
             docker-compose --file release/oci/test.yml run sut
           fi
 
-  oci:
-    needs: build_and_test
+  build-and-publish:
+    needs: build-and-test
     runs-on: ubuntu-latest
     if: ${{ ! (startsWith(github.actor, 'dependabot') || github.event.pull_request.head.repo.fork ) }}
 
