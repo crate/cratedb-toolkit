@@ -13,6 +13,7 @@ SELECT strategy,
        QUOTE_IDENT(p.table_schema) || '.' || QUOTE_IDENT(p.table_name),
        QUOTE_IDENT(r.partition_column),
        TRY_CAST(p.values[r.partition_column] AS BIGINT),
+       r.retention_period,
        reallocation_attribute_name,
        reallocation_attribute_value,
        target_repository_name
