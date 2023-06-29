@@ -60,9 +60,10 @@ resolution of data.
 
 > The retention policy database table is also stored within CrateDB.
 
-By default, the `ext` schema is used for that, so the effective full-qualified database
-table name is `"ext"."retention_policy"`. It is configurable by using the `--schema`
-command-line option, or the `CRATEDB_EXT_SCHEMA` environment variable.
+By default, the `ext` schema is used for that, so the effective full-qualified
+database table name is `"ext"."retention_policy"`. The schema is configurable
+by using the `--schema` command-line option, or the `CRATEDB_EXT_SCHEMA`
+environment variable.
 
 
 ## Strategies
@@ -77,9 +78,9 @@ A basic retention policy algorithm that drops records from expired partitions.
 ```sql
 -- A policy using the DELETE strategy.
 INSERT INTO "ext"."retention_policy"
-  (table_schema, table_name, partition_column, retention_period, strategy)
+  (strategy, table_schema, table_name, partition_column, retention_period)
 VALUES
-  ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+  ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 ```
 
 [implementation](cratedb_retention/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
@@ -100,8 +101,9 @@ large amounts of storage space.
 ```sql
 -- A policy using the REALLOCATE strategy.
 INSERT INTO "ext"."retention_policy"
+  (strategy, table_schema, table_name, partition_column, retention_period, reallocation_attribute_name, reallocation_attribute_value)
 VALUES
-  ('doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
+  ('reallocate', 'doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold');
 ```
 
 [implementation](cratedb_retention/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
@@ -118,12 +120,55 @@ where data in form of snapshots can be exported to, and imported from.
 ```sql
 -- A policy using the SNAPSHOT strategy.
 INSERT INTO "ext"."retention_policy"
-  (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
+  (strategy, table_schema, table_name, partition_column, retention_period, target_repository_name)
 VALUES
-  ('doc', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
+  ('snapshot', 'doc', 'sensor_readings', 'time_month', 365, 'export_cold');
 ```
 
 [implementation](cratedb_retention/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
+
+
+## Internals
+
+The database schema for the retention policy table is defined like this.
+Each record represents a rule how to expire and retain data per table.
+At runtime, each record will correspond to a dedicated retention job task.
+
+```sql
+-- Set up the retention policy database table schema.
+CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
+
+    -- Source: The database table operated upon.
+    "table_schema" TEXT,                        -- The source table schema.
+    "table_name" TEXT,                          -- The source table name.
+    "partition_column" TEXT NOT NULL,           -- The source table column name used for partitioning.
+
+    -- Retention parameters.
+    "retention_period" INTEGER NOT NULL,        -- Retention period in days.
+                                                -- TODO: Provide better description what this means.
+
+    -- Target: Where data is moved/relocated to.
+    "reallocation_attribute_name" TEXT,         -- TODO: Describe the meaning of this column value.
+    "reallocation_attribute_value" TEXT,        -- TODO: Describe the meaning of this column value.
+    "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
+
+    -- Strategy to apply for data retention.
+    "strategy" TEXT NOT NULL,
+
+    PRIMARY KEY ("table_schema", "table_name", "strategy")
+)
+CLUSTERED INTO 1 SHARDS;
+```
+
+You can add a retention policy by using an SQL statement like this.
+TODO: Describe what it does.
+```sql
+-- Add a retention policy using the DELETE strategy.
+INSERT INTO "ext"."retention_policy"
+  (strategy, table_schema, table_name, partition_column, retention_period)
+VALUES
+  ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
+```
 
 
 ## Install
