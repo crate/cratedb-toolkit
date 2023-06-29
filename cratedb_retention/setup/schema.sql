@@ -1,6 +1,9 @@
 -- Set up the retention policy database table schema.
 CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
 
+    -- Strategy to apply for data retention.
+    "strategy" TEXT NOT NULL,
+
     -- Source: The database table operated upon.
     "table_schema" TEXT,                        -- The source table schema.
     "table_name" TEXT,                          -- The source table name.
@@ -22,9 +25,6 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     -- Targeting a repository.
     "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
 
-    -- Strategy to apply for data retention.
-    "strategy" TEXT NOT NULL,
-
-    PRIMARY KEY ("table_schema", "table_name", "strategy")
+    PRIMARY KEY ("strategy", "table_schema", "table_name")
 )
 CLUSTERED INTO 1 SHARDS;

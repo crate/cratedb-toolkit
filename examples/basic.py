@@ -37,9 +37,9 @@ def setup_retention(dburi: str):
     sql = """
     -- A policy using the DELETE strategy.
     INSERT INTO "ext"."retention_policy"
-      (table_schema, table_name, partition_column, retention_period, strategy)
+      (strategy, table_schema, table_name, partition_column, retention_period)
     VALUES
-      ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+      ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
     """
     try:
         run_sql(dburi, sql)

@@ -256,9 +256,9 @@ Add a retention policy rule using SQL.
 # A policy using the DELETE strategy.
 crash --hosts "${CRATEDB_HOST}" <<SQL
     INSERT INTO "ext"."retention_policy"
-      (table_schema, table_name, partition_column, retention_period, strategy)
+      (strategy, table_schema, table_name, partition_column, retention_period)
     VALUES
-      ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+      ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 SQL
 ```
 
@@ -307,9 +307,9 @@ Add a retention policy rule using SQL.
 docker run --rm -i --network=host "${OCI_IMAGE}" \
 crash --hosts "${CRATEDB_HOST}" <<SQL
     INSERT INTO "ext"."retention_policy"
-      (table_schema, table_name, partition_column, retention_period, strategy)
+      (strategy, table_schema, table_name, partition_column, retention_period)
     VALUES
-      ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+      ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 SQL
 ```
 
@@ -346,9 +346,9 @@ setup_schema(settings=settings)
 sql = """
 -- A policy using the DELETE strategy.
 INSERT INTO "ext"."retention_policy"
-  (table_schema, table_name, partition_column, retention_period, strategy)
+  (strategy, table_schema, table_name, partition_column, retention_period)
 VALUES
-  ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+  ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 """
 run_sql(DBURI, sql)
 
