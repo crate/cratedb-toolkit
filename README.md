@@ -119,9 +119,18 @@ VALUES
 
 ## Install
 
+The CrateDB data retention and expiration toolkit program `cratedb-retention` can be
+installed by using the corresponding Python package, or it can alternatively be invoked
+on the command line using Podman or Docker.
+
 Install package.
 ```shell
 pip install --upgrade git+https://github.com/crate-workbench/cratedb-retention
+```
+
+Run with Docker.
+```shell
+docker run --rm "ghcr.io/crate-workbench/cratedb-retention" cratedb-retention --version
 ```
 
 
@@ -170,6 +179,56 @@ SQL
 
 Invoke the data retention job, using a specific cut-off date.
 ```shell
+cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
+```
+
+### Podman or Docker
+
+This section offers a complete walkthrough, how to run a demonstration setup on
+Podman or Docker, step by step.
+
+```shell
+export CRATEDB_URI='crate://localhost/'
+export CRATEDB_HOST='http://localhost:4200/'
+export OCI_IMAGE='ghcr.io/crate-workbench/cratedb-retention:nightly'
+```
+
+Display version number.
+```shell
+docker run --rm -i --network=host "${OCI_IMAGE}" \
+cratedb-retention --version
+```
+
+Start CrateDB.
+```shell
+docker run --rm -it \
+  --name=cratedb \
+  --publish=4200:4200 --publish=5432:5432 \
+  --env=CRATE_HEAP_SIZE=4g crate \
+  -Cdiscovery.type=single-node
+```
+
+Install retention policy bookkeeping tables.
+```shell
+docker run --rm -i --network=host "${OCI_IMAGE}" \
+cratedb-retention setup "${CRATEDB_URI}"
+```
+
+Add a retention policy rule using SQL.
+```shell
+# A policy using the DELETE strategy.
+docker run --rm -i --network=host "${OCI_IMAGE}" \
+crash --hosts "${CRATEDB_HOST}" <<SQL
+    INSERT INTO "ext"."retention_policy"
+      (table_schema, table_name, partition_column, retention_period, strategy)
+    VALUES
+      ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+SQL
+```
+
+Invoke the data retention job, using a specific cut-off date.
+```shell
+docker run --rm -i --network=host "${OCI_IMAGE}" \
 cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
