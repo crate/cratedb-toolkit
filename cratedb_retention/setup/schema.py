@@ -3,13 +3,13 @@
 import logging
 from importlib.resources import read_text
 
-from cratedb_retention.model import Settings
+from cratedb_retention.model import JobSettings
 from cratedb_retention.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 
 
-def setup_schema(settings: Settings):
+def setup_schema(settings: JobSettings):
     """
     Set up the retention policy table schema.
     """

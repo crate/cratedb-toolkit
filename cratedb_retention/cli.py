@@ -6,8 +6,8 @@ import typing as t
 
 import click
 
-from cratedb_retention.core import Engine
-from cratedb_retention.model import DatabaseAddress, RetentionStrategy, Settings
+from cratedb_retention.core import RetentionJob
+from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.util.cli import boot_click, docstring_format_verbatim
 
@@ -72,9 +72,9 @@ def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
         logger.error("Unable to operate without database")
         sys.exit(1)
 
-    # Create `Settings` instance.
+    # Create `JobSettings` instance.
     # It is the single source of truth about configuration and runtime settings.
-    settings = Settings(database=DatabaseAddress.from_string(dburi))
+    settings = JobSettings(database=DatabaseAddress.from_string(dburi))
     if schema is not None:
         settings.policy_table.schema = schema
 
@@ -102,9 +102,9 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: 
         logger.error(f"Unknown strategy. Select one of {strategy_choices}")
         sys.exit(1)
 
-    # Create `Settings` instance.
+    # Create `JobSettings` instance.
     # It is the single source of truth about configuration and runtime settings.
-    settings = Settings(
+    settings = JobSettings(
         database=DatabaseAddress.from_string(dburi),
         strategy=RetentionStrategy(strategy),
         cutoff_day=cutoff_day,
@@ -112,6 +112,6 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, schema: 
     if schema is not None:
         settings.policy_table.schema = schema
 
-    # Invoke the engine.
-    engine = Engine(settings=settings)
-    engine.start()
+    # Invoke the data retention job.
+    job = RetentionJob(settings=settings)
+    job.start()

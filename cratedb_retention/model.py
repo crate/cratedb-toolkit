@@ -109,13 +109,15 @@ class TableAddress:
 
 
 @dataclasses.dataclass
-class Settings:
+class JobSettings:
     """
     Bundle all configuration and runtime settings.
     """
 
     # Database connection URI.
-    database: DatabaseAddress = dataclasses.field(default_factory=lambda: DatabaseAddress(uri="crate://localhost/"))
+    database: DatabaseAddress = dataclasses.field(
+        default_factory=lambda: DatabaseAddress.from_string("crate://localhost/")
+    )
 
     # Retention strategy.
     strategy: t.Optional[RetentionStrategy] = None
@@ -141,7 +143,7 @@ class GenericRetention:
     """
 
     # Runtime context settings.
-    settings: Settings
+    settings: JobSettings
 
     # File name of SQL statement to load retention policies.
     _tasks_sql: str = dataclasses.field(init=False)

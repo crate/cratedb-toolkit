@@ -3,7 +3,7 @@
 import logging
 import typing as t
 
-from cratedb_retention.model import GenericRetention, RetentionStrategy, Settings
+from cratedb_retention.model import GenericRetention, JobSettings, RetentionStrategy
 from cratedb_retention.strategy.delete import DeleteRetention
 from cratedb_retention.strategy.reallocate import ReallocateRetention
 from cratedb_retention.strategy.snapshot import SnapshotRetention
@@ -11,15 +11,16 @@ from cratedb_retention.strategy.snapshot import SnapshotRetention
 logger = logging.getLogger(__name__)
 
 
-class Engine:
+class RetentionJob:
     """
-    Implementation of the retention and expiration management subsystem for CrateDB.
+    The retention job implementation evaluates its configuration and runtime settings,
+    and dispatches to corresponding retention strategy implementations.
 
-    This is the main application, effectively evaluating configuration settings,
-    and dispatching to corresponding retention strategy implementations.
+    This is effectively the main application, implementing a retention and expiration
+    management subsystem for CrateDB.
     """
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: JobSettings):
         self.settings = settings
 
     def start(self):

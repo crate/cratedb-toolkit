@@ -136,6 +136,10 @@ docker run --rm "ghcr.io/crate-workbench/cratedb-retention" cratedb-retention --
 
 ## Usage
 
+The toolkit can be used both as a standalone program, and as a library.
+
+### Command-line use
+
 This section outlines how to connect to, and run data retention jobs, both
 on a database cluster running on your premises, and on [CrateDB Cloud].
 
@@ -145,21 +149,21 @@ Note that, currently, the Python driver and the crash database
 shell need to obtain slightly different parameters. 
 ```
 
-### Workstation / on-premise
+#### Workstation / on-premise
 
 ```shell
 export CRATEDB_URI='crate://localhost/'
 export CRATEDB_HOST='http://localhost:4200/'
 ```
 
-### CrateDB Cloud
+#### CrateDB Cloud
 
 ```shell
 export CRATEDB_URI='crate://admin:<PASSWORD>@<CLUSTERNAME>.aks1.eastus2.azure.cratedb.net:4200?ssl=true'
 export CRATEDB_HOST='https://admin:<PASSWORD>@<CLUSTERNAME>.aks1.eastus2.azure.cratedb.net:4200/'
 ```
 
-### General
+#### General
 
 Install retention policy bookkeeping tables.
 ```shell
@@ -182,10 +186,12 @@ Invoke the data retention job, using a specific cut-off date.
 cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
-### Podman or Docker
+#### Podman or Docker
 
-This section offers a complete walkthrough, how to run a demonstration setup on
-Podman or Docker, step by step.
+This section offers a complete walkthrough, how work with the `cratedb-retention`
+program interactively using Podman or Docker, step by step. It starts a single-
+node CrateDB instance on your workstation for demonstration purposes. Please note
+that some retention policy strategies will not work on single-node installations.
 
 ```shell
 export CRATEDB_URI='crate://localhost/'
@@ -233,6 +239,51 @@ cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
 
+### Library use
+
+This section outlines how to use the toolkit as a library within your own
+applications. The code displayed below is a stripped-down version of the
+runnable example program [`examples/basic.py`], located within this repository.
+
+```python
+from cratedb_retention.core import RetentionJob
+from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionStrategy
+from cratedb_retention.setup.schema import setup_schema
+from cratedb_retention.util.database import run_sql
+
+
+# Define the database URI to connect to.
+DBURI = "http://localhost/"
+
+
+# A. Initialize the subsystem, and create a data retention policy.
+settings = JobSettings(
+    database=DatabaseAddress.from_string(DBURI),
+)
+setup_schema(settings=settings)
+
+sql = """
+-- A policy using the DELETE strategy.
+INSERT INTO "ext"."retention_policy"
+  (table_schema, table_name, partition_column, retention_period, strategy)
+VALUES
+  ('doc', 'raw_metrics', 'ts_day', 1, 'delete');
+"""
+run_sql(DBURI, sql)
+
+
+# B. Define job settings, and invoke the data retention job.
+settings = JobSettings(
+    database=DatabaseAddress.from_string(DBURI),
+    strategy=RetentionStrategy.DELETE,
+    cutoff_day="2023-06-27",
+)
+
+job = RetentionJob(settings=settings)
+job.start()
+```
+
+
 ## Development
 
 It is recommended to use a Python virtualenv for the subsequent operations.
@@ -273,6 +324,7 @@ poe format
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
+[`examples/basic.py`]: examples/basic.py
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
 [time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009
