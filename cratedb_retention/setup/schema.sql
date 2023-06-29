@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     "reallocation_attribute_name" TEXT,         -- Name of the node-specific custom attribute.
     "reallocation_attribute_value" TEXT,        -- Value of the node-specific custom attribute.
 
-    -- Targeting an S3 repository.
+    -- Targeting a repository.
     "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
 
     -- Strategy to apply for data retention.

@@ -2,8 +2,6 @@
 
 ## Iteration +1
 - Add "tags" to data model, for grouping, multi-tenancy, and more.
-- Move `strategy` column on first position of retention policy table,
-  and update all corresponding occurrences.
 - Recurrent queries via scheduling.
   Either use classic cron or systemd-timers, or use one of `APScheduler`,
   `schedule`, or `scheduler`.
@@ -82,3 +80,5 @@
 - Document the layout of the retention policy
   entity, and the meaning of its attributes.
 - CI: Rename OCI workflow build steps.
+- Move `strategy` column on first position of retention policy table,
+  and update all corresponding occurrences.
