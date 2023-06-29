@@ -37,6 +37,7 @@ class RetentionPolicy:
     table_fullname: str
     partition_column: str
     partition_value: str
+    retention_period: int
     reallocation_attribute_name: str
     reallocation_attribute_value: str
     target_repository_name: str
