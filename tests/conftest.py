@@ -7,7 +7,7 @@ import sqlalchemy as sa
 from cratedb_retention.model import DatabaseAddress, JobSettings
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.util.common import setup_logging
-from cratedb_retention.util.database import run_sql
+from cratedb_retention.util.database import DatabaseAdapter, run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
 
 # Use different schemas both for storing the retention policy table, and
@@ -64,6 +64,14 @@ def cratedb():
     fixture = CrateDBFixture()
     yield fixture
     fixture.finalize()
+
+
+@pytest.fixture()
+def database(cratedb):
+    """
+    Provide a client database adapter, which is connected to the test database instance.
+    """
+    yield DatabaseAdapter(dburi=cratedb.get_connection_url())
 
 
 @pytest.fixture(scope="function")
@@ -144,6 +152,13 @@ def provision_database(cratedb):
           (strategy, table_schema, table_name, partition_column, retention_period)
         VALUES
           ('delete', '{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 1);
+        """,  # noqa: S608
+        f"""
+        -- Provision retention policy rule for the DELETE strategy, using tags.
+        INSERT INTO {settings.policy_table.fullname}
+          (strategy, tags, table_schema, table_name, partition_column, retention_period)
+        VALUES
+          ('delete', {{foo='true', bar='true'}}, '{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 1);
         """,  # noqa: S608
         f"""
         -- Provision retention policy rule for the REALLOCATE strategy.

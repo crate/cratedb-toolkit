@@ -148,8 +148,9 @@ This retention policy implements the following directive.
 
 [implementation](cratedb_retention/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
 
+## Data model
 
-## Internals
+### SQL DDL schema
 
 The database schema for the retention policy table is defined like this.
 Each record represents a rule how to expire and retain data per table.
@@ -157,7 +158,13 @@ At runtime, each record will correspond to a dedicated retention job task.
 
 ```sql
 -- Set up the retention policy database table schema.
-CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
+CREATE TABLE IF NOT EXISTS "ext"."retention_policy" (
+
+    -- Strategy to apply for data retention.
+    "strategy" TEXT NOT NULL,
+
+    -- Tags: For grouping, multi-tenancy, and more.
+    "tags" OBJECT(DYNAMIC),
 
     -- Source: The database table operated upon.
     "table_schema" TEXT,                        -- The source table schema.
@@ -180,14 +187,12 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     -- Targeting a repository.
     "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
 
-    -- Strategy to apply for data retention.
-    "strategy" TEXT NOT NULL,
-
     PRIMARY KEY ("table_schema", "table_name", "strategy")
 )
 CLUSTERED INTO 1 SHARDS;
 ```
 
+### Record examples
 You can add a retention policy by using an SQL statement like this.
 ```sql
 -- Add a retention policy using the DELETE strategy.
@@ -195,6 +200,40 @@ INSERT INTO "ext"."retention_policy"
   (strategy, table_schema, table_name, partition_column, retention_period)
 VALUES
   ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
+```
+
+### Tags
+
+By using tags, you can conveniently define groups of retention policies. This
+policy is being tagged with both `foo`, and `bar`.
+```sql
+INSERT INTO "ext"."retention_policy"
+  (strategy, tags, table_schema, table_name, partition_column, retention_period)
+VALUES
+  ('delete', {foo='true', bar='true'}, 'doc', 'raw_metrics', 'ts_day', 1);
+```
+
+In order to select retention policies tagged with `foo`, use such an SQL statement.
+```sql
+SET error_on_unknown_object_key=false;
+SELECT * FROM "ext"."retention_policy" WHERE tags['foo'] IS NOT NULL;
+```
+
+Delete all retention policy records tagged with `foo`.
+```sql
+DELETE FROM "ext"."retention_policy" WHERE tags['foo'] IS NOT NULL;
+```
+
+In order to use tags when running retention jobs, the program accepts an optional
+command-line option like `--tags=foo,bar`.
+
+It will limit the retention policies to all records which contain both tags, i.e.
+they are combined using `AND`. Currently, there is no interface to obtain multiple
+tag values, and combine them using `OR`. Running retention jobs for multiple tags
+needs multiple invocations.
+
+```shell
+cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete --tags=foo,bar "${CRATEDB_URI}"
 ```
 
 

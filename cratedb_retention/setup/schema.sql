@@ -4,6 +4,9 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     -- Strategy to apply for data retention.
     "strategy" TEXT NOT NULL,
 
+    -- Tags: For grouping, multi-tenancy, and more.
+    "tags" OBJECT(DYNAMIC),
+
     -- Source: The database table operated upon.
     "table_schema" TEXT,                        -- The source table schema.
     "table_name" TEXT,                          -- The source table name.
