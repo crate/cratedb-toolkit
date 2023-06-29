@@ -1,28 +1,12 @@
 # Backlog
 
 ## Iteration +1
-- Use a dedicated schema for retention policy tables, other than `doc`.
-- Document library and Docker usage
-- Connect to CrateDB Cloud
-- Use SQLAlchemy as query builder, to prevent SQL injection (S608).
-- Provide a solid (considering best-practices, DWIM) cascaded/multi-level
-  downsampling implementation/toolkit, similar to RRDtool or Munin.
-  - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
-  - https://community.openhab.org/t/influxdb-in-rrd-style/88395
-  - https://github.com/influxdata/influxdb/issues/23108
-  - https://forums.percona.com/t/data-retention-archive-some-metrics-like-rrdtool-with-1d-resolution/21437
-
-## Iteration +2
-- Improve configurability by offering to configure schema names and such.
-  What about details within SQL queries like `ORDER BY 5 ASC`?
-- Outline how to run multi-tenant operations.
-- Add an audit log, which records events when retention policy rules are
-  changed, and executed.
-- Document usage with Kubernetes, and Nomad/Waypoint.
-
-## Iteration +3
+- Add "tags" to data model, for grouping, multi-tenancy, and more.
+- Move `strategy` column on first position of retention policy table,
+  and update all corresponding occurrences.
 - Recurrent queries via scheduling.
-  Yes, or no? If yes, use one of `APScheduler`, `schedule`, or `scheduler`.
+  Either use classic cron or systemd-timers, or use one of `APScheduler`,
+  `schedule`, or `scheduler`.
 
   ```python
   import datetime as dt
@@ -40,7 +24,43 @@
   - https://github.com/dbader/schedule
   - https://gitlab.com/DigonIO/scheduler
 
-- What about an Ubuntu Snap, a Helm chart, or a Nomad Pack?
+## Iteration +2
+- Document "Docker Compose" setup variant
+- Generalize from `cutoff_day` to `cutoff_date`?
+- Refactor SQL queries once more, introducing comment-stripping, and renaming the files.
+- Make all tests work completely.
+- Battle testing.
+- More subcommands, like `list-policies` (`list`) and `check-policies` (`check`).
+- Improve how to create a policy, see README and `examples/basic.py`
+- Remedy the need to do a `run_sql` step by introducing a subcommand `add-policy`.
+- Provide a solid (considering best-practices, DWIM) cascaded/multi-level
+  downsampling implementation/toolkit, similar to RRDtool or Munin.
+
+  This probably needs the current strategies to be tagged as `partition`-based
+  strategies, because the downsampling strategies do not necessarily need to
+  work on/with partitions, right? So, the template variable `policy_dql` becomes
+  `partition_policy_dql` (vs. `generic_policy_dql`), and so forth.
+
+  - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
+  - https://community.openhab.org/t/influxdb-in-rrd-style/88395
+  - https://github.com/influxdata/influxdb/issues/23108
+  - https://forums.percona.com/t/data-retention-archive-some-metrics-like-rrdtool-with-1d-resolution/21437
+- OCI: Also build for ARM, maybe only on PRs to `main`, and releases?
+
+## Iteration +3
+- Review SQL queries: What about details like `ORDER BY 5 ASC`?
+- Use SQLAlchemy as query builder, to prevent SQL injection (S608),
+  see `render_delete.py` spike.
+- Improve configurability by offering to configure schema names and such.
+- Document how to run multi-tenant operations using "tags".
+- Add an audit log (`"ext"."jobs_log"`), which records events when retention policy
+  rules are changed, or executed.
+- Document usage with Kubernetes, and Nomad/Waypoint.
+- Job progress
+
+## Iteration +4
+- More packaging: Use `fpm`
+- More packaging: What about an Ubuntu Snap, a Helm chart, or a Nomad Pack?
 - Clarify how to interpret the `--cutoff-day` option.
 - Add policy rule editor UI.
 - Is "day"-granularity fine with all use-cases? Should it better be generalized?
@@ -48,5 +68,17 @@
   records. The reason is probably, because the scenario can't easily be simulated
   on a single-node cluster.
 - Ship more package variants: rpm, deb, snap, buildpack?
-- Job progress
-- Tags for data model
+- Verify Docker setup on Windows
+
+## Done
+- Use a dedicated schema for retention policy tables, other than `doc`.
+- Refactoring: Manifest the "retention policy" as code entity,
+  using dataclasses, or SQLAlchemy.
+- Document how to connect to CrateDB Cloud
+- Add `DatabaseAddress` entity, with `.safe` property to omit eventual passwords
+- Document library and Docker use
+- README: Add a good header, with links to relevant resources
+- Naming things: Use "toolkit" instead of "manager".
+- Document the layout of the retention policy
+  entity, and the meaning of its attributes.
+- CI: Rename OCI workflow build steps.
