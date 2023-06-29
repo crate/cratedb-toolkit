@@ -11,7 +11,7 @@ default-tag = "0.0.0"
 
 [project]
 name = "cratedb-retention"
-description = "Data retention and expiration manager for CrateDB."
+description = "Data retention and expiration toolkit for CrateDB."
 readme = "README.md"
 keywords = [
   "cratedb",

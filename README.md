@@ -1,4 +1,4 @@
-# Data retention and expiration manager for CrateDB
+# Data retention and expiration toolkit for CrateDB
 
 [![Tests](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml)
 
