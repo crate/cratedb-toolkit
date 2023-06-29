@@ -124,18 +124,43 @@ Install package.
 pip install --upgrade git+https://github.com/crate-workbench/cratedb-retention
 ```
 
-Install retention policy bookkeeping tables.
-```shell
-cratedb-retention setup "crate://localhost/"
-```
-
 
 ## Usage
 
-Define a few retention policy rules using SQL.
+This section outlines how to connect to, and run data retention jobs, both
+on a database cluster running on your premises, and on [CrateDB Cloud].
+
+The steps are the same, only the connection parameters are different.
+```{todo}
+Note that, currently, the Python driver and the crash database
+shell need to obtain slightly different parameters. 
+```
+
+### Workstation / on-premise
+
+```shell
+export CRATEDB_URI='crate://localhost/'
+export CRATEDB_HOST='http://localhost:4200/'
+```
+
+### CrateDB Cloud
+
+```shell
+export CRATEDB_URI='crate://admin:<PASSWORD>@<CLUSTERNAME>.aks1.eastus2.azure.cratedb.net:4200?ssl=true'
+export CRATEDB_HOST='https://admin:<PASSWORD>@<CLUSTERNAME>.aks1.eastus2.azure.cratedb.net:4200/'
+```
+
+### General
+
+Install retention policy bookkeeping tables.
+```shell
+cratedb-retention setup "${CRATEDB_URI}"
+```
+
+Add a retention policy rule using SQL.
 ```shell
 # A policy using the DELETE strategy.
-docker run --rm -i --network=host crate crash <<SQL
+crash --hosts "${CRATEDB_HOST}" <<SQL
     INSERT INTO "ext"."retention_policy"
       (table_schema, table_name, partition_column, retention_period, strategy)
     VALUES
@@ -145,7 +170,7 @@ SQL
 
 Invoke the data retention job, using a specific cut-off date.
 ```shell
-cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "crate://localhost"
+cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
 
@@ -185,6 +210,7 @@ poe format
 ```
 
 
+[CrateDB Cloud]: https://console.cratedb.cloud/
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/

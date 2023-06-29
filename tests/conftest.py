@@ -4,7 +4,7 @@
 import pytest
 import sqlalchemy as sa
 
-from cratedb_retention.model import Settings
+from cratedb_retention.model import DatabaseAddress, Settings
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.util.common import setup_logging
 from cratedb_retention.util.database import run_sql
@@ -75,7 +75,7 @@ def provision_database(cratedb):
 
     database_url = cratedb.get_connection_url()
 
-    settings = Settings(dburi=database_url)
+    settings = Settings(database=DatabaseAddress.from_string(database_url))
     settings.policy_table.schema = TESTDRIVE_EXT_SCHEMA
     setup_schema(settings=settings)
 
