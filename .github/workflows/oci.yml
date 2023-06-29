@@ -8,7 +8,7 @@ on:
       - '*.*.*'
 
   schedule:
-    - cron: '45 06 * * *'  # every day at 06:45 am
+    - cron: '45 00 * * *'  # every day at 00:45 am
 
   # Allow job to be triggered manually.
   workflow_dispatch:
