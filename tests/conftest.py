@@ -140,20 +140,24 @@ def provision_database(cratedb):
     rules = [
         f"""
         -- Provision retention policy rule for the DELETE strategy.
-        INSERT INTO {settings.policy_table.fullname} (
-          table_schema, table_name, partition_column, retention_period, strategy)
-        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 1, 'delete');
+        INSERT INTO {settings.policy_table.fullname}
+          (strategy, table_schema, table_name, partition_column, retention_period)
+        VALUES
+          ('delete', '{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 1);
         """,  # noqa: S608
         f"""
         -- Provision retention policy rule for the REALLOCATE strategy.
         INSERT INTO {settings.policy_table.fullname}
-        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 60, 'storage', 'cold', NULL, 'reallocate');
-        """,  # noqa: S608
+          (strategy, table_schema, table_name, partition_column, retention_period, reallocation_attribute_name, reallocation_attribute_value)
+        VALUES
+          ('reallocate', '{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 60, 'storage', 'cold');
+        """,  # noqa: S608, E501
         f"""
         -- Provision retention policy rule for the SNAPSHOT strategy.
         INSERT INTO {settings.policy_table.fullname}
-          (table_schema, table_name, partition_column, retention_period, target_repository_name, strategy)
-        VALUES ('{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 365, 'export_cold', 'snapshot');
+          (strategy, table_schema, table_name, partition_column, retention_period, target_repository_name)
+        VALUES
+          ('snapshot', '{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 365, 'export_cold');
         """,  # noqa: S608
     ]
     for sql in rules:
