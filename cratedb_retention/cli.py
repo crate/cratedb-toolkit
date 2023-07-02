@@ -114,7 +114,6 @@ tags_option = click.option(
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool):
-    verbose = True
     return boot_click(ctx, verbose, debug)
 
 

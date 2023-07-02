@@ -300,6 +300,12 @@ Note that, currently, the Python driver and the crash database
 shell need to obtain slightly different parameters. 
 ```
 
+By using the `--verbose` option, directly after the main command, you can
+inspect the SQL statements issued to the database.
+```shell
+cratedb-retention --verbose setup "${CRATEDB_URI}"
+```
+
 #### Workstation / on-premise
 
 ```shell
