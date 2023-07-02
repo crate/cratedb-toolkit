@@ -42,6 +42,26 @@ def test_create_retrieve_delete(store):
     assert store.retrieve() == []
 
 
+def test_list_tags(store):
+    """
+    Verify `list-tags` subcommand.
+    """
+
+    # Add a retention policy.
+    policy = RetentionPolicy(
+        strategy=RetentionStrategy.DELETE,
+        tags={"foo", "bar"},
+        table_schema="doc",
+        table_name="raw_metrics",
+        partition_column="ts_day",
+        retention_period=1,
+    )
+    store.create(policy, ignore="DuplicateKeyException")
+
+    tags = store.retrieve_tags()
+    assert tags == ["bar", "foo"]
+
+
 def test_delete_by_tag(store):
     """
     Verify deleting a retention policy by single tag.
