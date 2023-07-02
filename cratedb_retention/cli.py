@@ -48,6 +48,18 @@ def help_list_policies():
     """  # noqa: E501
 
 
+def help_list_tags():
+    """
+    List all tags.
+
+    Examples
+    ========
+
+    cratedb-retention list-tags "crate://localhost/"
+
+    """  # noqa: E501
+
+
 def help_create_policy():
     """
     Create a data retention policy.
@@ -157,6 +169,29 @@ def list_policies(ctx: click.Context, dburi: str, schema: str):
     # Set up adapter to retention policy store.
     store = RetentionPolicyStore(settings=settings)
     jd(store.retrieve())
+
+
+@make_command(cli, "list-tags", help_list_tags)
+@click.argument("dburi")
+@schema_option
+@click.pass_context
+def list_tags(ctx: click.Context, dburi: str, schema: str):
+    # Sanity checks.
+    if not dburi:
+        logger.error("Unable to operate without database")
+        sys.exit(1)
+
+    # Create `JobSettings` instance, and configure schema name.
+    # It is the single source of truth about configuration and runtime settings.
+    settings = JobSettings(
+        database=DatabaseAddress.from_string(dburi),
+    )
+    if schema is not None:
+        settings.policy_table.schema = schema
+
+    # Set up adapter to retention policy store.
+    store = RetentionPolicyStore(settings=settings)
+    jd(store.retrieve_tags())
 
 
 @make_command(cli, "create-policy", help_create_policy, aliases=["create", "add"])

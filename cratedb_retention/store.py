@@ -143,6 +143,25 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         records = list(map(self.row_to_record, records))
         return records
 
+    def retrieve_tags(self):
+        """
+        Retrieve all tags from database table.
+
+        TODO: Add filtering capabilities.
+        """
+        # Synchronize data.
+        sql = f"REFRESH TABLE {self.settings.policy_table.fullname};"
+        self.database.run_sql(sql)
+
+        # Run SELECT statement, and return result.
+        selectable = sa.select(self.table.c.tags)
+        records = self.query(selectable)
+        tags = []
+        for record in records:
+            tags += self.row_to_record(record)["tags"]
+        tags = sorted(set(tags))
+        return tags
+
     @staticmethod
     def row_to_record(item):
         """
