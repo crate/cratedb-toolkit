@@ -1,9 +1,6 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-import typing as t
-
 import sqlalchemy as sa
-from sqlalchemy.exc import ProgrammingError
 
 
 def run_sql(dburi: str, sql: str, records: bool = False):
@@ -50,51 +47,3 @@ class DatabaseAdapter:
         sql = f"SELECT COUNT(*) AS count FROM {tablename_full};"  # noqa: S608
         results = self.run_sql(sql=sql)
         return results[0][0]
-
-
-class DatabaseTagHelper:
-    """
-    Support tags stored within an `OBJECT(DYNAMIC)` column in CrateDB.
-    """
-
-    def __init__(self, database: DatabaseAdapter, tablename: str):
-        self.database = database
-        self.tablename = tablename
-
-    @staticmethod
-    def get_tags_sql(tags: t.Optional[t.List[str]], field_prefix: str = ""):
-        """
-        Return list of SQL WHERE constraint clauses from given tags.
-        """
-        items = []
-        if tags:
-            for tag in tags:
-                item = f"{field_prefix}tags['{tag}'] IS NOT NULL"
-                items.append(item)
-        return items
-
-    def tags_exist(self, tags: t.List[str]):
-        """
-        Check if given tags exist in the database.
-
-        When not, no query can yield results, so we do not need to bother about
-        failing JOIN operations because if non-existing tags.
-        """
-        where_clause = sql_and(self.get_tags_sql(tags=tags))
-        # Compute SQL WHERE clause for filtering by tags.
-        sql = f"SELECT * FROM {self.tablename} WHERE {where_clause};"  # noqa: S608
-        try:
-            self.database.run_sql(sql)
-        except ProgrammingError as ex:
-            if "ColumnUnknownException" in str(ex):
-                return False
-            else:
-                raise
-        return True
-
-
-def sql_and(items):
-    """
-    Join items with SQL's `AND`.
-    """
-    return str(sa.and_(*map(sa.text, items)))
