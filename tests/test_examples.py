@@ -2,11 +2,11 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 
 
-def test_example_basic(store):
+def test_example_full(store):
     """
     Verify that the program `examples/basic.py` works.
     """
-    from examples.basic import main
+    from examples.full import main
 
     main(dburi=store.database.dburi)
 
