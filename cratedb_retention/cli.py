@@ -121,16 +121,16 @@ tags_option = click.option(
 
 
 @click.group(cls=ClickAliasedGroup)
-@click.version_option(package_name="cratedb-retention")
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
+@click.version_option(package_name="cratedb-retention")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool):
     return boot_click(ctx, verbose, debug)
 
 
 @make_command(cli, "setup", help_setup)
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @click.pass_context
 def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
@@ -149,7 +149,7 @@ def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
 
 
 @make_command(cli, "list-policies", help_list_policies, aliases=["list"])
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @click.pass_context
 def list_policies(ctx: click.Context, dburi: str, schema: str):
@@ -172,7 +172,7 @@ def list_policies(ctx: click.Context, dburi: str, schema: str):
 
 
 @make_command(cli, "list-tags", help_list_tags)
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @click.pass_context
 def list_tags(ctx: click.Context, dburi: str, schema: str):
@@ -195,7 +195,7 @@ def list_tags(ctx: click.Context, dburi: str, schema: str):
 
 
 @make_command(cli, "create-policy", help_create_policy, aliases=["create", "add"])
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @click_options_from_dataclass(RetentionPolicy)
 @click.pass_context
@@ -227,7 +227,7 @@ def create_policy(ctx: click.Context, dburi: str, schema: str, **kwargs):
 
 
 @make_command(cli, "delete-policy", help_delete_policy, aliases=["del", "rm"])
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @identifier_option
 @tags_option
@@ -264,7 +264,7 @@ def delete_policy(ctx: click.Context, dburi: str, schema: str, identifier: str, 
 
 
 @make_command(cli, "run", help_run)
-@click.argument("dburi")
+@click.argument("dburi", envvar="CRATEDB_URI")
 @schema_option
 @click.option("--cutoff-day", type=str, required=True, help="Select day parameter")
 @strategy_option
