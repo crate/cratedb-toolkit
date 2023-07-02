@@ -7,7 +7,7 @@
 
 -- The retention policy database table is called `"ext"."retention_policy"` by default.
 
-SELECT strategy,
+SELECT r.strategy,
        r.tags,
        p.table_schema,
        p.table_name,
@@ -15,9 +15,9 @@ SELECT strategy,
        QUOTE_IDENT(r.partition_column),
        TRY_CAST(p.values[r.partition_column] AS BIGINT),
        r.retention_period,
-       reallocation_attribute_name,
-       reallocation_attribute_value,
-       target_repository_name
+       r.reallocation_attribute_name,
+       r.reallocation_attribute_value,
+       r.target_repository_name
 FROM "information_schema"."table_partitions" p
 JOIN {policy_table.fullname} r ON
   p.table_schema = r.table_schema AND

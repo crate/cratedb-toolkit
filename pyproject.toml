@@ -82,6 +82,7 @@ dynamic = [
 dependencies = [
   "boltons<24",
   "click<9",
+  "click-aliases<2",
   "colorama<1",
   "colorlog",
   "crash",

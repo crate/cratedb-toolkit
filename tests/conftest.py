@@ -4,8 +4,9 @@
 import pytest
 import sqlalchemy as sa
 
-from cratedb_retention.model import DatabaseAddress, JobSettings
+from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
+from cratedb_retention.store import RetentionPolicyStore
 from cratedb_retention.util.common import setup_logging
 from cratedb_retention.util.database import DatabaseAdapter, run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
@@ -59,33 +60,62 @@ class CrateDBFixture:
         return conn.execute(sa.text(sql))
 
 
+@pytest.fixture(scope="session", autouse=True)
+def configure_database_schema(session_mocker):
+    """
+    Configure the machinery to use another schema for storing the retention
+    policy table, so that it does not accidentally touch a production system.
+
+    If not configured otherwise, the test suite currently uses `testdrive-ext`.
+    """
+    session_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
+
+
 @pytest.fixture(scope="function")
 def cratedb():
-    fixture = CrateDBFixture()
-    yield fixture
-    fixture.finalize()
+    db = CrateDBFixture()
+    db.reset()
+    yield db
+    db.finalize()
 
 
 @pytest.fixture()
-def database(cratedb):
+def database(cratedb, settings):
     """
     Provide a client database adapter, which is connected to the test database instance.
     """
-    yield DatabaseAdapter(dburi=cratedb.get_connection_url())
+    yield DatabaseAdapter(dburi=settings.database.dburi)
+
+
+@pytest.fixture()
+def store(database, settings):
+    """
+    Provide a client database adapter, which is connected to the test database instance.
+    The retention policy database table schema has been established.
+    """
+    setup_schema(settings=settings)
+    rps = RetentionPolicyStore(settings=settings)
+    yield rps
+
+
+@pytest.fixture()
+def settings(cratedb):
+    """
+    Provide configuration and runtime settings object, parameterized for the test suite.
+    """
+    database_url = cratedb.get_connection_url()
+    job_settings = JobSettings(database=DatabaseAddress.from_string(database_url))
+    job_settings.policy_table.schema = TESTDRIVE_EXT_SCHEMA
+    return job_settings
 
 
 @pytest.fixture(scope="function")
-def provision_database(cratedb):
+def provision_database(cratedb, settings, store):
     """
     Populate the retention policy table, and the data tables.
     """
-    cratedb.reset()
 
     database_url = cratedb.get_connection_url()
-
-    settings = JobSettings(database=DatabaseAddress.from_string(database_url))
-    settings.policy_table.schema = TESTDRIVE_EXT_SCHEMA
-    setup_schema(settings=settings)
 
     ddls = [
         f"""
@@ -146,37 +176,45 @@ def provision_database(cratedb):
         run_sql(database_url, sql)
 
     rules = [
-        f"""
-        -- Provision retention policy rule for the DELETE strategy.
-        INSERT INTO {settings.policy_table.fullname}
-          (strategy, table_schema, table_name, partition_column, retention_period)
-        VALUES
-          ('delete', '{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 1);
-        """,  # noqa: S608
-        f"""
-        -- Provision retention policy rule for the DELETE strategy, using tags.
-        INSERT INTO {settings.policy_table.fullname}
-          (strategy, tags, table_schema, table_name, partition_column, retention_period)
-        VALUES
-          ('delete', {{foo='true', bar='true'}}, '{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 1);
-        """,  # noqa: S608
-        f"""
-        -- Provision retention policy rule for the REALLOCATE strategy.
-        INSERT INTO {settings.policy_table.fullname}
-          (strategy, table_schema, table_name, partition_column, retention_period, reallocation_attribute_name, reallocation_attribute_value)
-        VALUES
-          ('reallocate', '{TESTDRIVE_DATA_SCHEMA}', 'raw_metrics', 'ts_day', 60, 'storage', 'cold');
-        """,  # noqa: S608, E501
-        f"""
-        -- Provision retention policy rule for the SNAPSHOT strategy.
-        INSERT INTO {settings.policy_table.fullname}
-          (strategy, table_schema, table_name, partition_column, retention_period, target_repository_name)
-        VALUES
-          ('snapshot', '{TESTDRIVE_DATA_SCHEMA}', 'sensor_readings', 'time_month', 365, 'export_cold');
-        """,  # noqa: S608
+        # Retention policy rule for the DELETE strategy.
+        RetentionPolicy(
+            strategy=RetentionStrategy.DELETE,
+            table_schema=TESTDRIVE_DATA_SCHEMA,
+            table_name="raw_metrics",
+            partition_column="ts_day",
+            retention_period=1,
+        ),
+        # Retention policy rule for the DELETE strategy, using tags.
+        RetentionPolicy(
+            strategy=RetentionStrategy.DELETE,
+            tags={"foo": "true", "bar": "true"},
+            table_schema=TESTDRIVE_DATA_SCHEMA,
+            table_name="sensor_readings",
+            partition_column="time_month",
+            retention_period=1,
+        ),
+        # Retention policy rule for the REALLOCATE strategy.
+        RetentionPolicy(
+            strategy=RetentionStrategy.REALLOCATE,
+            table_schema=TESTDRIVE_DATA_SCHEMA,
+            table_name="raw_metrics",
+            partition_column="ts_day",
+            retention_period=60,
+            reallocation_attribute_name="storage",
+            reallocation_attribute_value="cold",
+        ),
+        # Retention policy rule for the SNAPSHOT strategy.
+        RetentionPolicy(
+            strategy=RetentionStrategy.SNAPSHOT,
+            table_schema=TESTDRIVE_DATA_SCHEMA,
+            table_name="sensor_readings",
+            partition_column="time_month",
+            retention_period=365,
+            target_repository_name="export_cold",
+        ),
     ]
-    for sql in rules:
-        run_sql(database_url, sql)
+    for rule in rules:
+        store.create(rule, ignore="DuplicateKeyException")
 
     # Synchronize data.
     run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";')

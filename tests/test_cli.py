@@ -5,18 +5,7 @@ from click.testing import CliRunner
 from sqlalchemy.exc import ProgrammingError
 
 from cratedb_retention.cli import cli
-from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
-
-
-@pytest.fixture(scope="module", autouse=True)
-def configure_database_schema(module_mocker):
-    """
-    Configure the machinery to use another schema for storing the retention
-    policy table, so that it does not accidentally touch a production system.
-
-    If not configured otherwise, the test suite currently uses `testdrive-ext`.
-    """
-    module_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
+from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 
 def test_version():
@@ -46,6 +35,33 @@ def test_setup(cratedb):
         catch_exceptions=False,
     )
     assert result.exit_code == 0
+
+
+def test_list_policies(cratedb, provision_database, database, capsys):
+    """
+    Verify a basic DELETE retention policy through the CLI.
+    """
+
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    result = runner.invoke(
+        cli,
+        args=f'list-policies "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # TODO: Can't read STDOUT. Why?
+    """
+    out, err = capsys.readouterr()
+    output = json.loads(out)
+    item0 = output[0]
+
+    assert item0["table_schema"] == "doc"
+    assert item0["table_name"] == "raw_metrics"
+    """
 
 
 def test_run_delete_basic(cratedb, provision_database, database):

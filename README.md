@@ -73,15 +73,15 @@ More strategies can be added, and corresponding contributions are welcome.
 
 ### DELETE
 
-A basic retention policy algorithm that drops records from expired partitions.
+A retention policy algorithm that deletes records from expired partitions.
 
-```sql
--- A policy using the DELETE strategy.
-INSERT INTO "ext"."retention_policy"
-  (strategy, table_schema, table_name, partition_column, retention_period)
-VALUES
-  ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
+```shell
+cratedb-retention create-policy --strategy=delete \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=1 \
+  "${CRATEDB_URI}"
 ```
+
 
 This retention policy implements the following directive.
 
@@ -103,12 +103,12 @@ On the data expiration run, corresponding partitions will get physically moved t
 cluster nodes of the `cold` type, which are mostly designated archive nodes, with
 large amounts of storage space.
 
-```sql
--- A policy using the REALLOCATE strategy.
-INSERT INTO "ext"."retention_policy"
-  (strategy, table_schema, table_name, partition_column, retention_period, reallocation_attribute_name, reallocation_attribute_value)
-VALUES
-  ('reallocate', 'doc', 'raw_metrics', 'ts_day', 60, 'storage', 'cold');
+```shell
+cratedb-retention create-policy --strategy=reallocate \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=60 \
+  --reallocation-attribute-name=storage --reallocation-attribute-value=cold \
+  "${CRATEDB_URI}"
 ```
 
 This retention policy implements the following directive.
@@ -131,12 +131,12 @@ or on a supported object storage backend. CrateDB is able to use buckets on S3-c
 storage backends, or on Azure blob storage, using the `CREATE REPOSITORY ... TYPE = 
 s3|azure|fs` SQL statement.
 
-```sql
--- A policy using the SNAPSHOT strategy.
-INSERT INTO "ext"."retention_policy"
-  (strategy, table_schema, table_name, partition_column, retention_period, target_repository_name)
-VALUES
-  ('snapshot', 'doc', 'sensor_readings', 'time_month', 365, 'export_cold');
+```shell
+cratedb-retention create-policy --strategy=snapshot \
+  --table-schema=doc --table-name=sensor_readings \
+  --partition-column=time_month --retention-period=365 \
+  --target-repository-name=export_cold \
+  "${CRATEDB_URI}"
 ```
 
 This retention policy implements the following directive.
@@ -194,6 +194,7 @@ CLUSTERED INTO 1 SHARDS;
 
 ### Record examples
 You can add a retention policy by using an SQL statement like this.
+
 ```sql
 -- Add a retention policy using the DELETE strategy.
 INSERT INTO "ext"."retention_policy"
@@ -202,15 +203,40 @@ VALUES
   ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
 ```
 
+Using the corresponding CLI command is equivalent to the SQL statement.
+```shell
+cratedb-retention create-policy --strategy=delete \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=1 \
+  "${CRATEDB_URI}"
+```
+After running that command, and creating a record, the program reports
+about its identifier.
+```
+Created new retention policy: adb90608-c20f-4de7-be98-93588d8358dc
+```
+You can use it to delete the rule again.
+```shell
+cratedb-retention delete-policy --id=adb90608-c20f-4de7-be98-93588d8358dc \
+  "${CRATEDB_URI}"
+```
+
+For enumerating all policies, use the `list-policies` subcommand.
+```shell
+cratedb-retention list-policies "${CRATEDB_URI}"
+```
+
+
 ### Tags
 
 By using tags, you can conveniently define groups of retention policies. This
 policy is being tagged with both `foo`, and `bar`.
-```sql
-INSERT INTO "ext"."retention_policy"
-  (strategy, tags, table_schema, table_name, partition_column, retention_period)
-VALUES
-  ('delete', {foo='true', bar='true'}, 'doc', 'raw_metrics', 'ts_day', 1);
+```shell
+cratedb-retention create-policy --strategy=delete \
+  --tags=foo,bar \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=1 \
+  "${CRATEDB_URI}"
 ```
 
 In order to select retention policies tagged with `foo`, use such an SQL statement.
@@ -219,9 +245,14 @@ SET error_on_unknown_object_key=false;
 SELECT * FROM "ext"."retention_policy" WHERE tags['foo'] IS NOT NULL;
 ```
 
-Delete all retention policy records tagged with `foo`.
+Delete all retention policy records tagged with `foo` and `bar`.
 ```sql
-DELETE FROM "ext"."retention_policy" WHERE tags['foo'] IS NOT NULL;
+DELETE FROM "ext"."retention_policy"
+       WHERE tags['foo'] IS NOT NULL
+       AND   tags['bar'] IS NOT NULL;
+```
+```shell
+cratedb-retention delete-policy --tags=foo,bar "${CRATEDB_URI}"
 ```
 
 In order to use tags when running retention jobs, the program accepts an optional
@@ -290,15 +321,12 @@ Install retention policy bookkeeping tables.
 cratedb-retention setup "${CRATEDB_URI}"
 ```
 
-Add a retention policy rule using SQL.
+Add a retention policy rule.
 ```shell
-# A policy using the DELETE strategy.
-crash --hosts "${CRATEDB_HOST}" <<SQL
-    INSERT INTO "ext"."retention_policy"
-      (strategy, table_schema, table_name, partition_column, retention_period)
-    VALUES
-      ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
-SQL
+cratedb-retention create-policy --strategy=delete \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=1 \
+  "${CRATEDB_URI}"
 ```
 
 Invoke the data retention job, using a specific cut-off date.
@@ -340,16 +368,13 @@ docker run --rm -i --network=host "${OCI_IMAGE}" \
 cratedb-retention setup "${CRATEDB_URI}"
 ```
 
-Add a retention policy rule using SQL.
+Add a retention policy rule using the DELETE strategy.
 ```shell
-# A policy using the DELETE strategy.
 docker run --rm -i --network=host "${OCI_IMAGE}" \
-crash --hosts "${CRATEDB_HOST}" <<SQL
-    INSERT INTO "ext"."retention_policy"
-      (strategy, table_schema, table_name, partition_column, retention_period)
-    VALUES
-      ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
-SQL
+cratedb-retention create-policy --strategy=delete \
+  --table-schema=doc --table-name=raw_metrics \
+  --partition-column=ts_day --retention-period=1 \
+  "${CRATEDB_URI}"
 ```
 
 Invoke the data retention job, using a specific cut-off date.
@@ -367,32 +392,38 @@ runnable example program [`examples/basic.py`], located within this repository.
 
 ```python
 from cratedb_retention.core import RetentionJob
-from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionStrategy
+from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
-from cratedb_retention.util.database import run_sql
+from cratedb_retention.store import RetentionPolicyStore
 
 
 # Define the database URI to connect to.
-DBURI = "http://localhost/"
+DBURI = "crate://localhost/"
 
 
-# A. Initialize the subsystem, and create a data retention policy.
+# A. Set up adapter to retention policy store.
 settings = JobSettings(
     database=DatabaseAddress.from_string(DBURI),
 )
+store = RetentionPolicyStore(settings=settings)
+
+
+# B. Initialize the subsystem, and create a data retention policy.
+# TODO: Refactor to `RetentionPolicyStore`.
 setup_schema(settings=settings)
 
-sql = """
--- A policy using the DELETE strategy.
-INSERT INTO "ext"."retention_policy"
-  (strategy, table_schema, table_name, partition_column, retention_period)
-VALUES
-  ('delete', 'doc', 'raw_metrics', 'ts_day', 1);
-"""
-run_sql(DBURI, sql)
+# Add a basic retention policy.
+policy = RetentionPolicy(
+    strategy=RetentionStrategy.DELETE,
+    table_schema="doc",
+    table_name="raw_metrics",
+    partition_column="ts_day",
+    retention_period=1,
+)
+identifier = store.create(policy, ignore="DuplicateKeyException")
 
 
-# B. Define job settings, and invoke the data retention job.
+# C. Define job settings, and invoke the data retention job.
 settings = JobSettings(
     database=DatabaseAddress.from_string(DBURI),
     strategy=RetentionStrategy.DELETE,

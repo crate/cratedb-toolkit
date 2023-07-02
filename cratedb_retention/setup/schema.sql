@@ -1,6 +1,8 @@
 -- Set up the retention policy database table schema.
 CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
 
+    "id" TEXT NOT NULL PRIMARY KEY,
+
     -- Strategy to apply for data retention.
     "strategy" TEXT NOT NULL,
 
@@ -26,8 +28,7 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     "reallocation_attribute_value" TEXT,        -- Value of the node-specific custom attribute.
 
     -- Targeting a repository.
-    "target_repository_name" TEXT,              -- The name of a repository created with `CREATE REPOSITORY ...`.
+    "target_repository_name" TEXT               -- The name of a repository created with `CREATE REPOSITORY ...`.
 
-    PRIMARY KEY ("strategy", "table_schema", "table_name")
 )
 CLUSTERED INTO 1 SHARDS;

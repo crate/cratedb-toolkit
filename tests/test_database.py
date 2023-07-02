@@ -1,6 +1,5 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-
 import sqlalchemy as sa
 
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
