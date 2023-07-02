@@ -110,71 +110,11 @@ def settings(cratedb):
 
 
 @pytest.fixture(scope="function")
-def provision_database(cratedb, settings, store):
+def policies(cratedb, settings, store):
     """
-    Populate the retention policy table, and the data tables.
+    Populate the retention policy table.
     """
-
     database_url = cratedb.get_connection_url()
-
-    ddls = [
-        f"""
-        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics" (
-           "variable" TEXT,
-           "timestamp" TIMESTAMP WITH TIME ZONE,
-           "ts_day" TIMESTAMP GENERATED ALWAYS AS date_trunc('day', "timestamp"),
-           "value" REAL,
-           "quality" INTEGER,
-           PRIMARY KEY ("variable", "timestamp", "ts_day")
-        )
-        PARTITIONED BY ("ts_day")
-        WITH ("routing.allocation.require.storage" = 'hot')
-        ;
-        """,
-        f"""
-        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings" (
-           time TIMESTAMP WITH TIME ZONE NOT NULL,
-           time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
-           sensor_id TEXT NOT NULL,
-           battery_level DOUBLE PRECISION,
-           battery_status TEXT,
-           battery_temperature DOUBLE PRECISION
-        )
-        PARTITIONED BY (time_month);
-        """,
-    ]
-    for sql in ddls:
-        run_sql(database_url, sql)
-
-    data = [
-        f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
-            (variable, timestamp, value, quality)
-        VALUES
-            ('temperature', '2023-06-27T12:00:00', 42.42, 0);
-        """,
-        f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
-            (variable, timestamp, value, quality)
-        VALUES
-            ('water-flow', NOW() - '5 months'::INTERVAL, 12, 1);
-        """,
-        f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
-            (time, sensor_id, battery_level, battery_status, battery_temperature)
-        VALUES
-            (NOW() - '6 years'::INTERVAL, 'batt01', 98.99, 'FULL', 42.42);
-        """,
-        f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
-            (time, sensor_id, battery_level, battery_status, battery_temperature)
-        VALUES
-            (NOW() - '5 years'::INTERVAL, 'batt01', 83.82, 'ALMOST FULL', 18.42);
-        """,
-    ]
-    for sql in data:
-        run_sql(database_url, sql)
-
     rules = [
         # Retention policy rule for the DELETE strategy.
         RetentionPolicy(
@@ -187,7 +127,7 @@ def provision_database(cratedb, settings, store):
         # Retention policy rule for the DELETE strategy, using tags.
         RetentionPolicy(
             strategy=RetentionStrategy.DELETE,
-            tags={"foo": "true", "bar": "true"},
+            tags={"foo", "bar"},
             table_schema=TESTDRIVE_DATA_SCHEMA,
             table_name="sensor_readings",
             partition_column="time_month",
@@ -217,9 +157,84 @@ def provision_database(cratedb, settings, store):
         store.create(rule, ignore="DuplicateKeyException")
 
     # Synchronize data.
-    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";')
-    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings";')
     run_sql(database_url, f"REFRESH TABLE {settings.policy_table.fullname};")
+
+
+@pytest.fixture(scope="function")
+def raw_metrics(cratedb, settings, store):
+    """
+    Populate the `raw_metrics` table.
+    """
+
+    database_url = cratedb.get_connection_url()
+    ddl = f"""
+        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics" (
+           "variable" TEXT,
+           "timestamp" TIMESTAMP WITH TIME ZONE,
+           "ts_day" TIMESTAMP GENERATED ALWAYS AS date_trunc('day', "timestamp"),
+           "value" REAL,
+           "quality" INTEGER,
+           PRIMARY KEY ("variable", "timestamp", "ts_day")
+        )
+        PARTITIONED BY ("ts_day")
+        WITH ("routing.allocation.require.storage" = 'hot')
+        ;
+    """
+
+    dml = f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
+            (variable, timestamp, value, quality)
+        SELECT
+            'temperature' AS variable,
+            generate_series AS timestamp,
+            RANDOM()*100 AS value,
+            0 AS quality
+        FROM generate_series('2023-06-01', '2023-06-30', '5 days'::INTERVAL);
+    """
+
+    run_sql(database_url, ddl)
+    run_sql(database_url, dml)
+    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";')
+
+
+@pytest.fixture(scope="function")
+def sensor_readings(cratedb, settings, store):
+    """
+    Populate the `sensor_readings` table.
+    """
+
+    database_url = cratedb.get_connection_url()
+    ddl = f"""
+        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings" (
+           time TIMESTAMP WITH TIME ZONE NOT NULL,
+           time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
+           sensor_id TEXT NOT NULL,
+           battery_level DOUBLE PRECISION,
+           battery_status TEXT,
+           battery_temperature DOUBLE PRECISION
+        )
+        PARTITIONED BY (time_month);
+    """
+
+    dml = f"""
+        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
+            (time, sensor_id, battery_level, battery_status, battery_temperature)
+        SELECT
+            generate_series AS time,
+            'batt01' AS sensor_id,
+            RANDOM()*100 AS battery_level,
+            'FULL' AS battery_status,
+            RANDOM()*100 AS battery_temperature
+        FROM generate_series(
+            '2023-05-01'::TIMESTAMPTZ - '6 years'::INTERVAL,
+            '2023-06-30'::TIMESTAMPTZ - '6 years'::INTERVAL,
+            '7 days'::INTERVAL
+        );
+    """
+
+    run_sql(database_url, ddl)
+    run_sql(database_url, dml)
+    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings";')
 
 
 setup_logging()

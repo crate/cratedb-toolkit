@@ -37,12 +37,12 @@ def test_setup(cratedb):
     assert result.exit_code == 0
 
 
-def test_list_policies(cratedb, provision_database, database, capsys):
+def test_list_policies(store, capsys):
     """
     Verify a basic DELETE retention policy through the CLI.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
@@ -64,12 +64,12 @@ def test_list_policies(cratedb, provision_database, database, capsys):
     """
 
 
-def test_run_delete_basic(cratedb, provision_database, database):
+def test_run_delete_basic(store, database, raw_metrics, policies):
     """
     Verify a basic DELETE retention policy through the CLI.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
@@ -84,12 +84,12 @@ def test_run_delete_basic(cratedb, provision_database, database):
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 0
 
 
-def test_run_delete_with_tags_match(cratedb, provision_database, database):
+def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
     """
     Verify a basic DELETE retention policy through the CLI, with using correct (matching) tags.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
@@ -104,12 +104,12 @@ def test_run_delete_with_tags_match(cratedb, provision_database, database):
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 0
 
 
-def test_run_delete_with_tags_unknown(cratedb, provision_database, database):
+def test_run_delete_with_tags_unknown(store, database, sensor_readings, policies):
     """
     Verify a basic DELETE retention policy through the CLI, with using wrong (not matching) tags.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
@@ -121,15 +121,15 @@ def test_run_delete_with_tags_unknown(cratedb, provision_database, database):
     assert result.exit_code == 0
 
     # Verify that records have not been deleted, because the tags did not match.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 2
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 9
 
 
-def test_run_reallocate(cratedb, provision_database, database):
+def test_run_reallocate(store, database, raw_metrics, policies):
     """
     CLI test: Invoke `cratedb-retention run --strategy=reallocate`.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
@@ -144,15 +144,15 @@ def test_run_reallocate(cratedb, provision_database, database):
     # FIXME: Currently, the test for this strategy apparently does not remove any records.
     #        The reason is probably, because the scenario can't easily be simulated on
     #        a single-node cluster.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 2
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
 
 
-def test_run_snapshot(cratedb, provision_database):
+def test_run_snapshot(store, database, sensor_readings, policies):
     """
     CLI test: Invoke `cratedb-retention run --strategy=snapshot`.
     """
 
-    database_url = cratedb.get_connection_url()
+    database_url = store.database.dburi
     runner = CliRunner()
 
     # Invoke data retention through CLI interface.
