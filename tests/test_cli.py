@@ -22,7 +22,7 @@ def test_version():
     assert result.exit_code == 0
 
 
-def test_setup(cratedb):
+def test_setup_brief(cratedb, caplog):
     """
     CLI test: Invoke `cratedb-retention setup`.
     """
@@ -35,6 +35,25 @@ def test_setup(cratedb):
         catch_exceptions=False,
     )
     assert result.exit_code == 0
+
+    assert 1 <= len(caplog.records) <= 2
+
+
+def test_setup_verbose(cratedb, caplog):
+    """
+    CLI test: Invoke `cratedb-retention setup`.
+    """
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli,
+        args=f'--verbose setup "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    assert 3 <= len(caplog.records) <= 5
 
 
 def test_list_policies(store, capsys):
