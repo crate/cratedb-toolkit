@@ -1,9 +1,18 @@
 # Backlog
 
 ## Iteration +1
-- Add "tags" to data model, for grouping, multi-tenancy, and more.
+- Add additional check if data table(s) exists, or not.
+- Dissolve JOIN-based retention task gathering, because, when the application
+  does not discover any retention policy job, it can not discriminate between
+  "no retention policy" and "no data", and this, it is not able to report about
+  it correspondingly.
+- Refactor "partition"-based strategies into subfamily/category, in order to
+  make room for other types of strategies not necessarily using partitioned
+  tables.
+
+## Iteration +2
 - Recurrent queries via scheduling.
-  Either use classic cron or systemd-timers, or use one of `APScheduler`,
+  Either use classic cron, or systemd-timers, or use one of `APScheduler`,
   `schedule`, or `scheduler`.
 
   ```python
@@ -21,23 +30,17 @@
   - https://github.com/agronholm/apscheduler
   - https://github.com/dbader/schedule
   - https://gitlab.com/DigonIO/scheduler
-
-## Iteration +2
 - Document "Docker Compose" setup variant
 - Generalize from `cutoff_day` to `cutoff_date`?
 - Refactor SQL queries once more, introducing comment-stripping, and renaming the files.
 - Make all tests work completely.
+  The `snapshot` and `reallocate` scenarios are currently untested.
 - Battle testing.
 - More subcommands, like `list-policies` (`list`) and `check-policies` (`check`).
 - Improve how to create a policy, see README and `examples/basic.py`
 - Remedy the need to do a `run_sql` step by introducing a subcommand `add-policy`.
 - Provide a solid (considering best-practices, DWIM) cascaded/multi-level
   downsampling implementation/toolkit, similar to RRDtool or Munin.
-
-  This probably needs the current strategies to be tagged as `partition`-based
-  strategies, because the downsampling strategies do not necessarily need to
-  work on/with partitions, right? So, the template variable `policy_dql` becomes
-  `partition_policy_dql` (vs. `generic_policy_dql`), and so forth.
 
   - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
   - https://community.openhab.org/t/influxdb-in-rrd-style/88395
@@ -53,6 +56,7 @@
 - Document how to run multi-tenant operations using "tags".
 - Add an audit log (`"ext"."jobs_log"`), which records events when retention policy
   rules are changed, or executed.
+- Add Webhooks, to connect to other systems
 - Document usage with Kubernetes, and Nomad/Waypoint.
 - Job progress
 
@@ -82,3 +86,12 @@
 - CI: Rename OCI workflow build steps.
 - Move `strategy` column on first position of retention policy table,
   and update all corresponding occurrences.
+- Add "tags" to data model, for grouping, multi-tenancy, and more.
+- Improve example
+- Introduce database and CLI API for *editing* records
+- List all tags
+- Examples: Add "full" example to `basic.py`, rename to `full.py`
+- Improve tests by using `generate_series`
+- Document compact invocation, after applying an alias and exporting an
+  environment variable: `cratedb-retention rm --tags=baz`
+- Default value for `"${CRATEDB_URI}"` aka. `dburi` argument
