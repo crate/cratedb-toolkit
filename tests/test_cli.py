@@ -2,7 +2,7 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 from click.testing import CliRunner
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from cratedb_retention.cli import cli
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
@@ -54,6 +54,40 @@ def test_setup_verbose(cratedb, caplog):
     assert result.exit_code == 0
 
     assert 3 <= len(caplog.records) <= 5
+
+
+def test_setup_failure_no_dburi():
+    """
+    Verify that the program fails, when it is not able to obtain a
+    database URI to connect to.
+    """
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        args="--verbose setup",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 2
+    assert "Missing argument 'DBURI'" in result.output
+
+
+def test_setup_failure_envvar_invalid_dburi(mocker):
+    """
+    Verify using the `CRATEDB_URI` environment variable, and that the
+    program fails correctly, when pointing it to an arbitrary address.
+    """
+
+    mocker.patch("os.environ", {"CRATEDB_URI": "crate://localhost:5555"})
+
+    runner = CliRunner()
+    with pytest.raises(OperationalError) as ex:
+        runner.invoke(
+            cli,
+            args="--verbose setup",
+            catch_exceptions=False,
+        )
+    assert ex.match("No more Servers available")
 
 
 def test_list_policies(store, capsys):

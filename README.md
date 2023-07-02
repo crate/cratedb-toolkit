@@ -306,6 +306,19 @@ inspect the SQL statements issued to the database.
 cratedb-retention --verbose setup "${CRATEDB_URI}"
 ```
 
+The `DBURI` command-line argument can be omitted when defining the `CRATEDB_URI`
+environment variable.
+```shell
+export CRATEDB_URI='crate://localhost/'
+```
+
+There are also a few shortcuts for subcommands. For example, the shortest form of
+incantation for deleting a retention policy would be:
+```shell
+cratedb-retention rm --tags=baz
+```
+
+
 #### Workstation / on-premise
 
 ```shell
