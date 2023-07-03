@@ -17,6 +17,9 @@ Synopsis
 ========
 ::
 
+    # Install package
+    pip install cratedb-retention
+
     # General.
     python examples/edit.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
 
@@ -69,7 +72,7 @@ class EditExample:
 
         logger.info("Creating two policies, and list them")
 
-        # Add a basic retention policy.
+        # Add a retention policy.
         policy = RetentionPolicy(
             strategy=RetentionStrategy.DELETE,
             table_schema="doc",
@@ -77,7 +80,7 @@ class EditExample:
             partition_column="ts_day",
             retention_period=1,
         )
-        id_basic = self.store.create(policy, ignore="DuplicateKeyException")
+        identifier = self.store.create(policy, ignore="DuplicateKeyException")
 
         # Add a retention policy using tags.
         policy = RetentionPolicy(
@@ -95,7 +98,7 @@ class EditExample:
 
         # Delete the policies created by the previous functions.
         logger.info("Deleting policies again")
-        self.store.delete(id_basic)
+        self.store.delete(identifier)
         self.store.delete_by_all_tags(["foo", "bar"])
 
         logger.info("Listing all remaining policies should equal an empty list")

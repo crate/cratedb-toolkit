@@ -19,6 +19,9 @@ Synopsis
 ========
 ::
 
+    # Install package
+    pip install cratedb-retention
+
     # General.
     python examples/full.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
 
