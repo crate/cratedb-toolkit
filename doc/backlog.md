@@ -4,7 +4,7 @@
 - Add additional check if data table(s) exists, or not.
 - Dissolve JOIN-based retention task gathering, because, when the application
   does not discover any retention policy job, it can not discriminate between
-  "no retention policy" and "no data", and this, it is not able to report about
+  "no retention policy" and "no data", and thus, it is not able to report about
   it correspondingly.
 - Refactor "partition"-based strategies into subfamily/category, in order to
   make room for other types of strategies not necessarily using partitioned
