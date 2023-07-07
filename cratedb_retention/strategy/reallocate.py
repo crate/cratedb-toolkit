@@ -1,9 +1,10 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 """
-Implements a retention policy by reallocating cold partitions
+A retention policy implementation which reallocates data to "warm" partitions.
 
-A detailed tutorial is available at https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934
+It is derived from a corresponding tutorial based on Apache Airflow.
+https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934
 
 Prerequisites
 -------------

@@ -21,14 +21,14 @@ CREATE TABLE IF NOT EXISTS {policy_table.fullname} (
     -- Target: Where data is moved/relocated to.
 
     -- Targeting specific nodes.
-    -- You may want to designate dedicated nodes to be responsible for hot or cold storage types.
+    -- You may want to designate dedicated nodes to be responsible for "hot" or "warm" storage types.
     -- To do that, you can assign attributes to specific nodes, effectively tagging them.
     -- https://crate.io/docs/crate/reference/en/latest/config/node.html#custom-attributes
     "reallocation_attribute_name" TEXT,         -- Name of the node-specific custom attribute.
     "reallocation_attribute_value" TEXT,        -- Value of the node-specific custom attribute.
 
     -- Targeting a repository.
-    "target_repository_name" TEXT               -- The name of a repository created with `CREATE REPOSITORY ...`.
+    "target_repository_name" TEXT               -- The name of a repository created with "CREATE REPOSITORY ...".
 
 )
 CLUSTERED INTO 1 SHARDS;
