@@ -19,7 +19,7 @@ different retention strategies.
 The application manages the life-cycle of data stored in CrateDB, handling
 concerns of data expiry, size reduction, and archival. Within a system storing
 and processing large amounts of data, it is crucial to manage data flows between
-hot and cold storage types better than using ad hoc solutions.
+"hot", "warm", and "cold" storage types better than using ad hoc solutions.
 
 Data retention policies can be flexibly configured by adding records to the
 retention policy database table, which is also stored within CrateDB.
@@ -92,22 +92,22 @@ This retention policy implements the following directive.
 
 ### REALLOCATE
 
-A retention policy algorithm that reallocates expired partitions from hot nodes
-to cold nodes.
+A retention policy algorithm that reallocates expired partitions from "hot" nodes
+to "warm" nodes.
 
 Because each cluster member is assigned a designated node type by using the
-`-Cnode.attr.storage=hot|cold` parameter, this strategy is only applicable in
+`-Cnode.attr.storage=hot|warm` parameter, this strategy is only applicable in
 cluster/multi-node scenarios.
 
 On the data expiration run, corresponding partitions will get physically moved to
-cluster nodes of the `cold` type, which are mostly designated archive nodes, with
+cluster nodes of the `warm` type, which are mostly designated archive nodes, with
 large amounts of storage space.
 
 ```shell
 cratedb-retention create-policy --strategy=reallocate \
   --table-schema=doc --table-name=raw_metrics \
   --partition-column=ts_day --retention-period=60 \
-  --reallocation-attribute-name=storage --reallocation-attribute-value=cold \
+  --reallocation-attribute-name=storage --reallocation-attribute-value=warm \
   "${CRATEDB_URI}"
 ```
 
@@ -115,7 +115,7 @@ This retention policy implements the following directive.
 
 > **Reallocate** data from the `"doc"."raw_metrics"` table, on partitions defined by
 > the column `ts_day`, which is older than **60** days at the given cut-off date, to
-> nodes tagged with the `storage=cold` attribute.
+> nodes tagged with the `storage=warm` attribute.
 
 [implementation](cratedb_retention/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
 
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS "ext"."retention_policy" (
     -- Target: Where data is moved/relocated to.
 
     -- Targeting specific nodes.
-    -- You may want to designate dedicated nodes to be responsible for hot or cold storage types.
+    -- You may want to designate dedicated nodes to be responsible for "hot" or "warm" storage types.
     -- To do that, you can assign attributes to specific nodes, effectively tagging them.
     -- https://crate.io/docs/crate/reference/en/latest/config/node.html#custom-attributes
     "reallocation_attribute_name" TEXT,         -- Name of the node-specific custom attribute.

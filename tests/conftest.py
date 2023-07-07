@@ -141,7 +141,7 @@ def policies(cratedb, settings, store):
             partition_column="ts_day",
             retention_period=60,
             reallocation_attribute_name="storage",
-            reallocation_attribute_value="cold",
+            reallocation_attribute_value="warm",
         ),
         # Retention policy rule for the SNAPSHOT strategy.
         RetentionPolicy(
