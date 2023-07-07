@@ -103,7 +103,7 @@ def help_run():
     """  # noqa: E501
 
 
-schema_option = click.option(
+schema_option: t.Any = click.option(
     "--schema",
     type=str,
     required=False,
@@ -111,16 +111,21 @@ schema_option = click.option(
     help="Select schema where extension tables are created",
 )
 
-strategy_option = click.option("--strategy", type=str, required=True, help="Which kind of retention strategy to apply")
-identifier_option = click.option(
+strategy_option: t.Any = click.option(
+    "--strategy",
+    type=str,
+    required=True,
+    help="Which kind of retention strategy to apply",
+)
+identifier_option: t.Any = click.option(
     "--identifier", "--id", type=str, required=False, help="Identifier of retention policy"
 )
-tags_option = click.option(
+tags_option: t.Any = click.option(
     "--tags", type=str, required=False, help="Tags for retention policy, used for grouping and filtering"
 )
 
 
-@click.group(cls=ClickAliasedGroup)
+@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.version_option(package_name="cratedb-retention")
