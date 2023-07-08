@@ -46,18 +46,23 @@ class EditExample:
     """
 
     def __init__(self, dburi):
-        self.dburi = dburi
-
         # Set up a generic database adapter.
-        self.db = DatabaseAdapter(dburi=self.dburi)
+        self.db = DatabaseAdapter(dburi=dburi)
 
         # Configure retention policy store to use the `examples` schema.
-        self.settings = JobSettings(database=DatabaseAddress.from_string(self.dburi))
+        self.settings = JobSettings(database=DatabaseAddress.from_string(dburi))
         if "PYTEST_CURRENT_TEST" not in os.environ:
             self.settings.policy_table.schema = "examples"
 
         # Set up adapter to retention policy store.
+        self.setup()
         self.store = RetentionPolicyStore(settings=self.settings)
+
+    def cleanup(self):
+        """
+        Drop retention policy table.
+        """
+        self.db.run_sql(f"DROP TABLE IF EXISTS {self.settings.policy_table.fullname};")
 
     def setup(self):
         """
@@ -112,8 +117,8 @@ def main(dburi: str):
 
     logger.info("Running example application")
     example = EditExample(dburi=dburi)
-    example.setup()
     example.main()
+    example.cleanup()
 
 
 if __name__ == "__main__":

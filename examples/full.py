@@ -37,7 +37,7 @@ from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolic
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.store import RetentionPolicyStore
 from cratedb_retention.util.cli import boot_with_dburi
-from cratedb_retention.util.database import DatabaseAdapter, run_sql
+from cratedb_retention.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +48,11 @@ class FullExample:
     """
 
     def __init__(self, dburi):
-        self.dburi = dburi
-
         # Set up a generic database adapter.
-        self.db = DatabaseAdapter(dburi=self.dburi)
+        self.db = DatabaseAdapter(dburi=dburi)
 
         # Configure retention policy store to use the `examples` schema.
-        self.settings = JobSettings(database=DatabaseAddress.from_string(self.dburi))
+        self.settings = JobSettings(database=DatabaseAddress.from_string(dburi))
         if "PYTEST_CURRENT_TEST" not in os.environ:
             self.settings.policy_table.schema = "examples"
 
@@ -62,10 +60,10 @@ class FullExample:
         """
         Drop retention policy table and data table.
         """
-        run_sql(self.dburi, f"DROP TABLE IF EXISTS {self.settings.policy_table.fullname};")
-        run_sql(self.dburi, 'DROP TABLE IF EXISTS "examples"."raw_metrics";')
+        self.db.run_sql(f"DROP TABLE IF EXISTS {self.settings.policy_table.fullname};")
+        self.db.run_sql('DROP TABLE IF EXISTS "examples"."raw_metrics";')
 
-    def setup_retention(self):
+    def setup(self):
         """
         Create the SQL DDL schema for the retention policy table, and insert a single record.
         """
@@ -85,7 +83,7 @@ class FullExample:
         store = RetentionPolicyStore(settings=self.settings)
         store.create(policy, ignore="DuplicateKeyException")
 
-        run_sql(self.dburi, f"REFRESH TABLE {self.settings.policy_table.fullname};")
+        self.db.run_sql(f"REFRESH TABLE {self.settings.policy_table.fullname};")
 
     def setup_data(self):
         """
@@ -101,7 +99,7 @@ class FullExample:
                PRIMARY KEY ("variable", "timestamp", "ts_day")
             )
             PARTITIONED BY ("ts_day")
-            WITH ("routing.allocation.require.storage" = 'hot')
+            CLUSTERED INTO 1 SHARDS
             ;
         """
 
@@ -116,9 +114,9 @@ class FullExample:
             FROM generate_series('2023-06-01', '2023-06-30', '2 days'::INTERVAL);
         """
 
-        run_sql(self.dburi, ddl)
-        run_sql(self.dburi, dml)
-        run_sql(self.dburi, 'REFRESH TABLE "examples"."raw_metrics";')
+        self.db.run_sql(ddl)
+        self.db.run_sql(dml)
+        self.db.run_sql('REFRESH TABLE "examples"."raw_metrics";')
 
     def invoke(self, strategy: str, cutoff_day: str):
         """
@@ -137,7 +135,7 @@ class FullExample:
         job = RetentionJob(settings=settings)
         job.start()
 
-        run_sql(self.dburi, 'REFRESH TABLE "examples"."raw_metrics";')
+        self.db.run_sql('REFRESH TABLE "examples"."raw_metrics";')
 
 
 def main(dburi: str):
@@ -151,7 +149,7 @@ def main(dburi: str):
     logger.info("Provisioning database")
     example = FullExample(dburi=dburi)
     example.cleanup()
-    example.setup_retention()
+    example.setup()
     example.setup_data()
 
     logger.info("Invoking data retention/expiry")
@@ -166,6 +164,8 @@ def main(dburi: str):
     # Report about number of records in table after data retention.
     count = example.db.count_records("examples.raw_metrics")
     logger.info(f"Database table `examples.raw_metrics` contains {count} records")
+
+    example.cleanup()
 
 
 if __name__ == "__main__":
