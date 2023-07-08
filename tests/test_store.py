@@ -47,6 +47,7 @@ def test_create_retrieve_delete(store):
 def test_create_exists(store):
     """
     Verify that only one retention policy can be created for a specific table.
+    When attempting to create multiple policies per table, the program fails.
     """
     # Add a retention policy.
     policy = RetentionPolicy(
@@ -161,40 +162,59 @@ def test_delete_by_all_tags(store):
     assert len(store.retrieve()) == 1
 
 
-def test_delete_unknown(store):
+def test_delete_unknown(caplog, store):
     """
     Verify behavior when deleting an unknown item by identifier.
     """
+
+    caplog.clear()
     rowcount = store.delete(identifier=None)
     assert rowcount == 0
+    assert "Retention policy not found with id: None" in caplog.messages
 
+    caplog.clear()
     rowcount = store.delete(identifier="unknown")
     assert rowcount == 0
+    assert "Retention policy not found with id: unknown" in caplog.messages
 
 
-def test_delete_by_tag_unknown(store):
+def test_delete_by_tag_unknown(caplog, store):
     """
     Verify behavior when deleting items by unknown tag
     """
+
+    caplog.clear()
     rowcount = store.delete_by_tag(None)
     assert rowcount == 0
+    assert "No retention policies found with tags: [None]" in caplog.messages
 
+    caplog.clear()
     rowcount = store.delete_by_tag("unknown")
     assert rowcount == 0
+    assert "No retention policies found with tags: ['unknown']" in caplog.messages
 
 
-def test_delete_by_all_tags_unknown(store):
+def test_delete_by_all_tags_unknown(caplog, store):
     """
     Verify behavior when deleting items by unknown tag
     """
+
+    caplog.clear()
     rowcount = store.delete_by_all_tags(None)
     assert rowcount == 0
+    assert "No tags obtained, skipping deletion" in caplog.messages
 
+    caplog.clear()
     rowcount = store.delete_by_all_tags([])
     assert rowcount == 0
+    assert "No tags obtained, skipping deletion" in caplog.messages
 
+    caplog.clear()
     rowcount = store.delete_by_all_tags([None])
     assert rowcount == 0
+    assert "No retention policies found with tags: [None]" in caplog.messages
 
+    caplog.clear()
     rowcount = store.delete_by_all_tags(["unknown"])
     assert rowcount == 0
+    assert "No retention policies found with tags: ['unknown']" in caplog.messages

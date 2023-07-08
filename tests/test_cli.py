@@ -2,7 +2,7 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 from click.testing import CliRunner
-from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.exc import OperationalError
 
 from cratedb_retention.cli import cli
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
@@ -157,7 +157,7 @@ def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 0
 
 
-def test_run_delete_with_tags_unknown(store, database, sensor_readings, policies):
+def test_run_delete_with_tags_unknown(caplog, store, database, sensor_readings, policies):
     """
     Verify a basic DELETE retention policy through the CLI, with using wrong (not matching) tags.
     """
@@ -175,6 +175,8 @@ def test_run_delete_with_tags_unknown(store, database, sensor_readings, policies
 
     # Verify that records have not been deleted, because the tags did not match.
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 9
+
+    assert "No retention policies found with tags: ['foo', 'unknown']" in caplog.messages
 
 
 def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_policy):
@@ -195,12 +197,12 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
 
     # Verify that records have been deleted.
     # FIXME: Currently, the test for this strategy apparently does not remove any records.
-    #        The reason is probably, because the scenario can't easily be simulated on
-    #        a single-node cluster.
+    #        The reason is because the scenario can't easily be simulated on a single-node
+    #        cluster. The suite would need to orchestrate at least two nodes.
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
 
 
-def test_run_snapshot(store, database, sensor_readings, sensor_readings_snapshot_policy):
+def test_run_snapshot(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy):
     """
     CLI test: Invoke `cratedb-retention run --strategy=snapshot`.
     """
@@ -210,10 +212,12 @@ def test_run_snapshot(store, database, sensor_readings, sensor_readings_snapshot
 
     # Invoke data retention through CLI interface.
     # FIXME: This currently can not be tested, because it needs a snapshot repository.
-    # TODO: Provide an embedded MinIO S3 instance.
-    with pytest.raises(ProgrammingError):
-        runner.invoke(
-            cli,
-            args=f'run --cutoff-day=2024-12-31 --strategy=snapshot "{database_url}"',
-            catch_exceptions=False,
-        )
+    # TODO: Provide an embedded MinIO S3 instance to the test suite.
+    runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-12-31 --strategy=snapshot "{database_url}"',
+        catch_exceptions=False,
+    )
+
+    assert "Data retention SQL statement failed" in caplog.text
+    assert "RepositoryUnknownException[Repository 'export_cold' unknown]" in caplog.text

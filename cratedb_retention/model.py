@@ -1,5 +1,6 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import abc
 import dataclasses
 import logging
 import os
@@ -22,24 +23,23 @@ class RetentionStrategy(Enum):
     REALLOCATE = "REALLOCATE"
     SNAPSHOT = "SNAPSHOT"
 
+    def to_database(self) -> str:
+        """
+        In the database, strategy values are stored in lower case.
+        """
+        return str(self.value).lower()
+
 
 @dataclasses.dataclass
 class RetentionPolicy:
     """
-    Manage a retention policy entity.
+    Manage the database representation of a "retention policy" entity.
 
-    This layout has to be synchronized with both the table definition per SQL DDL
-    statement within `schema.sql`, and the query result representation per SQL DQL
-    statement within `policy.sql`.
-
-    To be more specific, the SQL DQL result returns two additional fields,
-    `table_fullname`, and `retention_value`, when compared to the original
-    DDL.
-
-    TODO: Maybe this anomaly could be dissolved?
+    This layout has to be synchronized with the corresponding table definition
+    per SQL DDL statement within `schema.sql`.
     """
 
-    strategy: t.Union[RetentionStrategy, str] = dataclasses.field(
+    strategy: RetentionStrategy = dataclasses.field(
         metadata={"help": "Which kind of retention strategy to use or apply"},
     )
     tags: t.Optional[t.Union[list, set]] = dataclasses.field(
@@ -54,17 +54,9 @@ class RetentionPolicy:
         default=None,
         metadata={"help": "The source table name"},
     )
-    table_fullname: t.Optional[str] = dataclasses.field(
-        default=None,
-        metadata={"read_only": True},
-    )
     partition_column: t.Optional[str] = dataclasses.field(
         default=None,
         metadata={"help": "The source table column name used for partitioning"},
-    )
-    partition_value: t.Optional[str] = dataclasses.field(
-        default=None,
-        metadata={"read_only": True},
     )
     retention_period: t.Optional[int] = dataclasses.field(
         default=None,
@@ -86,25 +78,22 @@ class RetentionPolicy:
         metadata={"help": "The name of a repository created with `CREATE REPOSITORY ...`, when targeting a repository"},
     )
 
-    @classmethod
-    def from_record(cls, record):
-        """
-        Factory for creating instance from database record.
-        """
-        return cls(**cls.record_mapper(record))
+    id: t.Optional[str] = dataclasses.field(  # noqa: A003
+        default=None,
+        metadata={"help": "The retention policy identifier"},
+    )
+
+    @property
+    def table_fullname(self) -> str:
+        return f'"{self.table_schema}"."{self.table_name}"'
 
     @classmethod
-    def record_mapper(cls, record):
-        """
-        Map database record to instance attributes.
-        """
-        fields = dataclasses.fields(cls)
-        out = OrderedDict()
-        for index, field in enumerate(fields):
-            out[field.name] = record[index]
-        return out
+    def from_record(cls, record) -> "RetentionPolicy":
+        strategy = RetentionStrategy(record["strategy"].upper())
+        del record["strategy"]
+        return cls(strategy=strategy, **record)
 
-    def to_storage_dict(self):
+    def to_storage_dict(self, identifier: t.Optional[str] = None) -> t.Dict[str, str]:
         """
         Return representation suitable for storing into database table using SQLAlchemy.
         """
@@ -112,20 +101,56 @@ class RetentionPolicy:
         # Serialize to dictionary.
         data = dataclasses.asdict(self)
 
-        # Strategy values are stored in lower case.
-        data["strategy"] = str(data["strategy"].value).lower()
+        # Marshal strategy type.
+        data["strategy"] = self.strategy.to_database()
 
-        # Converge list of tags to `OBJECT(DYNAMIC)` representation.
+        # Marshal list of tags to `OBJECT(DYNAMIC)` representation.
         tags = OrderedDict()
         for tag in data["tags"]:
             tags[tag] = "true"
         data["tags"] = tags
 
-        # Purge fields not present in physical representation.
-        del data["table_fullname"]
-        del data["partition_value"]
+        # Optionally add identifier.
+        if identifier is not None:
+            data["id"] = identifier
 
         return data
+
+
+@dataclasses.dataclass
+class RetentionTask:
+    """
+    Represent a retention task at runtime.
+
+    Specialized retention tasks, like `ReallocateRetentionTask`, derive from this class.
+
+    It mostly contains attributes from `RetentionPolicy`, but a) offers marshalled
+    values only, and b) omits some settings/parameters which have already been resolved
+    by previous processing layers.
+    """
+
+    table_schema: str
+    table_name: str
+    table_fullname: str
+    partition_column: str
+    partition_value: str
+    reallocation_attribute_name: str
+    reallocation_attribute_value: str
+    target_repository_name: str
+
+    @classmethod
+    def factory(cls, **kwargs):
+        """
+        Create an instance from keyword arguments.
+        """
+        return cls(**kwargs)
+
+    @abc.abstractmethod
+    def to_sql(self) -> t.Union[str, t.List[str]]:
+        """
+        Return one or more SQL statements, which resemble this task.
+        """
+        pass
 
 
 @dataclasses.dataclass

@@ -15,16 +15,15 @@ Prerequisites
 import dataclasses
 import logging
 
-from cratedb_retention.core import GenericRetention
-from cratedb_retention.model import RetentionPolicy
+from cratedb_retention.model import RetentionTask
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class ReallocateAction(RetentionPolicy):
+class ReallocateRetentionTask(RetentionTask):
     """
-    Manage metadata representing a data retention operation on a single table.
+    Represent a data retention task, using the `reallocate` strategy.
     """
 
     def to_sql(self):
@@ -39,15 +38,18 @@ class ReallocateAction(RetentionPolicy):
         return sql
 
 
-@dataclasses.dataclass
-class ReallocateRetention(GenericRetention):
+class ReallocateRetentionJob:
     """
-    Represent a complete data retention job, using the `reallocate` strategy.
+    Represent a data retention job, using the `reallocate` strategy.
+
+    TODO: Clarify `ORDER BY 5 ASC`.
     """
 
-    _tasks_sql_file = None
-    _tasks_sql_text = """
-WITH partition_allocations AS (
+    SQL = """
+WITH partitions AS (
+  {policy_dql}
+),
+partition_allocations AS (
   SELECT DISTINCT s.schema_name AS table_schema,
                   s.table_name,
                   s.partition_ident,
@@ -55,12 +57,11 @@ WITH partition_allocations AS (
   FROM sys.shards s
   JOIN sys.nodes n ON s.node['id'] = n.id
 )
-{policy_dql}
+SELECT *
+FROM partitions p
 JOIN partition_allocations a ON a.table_schema = p.table_schema
   AND a.table_name = p.table_name
   AND p.partition_ident = a.partition_ident
-  AND attributes[r.reallocation_attribute_name] <> r.reallocation_attribute_value
-WHERE {where_clause}
+  AND attributes['{reallocation_attribute_name}'] <> '{reallocation_attribute_value}'
 ORDER BY 5 ASC;
     """
-    _action_class = ReallocateAction

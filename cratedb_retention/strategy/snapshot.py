@@ -13,16 +13,15 @@ See the file setup/schema.sql in this repository.
 import dataclasses
 import logging
 
-from cratedb_retention.core import GenericRetention
-from cratedb_retention.model import RetentionPolicy
+from cratedb_retention.model import RetentionTask
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class SnapshotAction(RetentionPolicy):
+class SnapshotRetentionTask(RetentionTask):
     """
-    Manage metadata representing a data retention operation on a single table.
+    Represent a data retention task, using the `snapshot` strategy.
     """
 
     def to_sql(self):
@@ -39,13 +38,3 @@ class SnapshotAction(RetentionPolicy):
         DELETE FROM {self.table_fullname} WHERE {self.partition_column} = {self.partition_value};
         """  # noqa: S608
         return [sql, sql2]
-
-
-@dataclasses.dataclass
-class SnapshotRetention(GenericRetention):
-    """
-    Represent a complete data retention job, using the `snapshot` strategy.
-    """
-
-    _tasks_sql_file = None
-    _action_class = SnapshotAction

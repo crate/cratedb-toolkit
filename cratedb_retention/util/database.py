@@ -1,6 +1,7 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import sqlalchemy as sa
+from sqlalchemy.sql.elements import AsBoolean
 
 
 def run_sql(dburi: str, sql: str, records: bool = False):
@@ -47,3 +48,24 @@ class DatabaseAdapter:
         sql = f"SELECT COUNT(*) AS count FROM {tablename_full};"  # noqa: S608
         results = self.run_sql(sql=sql)
         return results[0][0]
+
+    def table_exists(self, tablename_full: str) -> bool:
+        """
+        Check whether given table exists.
+        """
+        sql = f"SELECT 1 FROM {tablename_full} LIMIT 1;"  # noqa: S608
+        try:
+            self.run_sql(sql=sql)
+            return True
+        except Exception:
+            return False
+
+
+def sa_is_empty(thing):
+    """
+    When a WHERE criteria clause is empty, i.e. it contains only an
+    `and_` element, let's consider it to be empty.
+
+    TODO: Verify this. How to actually compare SQLAlchemy elements by booleanness?
+    """
+    return isinstance(thing, AsBoolean)
