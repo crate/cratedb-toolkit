@@ -1,5 +1,7 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import pytest
+
 from cratedb_retention.model import RetentionPolicy, RetentionStrategy
 
 
@@ -42,6 +44,25 @@ def test_create_retrieve_delete(store):
     assert store.retrieve() == []
 
 
+def test_create_exists(store):
+    """
+    Verify that only one retention policy can be created for a specific table.
+    """
+    # Add a retention policy.
+    policy = RetentionPolicy(
+        strategy=RetentionStrategy.DELETE,
+        tags={"foo", "bar"},
+        table_schema="doc",
+        table_name="raw_metrics",
+        partition_column="ts_day",
+        retention_period=1,
+    )
+    store.create(policy)
+    with pytest.raises(ValueError) as ex:
+        store.create(policy)
+    assert ex.match("Retention policy for table 'doc.raw_metrics' already exists")
+
+
 def test_list_tags(store):
     """
     Verify `list-tags` subcommand.
@@ -75,7 +96,7 @@ def test_delete_by_tag(store):
             strategy=RetentionStrategy.DELETE,
             tags={"foo", "bar"},
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="foo",
             partition_column="ts_day",
             retention_period=1,
         ),
@@ -83,7 +104,7 @@ def test_delete_by_tag(store):
             strategy=RetentionStrategy.DELETE,
             tags={"bar"},
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="bar",
             partition_column="ts_day",
             retention_period=1,
         ),
@@ -115,7 +136,7 @@ def test_delete_by_all_tags(store):
             strategy=RetentionStrategy.DELETE,
             tags={"foo", "bar"},
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="foo",
             partition_column="ts_day",
             retention_period=1,
         ),
@@ -123,7 +144,7 @@ def test_delete_by_all_tags(store):
             strategy=RetentionStrategy.DELETE,
             tags={"bar"},
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="bar",
             partition_column="ts_day",
             retention_period=1,
         ),

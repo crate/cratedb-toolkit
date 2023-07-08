@@ -177,7 +177,7 @@ def test_run_delete_with_tags_unknown(store, database, sensor_readings, policies
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 9
 
 
-def test_run_reallocate(store, database, raw_metrics, policies):
+def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_policy):
     """
     CLI test: Invoke `cratedb-retention run --strategy=reallocate`.
     """
@@ -200,7 +200,7 @@ def test_run_reallocate(store, database, raw_metrics, policies):
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
 
 
-def test_run_snapshot(store, database, sensor_readings, policies):
+def test_run_snapshot(store, database, sensor_readings, sensor_readings_snapshot_policy):
     """
     CLI test: Invoke `cratedb-retention run --strategy=snapshot`.
     """

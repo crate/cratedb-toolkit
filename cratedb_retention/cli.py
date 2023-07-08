@@ -205,6 +205,10 @@ def list_tags(ctx: click.Context, dburi: str, schema: str):
 @click_options_from_dataclass(RetentionPolicy)
 @click.pass_context
 def create_policy(ctx: click.Context, dburi: str, schema: str, **kwargs):
+    # Sanity checks.
+    if "strategy" not in kwargs or kwargs["strategy"] is None:
+        raise ValueError("--strategy option is required")
+
     # TODO: Converge to Click converters.
     kwargs["strategy"] = RetentionStrategy(kwargs["strategy"].upper())
     kwargs["tags"] = split_list(kwargs["tags"])
