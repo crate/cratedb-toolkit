@@ -22,6 +22,7 @@ RESET_TABLES = [
     f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"',
 ]
 
 

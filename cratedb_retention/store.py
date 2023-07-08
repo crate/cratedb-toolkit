@@ -11,8 +11,8 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from cratedb_retention.model import JobSettings, RetentionPolicy
-from cratedb_retention.util.database import DatabaseAdapter
+from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_retention.util.database import DatabaseAdapter, sa_is_empty
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +32,18 @@ class SQLAlchemyTagHelperMixin:
     def synchronize(self):
         pass
 
-    def get_tags_constraints(self, tags: t.Union[t.List[str], t.Set[str]], table_alias: t.Optional[str] = None):
+    def get_tags_constraints(self, tags: t.Union[t.List[str], t.Set[str]]):
         """
         Return list of SQL WHERE constraint clauses from given tags.
         """
-        real_table: NamedFromClause = self.table  # type: ignore[attr-defined]
-        if table_alias:
-            real_table = real_table.alias(table_alias)
+        table: NamedFromClause = self.table  # type: ignore[attr-defined]
         constraints = []
         for tag in tags:
             if not tag:
                 continue
-            constraint = real_table.c[self.tag_column][tag] != sa.Null()
+            constraint = table.c[self.tag_column][tag] != sa.Null()
             constraints.append(constraint)
-        if not constraints:
-            return None
-        return sa.and_(*constraints)
+        return sa.and_(sa.true(), *constraints)
 
     def tags_exist(self, tags: t.Union[t.List[str], t.Set[str]]):
         """
@@ -60,7 +56,7 @@ class SQLAlchemyTagHelperMixin:
         """
         table = self.table  # type: ignore[attr-defined]
         where_clause = self.get_tags_constraints(tags)
-        if where_clause is None:
+        if sa_is_empty(where_clause):
             return False
         selectable = sa.select(table).where(where_clause)
         try:
@@ -92,8 +88,8 @@ class SQLAlchemyTagHelperMixin:
 
         table = self.table  # type: ignore[attr-defined]
         where_clause = self.get_tags_constraints(tags)
-        if where_clause is None:
-            logger.warning("Unable to compute constraints for deletion")
+        if sa_is_empty(where_clause):
+            logger.warning("Unable to compute criteria for deletion")
             return 0
         deletable = sa.delete(table).where(where_clause)  # type: ignore[arg-type]
         result = self.execute(deletable)
@@ -125,18 +121,24 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         Create a new retention policy, and return its identifier.
         """
 
+        ignore = ignore or ""
+
         # Sanity checks.
         if policy.table_schema is None:
             raise ValueError("Table schema needs to be defined")
         if policy.table_name is None:
             raise ValueError("Table name needs to be defined")
         if self.exists(policy):
-            raise ValueError(f"Retention policy for table '{policy.table_schema}.{policy.table_name}' already exists")
+            if not ignore.startswith("DuplicateKey"):
+                raise ValueError(
+                    f"Retention policy for table '{policy.table_schema}.{policy.table_name}' already exists"
+                )
 
         table = self.table
         # TODO: Add UUID as converter to CrateDB driver?
         identifier = str(uuid.uuid4())
-        insertable = sa.insert(table).values(id=identifier, **policy.to_storage_dict()).returning(table.c.id)
+        data = policy.to_storage_dict(identifier=identifier)
+        insertable = sa.insert(table).values(**data).returning(table.c.id)
         cursor = self.execute(insertable)
         identifier = cursor.one()[0]
         self.synchronize()
@@ -154,6 +156,18 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         records = self.query(selectable)
         records = list(map(self.row_to_record, records))
         return records
+
+    def retrieve_policies(self, strategy: RetentionStrategy, tags):
+        """
+        Retrieve effective policies to process, by strategy and tags.
+        """
+        table = self.table
+        selectable = sa.select(table).where(table.c.strategy == strategy.to_database())
+        criteria = self.get_tags_constraints(tags)
+        selectable = selectable.where(criteria)
+        for row in self.query(selectable):
+            policy = RetentionPolicy.from_record(row)
+            yield policy
 
     def retrieve_tags(self):
         """
@@ -175,6 +189,9 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
     def row_to_record(item):
         """
         Compute serializable representation from database row.
+
+        Convert between representation of tags. In Python land, it's a `set`,
+        while in database land, it's an `OBJECT`.
         """
         if isinstance(item["tags"], dict):
             item["tags"] = sorted(item["tags"].keys())
@@ -189,6 +206,8 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         deletable = sa.delete(table).where(constraint)
         result = self.execute(deletable)
         self.synchronize()
+        if result.rowcount == 0:
+            logger.warning(f"Retention policy not found with id: {identifier}")
         return result.rowcount
 
     def execute(self, statement):
