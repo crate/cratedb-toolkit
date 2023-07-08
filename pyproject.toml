@@ -206,7 +206,7 @@ extend-exclude = [
 ]
 
 [tool.ruff.per-file-ignores]
-"tests/*" = ["S101", "T201"]  # Allow use of `assert`, and `print`.
+"tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
 "examples/*" = ["T201"]  # Allow `print`
 "cratedb_retention/cli.py" = ["T201"]  # Allow `print`
 
