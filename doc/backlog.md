@@ -1,17 +1,72 @@
 # Backlog
 
 ## Iteration +1
-- Add additional check if data table(s) exists, or not.
-- Dissolve JOIN-based retention task gathering, because, when the application
-  does not discover any retention policy job, it can not discriminate between
-  "no retention policy" and "no data", and thus, it is not able to report about
-  it correspondingly.
+- CLI: Use proper exit codes.
+- Make `--cutoff-day` optional, use `today()` as default.
 - Refactor "partition"-based strategies into subfamily/category, in order to
   make room for other types of strategies not necessarily using partitioned
   tables.
 
+## Iteration +1.5
+- CI: Nightly builds, to verify regressions on CrateDB
+- CI: Also build OCI images for ARM, maybe only on PRs to `main`, and releases?
+- CI: Add code coverage tracking and reporting.
+- More subcommands, like `list-policies` (`list`) and `check-policies` (`check`).
+- Improve testing for the `reallocate` strategy.
+- Provide components for emulating materialized views
+  - https://en.wikipedia.org/wiki/Materialized_view
+  - https://github.com/crate/crate/issues/10661
+  - https://github.com/crate/crate/issues/8806
+  - https://github.com/crate/crate/issues/10803
+  - https://github.com/crate/crate/issues/14377
+  - Example:
+    ```shell
+    cratedb-retention create-materialized-view doc.raw_metrics \
+      --as='SELECT * FROM <table_name>;'
+    cratedb-retention refresh-materialized-view doc.raw_metrics
+    ```
+
+## Iteration +1.75
+Add two non-partition-based strategies. Category: `timerange`.
+
+- Add a shortcut interface for adding policies.
+  - Provide a TTL-like interface.
+    - https://iotdb.apache.org/UserGuide/V1.1.x/Delete-Data/TTL.html
+    - https://iotdb.apache.org/UserGuide/V1.1.x/Query-Data/Continuous-Query.html#downsampling-and-data-retention
+  - Rename `retention period` to `duration`. It is shorter, and aligns with InfluxDB.
+    - https://docs.influxdata.com/influxdb/v1.8/query_language/manage-database/#create-retention-policies-with-create-retention-policy
+    - https://docs.influxdata.com/influxdb/v1.8/query_language/spec/#durations
+  - Example:
+    ```shell
+    cratedb-retention set-ttl doc.raw_metrics \
+      --strategy=delete --duration=1w
+    ```
+- Provide a solid (considering best-practices, DWIM) cascaded/multi-level
+  downsampling implementation/toolkit, similar to RRDtool or Munin.
+
+  - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
+  - https://community.openhab.org/t/influxdb-in-rrd-style/88395
+  - https://github.com/influxdata/influxdb/issues/23108
+  - https://forums.percona.com/t/data-retention-archive-some-metrics-like-rrdtool-with-1d-resolution/21437
+- Naming things: Generalize to `supertask`.
+  - Examples
+  ```shell
+  # Example for a shortcut form of `supertask create-retention-policy`.
+  #      <TABLE>             <STRATEGY>:<TARGET>  <DURATION>
+  st ttl doc.sensor_readings snapshot:export_cold 365d
+  ```
+  When using partition-based retention, previously using the `--partition-column=time_month`
+  option, that syntax might be suitable:
+  ```shell
+  #      <TABLE>             <PARTCOL>  <STRATEGY>:<TARGET>  <DURATION>
+  st ttl doc.sensor_readings:time_month snapshot:export_cold 4w
+  ```
+
 ## Iteration +2
-- Recurrent queries via scheduling.
+- Periodic/recurrent queries via scheduling.
+  - https://github.com/crate/crate/issues/11182
+  - https://github.com/crate/crate-insights/issues/75
+
   Either use classic cron, or systemd-timers, or use one of `APScheduler`,
   `schedule`, or `scheduler`.
 
@@ -30,23 +85,13 @@
   - https://github.com/agronholm/apscheduler
   - https://github.com/dbader/schedule
   - https://gitlab.com/DigonIO/scheduler
-- Document "Docker Compose" setup variant
+- Document complete "Docker Compose" setup variant, using both CrateDB and `cratedb-retention`
 - Generalize from `cutoff_day` to `cutoff_date`?
-- Refactor SQL queries once more, introducing comment-stripping, and renaming the files.
-- Make all tests work completely.
-  The `snapshot` and `reallocate` scenarios are currently untested.
-- Battle testing.
-- More subcommands, like `list-policies` (`list`) and `check-policies` (`check`).
-- Improve how to create a policy, see README and `examples/basic.py`
-- Remedy the need to do a `run_sql` step by introducing a subcommand `add-policy`.
-- Provide a solid (considering best-practices, DWIM) cascaded/multi-level
-  downsampling implementation/toolkit, similar to RRDtool or Munin.
-
-  - https://bostik.iki.fi/aivoituksia/projects/influxdb-cascaded-downsampling.html
-  - https://community.openhab.org/t/influxdb-in-rrd-style/88395
-  - https://github.com/influxdata/influxdb/issues/23108
-  - https://forums.percona.com/t/data-retention-archive-some-metrics-like-rrdtool-with-1d-resolution/21437
-- OCI: Also build for ARM, maybe only on PRs to `main`, and releases?
+  For example, use `ms`. See https://iotdb.apache.org/UserGuide/V1.1.x/Delete-Data/TTL.html.
+- More battle testing, in sandboxes and on production systems.
+- Use storage classes
+  - https://github.com/crate/crate/issues/14298
+  - https://github.com/crate/crate/pull/14346
 
 ## Iteration +3
 - Review SQL queries: What about details like `ORDER BY 5 ASC`?
@@ -95,3 +140,15 @@
 - Document compact invocation, after applying an alias and exporting an
   environment variable: `cratedb-retention rm --tags=baz`
 - Default value for `"${CRATEDB_URI}"` aka. `dburi` argument
+- Add additional check if data table(s) exists, or not.
+- Dissolve JOIN-based retention task gathering, because, when the application
+  does not discover any retention policy job, it can not discriminate between
+  "no retention policy" and "no data", and thus, it is not able to report about
+  it correspondingly.
+- CLI: Provide `--dry-run` option
+- Docs: Before running the examples, need to invoke `cratedb-retention setup --schema=examples`
+- For testing the snapshot strategy, provide an embedded MinIO S3 instance to the test suite.
+- Improve SNAPSHOT testing: Microsoft Azure Blob Storage
+  - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
+  - https://learn.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests
+- Improve SNAPSHOT testing: Filesystem
