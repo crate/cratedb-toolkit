@@ -133,25 +133,6 @@ def policies(cratedb, settings, store):
             partition_column="time_month",
             retention_period=1,
         ),
-        # Retention policy rule for the REALLOCATE strategy.
-        RetentionPolicy(
-            strategy=RetentionStrategy.REALLOCATE,
-            table_schema=TESTDRIVE_DATA_SCHEMA,
-            table_name="raw_metrics",
-            partition_column="ts_day",
-            retention_period=60,
-            reallocation_attribute_name="storage",
-            reallocation_attribute_value="warm",
-        ),
-        # Retention policy rule for the SNAPSHOT strategy.
-        RetentionPolicy(
-            strategy=RetentionStrategy.SNAPSHOT,
-            table_schema=TESTDRIVE_DATA_SCHEMA,
-            table_name="sensor_readings",
-            partition_column="time_month",
-            retention_period=365,
-            target_repository_name="export_cold",
-        ),
     ]
     for rule in rules:
         store.create(rule, ignore="DuplicateKeyException")
@@ -235,6 +216,41 @@ def sensor_readings(cratedb, settings, store):
     run_sql(database_url, ddl)
     run_sql(database_url, dml)
     run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings";')
+
+
+@pytest.fixture(scope="function")
+def raw_metrics_reallocate_policy(store):
+    """
+    Populate the retention policy table.
+    """
+    # Retention policy rule for the REALLOCATE strategy.
+    rule = RetentionPolicy(
+        strategy=RetentionStrategy.REALLOCATE,
+        table_schema=TESTDRIVE_DATA_SCHEMA,
+        table_name="raw_metrics",
+        partition_column="ts_day",
+        retention_period=60,
+        reallocation_attribute_name="storage",
+        reallocation_attribute_value="warm",
+    )
+    store.create(rule, ignore="DuplicateKeyException")
+
+
+@pytest.fixture(scope="function")
+def sensor_readings_snapshot_policy(store):
+    """
+    Populate the retention policy table.
+    """
+    # Retention policy rule for the SNAPSHOT strategy.
+    rule = RetentionPolicy(
+        strategy=RetentionStrategy.SNAPSHOT,
+        table_schema=TESTDRIVE_DATA_SCHEMA,
+        table_name="sensor_readings",
+        partition_column="time_month",
+        retention_period=365,
+        target_repository_name="export_cold",
+    )
+    store.create(rule, ignore="DuplicateKeyException")
 
 
 setup_logging()

@@ -76,7 +76,7 @@ class EditExample:
         policy = RetentionPolicy(
             strategy=RetentionStrategy.DELETE,
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="foo",
             partition_column="ts_day",
             retention_period=1,
         )
@@ -87,7 +87,7 @@ class EditExample:
             strategy=RetentionStrategy.SNAPSHOT,
             tags=["foo", "bar"],
             table_schema="doc",
-            table_name="raw_metrics",
+            table_name="bar",
             partition_column="ts_day",
             retention_period=90,
         )

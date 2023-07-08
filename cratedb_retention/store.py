@@ -28,6 +28,10 @@ class SQLAlchemyTagHelperMixin:
     def execute(self, statement):
         pass
 
+    @abc.abstractmethod
+    def synchronize(self):
+        pass
+
     def get_tags_constraints(self, tags: t.Union[t.List[str], t.Set[str]], table_alias: t.Optional[str] = None):
         """
         Return list of SQL WHERE constraint clauses from given tags.
@@ -93,6 +97,7 @@ class SQLAlchemyTagHelperMixin:
             return 0
         deletable = sa.delete(table).where(where_clause)  # type: ignore[arg-type]
         result = self.execute(deletable)
+        self.synchronize()
         return result.rowcount
 
 
@@ -119,12 +124,22 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         """
         Create a new retention policy, and return its identifier.
         """
+
+        # Sanity checks.
+        if policy.table_schema is None:
+            raise ValueError("Table schema needs to be defined")
+        if policy.table_name is None:
+            raise ValueError("Table name needs to be defined")
+        if self.exists(policy):
+            raise ValueError(f"Retention policy for table '{policy.table_schema}.{policy.table_name}' already exists")
+
         table = self.table
         # TODO: Add UUID as converter to CrateDB driver?
         identifier = str(uuid.uuid4())
         insertable = sa.insert(table).values(id=identifier, **policy.to_storage_dict()).returning(table.c.id)
         cursor = self.execute(insertable)
         identifier = cursor.one()[0]
+        self.synchronize()
         return identifier
 
     def retrieve(self):
@@ -133,9 +148,6 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
 
         TODO: Add filtering capabilities.
         """
-        # Synchronize data.
-        sql = f"REFRESH TABLE {self.settings.policy_table.fullname};"
-        self.database.run_sql(sql)
 
         # Run SELECT statement, and return result.
         selectable = sa.select(self.table)
@@ -149,9 +161,6 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
 
         TODO: Add filtering capabilities.
         """
-        # Synchronize data.
-        sql = f"REFRESH TABLE {self.settings.policy_table.fullname};"
-        self.database.run_sql(sql)
 
         # Run SELECT statement, and return result.
         selectable = sa.select(self.table.c.tags)
@@ -179,6 +188,7 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         constraint = table.c.id == identifier
         deletable = sa.delete(table).where(constraint)
         result = self.execute(deletable)
+        self.synchronize()
         return result.rowcount
 
     def execute(self, statement):
@@ -198,3 +208,22 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         rows = cursor.mappings().fetchall()
         records = [dict(row.items()) for row in rows]
         return records
+
+    def exists(self, policy: RetentionPolicy):
+        """
+        Check if retention policy for specific table already exists.
+        """
+        table = self.table
+        selectable = sa.select(table).where(
+            table.c.table_schema == policy.table_schema,
+            table.c.table_name == policy.table_name,
+        )
+        result = self.query(selectable)
+        return bool(result)
+
+    def synchronize(self):
+        """
+        Synchronize data by issuing `REFRESH TABLE` statement.
+        """
+        sql = f"REFRESH TABLE {self.settings.policy_table.fullname};"
+        self.database.run_sql(sql)
