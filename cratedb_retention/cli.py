@@ -103,6 +103,9 @@ def help_run():
     """  # noqa: E501
 
 
+dryrun_option: t.Any = click.option(
+    "--dry-run", type=bool, is_flag=True, default=False, help="Do not invoke SQL statements, but display them instead"
+)
 schema_option: t.Any = click.option(
     "--schema",
     type=str,
@@ -136,16 +139,17 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 
 @make_command(cli, "setup", help_setup)
 @click.argument("dburi", envvar="CRATEDB_URI")
+@dryrun_option
 @schema_option
 @click.pass_context
-def setup(ctx: click.Context, dburi: str, schema: t.Optional[str]):
+def setup(ctx: click.Context, dburi: str, dry_run: bool, schema: t.Optional[str]):
     if not dburi:
         logger.error("Unable to operate without database")
         sys.exit(1)
 
     # Create `JobSettings` instance, and configure schema name.
     # It is the single source of truth about configuration and runtime settings.
-    settings = JobSettings(database=DatabaseAddress.from_string(dburi))
+    settings = JobSettings(database=DatabaseAddress.from_string(dburi), dry_run=dry_run)
     if schema is not None:
         settings.policy_table.schema = schema
 
@@ -274,12 +278,15 @@ def delete_policy(ctx: click.Context, dburi: str, schema: str, identifier: str, 
 
 @make_command(cli, "run", help_run)
 @click.argument("dburi", envvar="CRATEDB_URI")
+@dryrun_option
 @schema_option
-@click.option("--cutoff-day", type=str, required=True, help="Select day parameter")
+@click.option("--cutoff-day", type=str, required=True, help="Select cut-off date parameter")
 @strategy_option
 @tags_option
 @click.pass_context
-def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, tags: str, schema: t.Optional[str]):
+def run(
+    ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, tags: str, dry_run: bool, schema: t.Optional[str]
+):
     # TODO: Converge to Click converters.
     strategy_type = RetentionStrategy(strategy.upper())
     tag_list = set(split_list(tags))
@@ -295,6 +302,7 @@ def run(ctx: click.Context, dburi: str, cutoff_day: str, strategy: str, tags: st
         strategy=strategy_type,
         tags=tag_list,
         cutoff_day=cutoff_day,
+        dry_run=dry_run,
     )
     if schema is not None:
         settings.policy_table.schema = schema

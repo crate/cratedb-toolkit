@@ -22,7 +22,7 @@ def test_version():
     assert result.exit_code == 0
 
 
-def test_setup_brief(cratedb, caplog):
+def test_setup_brief(caplog, cratedb, settings):
     """
     CLI test: Invoke `cratedb-retention setup`.
     """
@@ -36,10 +36,11 @@ def test_setup_brief(cratedb, caplog):
     )
     assert result.exit_code == 0
 
+    assert cratedb.database.table_exists(settings.policy_table.fullname) is True
     assert 1 <= len(caplog.records) <= 2
 
 
-def test_setup_verbose(cratedb, caplog):
+def test_setup_verbose(caplog, cratedb, settings):
     """
     CLI test: Invoke `cratedb-retention setup`.
     """
@@ -53,7 +54,27 @@ def test_setup_verbose(cratedb, caplog):
     )
     assert result.exit_code == 0
 
+    assert cratedb.database.table_exists(settings.policy_table.fullname) is True
     assert 3 <= len(caplog.records) <= 5
+
+
+def test_setup_dryrun(caplog, cratedb, settings):
+    """
+    CLI test: Invoke `cratedb-retention setup --dry-run`,
+    and verify the table will not be created.
+    """
+    database_url = cratedb.get_connection_url()
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli,
+        args=f'setup --dry-run "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    assert cratedb.database.table_exists(settings.policy_table.fullname) is False
+    assert "Pretending to execute SQL statement" in caplog.text
 
 
 def test_setup_failure_no_dburi():
@@ -135,6 +156,28 @@ def test_run_delete_basic(store, database, raw_metrics, policies):
 
     # Verify that records have been deleted.
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 0
+
+
+def test_run_delete_dryrun(caplog, store, database, raw_metrics, policies):
+    """
+    Verify a basic DELETE retention policy through the CLI with `--dry-run` does not do anything.
+    """
+
+    database_url = store.database.dburi
+    runner = CliRunner()
+
+    # Invoke data retention through CLI interface.
+    result = runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-12-31 --strategy=delete --dry-run "{database_url}"',
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify that records have been deleted.
+    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
+
+    assert "Pretending to execute SQL statement" in caplog.text
 
 
 def test_run_delete_with_tags_match(store, database, sensor_readings, policies):

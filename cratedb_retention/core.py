@@ -58,6 +58,9 @@ class RetentionJob:
             # Run a sequence of SQL statements for this task.
             # Stop the sequence when a step fails.
             for sql in sql_bunch:
+                if self.settings.dry_run:
+                    logger.info(f"Pretending to execute SQL statement:\n{sql}")
+                    continue
                 try:
                     run_sql(dburi=self.settings.database.dburi, sql=sql)
                 except Exception:
@@ -91,6 +94,7 @@ class RetentionJob:
                 logger.warning(f"Data table not found: {policy.table_fullname}")
                 continue
 
+            # Render SQL statement to gather tasks.
             sql_renderer = TaskSqlRenderer(settings=self.settings, store=self.store, policy=policy)
             selectable = sql_renderer.render()
             results = self.store.query(selectable)

@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 def setup_schema(settings: JobSettings):
     """
     Set up the retention policy table schema.
+
+    TODO: Refactor to `store` module.
     """
 
     logger.info(
@@ -24,6 +26,10 @@ def setup_schema(settings: JobSettings):
 
     tplvars = settings.to_dict()
     sql = sql.format_map(tplvars)
+
+    if settings.dry_run:
+        logger.info(f"Pretending to execute SQL statement:\n{sql}")
+        return
 
     # Materialize table schema.
     run_sql(settings.database.dburi, sql)
