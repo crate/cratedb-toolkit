@@ -300,10 +300,17 @@ Note that, currently, the Python driver and the crash database
 shell need to obtain slightly different parameters. 
 ```
 
-By using the `--verbose` option, directly after the main command, you can
-inspect the SQL statements issued to the database.
+By using the `--verbose` option, directly after the main command, before the
+subcommand, you can inspect the SQL statements issued to the database.
 ```shell
 cratedb-retention --verbose setup "${CRATEDB_URI}"
+```
+
+By using the `--dry-run` option, after the subcommand, the program will not
+issue altering or modifying SQL statements to the database. You can use it
+to learn about which actions would be performed.
+```shell
+cratedb-retention setup --dry-run "${CRATEDB_URI}"
 ```
 
 The `DBURI` command-line argument can be omitted when defining the `CRATEDB_URI`
@@ -351,6 +358,11 @@ cratedb-retention create-policy --strategy=delete \
 Invoke the data retention job, using a specific cut-off date.
 ```shell
 cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
+```
+
+Simulate the data retention job, display SQL statements only.
+```shell
+cratedb-retention run --dry-run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
 #### Podman or Docker

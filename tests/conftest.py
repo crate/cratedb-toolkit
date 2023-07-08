@@ -1,8 +1,6 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-
 import pytest
-import sqlalchemy as sa
 
 from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
@@ -29,36 +27,25 @@ RESET_TABLES = [
 class CrateDBFixture:
     def __init__(self):
         self.cratedb = None
+        self.database: DatabaseAdapter = None
         self.setup()
 
     def setup(self):
         # TODO: Make image name configurable.
         self.cratedb = CrateDBContainer("crate/crate:nightly")
         self.cratedb.start()
+        self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
     def finalize(self):
         self.cratedb.stop()
 
     def reset(self):
-        database_url = self.cratedb.get_connection_url()
-        sa_engine = sa.create_engine(database_url)
-        with sa_engine.connect() as conn:
-            # TODO: Make list of tables configurable.
-            for reset_table in RESET_TABLES:
-                conn.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
+        # TODO: Make list of tables configurable.
+        for reset_table in RESET_TABLES:
+            self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
 
     def get_connection_url(self, *args, **kwargs):
         return self.cratedb.get_connection_url(*args, **kwargs)
-
-    def get_connection(self):
-        database_url = self.cratedb.get_connection_url()
-        sa_engine = sa.create_engine(database_url)
-        with sa_engine.connect() as conn:
-            return conn
-
-    def execute(self, sql: str):
-        conn = self.get_connection()
-        return conn.execute(sa.text(sql))
 
 
 @pytest.fixture(scope="session", autouse=True)

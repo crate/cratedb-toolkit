@@ -232,6 +232,9 @@ class JobSettings:
     # Where the retention policy table is stored.
     policy_table: TableAddress = dataclasses.field(default_factory=default_table_address)
 
+    # Only pretend to invoke retention tasks.
+    dry_run: t.Optional[bool] = False
+
     def to_dict(self):
         data = dataclasses.asdict(self)
         data["policy_table"] = self.policy_table
