@@ -73,6 +73,31 @@ class DatabaseAdapter:
             if "RepositoryUnknownException" not in str(ex):
                 raise
 
+    def ensure_repository_fs(
+        self,
+        name: str,
+        typename: str,
+        location: str,
+        drop: bool = False,
+    ):
+        """
+        Make sure the repository exists, and optionally drop it upfront.
+        """
+        if drop:
+            self.drop_repository(name)
+
+        # TODO: CREATE REPOSITORY IF NOT EXISTS
+        sql = f"""
+            CREATE REPOSITORY
+                {name}
+            TYPE
+                {typename}
+            WITH (
+                location   = '{location}'
+            );
+        """
+        self.run_sql(sql)
+
     def ensure_repository_s3(
         self,
         name: str,

@@ -1,8 +1,12 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import typing as t
+
 import pytest
 from click.testing import CliRunner
+from docker.models.containers import Container
 from sqlalchemy.exc import OperationalError
+from testcontainers.core.container import DockerContainer
 
 from cratedb_retention.cli import cli
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
@@ -304,12 +308,7 @@ def test_run_snapshot_aws_s3(caplog, store, database, sensor_readings, sensor_re
 
     # Verify that the S3 bucket has been populated correctly, and that the snapshot has the right shape.
     object_names = minio.list_object_names(bucket_name="cratedb-cold-storage")
-    assert len(object_names) >= 5
-
-    # Strip random fragments from snapshot file names, to compare them against a reference.
-    # ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']  # noqa: ERA001, E501
-    object_base_names = [name.split("-")[0].replace("/", "") for name in object_names]
-    assert object_base_names == ["index", "index.latest", "meta", "snap", "indices"]
+    assert_snapshot_shape(object_names)
 
 
 @pytest.mark.skip(reason="CrateDB does not support custom endpoints for Azure Blob Storage")
@@ -356,9 +355,61 @@ def test_run_snapshot_azure_blob(caplog, store, database, sensor_readings, senso
 
     # Verify that the AZ blob container has been populated correctly, and that the snapshot has the right shape.
     blob_names = azurite.list_blob_names(container_name="cratedb-cold-storage")
-    assert len(blob_names) >= 5
+    assert_snapshot_shape(blob_names)
 
-    # Strip random fragments from snapshot file names, to compare them against a reference.
-    # ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']  # noqa: ERA001, E501
-    blob_base_names = [name.split("-")[0].replace("/", "") for name in blob_names]
-    assert blob_base_names == ["index", "index.latest", "meta", "snap", "indices"]
+
+def test_run_snapshot_fs(caplog, cratedb, store, database, sensor_readings, sensor_readings_snapshot_policy):
+    """
+    Verify the "SNAPSHOT" strategy using classic filesystem storage.
+    Invokes `cratedb-retention run --strategy=snapshot`.
+    """
+
+    # Acquire OCI container handle, to introspect it.
+    tc_container: DockerContainer = cratedb.cratedb
+    oci_container: Container = tc_container.get_wrapped_container()
+
+    # Define snapshot directory.
+    # Note that the path is located _inside_ the OCI container where CrateDB is running.
+    snapshot_path = "/tmp/snapshots/cratedb-cold-storage"  # noqa: S108
+
+    # Delete snapshot directory.
+    oci_container.exec_run(f"rm -rf {snapshot_path}")
+
+    # Create CrateDB repository on the filesystem.
+    # https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html#fs
+    database.ensure_repository_fs(
+        name="export_cold",
+        typename="fs",
+        location=snapshot_path,
+        drop=True,
+    )
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 9
+
+    # Invoke data retention through CLI interface.
+    database_url = store.database.dburi
+    runner = CliRunner()
+    runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-05-15 --strategy=snapshot "{database_url}"',
+        catch_exceptions=False,
+    )
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 4
+
+    # Verify that the filesystem has been populated correctly, and that the snapshot has the right shape.
+    ls_result = oci_container.exec_run(f"ls {snapshot_path}")
+    file_names = ls_result.output.decode().splitlines()
+    assert_snapshot_shape(file_names)
+
+
+def assert_snapshot_shape(file_names: t.List[str]):
+    """
+    Strip random fragments from snapshot file names, and compare against reference.
+    ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']
+    """  # noqa: ERA001, E501
+    assert len(file_names) >= 5
+    base_names = sorted([name.split("-")[0].replace("/", "") for name in file_names])
+    assert base_names == ["index", "index.latest", "indices", "meta", "snap"]
