@@ -68,6 +68,7 @@ class CrateDBContainer(DbContainer):
         self._command = "-Cdiscovery.type=single-node -Ccluster.routing.allocation.disk.threshold_enabled=false"
         # TODO: Generalize by obtaining more_opts from caller.
         self._command += " -Cnode.attr.storage=hot"
+        self._command += " -Cpath.repo=/tmp/snapshots"
 
         self.CRATEDB_USER = user or self.CRATEDB_USER
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
