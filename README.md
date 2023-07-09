@@ -131,6 +131,19 @@ or on a supported object storage backend. CrateDB is able to use buckets on S3-c
 storage backends, or on Azure blob storage, using the `CREATE REPOSITORY ... TYPE = 
 s3|azure|fs` SQL statement.
 
+```sql
+CREATE REPOSITORY
+    export_cold
+TYPE
+    s3
+WITH (
+    protocol   = 'https',
+    endpoint   = 's3-store.example.org:443',
+    access_key = '<USERNAME>',
+    secret_key = '<PASSWORD>',
+    bucket     = 'cratedb-cold-storage'
+);
+```
 ```shell
 cratedb-retention create-policy --strategy=snapshot \
   --table-schema=doc --table-name=sensor_readings \

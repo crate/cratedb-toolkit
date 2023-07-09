@@ -8,6 +8,7 @@ from cratedb_retention.store import RetentionPolicyStore
 from cratedb_retention.util.common import setup_logging
 from cratedb_retention.util.database import DatabaseAdapter, run_sql
 from tests.testcontainers.cratedb import CrateDBContainer
+from tests.testcontainers.minio import ExtendedMinioContainer
 
 # Use different schemas both for storing the retention policy table, and
 # the test data, so that they do not accidentally touch the default `doc`
@@ -65,6 +66,21 @@ def cratedb():
     db.reset()
     yield db
     db.finalize()
+
+
+@pytest.fixture(scope="session")
+def minio():
+    """
+    For testing the "SNAPSHOT" strategy against an Amazon Web Services S3 object storage API,
+    provide a MinIO service to the test suite.
+
+    - https://en.wikipedia.org/wiki/Object_storage
+    - https://en.wikipedia.org/wiki/Amazon_S3
+    - https://github.com/minio/minio
+    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
+    """
+    with ExtendedMinioContainer() as minio:
+        yield minio
 
 
 @pytest.fixture()
@@ -201,8 +217,8 @@ def sensor_readings(cratedb, settings, store):
             'FULL' AS battery_status,
             RANDOM()*100 AS battery_temperature
         FROM generate_series(
-            '2023-05-01'::TIMESTAMPTZ - '6 years'::INTERVAL,
-            '2023-06-30'::TIMESTAMPTZ - '6 years'::INTERVAL,
+            '2023-05-01'::TIMESTAMPTZ,
+            '2023-06-30'::TIMESTAMPTZ,
             '7 days'::INTERVAL
         );
     """

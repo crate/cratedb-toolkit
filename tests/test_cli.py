@@ -260,22 +260,53 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
     assert database.count_records(raw_metrics) == 6
 
 
-def test_run_snapshot(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy):
+def test_run_snapshot_aws_s3(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, minio):
     """
-    CLI test: Invoke `cratedb-retention run --strategy=snapshot`.
+    Verify the "SNAPSHOT" strategy using an object storage with AWS S3 API.
+    Invokes `cratedb-retention run --strategy=snapshot`.
     """
 
-    database_url = store.database.dburi
-    runner = CliRunner()
+    # Acquire runtime information from MinIO container. In order to let CrateDB talk to
+    # MinIO, we need its Docker-internal IP address (172.17.0.x), not the exposed one.
+    s3_endpoint = minio.get_real_host_address()
+
+    # Prepare a "bucket" on S3 storage.
+    minio.get_client().make_bucket("cratedb-cold-storage")
+
+    # Create CrateDB repository on an object storage with AWS S3 API.
+    # https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html#s3
+    s3_config = minio.get_config()
+    database.ensure_repository_s3(
+        name="export_cold",
+        typename="s3",
+        protocol="http",
+        endpoint=s3_endpoint,
+        access_key=s3_config["access_key"],
+        secret_key=s3_config["secret_key"],
+        bucket="cratedb-cold-storage",
+        drop=True,
+    )
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 9
 
     # Invoke data retention through CLI interface.
-    # FIXME: This currently can not be tested, because it needs a snapshot repository.
-    # TODO: Provide an embedded MinIO S3 instance to the test suite.
+    database_url = store.database.dburi
+    runner = CliRunner()
     runner.invoke(
         cli,
-        args=f'run --cutoff-day=2024-12-31 --strategy=snapshot "{database_url}"',
+        args=f'run --cutoff-day=2024-05-15 --strategy=snapshot "{database_url}"',
         catch_exceptions=False,
     )
 
-    assert "Data retention SQL statement failed" in caplog.text
-    assert "RepositoryUnknownException[Repository 'export_cold' unknown]" in caplog.text
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 4
+
+    # Verify that the S3 bucket has been populated correctly, and that the snapshot has the right shape.
+    object_names = minio.list_object_names(bucket_name="cratedb-cold-storage")
+    assert len(object_names) >= 5
+
+    # Strip random fragments from snapshot file names, to compare them against a reference.
+    # ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']  # noqa: ERA001, E501
+    object_base_names = [name.split("-")[0].replace("/", "") for name in object_names]
+    assert object_base_names == ["index", "index.latest", "meta", "snap", "indices"]
