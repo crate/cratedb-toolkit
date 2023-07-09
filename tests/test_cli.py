@@ -310,3 +310,55 @@ def test_run_snapshot_aws_s3(caplog, store, database, sensor_readings, sensor_re
     # ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']  # noqa: ERA001, E501
     object_base_names = [name.split("-")[0].replace("/", "") for name in object_names]
     assert object_base_names == ["index", "index.latest", "meta", "snap", "indices"]
+
+
+@pytest.mark.skip(reason="CrateDB does not support custom endpoints for Azure Blob Storage")
+def test_run_snapshot_azure_blob(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, azurite):
+    """
+    Verify the "SNAPSHOT" strategy using an object storage with Azure Blob Storage API.
+    Invokes `cratedb-retention run --strategy=snapshot`.
+    """
+
+    # Acquire runtime information from Azurite container. In order to let CrateDB talk to
+    # Azurite, we need its Docker-internal IP address (172.17.0.x), not the exposed one.
+    storage_endpoint = azurite.get_real_host_address()
+
+    # Prepare a "container" on Azure storage.
+    azurite.create_container("cratedb-cold-storage")
+
+    # Create CrateDB repository on an object storage with Azure Blob Storage API.
+    # https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html#azure
+    database.ensure_repository_az(
+        name="export_cold",
+        typename="azure",
+        protocol="http",
+        endpoint=storage_endpoint,
+        account=azurite._AZURITE_ACCOUNT_NAME,
+        key=azurite._AZURITE_ACCOUNT_KEY,
+        container="cratedb-cold-storage",
+        drop=True,
+    )
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 9
+
+    # Invoke data retention through CLI interface.
+    database_url = store.database.dburi
+    runner = CliRunner()
+    runner.invoke(
+        cli,
+        args=f'run --cutoff-day=2024-05-15 --strategy=snapshot "{database_url}"',
+        catch_exceptions=False,
+    )
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 4
+
+    # Verify that the AZ blob container has been populated correctly, and that the snapshot has the right shape.
+    blob_names = azurite.list_blob_names(container_name="cratedb-cold-storage")
+    assert len(blob_names) >= 5
+
+    # Strip random fragments from snapshot file names, to compare them against a reference.
+    # ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']  # noqa: ERA001, E501
+    blob_base_names = [name.split("-")[0].replace("/", "") for name in blob_names]
+    assert blob_base_names == ["index", "index.latest", "meta", "snap", "indices"]

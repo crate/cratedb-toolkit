@@ -106,6 +106,39 @@ class DatabaseAdapter:
         """
         self.run_sql(sql)
 
+    def ensure_repository_az(
+        self,
+        name: str,
+        typename: str,
+        protocol: str,
+        endpoint: str,
+        account: str,
+        key: str,
+        container: str,
+        drop: bool = False,
+    ):
+        """
+        Make sure the repository exists, and optionally drop it upfront.
+        """
+        if drop:
+            self.drop_repository(name)
+
+        # TODO: CREATE REPOSITORY IF NOT EXISTS
+        sql = f"""
+            CREATE REPOSITORY
+                {name}
+            TYPE
+                {typename}
+            WITH (
+                protocol   = '{protocol}',
+                endpoint   = '{endpoint}',
+                account    = '{account}',
+                key        = '{key}',
+                container  = '{container}'
+            );
+        """
+        self.run_sql(sql)
+
 
 def sa_is_empty(thing):
     """

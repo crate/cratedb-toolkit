@@ -7,6 +7,7 @@ from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.store import RetentionPolicyStore
 from cratedb_retention.util.common import setup_logging
 from cratedb_retention.util.database import DatabaseAdapter, run_sql
+from tests.testcontainers.azurite import ExtendedAzuriteContainer
 from tests.testcontainers.cratedb import CrateDBContainer
 from tests.testcontainers.minio import ExtendedMinioContainer
 
@@ -81,6 +82,22 @@ def minio():
     """
     with ExtendedMinioContainer() as minio:
         yield minio
+
+
+@pytest.fixture(scope="session")
+def azurite():
+    """
+    For testing the "SNAPSHOT" strategy against a Microsoft Azure Blob Storage object storage API,
+    provide an Azurite service to the test suite.
+
+    - https://en.wikipedia.org/wiki/Object_storage
+    - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
+    - https://learn.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests
+    - https://github.com/azure/azurite
+    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
+    """
+    with ExtendedAzuriteContainer() as azurite:
+        yield azurite
 
 
 @pytest.fixture()
