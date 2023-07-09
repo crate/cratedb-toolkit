@@ -1,6 +1,7 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import sqlalchemy as sa
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
 
@@ -59,6 +60,51 @@ class DatabaseAdapter:
             return True
         except Exception:
             return False
+
+    def drop_repository(self, name: str):
+        """
+        Drop snapshot repository.
+        """
+        # TODO: DROP REPOSITORY IF EXISTS
+        try:
+            sql = f"DROP REPOSITORY {name};"
+            self.run_sql(sql)
+        except ProgrammingError as ex:
+            if "RepositoryUnknownException" not in str(ex):
+                raise
+
+    def ensure_repository_s3(
+        self,
+        name: str,
+        typename: str,
+        protocol: str,
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        bucket: str,
+        drop: bool = False,
+    ):
+        """
+        Make sure the repository exists, and optionally drop it upfront.
+        """
+        if drop:
+            self.drop_repository(name)
+
+        # TODO: CREATE REPOSITORY IF NOT EXISTS
+        sql = f"""
+            CREATE REPOSITORY
+                {name}
+            TYPE
+                {typename}
+            WITH (
+                protocol   = '{protocol}',
+                endpoint   = '{endpoint}',
+                access_key = '{access_key}',
+                secret_key = '{secret_key}',
+                bucket     = '{bucket}'
+            );
+        """
+        self.run_sql(sql)
 
 
 def sa_is_empty(thing):
