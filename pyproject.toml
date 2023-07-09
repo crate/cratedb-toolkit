@@ -108,6 +108,7 @@ test = [
   "pytest-cov<5",
   "pytest-mock<4",
   "testcontainers<4",
+  "testcontainers-azurite==0.0.1rc1",
   "testcontainers-minio==0.0.1rc1",
 ]
 [project.urls]
