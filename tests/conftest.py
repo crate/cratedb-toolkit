@@ -135,9 +135,11 @@ def raw_metrics(cratedb, settings, store):
     Populate the `raw_metrics` table.
     """
 
+    tablename_full = f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"'
+
     database_url = cratedb.get_connection_url()
     ddl = f"""
-        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics" (
+        CREATE TABLE {tablename_full} (
            "variable" TEXT,
            "timestamp" TIMESTAMP WITH TIME ZONE,
            "ts_day" TIMESTAMP GENERATED ALWAYS AS date_trunc('day', "timestamp"),
@@ -151,7 +153,7 @@ def raw_metrics(cratedb, settings, store):
     """
 
     dml = f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"
+        INSERT INTO {tablename_full}
             (variable, timestamp, value, quality)
         SELECT
             'temperature' AS variable,
@@ -163,7 +165,9 @@ def raw_metrics(cratedb, settings, store):
 
     run_sql(database_url, ddl)
     run_sql(database_url, dml)
-    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."raw_metrics";')
+    run_sql(database_url, f"REFRESH TABLE {tablename_full};")
+
+    return tablename_full
 
 
 @pytest.fixture(scope="function")
@@ -172,9 +176,11 @@ def sensor_readings(cratedb, settings, store):
     Populate the `sensor_readings` table.
     """
 
+    tablename_full = f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"'
+
     database_url = cratedb.get_connection_url()
     ddl = f"""
-        CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings" (
+        CREATE TABLE {tablename_full} (
            time TIMESTAMP WITH TIME ZONE NOT NULL,
            time_month TIMESTAMP WITH TIME ZONE GENERATED ALWAYS AS DATE_TRUNC('month', "time"),
            sensor_id TEXT NOT NULL,
@@ -186,7 +192,7 @@ def sensor_readings(cratedb, settings, store):
     """
 
     dml = f"""
-        INSERT INTO "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"
+        INSERT INTO {tablename_full}
             (time, sensor_id, battery_level, battery_status, battery_temperature)
         SELECT
             generate_series AS time,
@@ -203,7 +209,9 @@ def sensor_readings(cratedb, settings, store):
 
     run_sql(database_url, ddl)
     run_sql(database_url, dml)
-    run_sql(database_url, f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."sensor_readings";')
+    run_sql(database_url, f"REFRESH TABLE {tablename_full};")
+
+    return tablename_full
 
 
 @pytest.fixture(scope="function")
