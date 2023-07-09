@@ -1,5 +1,6 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import datetime
 import logging
 import typing as t
 
@@ -25,6 +26,12 @@ class RetentionJob:
     """
 
     def __init__(self, settings: JobSettings):
+        # When no cutoff date is obtained from the caller, use `today()` as default value.
+        if settings.cutoff_day is None:
+            today = datetime.date.today().isoformat()
+            logger.info(f"No cutoff date selected, will use today(): {today}")
+            settings.cutoff_day = today
+
         # Runtime context settings.
         self.settings = settings
 
@@ -39,7 +46,7 @@ class RetentionJob:
             f"Connecting to database {self.settings.database.safe}, " f"table {self.settings.policy_table.fullname}"
         )
 
-        msg = f"Starting data retention using '{self.settings.strategy}', cut-off day '{self.settings.cutoff_day}'"
+        msg = f"Starting data retention using '{self.settings.strategy}', cutoff day '{self.settings.cutoff_day}'"
         if self.settings.tags:
             msg += f", and tags '{self.settings.tags}'"
         logger.info(msg)

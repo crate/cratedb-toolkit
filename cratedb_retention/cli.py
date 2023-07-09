@@ -114,6 +114,13 @@ schema_option: t.Any = click.option(
     help="Select schema where extension tables are created",
 )
 
+cutoff_date_option: t.Any = click.option(
+    "--cutoff-day",
+    type=str,
+    required=False,
+    help="Select cutoff date. Retire all data older than »cutoff date« minus "
+    "»data retention duration«. The default value is 'today()'.",
+)
 strategy_option: t.Any = click.option(
     "--strategy",
     type=str,
@@ -280,7 +287,7 @@ def delete_policy(ctx: click.Context, dburi: str, schema: str, identifier: str, 
 @click.argument("dburi", envvar="CRATEDB_URI")
 @dryrun_option
 @schema_option
-@click.option("--cutoff-day", type=str, required=True, help="Select cut-off date parameter")
+@cutoff_date_option
 @strategy_option
 @tags_option
 @click.pass_context

@@ -86,7 +86,8 @@ cratedb-retention create-policy --strategy=delete \
 This retention policy implements the following directive.
 
 > **Delete** all data from the `"doc"."raw_metrics"` table, on partitions defined by
-> the column `ts_day`, which is older than **1** day at the given cut-off date.
+> the column `ts_day`, which is older than **1** day at the given cutoff date when
+> running the retention job.
 
 [implementation](cratedb_retention/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
 
@@ -114,7 +115,7 @@ cratedb-retention create-policy --strategy=reallocate \
 This retention policy implements the following directive.
 
 > **Reallocate** data from the `"doc"."raw_metrics"` table, on partitions defined by
-> the column `ts_day`, which is older than **60** days at the given cut-off date, to
+> the column `ts_day`, which is older than **60** days at the given cutoff date, to
 > nodes tagged with the `storage=warm` attribute.
 
 [implementation](cratedb_retention/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
@@ -155,7 +156,7 @@ cratedb-retention create-policy --strategy=snapshot \
 This retention policy implements the following directive.
 
 > Run a **snapshot** on the data within the `"doc"."sensor_readings"` table, on partitions
-> defined by the column `time_month`, which is older than **365** days at the given cut-off
+> defined by the column `time_month`, which is older than **365** days at the given cutoff
 > date, to a previously created repository called `export_cold`. Delete the corresponding
 > data afterwards.
 
@@ -277,7 +278,7 @@ tag values, and combine them using `OR`. Running retention jobs for multiple tag
 needs multiple invocations.
 
 ```shell
-cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete --tags=foo,bar "${CRATEDB_URI}"
+cratedb-retention run --strategy=delete --tags=foo,bar "${CRATEDB_URI}"
 ```
 
 
@@ -368,14 +369,20 @@ cratedb-retention create-policy --strategy=delete \
   "${CRATEDB_URI}"
 ```
 
-Invoke the data retention job, using a specific cut-off date.
+Invoke the data retention job, expiring all data older than one day.
+```shell
+cratedb-retention run --strategy=delete "${CRATEDB_URI}"
+```
+
+Invoke the data retention job, expiring all data older than one day before
+a specific cutoff date.
 ```shell
 cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
 ```
 
 Simulate the data retention job, display SQL statements only.
 ```shell
-cratedb-retention run --dry-run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
+cratedb-retention run --dry-run --strategy=delete "${CRATEDB_URI}"
 ```
 
 #### Podman or Docker
@@ -421,10 +428,10 @@ cratedb-retention create-policy --strategy=delete \
   "${CRATEDB_URI}"
 ```
 
-Invoke the data retention job, using a specific cut-off date.
+Invoke the data retention job.
 ```shell
 docker run --rm -i --network=host "${OCI_IMAGE}" \
-cratedb-retention run --cutoff-day=2023-06-27 --strategy=delete "${CRATEDB_URI}"
+cratedb-retention run --strategy=delete "${CRATEDB_URI}"
 ```
 
 
@@ -471,7 +478,6 @@ identifier = store.create(policy, ignore="DuplicateKeyException")
 settings = JobSettings(
     database=DatabaseAddress.from_string(DBURI),
     strategy=RetentionStrategy.DELETE,
-    cutoff_day="2023-06-27",
 )
 
 job = RetentionJob(settings=settings)

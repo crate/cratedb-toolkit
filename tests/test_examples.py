@@ -2,11 +2,11 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 
 
-def test_example_full(store):
+def test_example_retire_cutoff(store):
     """
     Verify that the program `examples/basic.py` works.
     """
-    from examples.full import main
+    from examples.retire_cutoff import main
 
     main(dburi=store.database.dburi)
 

@@ -7,6 +7,10 @@ About
 Example program demonstrating how to create retention policy records,
 and invoke retention tasks.
 
+Specifically, this example demonstrates how to use a given cutoff date
+when invoking the data retention job, in order to retire all data before
+that date and the configured retention duration time.
+
 It initializes the data retention and expiry subsystem, and creates
 a data retention policy. After that, it invokes the corresponding
 data retention job.
@@ -23,10 +27,10 @@ Synopsis
     pip install cratedb-retention
 
     # General.
-    python examples/full.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
+    python examples/retire_cutoff.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
 
     # Default.
-    python examples/full.py crate://localhost:4200
+    python examples/retire_cutoff.py crate://localhost:4200
 
 """
 import logging
@@ -42,9 +46,9 @@ from cratedb_retention.util.database import DatabaseAdapter
 logger = logging.getLogger(__name__)
 
 
-class FullExample:
+class RetireCutoffExample:
     """
-    An example program demonstrating retention policy editing.
+    An example program demonstrating data retention with given cutoff date.
     """
 
     def __init__(self, dburi):
@@ -147,7 +151,7 @@ def main(dburi: str):
 
     # Set up all the jazz.
     logger.info("Provisioning database")
-    example = FullExample(dburi=dburi)
+    example = RetireCutoffExample(dburi=dburi)
     example.cleanup()
     example.setup()
     example.setup_data()
