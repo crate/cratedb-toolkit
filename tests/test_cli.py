@@ -146,6 +146,9 @@ def test_run_delete_basic(store, database, raw_metrics, policies):
     database_url = store.database.dburi
     runner = CliRunner()
 
+    # Check number of records in database.
+    assert database.count_records(raw_metrics) == 6
+
     # Invoke data retention through CLI interface.
     result = runner.invoke(
         cli,
@@ -154,8 +157,8 @@ def test_run_delete_basic(store, database, raw_metrics, policies):
     )
     assert result.exit_code == 0
 
-    # Verify that records have been deleted.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 0
+    # Check number of records in database.
+    assert database.count_records(raw_metrics) == 0
 
 
 def test_run_delete_dryrun(caplog, store, database, raw_metrics, policies):
@@ -166,6 +169,9 @@ def test_run_delete_dryrun(caplog, store, database, raw_metrics, policies):
     database_url = store.database.dburi
     runner = CliRunner()
 
+    # Check number of records in database.
+    assert database.count_records(raw_metrics) == 6
+
     # Invoke data retention through CLI interface.
     result = runner.invoke(
         cli,
@@ -173,11 +179,10 @@ def test_run_delete_dryrun(caplog, store, database, raw_metrics, policies):
         catch_exceptions=False,
     )
     assert result.exit_code == 0
-
-    # Verify that records have been deleted.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
-
     assert "Pretending to execute SQL statement" in caplog.text
+
+    # Check number of records in database.
+    assert database.count_records(raw_metrics) == 6
 
 
 def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
@@ -187,6 +192,9 @@ def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
 
     database_url = store.database.dburi
     runner = CliRunner()
+
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 9
 
     # Invoke data retention through CLI interface.
     result = runner.invoke(
@@ -208,6 +216,9 @@ def test_run_delete_with_tags_unknown(caplog, store, database, sensor_readings, 
     database_url = store.database.dburi
     runner = CliRunner()
 
+    # Check number of records in database.
+    assert database.count_records(sensor_readings) == 9
+
     # Invoke data retention through CLI interface.
     result = runner.invoke(
         cli,
@@ -216,10 +227,11 @@ def test_run_delete_with_tags_unknown(caplog, store, database, sensor_readings, 
     )
     assert result.exit_code == 0
 
-    # Verify that records have not been deleted, because the tags did not match.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 9
-
     assert "No retention policies found with tags: ['foo', 'unknown']" in caplog.messages
+
+    # Check number of records in database.
+    # Records have not been deleted, because the tags did not match.
+    assert database.count_records(sensor_readings) == 9
 
 
 def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_policy):
@@ -230,6 +242,9 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
     database_url = store.database.dburi
     runner = CliRunner()
 
+    # Check number of records in database.
+    assert database.count_records(raw_metrics) == 6
+
     # Invoke data retention through CLI interface.
     result = runner.invoke(
         cli,
@@ -238,11 +253,11 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
     )
     assert result.exit_code == 0
 
-    # Verify that records have been deleted.
+    # Check number of records in database.
     # FIXME: Currently, the test for this strategy apparently does not remove any records.
     #        The reason is because the scenario can't easily be simulated on a single-node
     #        cluster. The suite would need to orchestrate at least two nodes.
-    assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"') == 6
+    assert database.count_records(raw_metrics) == 6
 
 
 def test_run_snapshot(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy):
