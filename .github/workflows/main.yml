@@ -20,6 +20,8 @@ jobs:
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
+      # Do not tear down Testcontainers
+      TC_KEEPALIVE: true
 
     name: Python ${{ matrix.python-version }} on OS ${{ matrix.os }}
     steps:
