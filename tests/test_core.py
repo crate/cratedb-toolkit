@@ -1,5 +1,7 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import datetime
+
 import pytest
 
 from cratedb_retention.core import RetentionJob
@@ -45,7 +47,7 @@ def test_data_table_not_found(caplog, store, settings):
 
 def test_no_cutoff_date_given(caplog, store, settings):
     """
-    Verify the engine reports correctly when invoked without cutoff date.
+    Verify the engine uses default=today() when invoked without cutoff date.
     """
     # Add a retention policy.
     policy = RetentionPolicy(
@@ -63,9 +65,10 @@ def test_no_cutoff_date_given(caplog, store, settings):
     # Invoke the data retention job.
     settings.strategy = RetentionStrategy.DELETE
     job = RetentionJob(settings=settings)
-    with pytest.raises(ValueError) as ex:
-        job.start()
-    assert ex.match("Unable to operate without cutoff date")
+    job.start()
+
+    today = datetime.date.today().isoformat()
+    assert f"No cutoff date selected, will use today(): {today}" in caplog.messages
 
 
 def test_no_data_to_be_retired(caplog, store, settings):
