@@ -152,6 +152,13 @@ class TaskSqlRenderer:
         if self.settings.cutoff_day is None:
             raise ValueError("Unable to operate without cutoff date")
 
+        # Formulate SQL statement to gather relevant partitions to be expired.
+        # The `ORDER BY` is used to process partitions in chronological order, to not produce
+        # temporary gaps. Imagine a table is partitioned by month: If partitions which are
+        # selected for expiry are not processed in order, the recipe could first drop February,
+        # then March, and then January, which would produce inconsistent gaps in the data, if
+        # it was queried at the same time concurrently, while the expiration process is taking
+        # place.
         policy = self.policy
         selectable = sa.text(
             f"""
@@ -165,6 +172,8 @@ class TaskSqlRenderer:
             AND p.table_name = '{policy.table_name}'
             AND p.values['{policy.partition_column}'] <
                 '{self.settings.cutoff_day}'::TIMESTAMP - '{policy.retention_period} days'::INTERVAL
+        ORDER BY
+            partition_value ASC
         """
         )
         return self.specialize(selectable)
