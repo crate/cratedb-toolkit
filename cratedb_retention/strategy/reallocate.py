@@ -41,8 +41,6 @@ class ReallocateRetentionTask(RetentionTask):
 class ReallocateRetentionJob:
     """
     Represent a data retention job, using the `reallocate` strategy.
-
-    TODO: Clarify `ORDER BY 5 ASC`.
     """
 
     SQL = """
@@ -63,5 +61,4 @@ JOIN partition_allocations a ON a.table_schema = p.table_schema
   AND a.table_name = p.table_name
   AND p.partition_ident = a.partition_ident
   AND attributes['{reallocation_attribute_name}'] <> '{reallocation_attribute_value}'
-ORDER BY 5 ASC;
     """
