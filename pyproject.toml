@@ -94,7 +94,7 @@ develop = [
   "black<24",
   "mypy==1.4.1",
   "poethepoet<0.21",
-  "pyproject-fmt<0.13",
+  "pyproject-fmt<0.14",
   "ruff==0.0.275",
   "validate-pyproject<0.14",
 ]
