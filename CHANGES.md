@@ -16,6 +16,10 @@
 
 - Use full-qualified table names everywhere.
 
+- Fix: Compensate for `DROP REPOSITORY` now returning `RepositoryMissingException`
+  when the repository does not exist. With previous versions of CrateDB, it was
+  `RepositoryUnknownException`.
+
 ## 2023/06/27 0.0.0
 
 - Import "data retention" implementation from <https://github.com/crate/crate-airflow-tutorial>.
