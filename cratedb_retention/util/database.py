@@ -4,6 +4,8 @@ import sqlalchemy as sa
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
+from cratedb_retention.util.data import str_contains
+
 
 def run_sql(dburi: str, sql: str, records: bool = False):
     return DatabaseAdapter(dburi=dburi).run_sql(sql=sql, records=records)
@@ -70,7 +72,7 @@ class DatabaseAdapter:
             sql = f"DROP REPOSITORY {name};"
             self.run_sql(sql)
         except ProgrammingError as ex:
-            if "RepositoryUnknownException" not in str(ex):
+            if not str_contains(ex, "RepositoryUnknownException", "RepositoryMissingException"):
                 raise
 
     def ensure_repository_fs(
