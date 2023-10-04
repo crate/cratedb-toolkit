@@ -443,21 +443,19 @@ runnable example program [`examples/basic.py`], located within this repository.
 
 ```python
 from cratedb_retention.core import RetentionJob
-from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.store import RetentionPolicyStore
-
+from cratedb_toolkit.model import DatabaseAddress
 
 # Define the database URI to connect to.
 DBURI = "crate://localhost/"
-
 
 # A. Set up adapter to retention policy store.
 settings = JobSettings(
     database=DatabaseAddress.from_string(DBURI),
 )
 store = RetentionPolicyStore(settings=settings)
-
 
 # B. Initialize the subsystem, and create a data retention policy.
 # TODO: Refactor to `RetentionPolicyStore`.
@@ -472,7 +470,6 @@ policy = RetentionPolicy(
     retention_period=1,
 )
 identifier = store.create(policy, ignore="DuplicateKeyException")
-
 
 # C. Define job settings, and invoke the data retention job.
 settings = JobSettings(

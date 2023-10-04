@@ -11,7 +11,7 @@ from cratedb_retention.store import RetentionPolicyStore
 from cratedb_retention.strategy.delete import DeleteRetentionTask
 from cratedb_retention.strategy.reallocate import ReallocateRetentionJob, ReallocateRetentionTask
 from cratedb_retention.strategy.snapshot import SnapshotRetentionTask
-from cratedb_retention.util.database import run_sql
+from cratedb_toolkit.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 

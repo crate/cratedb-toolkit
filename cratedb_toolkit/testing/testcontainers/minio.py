@@ -14,7 +14,7 @@ import typing as t
 
 from testcontainers.minio import MinioContainer
 
-from tests.testcontainers.util import ExtendedDockerContainer
+from cratedb_toolkit.testing.testcontainers.util import ExtendedDockerContainer
 
 
 class ExtendedMinioContainer(ExtendedDockerContainer, MinioContainer):

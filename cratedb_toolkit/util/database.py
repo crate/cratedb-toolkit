@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
-from cratedb_retention.util.data import str_contains
+from cratedb_toolkit.util.data import str_contains
 
 
 def run_sql(dburi: str, sql: str, records: bool = False):

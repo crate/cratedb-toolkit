@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.selectable import NamedFromClause
 
 from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
-from cratedb_retention.util.database import DatabaseAdapter, sa_is_empty
+from cratedb_toolkit.util.database import DatabaseAdapter, sa_is_empty
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class SQLAlchemyTagHelperMixin:
         Check if given tags exist in the database.
 
         When not, no query can yield results, so we do not need to bother about
-        failing JOIN operations because if non-existing tags.
+        failing JOIN operations because of non-existing tags.
 
         TODO: Create corresponding issue at crate/crate.
         """

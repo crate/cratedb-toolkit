@@ -4,7 +4,7 @@ import logging
 from importlib.resources import read_text
 
 from cratedb_retention.model import JobSettings
-from cratedb_retention.util.database import run_sql
+from cratedb_toolkit.util.database import run_sql
 
 logger = logging.getLogger(__name__)
 
