@@ -9,16 +9,17 @@ from click import ClickException
 from click_aliases import ClickAliasedGroup
 
 from cratedb_retention.core import RetentionJob
-from cratedb_retention.model import DatabaseAddress, JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_retention.setup.schema import setup_schema
 from cratedb_retention.store import RetentionPolicyStore
-from cratedb_retention.util.cli import (
+from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util.cli import (
     boot_click,
     click_options_from_dataclass,
     make_command,
     split_list,
 )
-from cratedb_retention.util.data import jd
+from cratedb_toolkit.util.data import jd
 
 logger = logging.getLogger(__name__)
 

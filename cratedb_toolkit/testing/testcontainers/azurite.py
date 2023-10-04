@@ -15,7 +15,7 @@ import typing as t
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from testcontainers.azurite import AzuriteContainer
 
-from tests.testcontainers.util import ExtendedDockerContainer
+from cratedb_toolkit.testing.testcontainers.util import ExtendedDockerContainer
 
 
 class ExtendedAzuriteContainer(ExtendedDockerContainer, AzuriteContainer):
