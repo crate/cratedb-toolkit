@@ -62,12 +62,18 @@ def configure_database_schema(session_mocker):
     session_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
 
 
-@pytest.fixture(scope="function")
-def cratedb():
+@pytest.fixture(scope="session")
+def cratedb_service():
     db = CrateDBFixture()
     db.reset()
     yield db
     db.finalize()
+
+
+@pytest.fixture(scope="function")
+def cratedb(cratedb_service):
+    cratedb_service.reset()
+    yield cratedb_service
 
 
 @pytest.fixture(scope="session")
