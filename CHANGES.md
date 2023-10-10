@@ -3,6 +3,9 @@
 
 ## Unreleased
 
+
+## 2023/10/10 0.0.1
+
 - SQLAlchemy: Add a few patches and polyfills, which do not fit well
   into the vanilla Python driver / SQLAlchemy dialect.
 
