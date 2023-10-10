@@ -12,8 +12,8 @@ source .venv/bin/activate
 
 Acquire sources.
 ```shell
-git clone https://github.com/crate-workbench/cratedb-retention
-cd cratedb-retention
+git clone https://github.com/crate-workbench/cratedb-toolkit
+cd cratedb-toolkit
 ```
 
 Install project in sandbox mode.

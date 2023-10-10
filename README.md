@@ -1,7 +1,7 @@
 # CrateDB data processing toolkit
 
-[![Tests](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-retention/actions/workflows/main.yml)
-[![Test coverage](https://img.shields.io/codecov/c/gh/crate-workbench/cratedb-retention.svg)](https://codecov.io/gh/crate-workbench/cratedb-retention/)
+[![Tests](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml)
+[![Test coverage](https://img.shields.io/codecov/c/gh/crate-workbench/cratedb-toolkit.svg)](https://codecov.io/gh/crate-workbench/cratedb-toolkit/)
 
 » [Documentation]
 | [Changelog]
@@ -33,17 +33,17 @@ strongly recommended, especially when you use it as a library.
 
 Install package.
 ```shell
-pip install --upgrade git+https://github.com/crate-workbench/cratedb-retention
+pip install --upgrade git+https://github.com/crate-workbench/cratedb-toolkit
 ```
 
 Verify installation.
 ```shell
-cratedb-retention --version
+cratedb-toolkit --version
 ```
 
 Run with Docker.
 ```shell
-docker run --rm "ghcr.io/crate-workbench/cratedb-retention" cratedb-retention --version
+docker run --rm "ghcr.io/crate-workbench/cratedb-toolkit" cratedb-toolkit --version
 ```
 
 
@@ -53,12 +53,12 @@ For installing a development sandbox, please refer to the [development sandbox
 documentation](./doc/sandbox.md).
 
 
-[Changelog]: https://github.com/crate-workbench/cratedb-retention/blob/main/CHANGES.md
+[Changelog]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.md
 [Community Forum]: https://community.crate.io/
 [CrateDB]: https://crate.io/products/cratedb
 [CrateDB Cloud]: https://console.cratedb.cloud/
-[Documentation]: https://cratedb-retention.readthedocs.io/
-[Issues]: https://github.com/crate-workbench/cratedb-retention/issues
-[License]: https://github.com/crate-workbench/cratedb-retention/blob/main/LICENSE
-[PyPI]: https://pypi.org/project/cratedb-retention/
-[Source code]: https://github.com/crate-workbench/cratedb-retention
+[Documentation]: https://cratedb-toolkit.readthedocs.io/
+[Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues
+[License]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
+[PyPI]: https://pypi.org/project/cratedb-toolkit/
+[Source code]: https://github.com/crate-workbench/cratedb-toolkit

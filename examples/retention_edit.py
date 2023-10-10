@@ -18,7 +18,7 @@ Synopsis
 ::
 
     # Install package
-    pip install cratedb-retention
+    pip install cratedb-toolkit
 
     # General.
     python examples/retention_edit.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
