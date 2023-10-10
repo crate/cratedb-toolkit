@@ -6,15 +6,15 @@ def test_example_retire_cutoff(store):
     """
     Verify that the program `examples/basic.py` works.
     """
-    from examples.retire_cutoff import main
+    from examples.retention_retire_cutoff import main
 
     main(dburi=store.database.dburi)
 
 
 def test_example_edit(store):
     """
-    Verify that the program `examples/edit.py` works.
+    Verify that the program `examples/retention_edit.py` works.
     """
-    from examples.edit import main
+    from examples.retention_edit import main
 
     main(dburi=store.database.dburi)

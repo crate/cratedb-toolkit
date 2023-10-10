@@ -3,7 +3,7 @@
 import logging
 from importlib.resources import read_text
 
-from cratedb_retention.model import JobSettings
+from cratedb_toolkit.retention.model import JobSettings
 from cratedb_toolkit.util.database import run_sql
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def setup_schema(settings: JobSettings):
     )
 
     # Read SQL DDL statement.
-    sql = read_text("cratedb_retention.setup", "schema.sql")
+    sql = read_text("cratedb_toolkit.retention.setup", "schema.sql")
 
     tplvars = settings.to_dict()
     sql = sql.format_map(tplvars)

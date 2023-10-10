@@ -13,7 +13,7 @@ See the file setup/schema.sql in this repository.
 import dataclasses
 import logging
 
-from cratedb_retention.model import RetentionTask
+from cratedb_toolkit.retention.model import RetentionTask
 
 logger = logging.getLogger(__name__)
 

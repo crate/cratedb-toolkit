@@ -8,7 +8,7 @@ from docker.models.containers import Container
 from sqlalchemy.exc import OperationalError
 from testcontainers.core.container import DockerContainer
 
-from cratedb_retention.cli import cli
+from cratedb_toolkit.retention.cli import cli
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 

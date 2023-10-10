@@ -2,10 +2,10 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 
-from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
-from cratedb_retention.setup.schema import setup_schema
-from cratedb_retention.store import RetentionPolicyStore
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_toolkit.retention.setup.schema import setup_schema
+from cratedb_toolkit.retention.store import RetentionPolicyStore
 from cratedb_toolkit.testing.testcontainers.azurite import ExtendedAzuriteContainer
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer
 from cratedb_toolkit.testing.testcontainers.minio import ExtendedMinioContainer
