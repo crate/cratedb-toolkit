@@ -88,7 +88,7 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crash",
-  "crate[sqlalchemy]",
+  "crate[sqlalchemy]>=0.34",
   "sqlalchemy>=2",
 ]
 [project.optional-dependencies]
@@ -216,6 +216,7 @@ extend-exclude = [
 "tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
 "examples/*" = ["T201"]  # Allow `print`
 "cratedb_toolkit/retention/cli.py" = ["T201"]  # Allow `print`
+"cratedb_toolkit/sqlalchemy/__init__.py" = ["F401"]  # Allow `module´ imported but unused
 
 [tool.setuptools.packages.find]
 namespaces = false
