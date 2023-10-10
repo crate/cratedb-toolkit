@@ -57,6 +57,15 @@ jobs:
     - name: Acquire sources
       uses: actions/checkout@v6
 
+    - name: Set up Docker
+      uses: crazy-max/ghaction-setup-docker@v2
+
+    - name: Probe Docker
+      run: |
+        set -x
+        docker version
+        docker run --rm hello-world
+
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
