@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023, Crate.io Inc.
+# Copyright (c) 2021-2025, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import os
 import typing as t
@@ -27,6 +27,7 @@ RESET_TABLES = [
     '"ext"."jobinfo"',
     f'"{TESTDRIVE_EXT_SCHEMA}"."jobstats_statements"',
     f'"{TESTDRIVE_EXT_SCHEMA}"."jobstats_last"',
+    f'"{TESTDRIVE_EXT_SCHEMA}"."materialized_view"',
     f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policy"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
