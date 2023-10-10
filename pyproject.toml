@@ -10,12 +10,14 @@ method = "git"
 default-tag = "0.0.0"
 
 [project]
-name = "cratedb-retention"
-description = "Data retention and expiration toolkit for CrateDB."
+name = "cratedb-toolkit"
+description = "CrateDB data processing toolkit"
 readme = "README.md"
 keywords = [
   "cratedb",
-  "retention",
+  "data-retention",
+  "data-processing",
+  "toolkit",
 ]
 license = { text = "AGPL 3, EUPL 1.2" }
 authors = [
@@ -117,7 +119,7 @@ documentation = "https://github.com/crate-workbench/cratedb-retention"
 homepage = "https://github.com/crate-workbench/cratedb-retention"
 repository = "https://github.com/crate-workbench/cratedb-retention"
 [project.scripts]
-cratedb-retention = "cratedb_retention.cli:cli"
+cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 
 [tool.black]
 line-length = 120
@@ -127,14 +129,14 @@ branch = false
 omit = [
   "tests/*",
 ]
-source = ["cratedb_retention"]
+source = ["cratedb_toolkit"]
 
 [tool.coverage.report]
 fail_under = 0
 show_missing = true
 
 [tool.mypy]
-packages = ["cratedb_retention"]
+packages = ["cratedb_toolkit"]
 exclude = [
 ]
 check_untyped_defs = true
@@ -152,7 +154,7 @@ log_cli_level = "DEBUG"
 log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
 testpaths = [
   "examples",
-  "cratedb_retention",
+  "cratedb_toolkit",
   "tests",
 ]
 xfail_strict = true
@@ -210,7 +212,7 @@ extend-exclude = [
 [tool.ruff.per-file-ignores]
 "tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
 "examples/*" = ["T201"]  # Allow `print`
-"cratedb_retention/cli.py" = ["T201"]  # Allow `print`
+"cratedb_toolkit/retention/cli.py" = ["T201"]  # Allow `print`
 
 [tool.setuptools.packages.find]
 namespaces = false

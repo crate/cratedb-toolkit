@@ -6,11 +6,11 @@ import typing as t
 
 import sqlalchemy as sa
 
-from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy, RetentionTask
-from cratedb_retention.store import RetentionPolicyStore
-from cratedb_retention.strategy.delete import DeleteRetentionTask
-from cratedb_retention.strategy.reallocate import ReallocateRetentionJob, ReallocateRetentionTask
-from cratedb_retention.strategy.snapshot import SnapshotRetentionTask
+from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy, RetentionTask
+from cratedb_toolkit.retention.store import RetentionPolicyStore
+from cratedb_toolkit.retention.strategy.delete import DeleteRetentionTask
+from cratedb_toolkit.retention.strategy.reallocate import ReallocateRetentionJob, ReallocateRetentionTask
+from cratedb_toolkit.retention.strategy.snapshot import SnapshotRetentionTask
 from cratedb_toolkit.util.database import run_sql
 
 logger = logging.getLogger(__name__)

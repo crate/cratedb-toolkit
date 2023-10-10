@@ -1,6 +1,14 @@
 # Backlog
 
 ## Iteration +1
+- Refactoring towards `cratedb-toolkit`.
+  ```shell
+  ctk retention create-policy lalala
+  ctk materialized create lalala
+  ctk schedule add lalala
+  ```
+
+## Iteration +1.25
 - CLI: Use proper exit codes.
 - Make `--cutoff-day` optional, use `today()` as default.
 - Refactor "partition"-based strategies into subfamily/category, in order to
@@ -18,7 +26,6 @@
   - https://github.com/crate/crate/issues/10661
   - https://github.com/crate/crate/issues/8806
   - https://github.com/crate/crate/issues/10803
-  - https://github.com/crate/crate/issues/14377
   - Example:
     ```shell
     cratedb-retention create-materialized-view doc.raw_metrics \

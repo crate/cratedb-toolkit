@@ -11,7 +11,7 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_toolkit.util.database import DatabaseAdapter, sa_is_empty
 
 logger = logging.getLogger(__name__)

@@ -27,20 +27,20 @@ Synopsis
     pip install cratedb-retention
 
     # General.
-    python examples/retire_cutoff.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
+    python examples/retention_retire_cutoff.py crate://<USERNAME>:<PASSWORD>@<HOSTNAME>:4200?ssl=true
 
     # Default.
-    python examples/retire_cutoff.py crate://localhost:4200
+    python examples/retention_retire_cutoff.py crate://localhost:4200
 
 """
 import logging
 import os
 
-from cratedb_retention.core import RetentionJob
-from cratedb_retention.model import JobSettings, RetentionPolicy, RetentionStrategy
-from cratedb_retention.setup.schema import setup_schema
-from cratedb_retention.store import RetentionPolicyStore
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.retention.core import RetentionJob
+from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy
+from cratedb_toolkit.retention.setup.schema import setup_schema
+from cratedb_toolkit.retention.store import RetentionPolicyStore
 from cratedb_toolkit.util import DatabaseAdapter, boot_with_dburi
 
 logger = logging.getLogger(__name__)

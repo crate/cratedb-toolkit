@@ -2,7 +2,7 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 
-from cratedb_retention.model import RetentionPolicy, RetentionStrategy
+from cratedb_toolkit.retention.model import RetentionPolicy, RetentionStrategy
 
 
 def test_create_retrieve_delete(store):

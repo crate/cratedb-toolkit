@@ -4,8 +4,8 @@ import datetime
 
 import pytest
 
-from cratedb_retention.core import RetentionJob
-from cratedb_retention.model import RetentionPolicy, RetentionStrategy
+from cratedb_toolkit.retention.core import RetentionJob
+from cratedb_toolkit.retention.model import RetentionPolicy, RetentionStrategy
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 
