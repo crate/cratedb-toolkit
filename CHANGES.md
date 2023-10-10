@@ -20,6 +20,10 @@
   when the repository does not exist. With previous versions of CrateDB, it was
   `RepositoryUnknownException`.
 
+- Contrib: Add a few SQLAlchemy patches and polyfills, which do not fit well
+  into the vanilla Python driver / SQLAlchemy dialect.
+
+
 ## 2023/06/27 0.0.0
 
 - Import "data retention" implementation from <https://github.com/crate/crate-airflow-tutorial>.
