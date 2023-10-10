@@ -16,6 +16,11 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: ["3.11"]
+        include:
+          - os: "macos-latest"
+            python-version: "3.11"
+          - os: "windows-latest"
+            python-version: "3.11"
 
     env:
       OS: ${{ matrix.os }}
@@ -28,6 +33,15 @@ jobs:
 
     - name: Acquire sources
       uses: actions/checkout@v4
+
+    - name: Set up Docker
+      uses: docker-practice/actions-setup-docker@master
+      timeout-minutes: 12
+
+    - name: Probe Docker
+      run: |
+        docker version
+        docker run --rm hello-world
 
     - name: Set up Python
       uses: actions/setup-python@v4
