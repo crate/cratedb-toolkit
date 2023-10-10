@@ -114,11 +114,12 @@ test = [
   "testcontainers-minio==0.0.1rc1",
 ]
 [project.urls]
-changelog = "https://github.com/crate-workbench/cratedb-retention/blob/main/CHANGES.rst"
-documentation = "https://github.com/crate-workbench/cratedb-retention"
-homepage = "https://github.com/crate-workbench/cratedb-retention"
-repository = "https://github.com/crate-workbench/cratedb-retention"
+changelog = "https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.rst"
+documentation = "https://github.com/crate-workbench/cratedb-toolkit"
+homepage = "https://github.com/crate-workbench/cratedb-toolkit"
+repository = "https://github.com/crate-workbench/cratedb-toolkit"
 [project.scripts]
+cratedb-toolkit = "cratedb_toolkit.cli:cli"
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 
 [tool.black]

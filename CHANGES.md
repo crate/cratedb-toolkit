@@ -1,4 +1,4 @@
-# Changes for cratedb-retention
+# Changes for cratedb-toolkit
 
 ## Unreleased
 
