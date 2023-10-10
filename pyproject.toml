@@ -101,8 +101,7 @@ develop = [
   "validate-pyproject<0.15",
 ]
 release = [
-  "build<1",
-  'minibump<1; python_version >= "3.10"',
+  "build<2",
   "twine<5",
 ]
 test = [
@@ -246,7 +245,6 @@ lint = [
 ]
 
 release = [
-  { cmd = "minibump bump --relax minor" },
   { cmd = "python -m build" },
   { cmd = "twine upload dist/*" },
 ]

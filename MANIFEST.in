@@ -1,5 +1,5 @@
 include *.md *.rst LICENSE
 recursive-include doc *.md *.rst
-recursive-include cratedb_retention *.sql
+recursive-include cratedb_toolkit *.sql
 prune release
 prune tests
