@@ -24,7 +24,7 @@ def test_cratedb_summits(cratedb):
 
 def test_database_insert(cratedb):
     """
-    Verify inserting two records and reading them back work.
+    Verify that inserting two records and reading them back works well.
     """
     cratedb.reset()
 
