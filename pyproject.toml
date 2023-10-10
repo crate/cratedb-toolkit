@@ -161,6 +161,7 @@ testpaths = [
 ]
 xfail_strict = true
 markers = [
+  "examples",
   "slow",
 ]
 

@@ -18,6 +18,7 @@ class DatabaseAdapter:
 
     def __init__(self, dburi: str):
         self.dburi = dburi
+        # TODO: Make `echo=True` configurable.
         self.engine = sa.create_engine(self.dburi, echo=False)
         self.connection = self.engine.connect()
 

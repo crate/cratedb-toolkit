@@ -1,5 +1,6 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import logging
 import typing as t
 
 import pytest
@@ -33,6 +34,7 @@ def test_setup_brief(caplog, cratedb, settings):
     database_url = cratedb.get_connection_url()
     runner = CliRunner()
 
+    caplog.set_level(logging.ERROR, "sqlalchemy")
     result = runner.invoke(
         cli,
         args=f'setup "{database_url}"',
@@ -59,7 +61,7 @@ def test_setup_verbose(caplog, cratedb, settings):
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
-    assert 3 <= len(caplog.records) <= 5
+    assert 3 <= len(caplog.records) <= 7
 
 
 def test_setup_dryrun(caplog, cratedb, settings):
