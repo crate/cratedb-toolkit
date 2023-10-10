@@ -15,6 +15,7 @@ import os
 from typing import Optional
 
 from testcontainers.core.config import MAX_TRIES
+from testcontainers.core.docker_client import DockerClient
 from testcontainers.core.generic import DbContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 
@@ -85,6 +86,10 @@ class CrateDBContainer(DbContainer):
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
 
+        if "CI" in os.environ:
+            docker_host = get_docker_host()
+            self.with_env("DOCKER_HOST", docker_host).with_env("DOCKER_CERT_PATH", "").with_env("DOCKER_TLS_VERIFY", "")
+
     def get_connection_url(self, host=None) -> str:
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
@@ -143,3 +148,27 @@ class CrateDBContainer(DbContainer):
             logger.info("Stopping CrateDB")
             return super().stop()
         return None
+
+
+def get_docker_host():
+    """
+    https://github.com/testcontainers/testcontainers-python/blob/main/core/tests/test_docker_in_docker.py
+    """
+    # real dind isn't possible (AFAIK) in CI
+    # forwarding the socket to a container port is at least somewhat the same
+    client = DockerClient()
+    not_really_dind = client.run(
+        image="alpine/socat",
+        command="tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock",
+        volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock"}},
+        detach=True,
+    )
+
+    not_really_dind.start()
+
+    # get ip address for DOCKER_HOST
+    # avoiding DockerContainer class here to prevent code changes affecting the test
+    specs = client.get_container(not_really_dind.id)
+    docker_host_ip = specs["NetworkSettings"]["Networks"]["bridge"]["IPAddress"]
+    docker_host = f"tcp://{docker_host_ip}:2375"
+    return docker_host
