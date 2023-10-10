@@ -34,6 +34,15 @@ jobs:
     - name: Acquire sources
       uses: actions/checkout@v4
 
+    - name: Set up Docker
+      uses: crazy-max/ghaction-setup-docker@v2
+
+    - name: Probe Docker
+      run: |
+        set -x
+        docker version
+        docker run --rm hello-world
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
