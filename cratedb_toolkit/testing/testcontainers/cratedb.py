@@ -86,9 +86,11 @@ class CrateDBContainer(DbContainer):
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
 
+        """
         if "CI" in os.environ:
             docker_host = get_docker_host()
             self.with_env("DOCKER_HOST", docker_host).with_env("DOCKER_CERT_PATH", "").with_env("DOCKER_TLS_VERIFY", "")
+        """
 
     def get_connection_url(self, host=None) -> str:
         # TODO: When using `db_name=self.CRATEDB_DB`:

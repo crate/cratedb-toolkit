@@ -35,11 +35,11 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Docker
-      uses: crazy-max/ghaction-setup-docker@v2
+      uses: docker-practice/actions-setup-docker@master
+      timeout-minutes: 12
 
     - name: Probe Docker
       run: |
-        set -x
         docker version
         docker run --rm hello-world
 
