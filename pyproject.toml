@@ -11,7 +11,7 @@ default-tag = "0.0.0"
 
 [project]
 name = "cratedb-toolkit"
-description = "CrateDB data processing toolkit"
+description = "CrateDB Toolkit"
 readme = "README.md"
 keywords = [
   "cratedb",

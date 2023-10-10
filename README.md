@@ -1,7 +1,14 @@
-# CrateDB data processing toolkit
+# CrateDB Toolkit
 
 [![Tests](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml)
 [![Test coverage](https://img.shields.io/codecov/c/gh/crate-workbench/cratedb-toolkit.svg)](https://codecov.io/gh/crate-workbench/cratedb-toolkit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
+
+[![License](https://img.shields.io/github/license/crate-workbench/cratedb-toolkit.svg)](https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE)
+[![Status](https://img.shields.io/pypi/status/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
+[![PyPI](https://img.shields.io/pypi/v/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
+[![Downloads](https://pepy.tech/badge/cratedb-toolkit/month)](https://pepy.tech/project/cratedb-toolkit/)
+
 
 » [Documentation]
 | [Changelog]
@@ -33,7 +40,7 @@ strongly recommended, especially when you use it as a library.
 
 Install package.
 ```shell
-pip install --upgrade git+https://github.com/crate-workbench/cratedb-toolkit
+pip install --upgrade cratedb-toolkit
 ```
 
 Verify installation.
@@ -50,13 +57,14 @@ docker run --rm "ghcr.io/crate-workbench/cratedb-toolkit" cratedb-toolkit --vers
 ## Development
 
 For installing a development sandbox, please refer to the [development sandbox
-documentation](./doc/sandbox.md).
+documentation].
 
 
 [Changelog]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.md
 [Community Forum]: https://community.crate.io/
 [CrateDB]: https://crate.io/products/cratedb
 [CrateDB Cloud]: https://console.cratedb.cloud/
+[development sandbox documentation]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/doc/sandbox.md
 [Documentation]: https://cratedb-toolkit.readthedocs.io/
 [Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues
 [License]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
