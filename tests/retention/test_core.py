@@ -6,7 +6,7 @@ import pytest
 
 from cratedb_toolkit.retention.core import RetentionJob
 from cratedb_toolkit.retention.model import RetentionPolicy, RetentionStrategy
-from tests.conftest import TESTDRIVE_DATA_SCHEMA
+from tests.retention.conftest import TESTDRIVE_DATA_SCHEMA
 
 
 def test_no_strategy_given(store, settings):

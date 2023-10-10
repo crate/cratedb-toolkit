@@ -425,7 +425,8 @@ cratedb-retention run --strategy=delete "${CRATEDB_URI}"
 
 This section outlines how to use the toolkit as a library within your own
 applications. The code displayed below is a stripped-down version of the
-runnable example program [`examples/basic.py`], located within this repository.
+runnable example program [`examples/retention_retire_cutoff.py`], located
+within this repository.
 
 ```python
 from cratedb_toolkit.retention.core import RetentionJob
@@ -473,7 +474,7 @@ job.start()
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
-[`examples/basic.py`]: examples/basic.py
+[`examples/retention_retire_cutoff.py`]: examples/retention_retire_cutoff.py
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
 [time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009
