@@ -2,15 +2,13 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 
-from cratedb_toolkit.testing.testcontainers.azurite import ExtendedAzuriteContainer
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer
-from cratedb_toolkit.testing.testcontainers.minio import ExtendedMinioContainer
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.common import setup_logging
 
-# Use different schemas both for storing the retention policy table, and
-# the test data, so that they do not accidentally touch the default `doc`
-# schema of CrateDB.
+# Use different schemas for storing the subsystem database tables, and the
+# test/example data, so that they do not accidentally touch the default `doc`
+# schema.
 TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
 TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 
@@ -24,6 +22,11 @@ RESET_TABLES = [
 
 
 class CrateDBFixture:
+    """
+    A little helper wrapping Testcontainer's `CrateDBContainer` and
+    CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
+    """
+
     def __init__(self):
         self.cratedb = None
         self.database: DatabaseAdapter = None
@@ -50,8 +53,8 @@ class CrateDBFixture:
 @pytest.fixture(scope="session", autouse=True)
 def configure_database_schema(session_mocker):
     """
-    Configure the machinery to use another schema for storing the retention
-    policy table, so that it does not accidentally touch a production system.
+    Configure the machinery to use a different schema for storing subsystem database
+    tables, so that they do not accidentally touch the production system.
 
     If not configured otherwise, the test suite currently uses `testdrive-ext`.
     """
@@ -60,6 +63,9 @@ def configure_database_schema(session_mocker):
 
 @pytest.fixture(scope="session")
 def cratedb_service():
+    """
+    Provide a CrateDB service instance to the test suite.
+    """
     db = CrateDBFixture()
     db.reset()
     yield db
@@ -68,39 +74,11 @@ def cratedb_service():
 
 @pytest.fixture(scope="function")
 def cratedb(cratedb_service):
+    """
+    Provide a fresh canvas to each test case invocation, by resetting database content.
+    """
     cratedb_service.reset()
     yield cratedb_service
-
-
-@pytest.fixture(scope="session")
-def minio():
-    """
-    For testing the "SNAPSHOT" strategy against an Amazon Web Services S3 object storage API,
-    provide a MinIO service to the test suite.
-
-    - https://en.wikipedia.org/wiki/Object_storage
-    - https://en.wikipedia.org/wiki/Amazon_S3
-    - https://github.com/minio/minio
-    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
-    """
-    with ExtendedMinioContainer() as minio:
-        yield minio
-
-
-@pytest.fixture(scope="session")
-def azurite():
-    """
-    For testing the "SNAPSHOT" strategy against a Microsoft Azure Blob Storage object storage API,
-    provide an Azurite service to the test suite.
-
-    - https://en.wikipedia.org/wiki/Object_storage
-    - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
-    - https://learn.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests
-    - https://github.com/azure/azurite
-    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
-    """
-    with ExtendedAzuriteContainer() as azurite:
-        yield azurite
 
 
 setup_logging()

@@ -15,8 +15,8 @@ description = "CrateDB data processing toolkit"
 readme = "README.md"
 keywords = [
   "cratedb",
-  "data-retention",
   "data-processing",
+  "data-retention",
   "toolkit",
 ]
 license = { text = "AGPL 3, EUPL 1.2" }
@@ -119,8 +119,8 @@ documentation = "https://github.com/crate-workbench/cratedb-toolkit"
 homepage = "https://github.com/crate-workbench/cratedb-toolkit"
 repository = "https://github.com/crate-workbench/cratedb-toolkit"
 [project.scripts]
-cratedb-toolkit = "cratedb_toolkit.cli:cli"
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"
+cratedb-toolkit = "cratedb_toolkit.cli:cli"
 
 [tool.black]
 line-length = 120

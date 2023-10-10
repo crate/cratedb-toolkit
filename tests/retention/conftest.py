@@ -6,6 +6,8 @@ from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_toolkit.retention.setup.schema import setup_schema
 from cratedb_toolkit.retention.store import RetentionPolicyStore
+from cratedb_toolkit.testing.testcontainers.azurite import ExtendedAzuriteContainer
+from cratedb_toolkit.testing.testcontainers.minio import ExtendedMinioContainer
 from cratedb_toolkit.util.database import DatabaseAdapter, run_sql
 from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
 
@@ -190,3 +192,34 @@ def sensor_readings_snapshot_policy(store):
         target_repository_name="export_cold",
     )
     store.create(rule, ignore="DuplicateKeyException")
+
+
+@pytest.fixture(scope="session")
+def minio():
+    """
+    For testing the "SNAPSHOT" strategy against an Amazon Web Services S3 object storage API,
+    provide a MinIO service to the test suite.
+
+    - https://en.wikipedia.org/wiki/Object_storage
+    - https://en.wikipedia.org/wiki/Amazon_S3
+    - https://github.com/minio/minio
+    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
+    """
+    with ExtendedMinioContainer() as minio:
+        yield minio
+
+
+@pytest.fixture(scope="session")
+def azurite():
+    """
+    For testing the "SNAPSHOT" strategy against a Microsoft Azure Blob Storage object storage API,
+    provide an Azurite service to the test suite.
+
+    - https://en.wikipedia.org/wiki/Object_storage
+    - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
+    - https://learn.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests
+    - https://github.com/azure/azurite
+    - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
+    """
+    with ExtendedAzuriteContainer() as azurite:
+        yield azurite
