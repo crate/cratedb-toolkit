@@ -1,4 +1,5 @@
 import json
+import sys
 import typing as t
 
 
@@ -6,7 +7,7 @@ def jd(data: t.Any):
     """
     Pretty-print JSON with indentation.
     """
-    print(json.dumps(data, indent=2))  # noqa: T201
+    print(json.dumps(data, indent=2), file=sys.stdout)  # noqa: T201
 
 
 def str_contains(haystack, *needles):

@@ -5,6 +5,9 @@
 
 - Add SQL runner utility primitives to `io.sql` namespace
 - Add `import_csv_pandas` and `import_csv_dask` utility primitives
+- data: Add subsystem for "loading" data.
+- Add SDK and CLI for CrateDB Cloud Data Import APIs
+  `ctk load table ...`
 
 
 ## 2023/11/06 v0.0.2
