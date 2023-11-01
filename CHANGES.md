@@ -6,6 +6,8 @@
 - CLI: Upgrade to `click-aliases>=1.0.2`, fixing erroring out when no group aliases
   are specified.
 
+- Add support for Python 3.12
+
 
 ## 2023/10/10 0.0.1
 
