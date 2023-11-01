@@ -22,15 +22,23 @@
 
 ## About
 
-This package is a work in progress, and includes different kinds of modules and
-subsystems to work with CrateDB and CrateDB Cloud efficiently.
+This software package includes a range of modules and subsystems to work
+with CrateDB and CrateDB Cloud efficiently.
+
+You can use CrateDB Toolkit to run data I/O procedures and automation tasks
+of different kinds around CrateDB and CrateDB Cloud. It can be used both as
+a standalone program, and as a library.
+
+It aims for [DWIM]-like usefulness and [UX], and provides CLI and HTTP
+interfaces, and others.
 
 
-## Caveat
+## Status
 
-Please note that the `cratedb-toolkit` package contains alpha- and beta-quality
-software, and as such, is considered to be a work in progress. Contributions of
-all kinds are very welcome, in order to make it more solid, and to add features.
+Please note that the `cratedb-toolkit` package contains alpha-, beta- and
+incubation-quality code, and as such, is considered to be a work in progress.
+Contributions of all kinds are much welcome, in order to make it more solid,
+and to add features.
 
 Breaking changes should be expected until a 1.0 release, so version pinning is
 strongly recommended, especially when you use it as a library.
@@ -66,7 +74,9 @@ documentation].
 [CrateDB Cloud]: https://console.cratedb.cloud/
 [development sandbox documentation]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/doc/sandbox.md
 [Documentation]: https://cratedb-toolkit.readthedocs.io/
+[DWIM]: https://en.wikipedia.org/wiki/DWIM
 [Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues
 [License]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
 [PyPI]: https://pypi.org/project/cratedb-toolkit/
 [Source code]: https://github.com/crate-workbench/cratedb-toolkit
+[UX]: https://en.wikipedia.org/wiki/User_experience
