@@ -1,4 +1,5 @@
 import dataclasses
+import typing as t
 from copy import deepcopy
 
 from boltons.urlutils import URL
@@ -50,3 +51,16 @@ class TableAddress:
     @property
     def fullname(self):
         return f'"{self.schema}"."{self.table}"'
+
+
+@dataclasses.dataclass
+class ClusterInformation:
+    """
+    Manage a database cluster's information.
+    """
+
+    cratedb: t.Any = dataclasses.field(default_factory=dict)
+    cloud: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
+
+    def asdict(self):
+        return dataclasses.asdict(self)

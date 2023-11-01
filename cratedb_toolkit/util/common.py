@@ -23,3 +23,7 @@ def setup_logging(level=logging.INFO, verbose: bool = False):
     logging.getLogger("urllib3.connectionpool").setLevel(level)
 
     # logging.getLogger("docker.auth").setLevel(logging.INFO)  # noqa: ERA001
+
+    # Tame Faker spamming the logs.
+    # https://github.com/joke2k/faker/issues/753#issuecomment-491402018
+    logging.getLogger("faker").setLevel(logging.ERROR)
