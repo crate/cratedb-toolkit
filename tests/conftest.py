@@ -18,6 +18,8 @@ RESET_TABLES = [
     f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_single"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_composite"',
 ]
 
 

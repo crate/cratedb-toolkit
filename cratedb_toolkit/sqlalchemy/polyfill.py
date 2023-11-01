@@ -29,7 +29,7 @@ def polyfill_autoincrement():
     schema.Column.__init__ = __init__  # type: ignore[method-assign]
 
 
-def check_uniqueness_factory(sa_entity, attribute_name):
+def check_uniqueness_factory(sa_entity, *attribute_names):
     """
     Run a manual column value uniqueness check on a table, and raise an IntegrityError if applicable.
 
@@ -39,22 +39,27 @@ def check_uniqueness_factory(sa_entity, attribute_name):
           dialect parameter `crate_polyfill_unique` or such.
     """
 
+    # Synthesize a canonical "name" for the constraint,
+    # composed of all column names involved.
+    constraint_name: str = "-".join(attribute_names)
+
     def check_uniqueness(mapper, connection, target):
         from sqlalchemy.exc import IntegrityError
 
         if isinstance(target, sa_entity):
             # TODO: How to use `session.query(SqlExperiment)` here?
-            stmt = (
-                mapper.selectable.select()
-                .filter(getattr(sa_entity, attribute_name) == getattr(target, attribute_name))
-                .compile(bind=connection.engine)
-            )
+            stmt = mapper.selectable.select()
+            for attribute_name in attribute_names:
+                stmt = stmt.filter(getattr(sa_entity, attribute_name) == getattr(target, attribute_name))
+            stmt = stmt.compile(bind=connection.engine)
             results = connection.execute(stmt)
             if results.rowcount > 0:
                 raise IntegrityError(
                     statement=stmt,
                     params=[],
-                    orig=Exception(f"DuplicateKeyException on column: {target.__tablename__}.{attribute_name}"),
+                    orig=Exception(
+                        f"DuplicateKeyException in table '{target.__tablename__}' " f"on constraint '{constraint_name}'"
+                    ),
                 )
 
     return check_uniqueness

@@ -8,6 +8,9 @@
 
 - Add support for Python 3.12
 
+- SQLAlchemy: Improve UNIQUE constraints polyfill to accept multiple
+  column names, for emulating unique composite keys.
+
 
 ## 2023/10/10 0.0.1
 
