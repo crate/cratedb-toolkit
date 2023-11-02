@@ -15,6 +15,9 @@ from cratedb_toolkit.util.croud import CroudException
 @click.version_option()
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool):
+    """
+    Run cluster operations on CrateDB and CrateDB Cloud.
+    """
     return boot_click(ctx, verbose, debug)
 
 

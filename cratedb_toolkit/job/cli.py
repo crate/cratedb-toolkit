@@ -1,16 +1,27 @@
+import sys
+
 import click
 
 from cratedb_toolkit.job.croud import jobs_list
-from cratedb_toolkit.util import jd
+from cratedb_toolkit.util.croud import get_croud_output_formats
+
+output_formats = get_croud_output_formats()
 
 
 @click.command(name="list-jobs")
 @click.option(
     "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=True, help="CrateDB Cloud cluster identifier"
 )
+@click.option(
+    "--format",
+    "format_",
+    type=click.Choice(output_formats, case_sensitive=False),
+    required=False,
+    help="The output format for the result of the operation",
+)
 @click.pass_context
-def cli_list_jobs(ctx: click.Context, cluster_id: str):
+def cli_list_jobs(ctx: click.Context, cluster_id: str, format_: str):
     """
-    List running jobs.
+    List CrateDB Cloud jobs.
     """
-    jd(jobs_list(cluster_id))
+    print(jobs_list(cluster_id, output_format=format_, decode_output=False), file=sys.stdout)  # noqa: T201
