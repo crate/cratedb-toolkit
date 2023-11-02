@@ -1,21 +1,43 @@
 # Backlog
 
 ## Iteration +1
-- Refactoring towards `cratedb-toolkit`.
+- UX: Refactoring towards `cratedb-toolkit`.
+- UX: `ctk load`: Clearly disambiguate between loading data into
+  RDBMS database tables, blob tables, or filesystem objects.
+  ```shell
+  ctk load table https://s3.amazonaws.com/my.import.data.gz
+  ```
+  ```shell
+  ctk load blob /path/to/image.png
+  ```
+  ```shell
+  ctk load object /local/path/to/image.png /dbfs/assets
+  ```
+- Improve retention subsystem API.
   ```shell
   ctk retention create-policy lalala
   ctk materialized create lalala
   ctk schedule add lalala
   ```
 
-## Iteration +1.25
+## Iteration +2
 - CLI: Use proper exit codes.
-- Make `--cutoff-day` optional, use `today()` as default.
-- Refactor "partition"-based strategies into subfamily/category, in order to
+- Retention: Make `--cutoff-day` optional, use `today()` as default.
+- Retention: Refactor "partition"-based strategies into subfamily/category, in order to
   make room for other types of strategies not necessarily using partitioned
   tables.
+- Cloud: Use `keyring` for storing CrateDB Cloud Cluster credentials
+- `ctk load table`: Accept `offset`/`limit` and `start`/`stop` options
+  - Humanized: https://github.com/panodata/aika
+- UX: Unlock `testdata://` data sources from `influxio`
+- UX: No stack traces when `cratedb_toolkit.util.croud.CroudException: 401 - Unauthorized`
+- UX: Explain `cratedb_toolkit.util.croud.CroudException: Another cluster operation is currently in progress, please try again later.`
+- UX: Explain `cratedb_toolkit.util.croud.CroudException: Resource not found.` when accessing unknown cluster id.
+- UX: Make `ctk list-jobs` respect `"status": "SUCCEEDED"` etc.
+- UX: Improve textual report from `ctk load table`
+- UX: Accept alias `--format {jsonl,ndjson}` for `--format json_row` 
 
-## Iteration +1.5
+## Iteration +3
 - CI: Nightly builds, to verify regressions on CrateDB
 - CI: Also build OCI images for ARM, maybe only on PRs to `main`, and releases?
 - CI: Add code coverage tracking and reporting.
@@ -33,7 +55,7 @@
     cratedb-retention refresh-materialized-view doc.raw_metrics
     ```
 
-## Iteration +1.75
+## Iteration +4
 Add two non-partition-based strategies. Category: `timerange`.
 
 - Add a shortcut interface for adding policies.
@@ -69,10 +91,11 @@ Add two non-partition-based strategies. Category: `timerange`.
   st ttl doc.sensor_readings:time_month snapshot:export_cold 4w
   ```
 
-## Iteration +2
+## Iteration +5
 - Periodic/recurrent queries via scheduling.
   - https://github.com/crate/crate/issues/11182
   - https://github.com/crate/crate-insights/issues/75
+  - Humanized: https://github.com/panodata/aika
 
   Either use classic cron, or systemd-timers, or use one of `APScheduler`,
   `schedule`, or `scheduler`.
@@ -100,7 +123,7 @@ Add two non-partition-based strategies. Category: `timerange`.
   - https://github.com/crate/crate/issues/14298
   - https://github.com/crate/crate/pull/14346
 
-## Iteration +3
+## Iteration +6
 - Review SQL queries: What about details like `ORDER BY 5 ASC`?
 - Use SQLAlchemy as query builder, to prevent SQL injection (S608),
   see `render_delete.py` spike.
@@ -112,7 +135,7 @@ Add two non-partition-based strategies. Category: `timerange`.
 - Document usage with Kubernetes, and Nomad/Waypoint.
 - Job progress
 
-## Iteration +4
+## Iteration +7
 - More packaging: Use `fpm`
 - More packaging: What about an Ubuntu Snap, a Helm chart, or a Nomad Pack?
 - Clarify how to interpret the `--cutoff-day` option.
