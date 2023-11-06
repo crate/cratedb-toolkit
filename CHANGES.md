@@ -3,6 +3,10 @@
 
 ## Unreleased
 
+
+
+## 2023/11/06 v0.0.2
+
 - CLI: Upgrade to `click-aliases>=1.0.2`, fixing erroring out when no group aliases
   are specified.
 
@@ -12,7 +16,7 @@
   column names, for emulating unique composite keys.
 
 
-## 2023/10/10 0.0.1
+## 2023/10/10 v0.0.1
 
 - SQLAlchemy: Add a few patches and polyfills, which do not fit well
   into the vanilla Python driver / SQLAlchemy dialect.
@@ -36,7 +40,7 @@
   `RepositoryUnknownException`.
 
 
-## 2023/06/27 0.0.0
+## 2023/06/27 v0.0.0
 
 - Import "data retention" implementation from <https://github.com/crate/crate-airflow-tutorial>.
   Thanks, @hammerhead.
