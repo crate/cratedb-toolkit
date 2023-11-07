@@ -4,6 +4,7 @@
 ## Unreleased
 
 - Add SQL runner utility primitives to `io.sql` namespace
+- Add `import_csv_pandas` and `import_csv_dask` utility primitives
 
 
 ## 2023/11/06 v0.0.2
