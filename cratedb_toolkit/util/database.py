@@ -1,6 +1,11 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import io
+import typing as t
+from pathlib import Path
+
 import sqlalchemy as sa
+import sqlparse
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
@@ -22,12 +27,23 @@ class DatabaseAdapter:
         self.engine = sa.create_engine(self.dburi, echo=False)
         self.connection = self.engine.connect()
 
-    def run_sql(self, sql: str, records: bool = False, ignore: str = None):
+    def run_sql(self, sql: t.Union[str, Path, io.IOBase], records: bool = False, ignore: str = None):
         """
         Run SQL statement, and return results, optionally ignoring exceptions.
         """
+
+        sql_effective: str
+        if isinstance(sql, str):
+            sql_effective = sql
+        elif isinstance(sql, Path):
+            sql_effective = sql.read_text()
+        elif isinstance(sql, io.IOBase):
+            sql_effective = sql.read()
+        else:
+            raise TypeError("SQL statement type must be either string, Path, or IO handle")
+
         try:
-            return self.run_sql_real(sql=sql, records=records)
+            return self.run_sql_real(sql=sql_effective, records=records)
         except Exception as ex:
             if not ignore:
                 raise
@@ -38,12 +54,23 @@ class DatabaseAdapter:
         """
         Invoke SQL statement, and return results.
         """
-        result = self.connection.execute(sa.text(sql))
-        if records:
-            rows = result.mappings().fetchall()
-            return [dict(row.items()) for row in rows]
+        results = []
+        with self.engine.connect() as connection:
+            for statement in sqlparse.split(sql):
+                result = connection.execute(sa.text(statement))
+                data: t.Any
+                if records:
+                    rows = result.mappings().fetchall()
+                    data = [dict(row.items()) for row in rows]
+                else:
+                    data = result.fetchall()
+                results.append(data)
+
+        # Backward-compatibility.
+        if len(results) == 1:
+            return results[0]
         else:
-            return result.fetchall()
+            return results
 
     def count_records(self, tablename_full: str):
         """
