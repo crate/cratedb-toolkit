@@ -3,6 +3,7 @@
 *.egg-info
 .eggs
 __pycache__
+*.pyc
 dist
 .coverage
 coverage.xml

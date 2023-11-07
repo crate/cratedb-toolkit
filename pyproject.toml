@@ -91,6 +91,7 @@ dependencies = [
   "crash",
   "crate[sqlalchemy]>=0.34",
   "sqlalchemy>=2",
+  "sqlparse<0.5",
 ]
 [project.optional-dependencies]
 develop = [

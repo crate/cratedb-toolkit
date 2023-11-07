@@ -3,6 +3,7 @@
 
 ## Unreleased
 
+- Add SQL runner utility primitives to `io.sql` namespace
 
 
 ## 2023/11/06 v0.0.2
