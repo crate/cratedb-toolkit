@@ -194,6 +194,61 @@ class DatabaseAdapter:
         """
         self.run_sql(sql)
 
+    def import_csv_pandas(
+        self, filepath: t.Union[str, Path], tablename: str, index=False, chunksize=1000, if_exists="replace"
+    ):
+        """
+        Import CSV data using pandas.
+        """
+        import pandas as pd
+        from crate.client.sqlalchemy.support import insert_bulk
+
+        df = pd.read_csv(filepath)
+        with self.engine.connect() as connection:
+            return df.to_sql(
+                tablename, connection, index=index, chunksize=chunksize, if_exists=if_exists, method=insert_bulk
+            )
+
+    def import_csv_dask(
+        self,
+        filepath: t.Union[str, Path],
+        tablename: str,
+        index=False,
+        chunksize=1000,
+        if_exists="replace",
+        npartitions: int = None,
+        progress: bool = False,
+    ):
+        """
+        Import CSV data using Dask.
+        """
+        import dask.dataframe as dd
+        import pandas as pd
+        from crate.client.sqlalchemy.support import insert_bulk
+
+        # Set a few defaults.
+        # TODO: Use amount of CPU cores instead?
+        npartitions = npartitions or 4
+
+        if progress:
+            from dask.diagnostics import ProgressBar
+
+            pbar = ProgressBar()
+            pbar.register()
+
+        # Load data into database.
+        df = pd.read_csv(filepath)
+        ddf = dd.from_pandas(df, npartitions=npartitions)
+        return ddf.to_sql(
+            tablename,
+            uri=self.dburi,
+            index=index,
+            chunksize=chunksize,
+            if_exists=if_exists,
+            method=insert_bulk,
+            parallel=True,
+        )
+
 
 def sa_is_empty(thing):
     """

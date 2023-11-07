@@ -21,7 +21,7 @@ COPY . /src
 
 # Install package.
 RUN --mount=type=cache,id=pip,target=/root/.cache/pip \
-    pip install --use-pep517 --prefer-binary '/src'
+    pip install --use-pep517 --prefer-binary '/src[io]'
 
 # Uninstall Git again.
 RUN apt-get --yes remove --purge git && apt-get --yes autoremove
