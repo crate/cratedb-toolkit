@@ -104,7 +104,7 @@ develop = [
 ]
 io = [
   "dask<=2023.10.1,>=2020",
-  "pandas<3,>=2",
+  "pandas<3,>=1",
 ]
 release = [
   "build<2",
