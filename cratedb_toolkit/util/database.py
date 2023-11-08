@@ -1,6 +1,7 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import io
+import os
 import typing as t
 from pathlib import Path
 
@@ -227,8 +228,7 @@ class DatabaseAdapter:
         from crate.client.sqlalchemy.support import insert_bulk
 
         # Set a few defaults.
-        # TODO: Use amount of CPU cores instead?
-        npartitions = npartitions or 4
+        npartitions = npartitions or os.cpu_count()
 
         if progress:
             from dask.diagnostics import ProgressBar
