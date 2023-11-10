@@ -1,10 +1,19 @@
 ---
-name: "Tests: Common"
+name: "Tests: MongoDB"
 
 on:
-  pull_request: ~
+  pull_request:
+    branches: ~
+    paths:
+    - '.github/workflows/mongodb.yml'
+    - 'cratedb_toolkit/io/mongodb/**'
+    - 'pyproject.toml'
   push:
     branches: [ main ]
+    paths:
+    - '.github/workflows/mongodb.yml'
+    - 'cratedb_toolkit/io/mongodb/**'
+    - 'pyproject.toml'
 
   # Allow job to be triggered manually.
   workflow_dispatch:
@@ -28,22 +37,16 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: ["3.8", "3.12"]
+        mongodb-version: ["2", "3", "4", "5", "6", "7"]
 
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
+      MONGODB_VERSION: ${{ matrix.mongodb-version }}
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
-    # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
-    services:
-      cratedb:
-        image: crate/crate:nightly
-        ports:
-          - 4200:4200
-          - 5432:5432
-
-    name: Python ${{ matrix.python-version }} on OS ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }}, MongoDB ${{ matrix.mongodb-version }} on OS ${{ matrix.os }}
     steps:
 
     - name: Acquire sources
@@ -75,7 +78,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: ./coverage.xml
-        flags: main
+        flags: mongodb
         env_vars: OS,PYTHON
         name: codecov-umbrella
         fail_ci_if_error: false
