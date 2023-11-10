@@ -2,6 +2,12 @@
 
 ## Introduction
 
+Acquire sources.
+```shell
+git clone https://github.com/crate-workbench/cratedb-toolkit
+cd cratedb-toolkit
+```
+
 It is recommended to use a Python virtualenv for the subsequent operations.
 If you something gets messed up during development, it is easy to nuke the
 installation, and start from scratch.
@@ -10,15 +16,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Acquire sources.
-```shell
-git clone https://github.com/crate-workbench/cratedb-toolkit
-cd cratedb-toolkit
-```
-
 Install project in sandbox mode.
 ```shell
-pip install --editable=.[develop,test]
+pip install --editable='.[develop,test]'
 ```
 
 Run tests. `TC_KEEPALIVE` keeps the auxiliary service containers running, which
