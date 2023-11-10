@@ -30,10 +30,11 @@ export TC_KEEPALIVE=true
 poe check
 ```
 
-In order to shut down and destroy the CrateDB container, which was started by
-the test suite, and was kept running by using `TC_KEEPALIVE`, use this command.
+In order to shut down and destroy the auxiliary service containers, which have
+been started by running the test suite, and were kept running by using 
+`TC_KEEPALIVE`, use this command.
 ```shell
-docker rm --force testcontainers-cratedb
+docker rm --force testcontainers-cratedb testcontainers-mongodb
 ```
 
 Format code.
