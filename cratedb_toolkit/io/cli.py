@@ -146,10 +146,10 @@ def load_table_cratedb(sqlalchemy_url: str, resource_url: str):
     ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
     """
     if resource_url.startswith("influxdb"):
-        from influxio.core import copy
+        from cratedb_toolkit.io.influxdb import influxdb_copy
 
         source_url = resource_url.replace("influxdb2", "http")
         target_url = sqlalchemy_url
-        copy(source_url, target_url, progress=True)
+        influxdb_copy(source_url, target_url, progress=True)
     else:
         raise NotImplementedError("Importing resource not implemented yet")

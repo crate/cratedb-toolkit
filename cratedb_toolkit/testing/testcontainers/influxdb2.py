@@ -10,6 +10,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import os
+
 from influxdb_client import InfluxDBClient
 from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
@@ -29,14 +31,15 @@ class InfluxDB2Container(KeepaliveContainer, DbContainer):
         The example spins up an InfluxDB2 database instance.
     """
 
+    INFLUXDB_VERSION = os.environ.get("INFLUXDB_VERSION", "latest")
+
     ORGANIZATION = "example"
     TOKEN = "token"  # noqa: S105
 
     # TODO: Dual-port use with 8083+8086.
     def __init__(
         self,
-        # TODO: Use `influxdb:latest` by default?
-        image: str = "influxdb:2.7",
+        image: str = f"influxdb:{INFLUXDB_VERSION}",
         port: int = 8086,
         dialect: str = "influxdb2",
         **kwargs,
