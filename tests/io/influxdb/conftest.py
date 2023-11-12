@@ -1,9 +1,6 @@
 import logging
 
 import pytest
-from influxdb_client import InfluxDBClient
-
-from cratedb_toolkit.testing.testcontainers.influxdb2 import InfluxDB2Container
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +17,16 @@ class InfluxDB2Fixture:
     """
 
     def __init__(self):
+        from influxdb_client import InfluxDBClient
+
         self.container = None
         self.client: InfluxDBClient = None
         self.setup()
 
     def setup(self):
         # TODO: Make image name configurable.
+        from cratedb_toolkit.testing.testcontainers.influxdb2 import InfluxDB2Container
+
         self.container = InfluxDB2Container()
         self.container.start()
         self.client = self.container.get_connection_client()

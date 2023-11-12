@@ -1,10 +1,19 @@
 ---
-name: "Tests: Common"
+name: "Tests: InfluxDB"
 
 on:
-  pull_request: ~
+  pull_request:
+    branches: ~
+    paths:
+    - '.github/workflows/influxdb.yml'
+    - 'cratedb_toolkit/io/influxdb/**'
+    - 'pyproject.toml'
   push:
     branches: [ main ]
+    paths:
+    - '.github/workflows/influxdb.yml'
+    - 'cratedb_toolkit/io/influxdb/**'
+    - 'pyproject.toml'
 
   # Allow job to be triggered manually.
   workflow_dispatch:
@@ -27,23 +36,23 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.8", "3.12"]
+        # TODO: yarl, dependency of influxio, is currently not available on Python 3.12.
+        #       https://github.com/aio-libs/yarl/pull/942
+        python-version: ["3.8", "3.11"]
+        influxdb-version: ["2.6", "2.7"]
 
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
+      INFLUXDB_VERSION: ${{ matrix.influxdb-version }}
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
-    # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
-    services:
-      cratedb:
-        image: crate/crate:nightly
-        ports:
-          - 4200:4200
-          - 5432:5432
-
-    name: Python ${{ matrix.python-version }} on OS ${{ matrix.os }}
+    name: "
+    Python ${{ matrix.python-version }}, 
+    InfluxDB ${{ matrix.influxdb-version }}, 
+    OS ${{ matrix.os }}
+    "
     steps:
 
     - name: Acquire sources
@@ -65,7 +74,7 @@ jobs:
         pip install "setuptools>=64" --upgrade
 
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[io,test,develop]
+        pip install --use-pep517 --prefer-binary --editable=.[influxdb,io,test,develop]
 
     - name: Run linter and software tests
       run: |
@@ -75,7 +84,7 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: ./coverage.xml
-        flags: main
+        flags: influxdb
         env_vars: OS,PYTHON
         name: codecov-umbrella
         fail_ci_if_error: false

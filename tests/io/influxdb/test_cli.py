@@ -1,3 +1,11 @@
+# ruff: noqa: E402
+import pytest
+
+pytest.importorskip("influxio", reason="Skipping InfluxDB tests because 'influxio' package is not installed")
+pytest.importorskip(
+    "influxdb_client", reason="Skipping InfluxDB tests because 'influxdb-client' package is not installed"
+)
+
 from click.testing import CliRunner
 from influxio.model import InfluxDbAdapter
 from influxio.testdata import DataFrameFactory
