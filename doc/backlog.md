@@ -36,6 +36,10 @@
 - UX: Make `ctk list-jobs` respect `"status": "SUCCEEDED"` etc.
 - UX: Improve textual report from `ctk load table`
 - UX: Accept alias `--format {jsonl,ndjson}` for `--format json_row` 
+- Catch recursion errors:
+  ```
+  CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/
+  ```
 
 ## Iteration +3
 - CI: Nightly builds, to verify regressions on CrateDB

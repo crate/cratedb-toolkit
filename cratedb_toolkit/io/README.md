@@ -65,4 +65,36 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 - Exercise data imports from AWS S3 and other Object Storage providers.
 
 
+## InfluxDB
+
+Using the adapter to [influxio], you can transfer data from InfluxDB to CrateDB.
+
+Import two data points into InfluxDB.
+```shell
+export INFLUX_ORG=example
+export INFLUX_TOKEN=token
+export INFLUX_BUCKET_NAME=testdrive
+export INFLUX_MEASUREMENT=demo
+influx bucket create
+influx write --precision=s "${INFLUX_MEASUREMENT},region=amazonas temperature=42.42,humidity=84.84 1556896326"
+influx write --precision=s "${INFLUX_MEASUREMENT},region=amazonas temperature=45.89,humidity=77.23,windspeed=5.4 1556896327"
+influx query "from(bucket:\"${INFLUX_BUCKET_NAME}\") |> range(start:-100y)"
+```
+
+Transfer data.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
+crash --command "SELECT * FROM testdrive.demo;"
+```
+
+Todo: More convenient table querying.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+ctk shell --command "SELECT * FROM testdrive.demo;"
+ctk show table "testdrive.demo"
+```
+
+
 [CrateDB Cloud]: https://console.cratedb.cloud/
+[influxio]: https://github.com/daq-tools/influxio

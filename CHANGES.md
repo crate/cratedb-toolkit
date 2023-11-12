@@ -9,6 +9,7 @@
 - Add SDK and CLI for CrateDB Cloud Data Import APIs
   `ctk load table ...`
 - Add `migr8` program from previous repository
+- InfluxDB: Add adapter for `influxio`
 
 
 ## 2023/11/06 v0.0.2
