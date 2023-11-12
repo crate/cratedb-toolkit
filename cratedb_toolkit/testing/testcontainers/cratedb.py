@@ -55,8 +55,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
     # TODO: Dual-port use with 4200+5432.
     def __init__(
         self,
-        # TODO: Use `crate/crate:nightly` by default?
-        image: str = "crate:latest",
+        image: str = "crate/crate:nightly",
         port: int = 4200,
         user: Optional[str] = None,
         password: Optional[str] = None,
