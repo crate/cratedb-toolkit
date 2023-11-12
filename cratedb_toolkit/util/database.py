@@ -92,6 +92,14 @@ class DatabaseAdapter:
         except Exception:
             return False
 
+    def refresh_table(self, tablename_full: str):
+        """
+        Run a `REFRESH TABLE ...` command.
+        """
+        sql = f"REFRESH TABLE {tablename_full};"  # noqa: S608
+        self.run_sql(sql=sql)
+        return True
+
     def drop_repository(self, name: str):
         """
         Drop snapshot repository.

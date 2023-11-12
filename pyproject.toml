@@ -105,6 +105,9 @@ develop = [
   "ruff==0.1.3",
   "validate-pyproject<0.16",
 ]
+influxdb = [
+  "influxio==0.1.1",
+]
 io = [
   "cr8",
   "dask<=2023.10.1,>=2020",

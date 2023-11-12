@@ -68,26 +68,57 @@ class GuidingTexts:
 @make_command(cli, name="table")
 @click.argument("url")
 @click.option(
-    "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=True, help="CrateDB Cloud cluster identifier"
+    "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=False, help="CrateDB Cloud cluster identifier"
+)
+@click.option(
+    "--cratedb-sqlalchemy-url", envvar="CRATEDB_SQLALCHEMY_URL", type=str, required=False, help="CrateDB SQLAlchemy URL"
 )
 @click.option("--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema where to import the data")
 @click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
 @click.option("--compression", type=str, required=False, help="Compression format of the import resource")
 @click.pass_context
-def load_table(ctx: click.Context, url: str, cluster_id: str, schema: str, table: str, format_: str, compression: str):
+def load_table(
+    ctx: click.Context,
+    url: str,
+    cluster_id: str,
+    cratedb_sqlalchemy_url: str,
+    schema: str,
+    table: str,
+    format_: str,
+    compression: str,
+):
     """
     Import data into CrateDB and CrateDB Cloud clusters.
-
-    # TODO: More inline documentation.
-    - https://console.cratedb.cloud
     """
 
-    cluster_info = get_cluster_info(cluster_id=cluster_id)
-    cio = CloudIo(cluster_id=cluster_id)
+    if not cluster_id and not cratedb_sqlalchemy_url:
+        raise KeyError(
+            "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy URL needs to be supplied. "
+            "Use --cluster-id / --cratedb-sqlalchemy-url CLI options "
+            "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_SQLALCHEMY_URL environment variables."
+        )
 
     resource = CloudIoResource(url=url, format=format_, compression=compression)
     target = CloudIoTarget(schema=schema, table=table)
+
+    if cluster_id:
+        load_table_cloud(cluster_id, resource, target)
+    elif cratedb_sqlalchemy_url:
+        load_table_cratedb(cratedb_sqlalchemy_url, url)
+    else:
+        raise NotImplementedError("Importing resource not implemented yet")
+
+
+def load_table_cloud(cluster_id: str, resource: CloudIoResource, target: CloudIoTarget):
+    """
+    export CRATEDB_CLOUD_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
+    ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz
+
+    https://console.cratedb.cloud
+    """
+    cluster_info = get_cluster_info(cluster_id=cluster_id)
+    cio = CloudIo(cluster_id=cluster_id)
 
     try:
         job_info, success = cio.load_resource(resource=resource, target=target)
@@ -107,3 +138,18 @@ def load_table(ctx: click.Context, url: str, cluster_id: str, schema: str, table
     except CroudException:
         logger.exception("Unknown error")
         sys.exit(1)
+
+
+def load_table_cratedb(sqlalchemy_url: str, resource_url: str):
+    """
+    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
+    """
+    if resource_url.startswith("influxdb"):
+        from influxio.core import copy
+
+        source_url = resource_url.replace("influxdb2", "http")
+        target_url = sqlalchemy_url
+        copy(source_url, target_url, progress=True)
+    else:
+        raise NotImplementedError("Importing resource not implemented yet")

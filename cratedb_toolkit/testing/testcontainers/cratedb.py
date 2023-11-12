@@ -16,7 +16,7 @@ from typing import Optional
 
 from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer, asbool
 
@@ -95,7 +95,9 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
             port=self.port_to_expose,
         )
 
+    @wait_container_is_ready()
     def _connect(self):
         # TODO: Better use a network connectivity health check?
         #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
+        # TODO: Provide a client instance.
         wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
