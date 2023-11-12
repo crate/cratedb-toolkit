@@ -18,10 +18,12 @@ from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 
+from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer, asbool
+
 logger = logging.getLogger(__name__)
 
 
-class CrateDBContainer(DbContainer):
+class CrateDBContainer(KeepaliveContainer, DbContainer):
     """
     CrateDB database container.
 
@@ -48,21 +50,21 @@ class CrateDBContainer(DbContainer):
     CRATEDB_USER = os.environ.get("CRATEDB_USER", "crate")
     CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "")
     CRATEDB_DB = os.environ.get("CRATEDB_DB", "doc")
-    CRATEDB_KEEPALIVE = os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False))
+    KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
 
     # TODO: Dual-port use with 4200+5432.
     def __init__(
         self,
+        # TODO: Use `crate/crate:nightly` by default?
         image: str = "crate:latest",
         port: int = 4200,
         user: Optional[str] = None,
         password: Optional[str] = None,
         dbname: Optional[str] = None,
         dialect: str = "crate",
-        keepalive: bool = False,
         **kwargs,
     ) -> None:
-        super(CrateDBContainer, self).__init__(image=image, **kwargs)
+        super().__init__(image=image, **kwargs)
 
         self._name = "testcontainers-cratedb"  # -{os.getpid()}
         self._command = "-Cdiscovery.type=single-node -Ccluster.routing.allocation.disk.threshold_enabled=false"
@@ -74,13 +76,11 @@ class CrateDBContainer(DbContainer):
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
         self.CRATEDB_DB = dbname or self.CRATEDB_DB
 
-        self.keepalive = keepalive or self.CRATEDB_KEEPALIVE
         self.port_to_expose = port
         self.dialect = dialect
 
-        self.with_exposed_ports(self.port_to_expose)
-
     def _configure(self) -> None:
+        self.with_exposed_ports(self.port_to_expose)
         self.with_env("CRATEDB_USER", self.CRATEDB_USER)
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
@@ -100,46 +100,3 @@ class CrateDBContainer(DbContainer):
         # TODO: Better use a network connectivity health check?
         #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
         wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
-
-    def start(self):
-        """
-        Improved `start()` method, supporting service-keepalive.
-
-        In order to keep the service running where it normally would be torn down,
-        define the `CRATEDB_KEEPALIVE` or `TC_KEEPALIVE` environment variables.
-        """
-
-        self._configure()
-
-        logger.info("Pulling image %s", self.image)
-        docker_client = self.get_docker_client()
-
-        # Check if container is already running, and whether it should be reused.
-        containers_running = docker_client.client.api.containers(all=True, filters={"name": self._name})
-        start_container = not containers_running
-
-        if start_container:
-            logger.info("Starting CrateDB")
-            self._container = docker_client.run(
-                self.image,
-                command=self._command,
-                detach=True,
-                environment=self.env,
-                ports=self.ports,
-                name=self._name,
-                volumes=self.volumes,
-                **self._kwargs,
-            )
-        else:
-            container_id = containers_running[0]["Id"]
-            self._container = docker_client.client.containers.get(container_id)
-
-        logger.info("Container started: %s", self._container.short_id)
-        self._connect()
-        return self
-
-    def stop(self, **kwargs):
-        if not self.keepalive:
-            logger.info("Stopping CrateDB")
-            return super().stop()
-        return None
