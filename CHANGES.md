@@ -13,6 +13,7 @@
 - MongoDB: Add `migr8` program from previous repository
 - MongoDB: Improve UX by using `ctk load table mongodb://...`
 - load table: Refactor to use more OO
+- Add `examples/cloud_import.py`
 
 
 ## 2023/11/06 v0.0.2

@@ -92,6 +92,7 @@ dependencies = [
   "crate[sqlalchemy]>=0.34",
   "croud==1.8",
   'importlib-metadata; python_version <= "3.7"',
+  "python-dotenv<2",
   "sqlalchemy>=2",
   "sqlparse<0.5",
 ]
