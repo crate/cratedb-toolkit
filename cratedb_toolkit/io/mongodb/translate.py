@@ -45,7 +45,7 @@ TYPES = {
 }
 
 BASE = """
-CREATE TABLE IF NOT EXISTS "doc"."{table}" (\n{columns}\n);
+CREATE TABLE IF NOT EXISTS "{schema}"."{table}" (\n{columns}\n);
 """
 
 COLUMN = '"{column_name}" {type}'
@@ -143,13 +143,14 @@ def indent_sql(query: str) -> str:
     return "\n".join(lines)
 
 
-def translate(schemas):
+def translate(schemas, schemaname: str = None):
     """
     Translate a schema definition for a set of MongoDB collection schemas.
 
     This results in a set of CrateDB compatible CREATE TABLE expressions
     corresponding to the set of MongoDB collection schemas.
     """
+    schemaname = schemaname or "doc"
 
     tables = list(schemas.keys())
     sql_queries = {}
@@ -162,5 +163,7 @@ def translate(schemas):
                 columns.append((COLUMN.format(column_name=fieldname, type=sql_type), comment))
 
         columns_definition = get_columns_definition(columns)
-        sql_queries[tablename] = indent_sql(BASE.format(table=tablename, columns=",\n".join(columns_definition)))
+        sql_queries[tablename] = indent_sql(
+            BASE.format(schema=schemaname, table=tablename, columns=",\n".join(columns_definition))
+        )
     return sql_queries

@@ -27,10 +27,12 @@ Export the documents from a MongoDB collection as JSON, to be ingested into Crat
 import calendar
 import re
 import sys
+import typing as t
 from datetime import datetime, timedelta
 
 import bsonjs
 import orjson as json
+import pymongo.collection
 
 _TZINFO_RE = re.compile(r"([+\-])?(\d\d):?(\d\d)")
 
@@ -89,12 +91,20 @@ def convert(d):
     return newdict
 
 
-def export(collection):
+def collection_to_json(collection: pymongo.collection.Collection, file: t.IO[t.Any] = None):
     """
-    Export a MongoDB collection's documents to standard JSON, output to stdout.
+    Export a MongoDB collection's documents to standard JSON.
+    The output is suitable to be consumed by the `cr8` program.
+
+    collection
+      a Pymongo collection object.
+
+    file
+      a file-like object (stream); defaults to the current sys.stdout.
     """
+    file = file or sys.stdout.buffer
     for document in collection.find():
         bson_json = bsonjs.dumps(document.raw)
         json_object = json.loads(bson_json)
-        sys.stdout.buffer.write(json.dumps(convert(json_object)))
-        sys.stdout.buffer.write(b"\n")
+        file.write(json.dumps(convert(json_object)))
+        file.write(b"\n")

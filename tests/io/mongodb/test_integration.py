@@ -1,9 +1,15 @@
+# ruff: noqa: E402
 import logging
 import os
 import unittest
 from unittest import mock
 
-import pymongo
+import pytest
+
+from tests.io.mongodb.conftest import RESET_DATABASES
+
+pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
+pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
 from cratedb_toolkit.io.mongodb.core import gather_collections
 from cratedb_toolkit.testing.testcontainers.mongodb import MongoDbContainerWithKeepalive
@@ -25,6 +31,8 @@ class TestMongoDBIntegration(unittest.TestCase):
     def setUpClass(cls):
         cls.startMongoDB()
         cls.client = cls.mongodb.get_connection_client()
+        for database_name in RESET_DATABASES:
+            cls.client.drop_database(database_name)
         cls.db = cls.client.get_database(cls.DBNAME)
         try:
             server_info = cls.client.server_info()
@@ -37,7 +45,6 @@ class TestMongoDBIntegration(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.client.drop_database(cls.DBNAME)
         cls.client.close()
         cls.stopMongoDB()
 
@@ -45,7 +52,7 @@ class TestMongoDBIntegration(unittest.TestCase):
     def startMongoDB(cls):
         mongodb_version = os.environ.get("MONGODB_VERSION", "7")
         mongodb_image = f"mongo:{mongodb_version}"
-        cls.mongodb = MongoDbContainerWithKeepalive(mongodb_image).with_name("testcontainers-mongodb")
+        cls.mongodb = MongoDbContainerWithKeepalive(mongodb_image)
         cls.mongodb.start()
 
     @classmethod

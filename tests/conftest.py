@@ -20,6 +20,8 @@ RESET_TABLES = [
     f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_single"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_composite"',
+    # cratedb_toolkit.io.{influxdb,mongodb}
+    '"testdrive"."demo"',
 ]
 
 

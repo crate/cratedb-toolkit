@@ -96,5 +96,45 @@ ctk show table "testdrive.demo"
 ```
 
 
+## MongoDB
+
+Using the MongoDB subsystem, you can transfer data from MongoDB to CrateDB.
+
+Import two data points into MongoDB.
+```shell
+mongosh mongodb://localhost:27017/testdrive <<EOF
+db.demo.remove({})
+db.demo.insertMany([
+  {
+    timestamp: new Date(1556896326),
+    region: "amazonas",
+    temperature: 42.42,
+    humidity: 84.84,
+  },
+  {
+    timestamp: new Date(1556896327),
+    region: "amazonas",
+    temperature: 45.89,
+    humidity: 77.23,
+    windspeed: 5.4,
+  },
+])
+db.demo.find({})
+EOF
+```
+
+Todo: Use `mongoimport`.
+```shell
+mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
+```
+
+Transfer data.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+ctk load table mongodb://localhost:27017/testdrive/demo
+crash --command "SELECT * FROM testdrive.demo;"
+```
+
+
 [CrateDB Cloud]: https://console.cratedb.cloud/
 [influxio]: https://github.com/daq-tools/influxio

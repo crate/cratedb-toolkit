@@ -92,11 +92,13 @@ dependencies = [
   "crate[sqlalchemy]>=0.34",
   "croud==1.8",
   'importlib-metadata; python_version <= "3.7"',
-  "rich<14,>=3.3.2",
   "sqlalchemy>=2",
   "sqlparse<0.5",
 ]
 [project.optional-dependencies]
+all = [
+  "cratedb-toolkit[influxdb,io,mongodb]",
+]
 develop = [
   "black<24",
   "mypy==1.6.1",
@@ -111,16 +113,21 @@ influxdb = [
 io = [
   "cr8",
   "dask<=2023.10.1,>=2020",
-  "orjson<4,>=3.3.1",
   "pandas<3,>=1",
+]
+mongodb = [
+  "cr8",
+  "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
   "python-bsonjs<0.4",
+  "rich<14,>=3.3.2",
 ]
 release = [
   "build<2",
   "twine<5",
 ]
 test = [
+  "pueblo[dataframe]@ git+https://github.com/pyveci/pueblo.git@develop",
   "pytest<8",
   "pytest-cov<5",
   "pytest-mock<4",

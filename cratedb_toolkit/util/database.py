@@ -7,6 +7,7 @@ from pathlib import Path
 
 import sqlalchemy as sa
 import sqlparse
+from boltons.urlutils import URL
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
@@ -266,3 +267,28 @@ def sa_is_empty(thing):
     TODO: Verify this. How to actually compare SQLAlchemy elements by booleanness?
     """
     return isinstance(thing, AsBoolean)
+
+
+def decode_database_table(url: str) -> t.Tuple[str, str]:
+    """
+    Decode database and table names from database URI path and/or query string.
+
+    Variants:
+
+        /<database>/<table>
+        ?database=<database>&table=<table>
+
+    TODO: Synchronize with `influxio.model.decode_database_table`.
+          This one uses `boltons`, the other one uses `yarl`.
+    """
+    url_ = URL(url)
+    try:
+        database, table = url_.path.strip("/").split("/")
+    except ValueError as ex:
+        if "too many values to unpack" not in str(ex) and "not enough values to unpack" not in str(ex):
+            raise
+        database = url_.query_params.get("database")
+        table = url_.query_params.get("table")
+        if url_.scheme == "crate" and not database:
+            database = url_.query_params.get("schema")
+    return database, table

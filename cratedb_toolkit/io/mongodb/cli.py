@@ -1,18 +1,15 @@
 import argparse
 import json
 
-import pymongo
 import rich
-from bson.raw_bson import RawBSONDocument
 
 from cratedb_toolkit import __version__
-from cratedb_toolkit.io.mongodb.core import extract, translate
-
-from .export import export
+from cratedb_toolkit.io.mongodb.core import export, extract, translate
 
 
 def extract_parser(subargs):
     parser = subargs.add_parser("extract", help="Extract a schema from a MongoDB database")
+    parser.add_argument("--url", default="mongodb://localhost:27017", help="MongoDB URL")
     parser.add_argument("--host", default="localhost", help="MongoDB host")
     parser.add_argument("--port", default=27017, help="MongoDB port")
     parser.add_argument("--database", required=True, help="MongoDB database")
@@ -35,6 +32,7 @@ def translate_parser(subargs):
 
 def export_parser(subargs):
     parser = subargs.add_parser("export", help="Export a MongoDB collection as plain JSON")
+    parser.add_argument("--url", default="mongodb://localhost:27017", help="MongoDB URL")
     parser.add_argument("--collection", required=True)
     parser.add_argument("--host", default="localhost", help="MongoDB host")
     parser.add_argument("--port", default=27017, help="MongoDB port")
@@ -80,12 +78,11 @@ def translate_from_file(args):
 
 
 def export_to_stdout(args):
-    client = pymongo.MongoClient(args.host, int(args.port), document_class=RawBSONDocument)
-    db = client[args.database]
-    export(db[args.collection])
+    export(args)
 
 
 def main():
+    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
     args = get_args()
     if args.command == "extract":
         extract_to_file(args)

@@ -38,3 +38,4 @@ class MongoDbContainerWithKeepalive(KeepaliveContainer, MongoDbContainer):
         **kwargs,
     ) -> None:
         super().__init__(image=image, **kwargs)
+        self.with_name("testcontainers-mongodb")

@@ -10,6 +10,8 @@
   `ctk load table ...`
 - Add `migr8` program from previous repository
 - InfluxDB: Add adapter for `influxio`
+- MongoDB: Add `migr8` program from previous repository
+- MongoDB: Improve UX by using `ctk load table mongodb://...`
 
 
 ## 2023/11/06 v0.0.2
