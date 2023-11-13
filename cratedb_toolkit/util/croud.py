@@ -1,3 +1,4 @@
+import argparse
 import contextlib
 import dataclasses
 import functools
@@ -10,11 +11,9 @@ from unittest.mock import patch
 import yaml
 from croud.parser import Argument
 
+from cratedb_toolkit.exception import CroudException
+
 logger = logging.getLogger(__name__)
-
-
-class CroudException(Exception):
-    pass
 
 
 @dataclasses.dataclass
@@ -82,7 +81,10 @@ class CroudWrapper:
 
         # Add command-specific arguments to parser.
         for arg_spec in self.call.specs:
-            arg_spec.add_to_parser(parser)
+            try:
+                arg_spec.add_to_parser(parser)
+            except argparse.ArgumentError:
+                pass
 
         # Decode arguments.
         args_in = self.call.arguments + [f"--output-fmt={self.output_format}"]
@@ -138,6 +140,11 @@ class CroudWrapper:
             for level in levels:
                 p = patch(f"croud.printer.print_{level}", functools.partial(print_fun, level))
                 stack.enter_context(p)
+            """
+            TODO: When aiming to disable wait-for-completion.
+                  p = patch(f"croud.clusters.commands._wait_for_completed_operation")
+                  stack.enter_context(p)
+            """
             return fun()
 
 

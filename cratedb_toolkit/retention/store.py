@@ -109,6 +109,9 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
             f"Connecting to database {self.settings.database.safe}, " f"table {self.settings.policy_table.fullname}"
         )
 
+        if self.settings.policy_table.table is None:
+            raise ValueError("Unable to create RetentionPolicyStore without table name")
+
         # Set up generic database adapter.
         self.database: DatabaseAdapter = DatabaseAdapter(dburi=self.settings.database.dburi)
 

@@ -4,7 +4,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.api.main import ClusterBase, ManagedCluster, StandaloneCluster
-from cratedb_toolkit.model import DatabaseAddress, TableAddress, WebResource
+from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.cli import boot_click, make_command
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ def load_table(
         raise KeyError(error_message)
 
     # Encapsulate source and target parameters.
-    resource = WebResource(url=url, format=format_, compression=compression)
+    resource = InputOutputResource(url=url, format=format_, compression=compression)
     target = TableAddress(schema=schema, table=table)
 
     # Dispatch "load table" operation.

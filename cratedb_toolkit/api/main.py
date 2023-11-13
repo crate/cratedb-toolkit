@@ -7,35 +7,59 @@ from abc import abstractmethod
 
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.cluster.util import get_cluster_info
-from cratedb_toolkit.exception import OperationFailed
+from cratedb_toolkit.exception import CroudException, OperationFailed
 from cratedb_toolkit.io.croud import CloudIo
-from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, TableAddress, WebResource
-from cratedb_toolkit.util.croud import CroudException
+from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, InputOutputResource, TableAddress
 
 logger = logging.getLogger(__name__)
 
 
 class ClusterBase(abc.ABC):
     @abstractmethod
-    def load_table(self, resource: WebResource, target: TableAddress):
+    def load_table(self, resource: InputOutputResource, target: TableAddress):
         raise NotImplementedError("Child class needs to implement this method")
 
 
 @dataclasses.dataclass
 class ManagedCluster(ClusterBase):
+    """
+    Wrap a managed CrateDB database cluster on CrateDB Cloud.
+    """
+
     cloud_id: str
     address: t.Optional[DatabaseAddress] = None
     info: t.Optional[ClusterInformation] = None
 
-    def load_table(self, resource: WebResource, target: TableAddress):
+    def __post_init__(self):
+        logger.info(f"Connecting to CrateDB Cloud Cluster: {self.cloud_id}")
+
+    def load_table(self, resource: InputOutputResource, target: t.Optional[TableAddress] = None):
         """
+        Load data into a database table on CrateDB Cloud.
+
+        Synopsis
+        --------
         export CRATEDB_CLOUD_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
         ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz
 
         https://console.cratedb.cloud
         """
-        cluster_info = get_cluster_info(cluster_id=self.cloud_id)
-        cio = CloudIo(cluster_id=self.cloud_id)
+
+        target = target or TableAddress()
+
+        try:
+            cluster_info = get_cluster_info(cluster_id=self.cloud_id)
+            logger.info(
+                f"Cluster information: name={cluster_info.cloud.get('name')}, url={cluster_info.cloud.get('url')}"
+            )
+            cio = CloudIo(cluster_id=self.cloud_id)
+        except CroudException as ex:
+            msg = f"Connecting to cluster resource failed: {self.cloud_id}. Reason: {ex}"
+            if "Resource not found" in str(ex):
+                logger.error(msg)
+                return None, False
+            logger.exception(msg)
+            raise OperationFailed(msg) from ex
 
         try:
             job_info, success = cio.load_resource(resource=resource, target=target)
@@ -47,12 +71,13 @@ class ManagedCluster(ClusterBase):
             )
             if success:
                 logger.info("Data loading was successful: %s", texts.success())
+                return job_info, success
             else:
-                msg = f"Data loading failed: {texts.error()}"
-                logger.error(msg)
-                raise OperationFailed(msg)
+                # TODO: Add "reason" to exception message.
+                logger.error(f"Data loading failed: {texts.error()}")
+                raise OperationFailed("Data loading failed")
 
-        # When exiting so, it is expected that error logging has taken place appropriately.
+            # When exiting so, it is expected that error logging has taken place appropriately.
         except CroudException as ex:
             msg = "Data loading failed: Unknown error"
             logger.exception(msg)
@@ -61,11 +86,17 @@ class ManagedCluster(ClusterBase):
 
 @dataclasses.dataclass
 class StandaloneCluster(ClusterBase):
+    """
+    Wrap a standalone CrateDB database cluster.
+    """
+
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
 
-    def load_table(self, resource: WebResource, target: TableAddress):
+    def load_table(self, resource: InputOutputResource, target: TableAddress):
         """
+        Load data into a database table on a standalone CrateDB Server.
+
         Synopsis
         --------
         export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo

@@ -4,7 +4,7 @@ import typing as t
 from pathlib import Path
 
 from cratedb_toolkit.job.croud import jobs_list
-from cratedb_toolkit.model import TableAddress, WebResource
+from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
 
 logger = logging.getLogger(__name__)
@@ -27,16 +27,16 @@ class CloudIo:
     def __init__(self, cluster_id: str):
         self.cluster_id = cluster_id
 
-    def load_resource(self, resource: WebResource, target: TableAddress) -> t.Tuple[t.Dict, bool]:
+    def load_resource(self, resource: InputOutputResource, target: TableAddress) -> t.Tuple[t.Dict, bool]:
         """
         Load resource from URL into CrateDB, using CrateDB Cloud infrastructure.
         """
 
-        logger.info(f"Loading resource. source={resource}, target={target}")
-
         # Use `schema` and `table` when given, otherwise derive from input URL.
         if target.table is None:
             target.table = Path(resource.url).with_suffix("").stem
+
+        logger.info(f"Loading data. source={resource}, target={target}")
 
         import_job = self.create_import_job(resource=resource, target=target)
         job_id = import_job["id"]
@@ -56,11 +56,11 @@ class CloudIo:
 
         found = False
         success = False
-        outcome: t.Dict = {}
+        job_info: t.Dict = {}
         for job in jobs:
             if job["id"] == job_id:
                 found = True
-                outcome = job
+                job_info = job
                 status = job["status"]
                 message = job["progress"]["message"]
                 message = f"{message} (status: {status})"
@@ -71,9 +71,11 @@ class CloudIo:
                     logger.error(message)
                 break
 
-        return outcome, success, found
+        fix_job_info_table_name(job_info)
 
-    def create_import_job(self, resource: WebResource, target: TableAddress) -> t.Dict[str, t.Any]:
+        return job_info, success, found
+
+    def create_import_job(self, resource: InputOutputResource, target: TableAddress) -> t.Dict[str, t.Any]:
         """
         Create CrateDB Cloud import job, using resource on filesystem or URL.
 
@@ -173,4 +175,22 @@ class CloudIo:
         )
 
         wr = CroudWrapper(call=call)
-        return wr.invoke()
+        job_info = wr.invoke()
+
+        # Adjust full-qualified table name by adding appropriate quotes.
+        # FIXME: Remove after flaw has been fixed.
+        fix_job_info_table_name(job_info)
+
+        return job_info
+
+
+def fix_job_info_table_name(job_info: t.Dict[str, t.Any]):
+    # FIXME: Remove after upstream has fixed the flaw.
+    #        Currently, the API returns `testdrive.pems-1`, but that can not be used at all.
+    #        So, converge it into `"testdrive"."pems-1"`.
+    if "destination" in job_info and "table" in job_info["destination"]:
+        table = job_info["destination"]["table"]
+        if '"' not in table and "." in table:
+            schema, table = table.split(".")
+            table = f'"{schema}"."{table}"'
+            job_info["destination"]["table"] = table

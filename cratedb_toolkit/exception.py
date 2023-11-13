@@ -4,3 +4,7 @@ class TableNotFound(Exception):
 
 class OperationFailed(Exception):
     pass
+
+
+class CroudException(Exception):
+    pass

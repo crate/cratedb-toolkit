@@ -80,12 +80,17 @@ class TableAddress:
     Manage a table address, which is made of "<schema>"."<table>".
     """
 
-    schema: str
-    table: str
+    schema: t.Optional[str] = None
+    table: t.Optional[str] = None
 
     @property
     def fullname(self):
-        return f'"{self.schema}"."{self.table}"'
+        if self.schema is None and self.table is None:
+            raise ValueError("Uninitialized table address can not be serialized")
+        if self.schema and self.table:
+            return f'"{self.schema}"."{self.table}"'
+        else:
+            return f'"{self.table}"'
 
 
 @dataclasses.dataclass
@@ -102,11 +107,11 @@ class ClusterInformation:
 
 
 @dataclasses.dataclass
-class WebResource:
+class InputOutputResource:
     """
-    Manage an input resource.
+    Manage information about an input or output resource.
     """
 
     url: str
-    format: str  # noqa: A003
-    compression: str
+    format: t.Optional[str] = None  # noqa: A003
+    compression: t.Optional[str] = None
