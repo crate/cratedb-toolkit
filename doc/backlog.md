@@ -1,32 +1,15 @@
 # Backlog
 
-## Iteration +1
-- UX: Refactoring towards `cratedb-toolkit`.
-- UX: `ctk load`: Clearly disambiguate between loading data into
-  RDBMS database tables, blob tables, or filesystem objects.
-  ```shell
-  ctk load table https://s3.amazonaws.com/my.import.data.gz
-  ```
-  ```shell
-  ctk load blob /path/to/image.png
-  ```
-  ```shell
-  ctk load object /local/path/to/image.png /dbfs/assets
-  ```
-- Improve retention subsystem API.
-  ```shell
-  ctk retention create-policy lalala
-  ctk materialized create lalala
-  ctk schedule add lalala
-  ```
-
 ## Iteration +2
-- CLI: Use proper exit codes.
-- Retention: Make `--cutoff-day` optional, use `today()` as default.
-- Retention: Refactor "partition"-based strategies into subfamily/category, in order to
-  make room for other types of strategies not necessarily using partitioned
-  tables.
-- Cloud: Use `keyring` for storing CrateDB Cloud Cluster credentials
+- Address `fix_job_info_table_name`
+- Add more items about `ctk load table` to `examples/` folder
+  - Python, Bash
+- Cloud: Parallelize import jobs?
+- Bug: Use CRATEDB_USERNAME=admin from cluster-info
+- Cloud: Tests for uploading a local file 
+- Cloud: Use `.ini` file and `keyring` for storing CrateDB Cloud Cluster ID and credentials
+- Cloud: List RUNNING/FAILED/SUCCEEDED jobs
+- Cloud: Sanitize file name `yc.2019.07-tiny.parquet` to be accepted as table name
 - `ctk load table`: Accept `offset`/`limit` and `start`/`stop` options
   - Humanized: https://github.com/panodata/aika
 - UX: Unlock `testdata://` data sources from `influxio`
@@ -40,6 +23,28 @@
   ```
   CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/
   ```
+- CLI: Verify exit codes.
+- UX: Rename `ctk cluster info` to `ctk status cluster --id=foo-bar-baz`
+- UX: Add `ctk start cluster --id=foo-bar-baz`
+- UX: Provide Bash/zsh completion
+- Beautify `list-jobs` output
+- `ctk list-clusters`
+- Store `CRATEDB_CLOUD_CLUSTER_ID` into `cratedb_toolkit.constants`
+- Cloud Tests: Verify file uploads
+- Docs: Add examples in more languages: Java, JavaScript, Lua, PHP
+
+## Iteration +2.5
+- Retention: Improve retention subsystem CLI API.
+  ```shell
+  ctk retention create-policy lalala
+  ctk materialized create lalala
+  ctk schedule add lalala
+  ```
+- Retention: Make `--cutoff-day` optional, use `today()` as default.
+- Retention: Refactor "partition"-based strategies into subfamily/category, in order to
+  make room for other types of strategies not necessarily using partitioned
+  tables.
+- Retention: Add `examples/retention_tags.py`.
 
 ## Iteration +3
 - CI: Nightly builds, to verify regressions on CrateDB
@@ -58,6 +63,9 @@
       --as='SELECT * FROM <table_name>;'
     cratedb-retention refresh-materialized-view doc.raw_metrics
     ```
+- CI Testcontainers
+  - https://github.com/testcontainers/testcontainers-python/blob/main/core/tests/test_docker_in_docker.py
+  - https://github.com/actions/runner-images/issues/17
 
 ## Iteration +4
 Add two non-partition-based strategies. Category: `timerange`.
@@ -186,3 +194,15 @@ Add two non-partition-based strategies. Category: `timerange`.
   - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
   - https://learn.microsoft.com/en-us/azure/storage/blobs/use-azurite-to-run-automated-tests
 - Improve SNAPSHOT testing: Filesystem
+- UX: Refactoring towards `cratedb-toolkit`.
+- UX: `ctk load`: Clearly disambiguate between loading data into
+  RDBMS database tables, blob tables, or filesystem objects.
+  ```shell
+  ctk load table https://s3.amazonaws.com/my.import.data.gz
+  ```
+  ```shell
+  ctk load blob /path/to/image.png
+  ```
+  ```shell
+  ctk load object /local/path/to/image.png /dbfs/assets
+  ```
