@@ -1,34 +1,13 @@
-import dataclasses
 import logging
 import time
 import typing as t
 from pathlib import Path
 
 from cratedb_toolkit.job.croud import jobs_list
+from cratedb_toolkit.model import TableAddress, WebResource
 from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
 
 logger = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class CloudIoResource:
-    """
-    Manage a CrateDB Cloud Import input resource.
-    """
-
-    url: str
-    format: str  # noqa: A003
-    compression: str
-
-
-@dataclasses.dataclass
-class CloudIoTarget:
-    """
-    Manage a CrateDB Cloud Import destination.
-    """
-
-    schema: str
-    table: str
 
 
 class CloudIoSpecs:
@@ -48,7 +27,7 @@ class CloudIo:
     def __init__(self, cluster_id: str):
         self.cluster_id = cluster_id
 
-    def load_resource(self, resource: CloudIoResource, target: CloudIoTarget) -> t.Tuple[t.Dict, bool]:
+    def load_resource(self, resource: WebResource, target: TableAddress) -> t.Tuple[t.Dict, bool]:
         """
         Load resource from URL into CrateDB, using CrateDB Cloud infrastructure.
         """
@@ -94,7 +73,7 @@ class CloudIo:
 
         return outcome, success, found
 
-    def create_import_job(self, resource: CloudIoResource, target: CloudIoTarget) -> t.Dict[str, t.Any]:
+    def create_import_job(self, resource: WebResource, target: TableAddress) -> t.Dict[str, t.Any]:
         """
         Create CrateDB Cloud import job, using resource on filesystem or URL.
 
