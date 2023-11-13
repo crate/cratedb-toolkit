@@ -19,8 +19,8 @@ class GuidingTexts:
         table, run [2] or [3]. If you want to export your data again, see [4].
 
         [1] {self.admin_url}
-        [2] ctk shell --command "SELECT * FROM {self.table_name} LIMIT 10;"
-        [3] ctk shell --command "SELECT COUNT(*) FROM {self.table_name};"
+        [2] ctk shell --command 'SELECT * FROM {self.table_name} LIMIT 10;'
+        [3] ctk shell --command 'SELECT COUNT(*) FROM {self.table_name};'
         [4] https://community.cratedb.com/t/cratedb-cloud-news-simple-data-export/1556
         """  # noqa: S608
 

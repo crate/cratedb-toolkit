@@ -60,16 +60,17 @@ export CRATEDB_PASSWORD='3$MJ5fALP8bNOYCYBMLOrzd&'
 ```
 
 ### Usage
-Load data.
+Load data into database table.
 ```shell
-ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz
-ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_marketing.json.gz
-ctk load table https://github.com/daq-tools/skeem/raw/main/tests/testdata/basic.parquet
+ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz'
+ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_marketing.json.gz'
+ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/timeseries/yc.2019.07-tiny.parquet.gz'
 ```
 
-Inquire data.
+Query and aggregate data using SQL.
 ```shell
 ctk shell --command="SELECT * FROM data_weather LIMIT 10;"
+ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=csv
 ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 ```
 

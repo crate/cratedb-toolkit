@@ -1,6 +1,7 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
+import responses
 
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer
 from cratedb_toolkit.util import DatabaseAdapter
@@ -83,6 +84,38 @@ def cratedb(cratedb_service):
     """
     cratedb_service.reset()
     yield cratedb_service
+
+
+@pytest.fixture
+def cloud_cluster_mock():
+    responses.add(
+        responses.Response(
+            method="GET",
+            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
+            json={"url": "https://testdrive.example.org:4200/", "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee"},
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="POST",
+            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
+            json={"id": "testdrive-job-id", "status": "REGISTERED"},
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET",
+            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
+            json=[
+                {
+                    "id": "testdrive-job-id",
+                    "status": "SUCCEEDED",
+                    "progress": {"message": "Import succeeded"},
+                    "destination": {"table": "basic"},
+                }
+            ],
+        )
+    )
 
 
 setup_logging()
