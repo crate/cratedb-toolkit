@@ -99,3 +99,14 @@ class ClusterInformation:
 
     def asdict(self):
         return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class WebResource:
+    """
+    Manage an input resource.
+    """
+
+    url: str
+    format: str  # noqa: A003
+    compression: str

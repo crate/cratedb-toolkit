@@ -1,15 +1,11 @@
 import logging
-import sys
 
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.cluster.util import get_cluster_info
-from cratedb_toolkit.io.croud import CloudIo, CloudIoResource, CloudIoTarget
-from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util import jd
+from cratedb_toolkit.api.main import ClusterBase, ManagedCluster, StandaloneCluster
+from cratedb_toolkit.model import DatabaseAddress, TableAddress, WebResource
 from cratedb_toolkit.util.cli import boot_click, make_command
-from cratedb_toolkit.util.croud import CroudException
 
 logger = logging.getLogger(__name__)
 
@@ -24,46 +20,6 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
     Load data into CrateDB.
     """
     return boot_click(ctx, verbose, debug)
-
-
-class GuidingTexts:
-    """
-    TODO: Add more richness / guidance to the text output.
-    """
-
-    def __init__(self, admin_url: str = None, table_name: str = None):
-        self.admin_url = admin_url
-        self.table_name = table_name
-
-    def success(self):
-        return f"""
-        Excellent, that worked well.
-
-        Now, you may want to inquire your data. To do that, use either CrateDB Admin UI,
-        or connect on your terminal using `crash`, `ctk shell`, or `psql`.
-
-        The CrateDB Admin UI for your cluster is available at [1]. To easily inspect a
-        few samples of your imported data, or to check the cardinality of your database
-        table, run [2] or [3]. If you want to export your data again, see [4].
-
-        [1] {self.admin_url}
-        [2] ctk shell --command "SELECT * FROM {self.table_name} LIMIT 10;"
-        [3] ctk shell --command "SELECT COUNT(*) FROM {self.table_name};"
-        [4] https://community.cratedb.com/t/cratedb-cloud-news-simple-data-export/1556
-        """  # noqa: S608
-
-    def error(self):
-        return """
-        That went south.
-
-        If you can share your import source, we will love to hear from you on our community
-        forum [1]. Otherwise, please send us an email [2] about the flaw you've discovered.
-        To learn more about the data import feature, see [3].
-
-        [1] https://community.cratedb.com/
-        [2] support@crate.io
-        [3] https://community.cratedb.com/t/importing-data-to-cratedb-cloud-clusters/1467
-        """
 
 
 @make_command(cli, name="table")
@@ -95,80 +51,35 @@ def load_table(
     Import data into CrateDB and CrateDB Cloud clusters.
     """
 
-    if not cluster_id and not cratedb_sqlalchemy_url and not cratedb_http_url:
-        raise KeyError(
-            "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy or HTTP URL needs to be supplied. "
-            "Use --cluster-id / --cratedb-sqlalchemy-url / --cratedb-http-url CLI options "
-            "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL environment variables."
-        )
+    error_message = (
+        "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy or HTTP URL needs to be supplied. "
+        "Use --cluster-id / --cratedb-sqlalchemy-url / --cratedb-http-url CLI options "
+        "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL environment variables."
+    )
 
-    resource = CloudIoResource(url=url, format=format_, compression=compression)
-    target = CloudIoTarget(schema=schema, table=table)
+    if not cluster_id and not cratedb_sqlalchemy_url and not cratedb_http_url:
+        raise KeyError(error_message)
 
     # When SQLAlchemy URL is not given, but HTTP URL is, compute the former on demand.
-    if not cratedb_sqlalchemy_url and cratedb_http_url:
-        cratedb_sqlalchemy_url = DatabaseAddress.from_httpuri(cratedb_http_url).dburi
+    if cluster_id:
+        address = None
+    elif cratedb_sqlalchemy_url:
+        address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
+    elif cratedb_http_url:
+        address = DatabaseAddress.from_httpuri(cratedb_sqlalchemy_url)
+    else:
+        raise KeyError(error_message)
+
+    # Encapsulate source and target parameters.
+    resource = WebResource(url=url, format=format_, compression=compression)
+    target = TableAddress(schema=schema, table=table)
 
     # Dispatch "load table" operation.
+    cluster: ClusterBase
     if cluster_id:
-        load_table_cloud(cluster_id, resource, target)
-    elif cratedb_sqlalchemy_url:
-        load_table_cratedb(cratedb_sqlalchemy_url, url)
+        cluster = ManagedCluster(cloud_id=cluster_id)
+    elif address:
+        cluster = StandaloneCluster(address=address)
     else:
-        raise NotImplementedError("Importing resource not implemented yet")
-
-
-def load_table_cloud(cluster_id: str, resource: CloudIoResource, target: CloudIoTarget):
-    """
-    export CRATEDB_CLOUD_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
-    ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz
-
-    https://console.cratedb.cloud
-    """
-    cluster_info = get_cluster_info(cluster_id=cluster_id)
-    cio = CloudIo(cluster_id=cluster_id)
-
-    try:
-        job_info, success = cio.load_resource(resource=resource, target=target)
-        jd(job_info)
-        # TODO: Explicitly report about `failed_records`, etc.
-        texts = GuidingTexts(
-            admin_url=cluster_info.cloud["url"],
-            table_name=job_info["destination"]["table"],
-        )
-        if success:
-            print(texts.success(), file=sys.stderr)  # noqa: T201
-        else:
-            print(texts.error(), file=sys.stderr)  # noqa: T201
-            sys.exit(1)
-
-    # When exiting so, it is expected that error logging has taken place appropriately.
-    except CroudException:
-        logger.exception("Unknown error")
-        sys.exit(1)
-
-
-def load_table_cratedb(sqlalchemy_url: str, resource_url: str):
-    """
-    Synopsis
-    --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
-
-    ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
-    ctk load table mongodb://localhost:27017/testdrive/demo
-    """
-    source_url = resource_url
-    target_url = sqlalchemy_url
-    if resource_url.startswith("influxdb"):
-        from cratedb_toolkit.io.influxdb import influxdb_copy
-
-        source_url = source_url.replace("influxdb2://", "http://")
-        if not influxdb_copy(source_url, target_url, progress=True):
-            sys.exit(1)
-    elif resource_url.startswith("mongodb"):
-        from cratedb_toolkit.io.mongodb.api import mongodb_copy
-
-        if not mongodb_copy(source_url, target_url, progress=True):
-            sys.exit(1)
-    else:
-        raise NotImplementedError("Importing resource not implemented yet")
+        raise NotImplementedError("Unable to select backend")
+    return cluster.load_table(resource=resource, target=target)

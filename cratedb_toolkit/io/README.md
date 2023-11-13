@@ -6,6 +6,18 @@
 A one-stop command `ctk load table` to load data into CrateDB database tables.
 
 
+## Installation
+
+Latest release.
+```shell
+pip install --upgrade 'cratedb-toolkit[all]'
+```
+
+Development version.
+```shell
+pip install --upgrade 'cratedb-toolkit[all] @ git+https://github.com/crate-workbench/cratedb-toolkit.git'
+```
+
 ## General Notes
 
 By default, the table name will be derived from the name of the input resource.

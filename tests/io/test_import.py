@@ -103,7 +103,7 @@ def test_import_croud_parquet(caplog):
 
     assert (
         f"Loading resource. "
-        f"source=CloudIoResource(url='{resource_url}', format=None, compression=None), "
-        f"target=CloudIoTarget(schema=None, table=None)" in caplog.messages
+        f"source=WebResource(url='{resource_url}', format=None, compression=None), "
+        f"target=TableAddress(schema=None, table=None)" in caplog.messages
     )
     assert "Import succeeded (status: SUCCEEDED)" in caplog.messages
