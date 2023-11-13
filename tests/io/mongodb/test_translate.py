@@ -1,6 +1,10 @@
 import unittest
 
+import pytest
+
 from cratedb_toolkit.io.mongodb import translate
+
+pytestmark = pytest.mark.mongodb
 
 
 class TestTranslate(unittest.TestCase):

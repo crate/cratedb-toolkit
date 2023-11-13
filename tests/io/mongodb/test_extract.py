@@ -3,6 +3,8 @@ import unittest
 
 import pytest
 
+pytestmark = pytest.mark.mongodb
+
 pytest.importorskip("bson", reason="Skipping tests because bson is not installed")
 pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
