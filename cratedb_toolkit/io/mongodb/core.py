@@ -1,37 +1,22 @@
-import re
+import io
+import logging
+import typing as t
 
 import pymongo
 import pymongo.database
 import rich
+from bson.raw_bson import RawBSONDocument
 from rich.syntax import Syntax
 
+from .export import collection_to_json
 from .extract import extract_schema_from_collection
 from .translate import translate as translate_schema
+from .util import parse_input_numbers
+
+logger = logging.getLogger(__name__)
 
 
-def parse_input_numbers(s: str):
-    """
-    Parse an input string for numbers and ranges.
-
-    Supports strings like '0 1 2', '0, 1, 2' as well as ranges such as
-    '0-2'.
-    """
-
-    options: list = []
-    for option in re.split(", | ", s):
-        match = re.search(r"(\d+)-(\d+)", option)
-        if match:
-            lower, upper = sorted([match.group(1), match.group(2)])
-            options = options + list(range(int(lower), int(upper) + 1))
-        else:
-            try:
-                options.append(int(option))
-            except ValueError:
-                pass
-    return options
-
-
-def gather_collections(database):
+def gather_collections(database) -> t.List[str]:
     """
     Gather a list of collections to use from a MongoDB database, based on user input.
     """
@@ -62,7 +47,17 @@ def gather_collections(database):
     return filtered_collections
 
 
-def extract(args):
+def get_mongodb_client_database(args, **kwargs) -> t.Tuple[pymongo.MongoClient, pymongo.database.Database]:
+    client: pymongo.MongoClient
+    if args.url:
+        client = pymongo.MongoClient(args.url, **kwargs)
+    else:
+        client = pymongo.MongoClient(args.host, int(args.port), **kwargs)
+    db: pymongo.database.Database = client.get_database(args.database)
+    return client, db
+
+
+def extract(args) -> t.Dict[str, t.Any]:
     """
     Extract schemas from MongoDB collections.
 
@@ -70,11 +65,7 @@ def extract(args):
     iterates over these collections and returns a dictionary of schemas for
     each of the selected collections.
     """
-
-    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
-
-    client: pymongo.MongoClient = pymongo.MongoClient(args.host, int(args.port))
-    db: pymongo.database.Database = client.get_database(args.database)
+    client, db = get_mongodb_client_database(args)
     if args.collection:
         filtered_collections = [args.collection]
     else:
@@ -101,14 +92,29 @@ def extract(args):
     return schemas
 
 
-def translate(schema):
+def translate(schemas, schemaname: str = None) -> t.Dict[str, str]:
     """
-    Translate a given schema into a CrateDB compatible SQL DDL statement.
+    Translate a given schema into SQL DDL statements compatible with CrateDB.
     """
-    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
-    sql_queries = translate_schema(schema)
+    result: t.Dict[str, str] = {}
+    sql_queries = translate_schema(schemas=schemas, schemaname=schemaname)
     for collection, query in sql_queries.items():
+        result[collection] = query
         syntax = Syntax(query, "sql")
         rich.print(f"Collection [blue bold]'{collection}'[/blue bold]:")
         rich.print(syntax)
         rich.print()
+    return result
+
+
+def export(args) -> t.IO[bytes]:
+    """
+    Export MongoDB collection into JSON format.
+
+    TODO: Run on multiple collections, like `extract`.
+    """
+    buffer = io.BytesIO()
+    client, db = get_mongodb_client_database(args, document_class=RawBSONDocument)
+    collection_to_json(db[args.collection], file=buffer)
+    buffer.seek(0)
+    return buffer

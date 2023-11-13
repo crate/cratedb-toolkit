@@ -21,7 +21,7 @@ COPY . /src
 
 # Install package.
 RUN --mount=type=cache,id=pip,target=/root/.cache/pip \
-    pip install --use-pep517 --prefer-binary '/src[io]'
+    pip install --use-pep517 --prefer-binary '/src[influxdb,io,mongodb]'
 
 # Uninstall Git again.
 RUN apt-get --yes remove --purge git && apt-get --yes autoremove

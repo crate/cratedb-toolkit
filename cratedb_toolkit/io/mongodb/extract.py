@@ -64,6 +64,8 @@ An example schema may look like:
 }
 """
 
+import typing as t
+
 import bson
 from pymongo.collection import Collection
 from rich import progress
@@ -77,7 +79,7 @@ progressbar = progress.Progress(
 )
 
 
-def extract_schema_from_collection(collection: Collection, partial: bool):
+def extract_schema_from_collection(collection: Collection, partial: bool) -> t.Dict[str, t.Any]:
     """
     Extract a schema definition from a collection.
 

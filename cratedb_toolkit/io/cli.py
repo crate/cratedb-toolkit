@@ -6,6 +6,7 @@ from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.cluster.util import get_cluster_info
 from cratedb_toolkit.io.croud import CloudIo, CloudIoResource, CloudIoTarget
+from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util import jd
 from cratedb_toolkit.util.cli import boot_click, make_command
 from cratedb_toolkit.util.croud import CroudException
@@ -73,6 +74,7 @@ class GuidingTexts:
 @click.option(
     "--cratedb-sqlalchemy-url", envvar="CRATEDB_SQLALCHEMY_URL", type=str, required=False, help="CrateDB SQLAlchemy URL"
 )
+@click.option("--cratedb-http-url", envvar="CRATEDB_HTTP_URL", type=str, required=False, help="CrateDB HTTP URL")
 @click.option("--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema where to import the data")
 @click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
@@ -83,6 +85,7 @@ def load_table(
     url: str,
     cluster_id: str,
     cratedb_sqlalchemy_url: str,
+    cratedb_http_url: str,
     schema: str,
     table: str,
     format_: str,
@@ -92,16 +95,21 @@ def load_table(
     Import data into CrateDB and CrateDB Cloud clusters.
     """
 
-    if not cluster_id and not cratedb_sqlalchemy_url:
+    if not cluster_id and not cratedb_sqlalchemy_url and not cratedb_http_url:
         raise KeyError(
-            "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy URL needs to be supplied. "
-            "Use --cluster-id / --cratedb-sqlalchemy-url CLI options "
-            "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_SQLALCHEMY_URL environment variables."
+            "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy or HTTP URL needs to be supplied. "
+            "Use --cluster-id / --cratedb-sqlalchemy-url / --cratedb-http-url CLI options "
+            "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL environment variables."
         )
 
     resource = CloudIoResource(url=url, format=format_, compression=compression)
     target = CloudIoTarget(schema=schema, table=table)
 
+    # When SQLAlchemy URL is not given, but HTTP URL is, compute the former on demand.
+    if not cratedb_sqlalchemy_url and cratedb_http_url:
+        cratedb_sqlalchemy_url = DatabaseAddress.from_httpuri(cratedb_http_url).dburi
+
+    # Dispatch "load table" operation.
     if cluster_id:
         load_table_cloud(cluster_id, resource, target)
     elif cratedb_sqlalchemy_url:
@@ -142,14 +150,25 @@ def load_table_cloud(cluster_id: str, resource: CloudIoResource, target: CloudIo
 
 def load_table_cratedb(sqlalchemy_url: str, resource_url: str):
     """
+    Synopsis
+    --------
     export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+
     ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
+    ctk load table mongodb://localhost:27017/testdrive/demo
     """
+    source_url = resource_url
+    target_url = sqlalchemy_url
     if resource_url.startswith("influxdb"):
         from cratedb_toolkit.io.influxdb import influxdb_copy
 
-        source_url = resource_url.replace("influxdb2", "http")
-        target_url = sqlalchemy_url
-        influxdb_copy(source_url, target_url, progress=True)
+        source_url = source_url.replace("influxdb2://", "http://")
+        if not influxdb_copy(source_url, target_url, progress=True):
+            sys.exit(1)
+    elif resource_url.startswith("mongodb"):
+        from cratedb_toolkit.io.mongodb.api import mongodb_copy
+
+        if not mongodb_copy(source_url, target_url, progress=True):
+            sys.exit(1)
     else:
         raise NotImplementedError("Importing resource not implemented yet")

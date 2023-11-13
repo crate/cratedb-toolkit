@@ -3,6 +3,9 @@
 A utility program, called `migr8`, supporting data migrations
 between MongoDB and CrateDB.
 
+A one-stop command `ctk load table mongodb://...`, wrapping the `migr8`
+steps into a complete pipeline, to facilitate convenient data transfers.
+
 
 ## About
 
@@ -32,21 +35,39 @@ client driver library to version 3, like `pip install 'pymongo<4'`.
 
 Use `pip` to install the package from PyPI.
 ```shell
-pip install --upgrade 'cratedb-toolkit[io]'
+pip install --upgrade 'cratedb-toolkit[mongodb]'
 ```
 
 To verify if the installation worked, invoke:
 ```shell
-migr8 --version
-migr8 --help
+ctk --version
 ```
 
 
 ## Usage
 
+`ctk load table` is your one-stop command to populate a CrateDB table from a
+MongoDB collection.
+
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+ctk load table mongodb://localhost:27017/testdrive/demo
+```
+
+It will run `extract` and `translate` to gather the SQL DDL schema, and will
+invoke `export` and `cr8` to actually transfer data.
+
+
+## Usage for `migr8`
+
 The program `migr8` offers three subcommands (`extract`, `translate`, `export`),
 to conclude data transfers from MongoDB to CrateDB. Please read this section
 carefully to learn how they can be used successfully.
+
+```shell
+migr8 --version
+migr8 --help
+```
 
 ### Schema Extraction
 
