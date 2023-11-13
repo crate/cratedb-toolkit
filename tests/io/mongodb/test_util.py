@@ -1,6 +1,10 @@
 import unittest
 
+import pytest
+
 from cratedb_toolkit.io.mongodb.util import parse_input_numbers
+
+pytestmark = pytest.mark.mongodb
 
 
 class TestInputNumberParser(unittest.TestCase):

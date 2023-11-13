@@ -8,6 +8,8 @@ import pytest
 
 from tests.io.mongodb.conftest import RESET_DATABASES
 
+pytestmark = pytest.mark.mongodb
+
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 

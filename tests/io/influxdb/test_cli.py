@@ -5,6 +5,8 @@ from pueblo.testing.dataframe import DataFrameFactory
 
 from cratedb_toolkit.cli import cli
 
+pytestmark = pytest.mark.influxdb
+
 pytest.importorskip("influxio", reason="Skipping InfluxDB tests because 'influxio' package is not installed")
 pytest.importorskip(
     "influxdb_client", reason="Skipping InfluxDB tests because 'influxdb-client' package is not installed"

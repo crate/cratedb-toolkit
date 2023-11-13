@@ -6,7 +6,10 @@ from pueblo.testing.dataframe import DataFrameFactory
 
 from cratedb_toolkit.cli import cli
 
+pytestmark = pytest.mark.mongodb
+
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
+pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
 
 def test_version():

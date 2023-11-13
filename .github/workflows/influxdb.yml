@@ -78,7 +78,7 @@ jobs:
 
     - name: Run linter and software tests
       run: |
-        poe check
+        pytest -m influxdb
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
