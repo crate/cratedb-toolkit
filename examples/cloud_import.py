@@ -34,13 +34,11 @@ Synopsis
 """
 
 import logging
-import os
 import sys
-
-from dotenv import find_dotenv, load_dotenv
 
 from cratedb_toolkit.api.main import ManagedCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
+from cratedb_toolkit.util.basic import obtain_cluster_id
 from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -86,28 +84,6 @@ def import_parquet(cluster_id: str):
     response, success = cluster.load_table(resource=resource, target=target)
     if not success:
         sys.exit(1)
-
-
-def obtain_cluster_id() -> str:
-    """
-    Obtain the CrateDB Cloud Cluster identifier from the environment.
-
-    - Use first positional argument from command line.
-    - Fall back to `CRATEDB_CLOUD_CLUSTER_ID` environment variable.
-    """
-    load_dotenv(find_dotenv())
-
-    try:
-        cluster_id = sys.argv[1]
-    except IndexError:
-        cluster_id = os.environ.get("CRATEDB_CLOUD_CLUSTER_ID")
-
-    if not cluster_id:
-        raise ValueError(
-            "Unable to obtain cluster identifier from command line or `CRATEDB_CLOUD_CLUSTER_ID` environment variable"
-        )
-
-    return cluster_id
 
 
 def main():
