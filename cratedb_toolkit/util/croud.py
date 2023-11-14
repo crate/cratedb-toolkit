@@ -68,6 +68,18 @@ class CroudWrapper:
         except Exception:
             raise
 
+    @staticmethod
+    def remove_version_argument(parser):
+        for action in parser._actions:
+            if "--version" in str(action):
+                parser._remove_action(action)
+        to_delete = []
+        for key, action in parser._option_string_actions.items():
+            if "--version" in str(action):
+                to_delete.append(key)
+        for delete in to_delete:
+            del parser._option_string_actions[delete]
+
     def invoke_real(self) -> t.Any:
         """
         Invoke croud function, decode response from JSON, and return data.
@@ -80,6 +92,7 @@ class CroudWrapper:
             "extra_args": [],
         }
         parser = create_parser(spec)
+        self.remove_version_argument(parser)
         add_default_args(parser, omit=set())
 
         # Add command-specific arguments to parser.
