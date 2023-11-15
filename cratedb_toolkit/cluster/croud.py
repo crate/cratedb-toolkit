@@ -1,11 +1,14 @@
 import json
+import typing as t
+from pathlib import Path
 
+from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
 
 
 class CloudManager:
     """
-    A wrapper around the CrateDB Cloud cluster API through the `croud` package.
+    A wrapper around the CrateDB Cloud API through the `croud` package, providing common methods.
     """
 
     def get_cluster_list(self):
@@ -71,8 +74,12 @@ class CloudManager:
         croud clusters get e1e38d92-a650-48f1-8a70-8133f2d5c400 --format=json
 
         """  # noqa: E501
+        # TODO: Use specific subscription, or, if only one exists, use it.
+        #       Alternatively, acquire value from user environment.
         # TODO: `--product-name=crfree` is not always the right choice. ;]
+        # TODO: Auto-generate cluster name when not given.
         # TODO: How to select CrateDB nightly, like `--version=nightly`?
+        # TODO: Let the user provide the credentials.
         # TODO: Add more parameters, like `--org-id`, `--channel`, `--unit`, and more.
         # TODO: What about `--sudo`?
         from croud.__main__ import command_tree
@@ -110,7 +117,7 @@ class CloudManager:
 
 class CloudCluster:
     """
-    A wrapper around the CrateDB Cloud cluster API through the `croud` package.
+    A wrapper around the CrateDB Cloud API through the `croud` package, providing methods specific to a cluster.
     """
 
     def __init__(self, cluster_id: str):
@@ -138,6 +145,88 @@ class CloudCluster:
             arguments=[
                 self.cluster_id,
             ],
+        )
+
+        wr = CroudWrapper(call=call)
+        return wr.invoke()
+
+    def list_jobs(self):
+        from croud.clusters.commands import import_jobs_list
+        from croud.parser import Argument
+
+        call = CroudCall(
+            fun=import_jobs_list,
+            specs=[Argument("--cluster-id", type=str, required=True, help="The cluster the import jobs belong to.")],
+            arguments=[
+                f"--cluster-id={self.cluster_id}",
+            ],
+        )
+
+        wr = CroudWrapper(call=call)
+        return wr.invoke()
+
+    def create_import_job(self, resource: InputOutputResource, target: TableAddress) -> t.Dict[str, t.Any]:
+        from croud.__main__ import import_job_create_common_args
+        from croud.clusters.commands import import_jobs_create_from_file, import_jobs_create_from_url
+        from croud.parser import Argument
+
+        specs: t.List[Argument] = import_job_create_common_args
+
+        url_argument = Argument("--url", type=str, required=True, help="The URL the import file will be read from.")
+
+        file_id_argument = Argument(
+            "--file-id",
+            type=str,
+            required=False,
+            help="The file ID that will be used for the "
+            "import. If not specified then --file-path"
+            " must be specified. "
+            "Please refer to `croud organizations "
+            "files` for more info.",
+        )
+        file_path_argument = Argument(
+            "--file-path",
+            type=str,
+            required=False,
+            help="The file in your local filesystem that "
+            "will be used. If not specified then "
+            "--file-id must be specified. "
+            "Please note the file will become visible "
+            "under `croud organizations files list`.",
+        )
+
+        # Compute command-line arguments for invoking `croud`.
+        # FIXME: This call is redundant.
+        path = Path(resource.url)
+
+        # TODO: Sanitize table name. Which characters are allowed?
+        if path.exists():
+            specs.append(file_path_argument)
+            specs.append(file_id_argument)
+            arguments = [
+                f"--cluster-id={self.cluster_id}",
+                f"--file-path={resource.url}",
+                f"--table={target.table}",
+                f"--file-format={resource.format}",
+            ]
+            fun = import_jobs_create_from_file
+        else:
+            specs.append(url_argument)
+            arguments = [
+                f"--cluster-id={self.cluster_id}",
+                f"--url={resource.url}",
+                f"--table={target.table}",
+                f"--file-format={resource.format}",
+            ]
+            fun = import_jobs_create_from_url
+
+        if resource.compression is not None:
+            arguments += [f"--compression={resource.compression}"]
+
+        call = CroudCall(
+            fun=fun,
+            specs=specs,
+            arguments=arguments,
         )
 
         wr = CroudWrapper(call=call)

@@ -61,6 +61,8 @@ def test_setup_verbose(caplog, cratedb, settings):
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
+
+    # TODO: Validate a few log messages, instead of just counting them.
     assert 3 <= len(caplog.records) <= 15
 
 
@@ -105,7 +107,7 @@ def test_setup_failure_envvar_invalid_dburi(mocker):
     program fails correctly, when pointing it to an arbitrary address.
     """
 
-    mocker.patch("os.environ", {"CRATEDB_URI": "crate://localhost:5555"})
+    mocker.patch.dict("os.environ", {"CRATEDB_URI": "crate://localhost:5555"})
 
     runner = CliRunner()
     with pytest.raises(OperationalError) as ex:

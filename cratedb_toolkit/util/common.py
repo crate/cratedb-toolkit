@@ -10,6 +10,9 @@ from cratedb_toolkit.util.data import asbool
 
 
 def setup_logging(level=logging.INFO, verbose: bool = False, debug: bool = False, width: int = 36):
+    if os.environ.get("DEBUG"):
+        level = logging.DEBUG
+
     reset = escape_codes["reset"]
     log_format = f"%(asctime)-15s [%(name)-{width}s] %(log_color)s%(levelname)-8s:{reset} %(message)s"
 
@@ -42,3 +45,7 @@ def setup_logging(level=logging.INFO, verbose: bool = False, debug: bool = False
     # Tame Faker spamming the logs.
     # https://github.com/joke2k/faker/issues/753#issuecomment-491402018
     logging.getLogger("faker").setLevel(logging.ERROR)
+
+
+def croak(message: str = "Foo."):
+    raise ValueError(message)

@@ -145,21 +145,28 @@ class CroudWrapper:
         def print_fun(levelname: str, *args, **kwargs):
             level = get_sane_log_level(levelname)
             message = str(args[0])
-            logger.log(level, message)
+
+            # Forward/propagate/emit log message from `croud`, or not.
+            # Variant 1: Forward original log message 1:1.
+            # logger.log(level, message)  # noqa: ERA001
+            # Variant 2: Augment log message: Converge to `DEBUG` level.
+            logger.log(logging.DEBUG, f"[croud] {levelname.upper():<8}: {message}")
+            # TODO: Variant 3: Use setting in `EnvironmentConfiguration` to turn forwarding on/off.
+
             if with_exceptions and level >= logging.ERROR:
                 raise CroudException(message)
 
-        # Patch all `print_*` functions, and invoke_foo workhorse function.
+        # Patch all `print_*` functions, and invoke workhorse function.
         # https://stackoverflow.com/a/46481946
         levels = ["debug", "info", "warning", "error", "success"]
         with contextlib.ExitStack() as stack:
             for level in levels:
                 p = patch(f"croud.printer.print_{level}", functools.partial(print_fun, level))
                 stack.enter_context(p)
+            # TODO: When aiming to disable wait-for-completion.
             """
-            TODO: When aiming to disable wait-for-completion.
-                  p = patch(f"croud.clusters.commands._wait_for_completed_operation")
-                  stack.enter_context(p)
+            p = patch(f"croud.clusters.commands._wait_for_completed_operation")
+            stack.enter_context(p)
             """
             return fun()
 

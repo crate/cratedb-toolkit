@@ -12,7 +12,11 @@
 #    under the License.
 import logging
 import os
+from abc import abstractmethod
 
+import pytest
+from docker.errors import DockerException
+from docker.models.containers import Container
 from testcontainers.core.container import DockerContainer
 
 from cratedb_toolkit.util.data import asbool
@@ -58,6 +62,7 @@ class KeepaliveContainer(DockerContainer):
         *args,
         **kwargs,
     ) -> None:
+        # Configure keepalive mechanism.
         self.keepalive = self.KEEPALIVE
         if "keepalive" in kwargs:
             self.keepalive = kwargs["keepalive"]
@@ -124,3 +129,71 @@ class KeepaliveContainer(DockerContainer):
             logger.info("Stopping container")
             return super().stop()
         return None
+
+
+class DockerSkippingContainer(DockerContainer):
+    """
+    Testcontainers: Skip test execution when Docker daemon is down.
+
+    It intercepts `DockerException: Connection aborted` errors and converges
+    them into `pytest.skip()` invocations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Set `_container` attribute early, because parent's `__del__` may access it.
+        self._container: Container = None
+        try:
+            super().__init__(*args, **kwargs)
+        # Detect when Docker daemon is not running.
+        # FIXME: Synchronize with `PytestTestcontainerAdapter`.
+        except DockerException as ex:
+            if "Connection aborted" in str(ex):
+                # TODO: Make this configurable through some `pytest_` variable.
+                raise pytest.skip(reason="Skipping test because Docker is not running", allow_module_level=True) from ex
+            else:  # noqa: RET506
+                raise
+
+
+class PytestTestcontainerAdapter:
+    """
+    A little helper wrapping Testcontainer's `DockerContainer` for Pytest.
+
+    It intercepts `DockerException: Connection aborted` errors and converges
+    them into `pytest.skip()` invocations.
+
+    It provides a convention where child classes need to implement the `setup()`
+    method. When objects of type `DockerContainer` are created within this
+    method, `DockerException` errors are intercepted, and Pytest is instructed
+    to skip the corresponding test case.
+    """
+
+    def __init__(self):
+        self.container: DockerContainer = None
+        self.run_setup()
+
+    @abstractmethod
+    def setup(self):
+        raise NotImplementedError("Must be implemented by child class")
+
+    def run_setup(self):
+        try:
+            self.setup()
+
+        # Detect when Docker daemon is not running.
+        # FIXME: Synchronize with `DockerSkippingContainer`.
+        except DockerException as ex:
+            if "Connection aborted" in str(ex):
+                # TODO: Make this configurable through some `pytest_` variable.
+                raise pytest.skip(
+                    reason="Skipping test because Docker daemon is not available", allow_module_level=True
+                ) from ex
+            else:  # noqa: RET506
+                raise
+
+        self.start()
+
+    def start(self):
+        self.container.start()
+
+    def stop(self):
+        self.container.stop()

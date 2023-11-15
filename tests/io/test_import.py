@@ -50,7 +50,7 @@ def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2)
     assert result == [(2,)]
 
 
-@pytest.mark.skip("Does not work. Why?")
+@pytest.mark.skip("Does not work. Q: Why? A: Response mocking? Q: And now? A: Just patch the low-level functions!")
 @responses.activate
 def test_import_cloud_file(tmp_path, caplog, cloud_cluster_mock):
     """

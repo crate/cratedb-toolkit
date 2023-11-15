@@ -2,6 +2,8 @@ import logging
 
 import pytest
 
+from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
+
 logger = logging.getLogger(__name__)
 
 
@@ -11,7 +13,7 @@ RESET_BUCKETS = [
 ]
 
 
-class InfluxDB2Fixture:
+class InfluxDB2Fixture(PytestTestcontainerAdapter):
     """
     A little helper wrapping Testcontainer's `InfluxDB2Container`.
     """
@@ -21,7 +23,7 @@ class InfluxDB2Fixture:
 
         self.container = None
         self.client: InfluxDBClient = None
-        self.setup()
+        super().__init__()
 
     def setup(self):
         # TODO: Make image name configurable.
@@ -30,9 +32,6 @@ class InfluxDB2Fixture:
         self.container = InfluxDB2Container()
         self.container.start()
         self.client = self.container.get_connection_client()
-
-    def finalize(self):
-        self.container.stop()
 
     def reset(self):
         """
@@ -55,7 +54,7 @@ def influxdb_service():
     db = InfluxDB2Fixture()
     db.reset()
     yield db
-    db.finalize()
+    db.stop()
 
 
 @pytest.fixture(scope="function")

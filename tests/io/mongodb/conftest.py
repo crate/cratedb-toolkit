@@ -4,6 +4,7 @@ import os
 import pytest
 
 from tests.conftest import check_sqlalchemy2
+from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ RESET_DATABASES = [
 ]
 
 
-class MongoDBFixture:
+class MongoDBFixture(PytestTestcontainerAdapter):
     """
     A little helper wrapping Testcontainer's `MongoDbContainer`.
     """
@@ -32,7 +33,7 @@ class MongoDBFixture:
         self.container_class = container_class
         self.container = None
         self.client: MongoClient = None
-        self.setup()
+        super().__init__()
 
     def setup(self):
         # TODO: Make image name configurable.
