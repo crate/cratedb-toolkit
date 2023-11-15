@@ -104,10 +104,13 @@ def obtain_setting_cli(
     """
     Obtain a command line argument value from `sys.argv`.
     """
-    parser = argparse.ArgumentParser(exit_on_error=False)
+    parser = argparse.ArgumentParser()
     arg = parser.add_argument(name, default=default, help=help)
-    namespace, args = parser.parse_known_args()
-    return parser, getattr(namespace, arg.dest)
+    try:
+        namespace, args = parser.parse_known_args()
+        return parser, getattr(namespace, arg.dest)
+    except argparse.ArgumentError:
+        return parser, None
 
 
 def argv_has_long_option() -> bool:
