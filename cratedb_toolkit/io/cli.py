@@ -77,16 +77,16 @@ def load_table(
         raise KeyError(error_message)
 
     # Encapsulate source and target parameters.
-    resource = InputOutputResource(url=url, format=format_, compression=compression)
+    source = InputOutputResource(url=url, format=format_, compression=compression)
     target = TableAddress(schema=schema, table=table)
 
     # Dispatch "load table" operation.
     cluster: ClusterBase
     if cluster_id:
-        cluster = ManagedCluster(cloud_id=cluster_id)
+        cluster = ManagedCluster(id=cluster_id)
     elif address:
         cluster = StandaloneCluster(address=address)
     else:
         raise NotImplementedError("Unable to select backend")
-    if not cluster.load_table(resource=resource, target=target, transformation=transformation):
+    if not cluster.load_table(source=source, target=target, transformation=transformation):
         sys.exit(2)

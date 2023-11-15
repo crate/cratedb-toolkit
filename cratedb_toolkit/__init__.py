@@ -9,3 +9,7 @@ try:
     __version__ = version(__appname__)
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
+
+from .api import ManagedCluster  # noqa: F401
+from .config import configure  # noqa: F401
+from .model import InputOutputResource, TableAddress  # noqa: F401

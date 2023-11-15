@@ -17,12 +17,13 @@ import typing as t
 import pymongo.errors
 from pymongo import MongoClient
 from testcontainers.core.exceptions import ContainerStartException
+from testcontainers.core.waiting_utils import wait_container_is_ready
 from testcontainers.mongodb import MongoDbContainer
 
-from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer
+from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer
 
 
-class MongoDbContainerWithKeepalive(KeepaliveContainer, MongoDbContainer):
+class MongoDbContainerWithKeepalive(DockerSkippingContainer, KeepaliveContainer, MongoDbContainer):
     """
     A Testcontainer for MongoDB with improved configurability.
 
@@ -56,6 +57,10 @@ class MongoDbContainerWithKeepalive(KeepaliveContainer, MongoDbContainer):
             connectTimeoutMS=self.TIMEOUT,
             serverSelectionTimeoutMS=self.TIMEOUT,
         )
+
+    @wait_container_is_ready()
+    def get_connection_url(self):
+        return super().get_connection_url()
 
 
 class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):

@@ -1,5 +1,5 @@
 # Copyright (c) 2023, Crate.io Inc.
-# Distributed under the terms of the AGPLv3 license, see LICENSE.
+# Distributed under the terms of the Apache 2 license.
 """
 About
 =====
@@ -11,15 +11,11 @@ The supported file types are CSV, JSON, Parquet, optionally with
 gzip compression. They can be acquired from the local filesystem,
 or from remote HTTP and AWS S3 resources.
 
-The program obtains a single positional argument from the command line,
-the CrateDB Cloud Cluster identifier. When omitted, it will fall back
-to the `CRATEDB_CLOUD_CLUSTER_ID` environment variable.
-
 Synopsis
 ========
 ::
 
-    # Install package.
+    # Install utility package.
     pip install 'cratedb-toolkit'
 
     # Log in to CrateDB Cloud.
@@ -28,78 +24,105 @@ Synopsis
     # Inquire list of available clusters.
     croud clusters list
 
-    # Invoke import of CSV and Parquet files.
-    python examples/cloud_import.py e1e38d92-a650-48f1-8a70-8133f2d5c400
+    # Invoke example import of CSV and Parquet files.
+    python examples/cloud_import.py --cluster-id e1e38d92-a650-48f1-8a70-8133f2d5c400
+
+Usage
+=====
+
+The program assumes you are appropriately authenticated to the CrateDB Cloud
+platform, for example using `croud login --idp azuread`.
+
+For addressing a database cluster, the program obtains the cluster identifier
+or name from the user's environment, using command-line arguments or environment
+variables.
+
+Configuration
+=============
+
+The configuration settings can be specified as CLI arguments::
+
+    --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
+    --cluster-name=Hotzenplotz
+
+Alternatively, you can use environment variables::
+
+    export CRATEDB_CLOUD_CLUSTER_ID=e1e38d92-a650-48f1-8a70-8133f2d5c400
+    export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
+
+Command line arguments take precedence. When omitted, the program will
+fall back to probe the environment variables.
 
 """
 
 import logging
-import sys
 
-from cratedb_toolkit.api.main import ManagedCluster
-from cratedb_toolkit.model import InputOutputResource, TableAddress
-from cratedb_toolkit.util.basic import obtain_cluster_id
-from cratedb_toolkit.util.common import setup_logging
+import cratedb_toolkit
+from cratedb_toolkit import InputOutputResource, ManagedCluster, TableAddress
+from cratedb_toolkit.util import setup_logging
 
 logger = logging.getLogger(__name__)
 
 
-def import_csv(cluster_id: str):
+def import_csv():
     """
     Import CSV file from HTTP, derive table name from file name.
 
-    ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
+    A corresponding command to query the imported data is::
+
+        ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
     """
 
-    # Acquire database cluster resource handle.
-    cluster = ManagedCluster(cloud_id=cluster_id)
+    # Acquire database cluster handle, obtaining cluster identifier
+    # or name from the user's environment.
+    cluster = ManagedCluster.from_env().start()
 
-    # Encapsulate source parameter.
+    # Define data source.
     url = "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
-    resource = InputOutputResource(url=url)
+    source = InputOutputResource(url=url)
 
     # Invoke import job. Without `target` argument, the destination
     # table name will be derived from the input file name.
-    response, success = cluster.load_table(resource=resource)
-    if not success:
-        sys.exit(1)
+    cluster.load_table(source=source)
 
 
-def import_parquet(cluster_id: str):
+def import_parquet():
     """
-    Import Parquet file from HTTP, and use specific schema and table names.
+    Import Parquet file from HTTP, use specific schema and table names.
 
-    ctk shell --command 'SELECT * FROM "testdrive"."yc-201907" LIMIT 10;'
+    A corresponding command to query the imported data is::
+
+        ctk shell --command 'SELECT * FROM "testdrive"."yc-201907" LIMIT 10;'
     """
 
-    # Acquire database cluster resource handle.
-    cluster = ManagedCluster(cloud_id=cluster_id)
+    # Acquire database cluster handle, obtaining cluster identifier
+    # or name from the user's environment.
+    cluster = ManagedCluster.from_env().start()
 
-    # Encapsulate source and target parameters.
+    # Define data source and target table.
     url = "https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz"
-    resource = InputOutputResource(url=url)
+    source = InputOutputResource(url=url)
     target = TableAddress(schema="testdrive", table="yc-201907")
 
     # Invoke import job. The destination table name is explicitly specified.
-    response, success = cluster.load_table(resource=resource, target=target)
-    if not success:
-        sys.exit(1)
+    cluster.load_table(source=source, target=target)
 
 
 def main():
-    """
-    Obtain cluster identifier, and run program.
-    """
-    try:
-        cluster_id = obtain_cluster_id()
-    except ValueError as ex:
-        logger.error(ex)
-        sys.exit(1)
-
-    import_csv(cluster_id)
-    import_parquet(cluster_id)
+    import_csv()
+    import_parquet()
 
 
 if __name__ == "__main__":
+    # Configure toolkit environment to be suitable for a CLI application, with
+    # interactive guidance, and accepting configuration settings from the environment.
     setup_logging()
+    cratedb_toolkit.configure(
+        runtime_errors="exit",
+        settings_accept_cli=True,
+        settings_accept_env=True,
+        settings_errors="exit",
+    )
+
+    # Run program.
     main()

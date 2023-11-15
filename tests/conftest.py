@@ -8,6 +8,8 @@ import sqlalchemy as sa
 from verlib2 import Version
 
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
+from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
+from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.common import setup_logging
 
 # Use different schemas for storing the subsystem database tables, and the
@@ -36,6 +38,34 @@ RESET_TABLES = [
 
 CRATEDB_HTTP_PORT = 44209
 CRATEDB_SETTINGS = {"http.port": CRATEDB_HTTP_PORT}
+
+
+class CrateDBFixture(PytestTestcontainerAdapter):
+    """
+    A little helper wrapping Testcontainer's `CrateDBContainer` and
+    CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
+    """
+
+    def __init__(self):
+        self.container = None
+        self.database: DatabaseAdapter = None
+        super().__init__()
+
+    def setup(self):
+        from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer
+
+        # TODO: Make image name configurable.
+        self.container = CrateDBContainer("crate/crate:nightly")
+        self.container.start()
+        self.database = DatabaseAdapter(dburi=self.get_connection_url())
+
+    def reset(self):
+        # TODO: Make list of tables configurable.
+        for reset_table in RESET_TABLES:
+            self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
+
+    def get_connection_url(self, *args, **kwargs):
+        return self.container.get_connection_url(*args, **kwargs)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -90,7 +120,11 @@ def cloud_cluster_mock():
         responses.Response(
             method="GET",
             url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
-            json={"url": "https://testdrive.example.org:4200/", "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee"},
+            json={
+                "url": "https://testdrive.example.org:4200/",
+                "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
+                "name": "testcluster",
+            },
         )
     )
     responses.add(

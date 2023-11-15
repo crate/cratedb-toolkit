@@ -17,10 +17,10 @@ from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
 from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
 
-from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer
+from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer
 
 
-class InfluxDB2Container(KeepaliveContainer, DbContainer):
+class InfluxDB2Container(DockerSkippingContainer, KeepaliveContainer, DbContainer):
     """
     InfluxDB database container.
 
@@ -63,6 +63,7 @@ class InfluxDB2Container(KeepaliveContainer, DbContainer):
         self.with_env("DOCKER_INFLUXDB_INIT_BUCKET", "default")
         self.with_env("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN", self.TOKEN)
 
+    @wait_container_is_ready()
     def get_connection_url(self, host=None) -> str:
         return super()._create_connection_url(
             dialect="http",
