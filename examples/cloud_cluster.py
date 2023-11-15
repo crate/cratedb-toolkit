@@ -29,7 +29,7 @@ Synopsis
     export CRATEDB_CLOUD_CLUSTER_ID='e1e38d92-a650-48f1-8a70-8133f2d5c400'
     export CRATEDB_USERNAME='admin'
     export CRATEDB_PASSWORD='H3IgNXNvQBJM3CiElOiVHuSp6CjXMCiQYhB4I9dLccVHGvvvitPSYr1vTpt4'
-    ctk shell --command "SELECT * from sys.summits LIMIT 5;"
+    ctk shell --command "SELECT * from sys.summits LIMIT 2;"
 
 Usage
 =====
@@ -60,6 +60,7 @@ fall back to probe the environment variables.
 """
 import json
 import logging
+import sys
 
 import cratedb_toolkit
 from cratedb_toolkit.util import setup_logging
@@ -72,7 +73,7 @@ def workload():
     Run a workload on a CrateDB database cluster on CrateDB Cloud.
 
     ctk cluster start Hotzenplotz
-    ctk shell --command "SELECT * from sys.summits LIMIT 5;"
+    ctk shell --command "SELECT * from sys.summits LIMIT 2;"
     """
 
     from cratedb_toolkit import ManagedCluster
@@ -83,12 +84,12 @@ def workload():
 
     # Report information about cluster.
     # TODO: Use `cluster.{print,format}_info()`.
-    print(json.dumps(cluster.info.cloud))  # noqa: T201
+    print(json.dumps(cluster.info.cloud), file=sys.stderr)  # noqa: T201
 
     # Run database workload.
-    # TODO: Enable acquiring a client handle.
-    # cratedb = cluster.get_connection_client()  # noqa: ERA001
-    # cratedb.run_sql("SELECT * from sys.summits LIMIT 5;")  # noqa: ERA001
+    cratedb = cluster.get_client_bundle()
+    results = cratedb.adapter.run_sql("SELECT * from sys.summits LIMIT 2;", records=True)
+    print(json.dumps(results, indent=2))  # noqa: T201
 
     # Stop cluster again.
     cluster.stop()
