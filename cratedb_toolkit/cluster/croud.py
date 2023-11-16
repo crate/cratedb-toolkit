@@ -62,7 +62,7 @@ class CloudManager:
         wr = CroudWrapper(call=call)
         return wr.invoke()
 
-    def create_project(self, name: str):
+    def create_project(self, name: str, organization_id: str = None):
         """
         Create project.
 
@@ -74,10 +74,14 @@ class CloudManager:
         from croud.__main__ import command_tree
         from croud.projects.commands import project_create
 
+        # TODO: Refactor elsewhere.
+        organization_id = organization_id or os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
+
         call = CroudCall(
             fun=project_create,
             specs=command_tree["projects"]["commands"]["create"]["extra_args"],
             arguments=[
+                f"--org-id={organization_id}",
                 f"--name={name}",
             ],
         )
