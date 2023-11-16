@@ -43,6 +43,7 @@ def test_example_cloud_cluster_with_deploy(mocker, mock_cloud_cluster_deploy):
     mocker.patch.dict(
         "os.environ",
         {
+            "CRATEDB_CLOUD_ORGANIZATION_ID": "4148156d-b842-4a86-8024-ecb380be1fc2",
             "CRATEDB_CLOUD_SUBSCRIPTION_ID": "f33a2f55-17d1-4f21-8130-b6595d7c52db",
             "CRATEDB_CLOUD_CLUSTER_NAME": "testcluster",
             "CRATEDB_USERNAME": "crate",
