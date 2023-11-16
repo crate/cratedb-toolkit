@@ -98,7 +98,7 @@ class ManagedCluster(ClusterBase):
             export CRATEDB_CLOUD_CLUSTER_ID=e1e38d92-a650-48f1-8a70-8133f2d5c400
             export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
         """
-        if not CONFIG.settings_accept_cli or not CONFIG.settings_accept_env:
+        if not CONFIG.settings_accept_cli and not CONFIG.settings_accept_env:
             raise ValueError(
                 "Unable to obtain cluster identifier or name without accepting settings from user environment"
             )

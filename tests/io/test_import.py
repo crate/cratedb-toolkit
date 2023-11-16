@@ -52,7 +52,7 @@ def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2)
 
 @pytest.mark.skip("Does not work. Q: Why? A: Response mocking? Q: And now? A: Just patch the low-level functions!")
 @responses.activate
-def test_import_cloud_file(tmp_path, caplog, cloud_cluster_mock):
+def test_import_cloud_file(tmp_path, caplog, mock_cloud_import):
     """
     CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a local file.
     """
@@ -86,7 +86,7 @@ def test_import_cloud_file(tmp_path, caplog, cloud_cluster_mock):
 
 
 @responses.activate
-def test_import_cloud_url(caplog, cloud_cluster_mock):
+def test_import_cloud_url(caplog, mock_cloud_import):
     """
     CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a URL.
     """

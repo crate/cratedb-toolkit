@@ -46,6 +46,7 @@ def flexfun(domain: str = None):
                     if CONFIG.runtime_errors == "raise":
                         raise
                     elif CONFIG.runtime_errors == "exit":  # noqa: RET506
+                        logger.error(ex)
                         sys.exit(runtime_error_exit_code)
                     else:
                         raise NotImplementedError(
