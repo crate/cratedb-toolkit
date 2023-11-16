@@ -1,6 +1,7 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import os
+import json
 
 import pytest
 import responses
@@ -115,38 +116,106 @@ def cratedb(cratedb_custom_service):
 
 
 @pytest.fixture
-def cloud_cluster_mock():
+def mock_cloud_cluster_exists(cratedb):
+    """
+    Mock a CrateDB Cloud API conversation, pretending a cluster exists.
+    """
+    responses.add_passthru("http+docker://localhost/")
     responses.add(
-        responses.Response(
-            method="GET",
-            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
-            json={
-                "url": "https://testdrive.example.org:4200/",
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/clusters/",
+        json=[
+            {
+                "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
+                "url": cratedb.get_connection_url(),
                 "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
                 "name": "testcluster",
-            },
-        )
+            }
+        ],
     )
-    responses.add(
-        responses.Response(
-            method="POST",
-            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
-            json={"id": "testdrive-job-id", "status": "REGISTERED"},
-        )
-    )
-    responses.add(
-        responses.Response(
-            method="GET",
-            url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
-            json=[
+
+
+@pytest.fixture
+def mock_cloud_cluster_deploy(cratedb):
+    """
+    Mock a CrateDB Cloud API conversation, for exercising a full deployment process.
+    """
+    responses.add_passthru("http+docker://localhost/")
+
+    callcount = 0
+
+    def cluster_list_callback(request):
+        nonlocal callcount
+        callcount += 1
+        headers = {}
+        if callcount == 1:
+            data = []
+        else:
+            data = [
                 {
-                    "id": "testdrive-job-id",
-                    "status": "SUCCEEDED",
-                    "progress": {"message": "Import succeeded"},
-                    "destination": {"table": "basic"},
+                    "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
+                    "url": cratedb.get_connection_url(),
+                    "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
+                    "name": "testcluster",
                 }
-            ],
-        )
+            ]
+        return 200, headers, json.dumps(data)
+
+    responses.add_callback(
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/clusters/",
+        callback=cluster_list_callback,
+    )
+
+    responses.add(
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/projects/",
+        json=[],
+    )
+
+    responses.add(
+        method="POST",
+        url="https://console.cratedb.cloud/api/v2/projects/",
+        json={"id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee"},
+    )
+
+    responses.add(
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/projects/3b6b7c82-d0ab-458c-ae6f-88f8346765ee/",
+        json={},
+    )
+
+
+@pytest.fixture
+def mock_cloud_import():
+    """
+    Mock a CrateDB Cloud API conversation, pretending to run a successful data import.
+    """
+    responses.add(
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
+        json={
+            "url": "https://testdrive.example.org:4200/",
+            "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
+            "name": "testcluster",
+        },
+    )
+    responses.add(
+        method="POST",
+        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
+        json={"id": "testdrive-job-id", "status": "REGISTERED"},
+    )
+    responses.add(
+        method="GET",
+        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
+        json=[
+            {
+                "id": "testdrive-job-id",
+                "status": "SUCCEEDED",
+                "progress": {"message": "Import succeeded"},
+                "destination": {"table": "basic"},
+            }
+        ],
     )
 
 
