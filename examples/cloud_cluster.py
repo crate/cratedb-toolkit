@@ -18,6 +18,10 @@ Synopsis
     # Log in to CrateDB Cloud.
     croud login --idp azuread
 
+    # Optional: If your account uses multiple subscriptions, you will need
+    # to select a specific one for invoking the cluster deployment operation.
+    export CRATEDB_CLOUD_SUBSCRIPTION_ID=f33a2f55-17d1-4f21-8130-b6595d7c52db
+
     # Initialize a cluster instance.
     python examples/cloud_cluster.py --cluster-name Hotzenplotz
 
