@@ -1,4 +1,5 @@
 import json
+import os
 import typing as t
 from pathlib import Path
 
@@ -11,7 +12,25 @@ class CloudManager:
     A wrapper around the CrateDB Cloud API through the `croud` package, providing common methods.
     """
 
-    def get_cluster_list(self):
+    def list_subscriptions(self):
+        """
+        Get list of clusters
+
+        croud clusters list --format=json
+        """
+        from croud.__main__ import command_tree
+        from croud.subscriptions.commands import subscriptions_list
+
+        call = CroudCall(
+            fun=subscriptions_list,
+            specs=command_tree["subscriptions"]["commands"]["list"]["extra_args"],
+            arguments=[],
+        )
+
+        wr = CroudWrapper(call=call)
+        return wr.invoke()
+
+    def list_clusters(self):
         """
         Get list of clusters
 
@@ -66,7 +85,7 @@ class CloudManager:
         wr = CroudWrapper(call=call)
         return wr.invoke()
 
-    def deploy_cluster(self, name: str, project_id: str):
+    def deploy_cluster(self, name: str, project_id: str, subscription_id: str = None):
         """
         Deploy cluster.
 
@@ -85,11 +104,32 @@ class CloudManager:
         from croud.__main__ import command_tree
         from croud.clusters.commands import clusters_deploy
 
+        # TODO: Refactor elsewhere.
+        subscription_id = subscription_id or os.environ.get("CRATEDB_CLOUD_SUBSCRIPTION_ID")
+
+        # Automatically use subscription, if there is only a single one. Otherwise, croak.
+        if subscription_id is None:
+            subscriptions = self.list_subscriptions()
+            if not subscriptions:
+                raise ValueError("Not selecting a subscription automatically, because there are none.")
+            if len(subscriptions) > 1:
+                subscriptions_text = json.dumps(subscriptions, indent=2)
+                raise ValueError(
+                    "Not selecting a subscription automatically, because there is more than one in your "  # noqa: S608
+                    "account. Please select one from this list by choosing the relevant UUID from the "
+                    f"`id` attribute, and supply it to the `CRATEDB_CLOUD_SUBSCRIPTION_ID` environment "
+                    f"variable:\n{subscriptions_text}"
+                )
+            subscription_id = subscriptions[0]["id"]
+
+        if subscription_id is None:
+            raise ValueError("Failed to obtain a subscription identifier")
+
         call = CroudCall(
             fun=clusters_deploy,
             specs=command_tree["clusters"]["commands"]["deploy"]["extra_args"],
             arguments=[
-                "--subscription-id=ba8592d2-b85b-4b21-b1c1-fbb99bc3c419",
+                f"--subscription-id={subscription_id}",
                 f"--project-id={project_id}",
                 "--tier=default",
                 "--product-name=crfree",
