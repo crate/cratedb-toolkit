@@ -4,6 +4,9 @@ import sys
 import typing as t
 
 import click
+from dotenv import find_dotenv, load_dotenv
+
+from cratedb_toolkit.config import CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +39,22 @@ def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str
     - Environment variable. Example: `export FOOBAR=bazqux`.
     - Environment variable prefix. Example: `export APPNAME_FOOBAR=bazqux`.
     """
+    # Load environment variables from `.env` file.
+    if not CONFIG.RUNNING_ON_PYTEST:
+        dotenv_file = find_dotenv()
+        logger.info(f"Loading environment variables from .env file: {dotenv_file}")
+        load_dotenv(dotenv_file)
+
+    # Decode settings from command-line arguments or environment variables.
     prog_name = prog_name or sys.argv[0]
     click_specs = [spec.click for spec in specs]
     command = click.Command(prog_name, params=click_specs)
+    if CONFIG.RUNNING_ON_JUPYTER or CONFIG.RUNNING_ON_PYTEST:
+        args = []
+    else:
+        args = sys.argv[1:]
     try:
-        with command.make_context(prog_name, args=sys.argv[1:]) as ctx:
+        with command.make_context(prog_name, args=args) as ctx:
             return ctx.params
     except click.exceptions.Exit as ex:
         if ex.exit_code != 0:

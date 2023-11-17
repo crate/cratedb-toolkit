@@ -9,6 +9,7 @@ __pycache__
 dist
 build
 .coverage*
+.env
 coverage.xml
 node_modules
 /cfr

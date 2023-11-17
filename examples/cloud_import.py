@@ -4,8 +4,9 @@
 About
 =====
 
-Example program demonstrating how to load data from files using
-the CrateDB Cloud Import API.
+This is an example program demonstrating how to load data from
+files using the Import API interface of CrateDB Cloud into
+a CrateDB Cloud Cluster.
 
 The supported file types are CSV, JSON, Parquet, optionally with
 gzip compression. They can be acquired from the local filesystem,
@@ -56,6 +57,7 @@ fall back to probe the environment variables.
 """
 
 import logging
+from pprint import pprint  # noqa: F401
 
 import cratedb_toolkit
 from cratedb_toolkit import InputOutputResource, ManagedCluster, TableAddress
@@ -85,6 +87,12 @@ def import_csv():
     # table name will be derived from the input file name.
     cluster.load_table(source=source)
 
+    # Query data.
+    """
+    results = cluster.query('SELECT * FROM "nab-machine-failure" LIMIT 5;')
+    pprint(results)  # noqa: T203
+    """
+
 
 def import_parquet():
     """
@@ -106,6 +114,12 @@ def import_parquet():
 
     # Invoke import job. The destination table name is explicitly specified.
     cluster.load_table(source=source, target=target)
+
+    # Query data.
+    """
+    results = cluster.query('SELECT * FROM "yc-201907" LIMIT 5;')
+    pprint(results)  # noqa: T203
+    """
 
 
 def main():

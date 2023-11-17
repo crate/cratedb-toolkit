@@ -316,6 +316,13 @@ class ManagedCluster(ClusterBase):
             sqlalchemy=adapter.engine,
         )
 
+    def query(self, sql: str):
+        """
+        Shortcut method to submit a database query in SQL format, and retrieve the results.
+        """
+        client_bundle = self.get_client_bundle()
+        return client_bundle.adapter.run_sql(sql, records=True)
+
 
 @dataclasses.dataclass
 class StandaloneCluster(ClusterBase):

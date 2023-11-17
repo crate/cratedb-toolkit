@@ -11,9 +11,9 @@ def flexfun(domain: str = None):
     """
     Function decorator, which honors toolkit environment settings wrt. error handling.
 
-    It is sorting out whether to raise exceptions, or whether to just `exit(1)`.
+    It is sorting out whether to raise exceptions, or whether to just `exit({1,2})`.
 
-    This detail important to handle well depending on the runtime environment. It can
+    This detail is important to handle well depending on the runtime environment. It can
     either be a standalone program, used on behalf of a library, or within a Jupyter
     Notebook.
 
@@ -28,7 +28,7 @@ def flexfun(domain: str = None):
         Generic error code.
     2
 
-        Parse error—for instance, when parsing command-line options, the ‘.wgetrc’ or ‘.netrc’...
+        Parse error. For instance, when parsing command-line options or config files.
 
     -- https://www.pythontutorial.net/advanced-python/python-decorator-arguments/
     """
