@@ -28,6 +28,7 @@ def test_import_csv_dask(cratedb, dummy_csv, needs_sqlalchemy2):
     """
     Invoke convenience function `import_csv_dask`, and verify database content.
     """
+    pytest.importorskip("dask")
     result = cratedb.database.import_csv_dask(filepath=dummy_csv, tablename="foobar")
     assert result is None
 
@@ -42,6 +43,7 @@ def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2)
     This time, use `progress=True` to make Dask display a progress bar.
     However, the code does not verify it.
     """
+    pytest.importorskip("dask")
     result = cratedb.database.import_csv_dask(filepath=dummy_csv, tablename="foobar", progress=True)
     assert result is None
 
