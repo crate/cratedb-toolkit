@@ -210,8 +210,10 @@ optional-dependencies.settings = [
 optional-dependencies.test = [
   "cratedb-toolkit[testing]",
   "httpx<0.29",
+  "ipywidgets<9",
   "markdown-it-py<4",
-  "pueblo[dataframe]",
+  "notebook<8",
+  "pueblo[dataframe,notebook,testing]",
   "pydantic-core<3",
   "pytest<9",
   "pytest-cov<7",
@@ -308,7 +310,7 @@ lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 [tool.pytest.ini_options]
 addopts = """
   -rfEXs -p pytester --strict-markers --verbosity=3
-  --cov --cov-report=term-missing --cov-report=xml
+  --cov=. --cov-report=term-missing --cov-report=xml
   """
 minversion = "2.0"
 log_level = "DEBUG"
