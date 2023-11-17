@@ -1,19 +1,18 @@
-import abc
 import dataclasses
 import json
 import logging
-import os
 import sys
 import time
 import typing as t
-from abc import abstractmethod
 from pathlib import Path
 
 from boltons.urlutils import URL
-import crate.client
-import sqlalchemy as sa
+from functools import lru_cache
+
+import click
 
 from cratedb_toolkit.api.guide import GuidingTexts
+from cratedb_toolkit.api.model import ClientBundle, ClusterBase
 from cratedb_toolkit.cluster.util import deploy_cluster, get_cluster_by_name, get_cluster_info
 from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import CroudException, OperationFailed
@@ -22,60 +21,105 @@ from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, InputOutp
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.runtime import flexfun
-from cratedb_toolkit.util.setting import RequiredMutuallyExclusiveSettingsGroup, Setting
+from cratedb_toolkit.util.setting import (
+    Setting,
+    check_mutual_exclusiveness,
+    obtain_settings,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class ClientBundle:
-    adapter: DatabaseAdapter
-    dbapi: crate.client.connection.Connection
-    sqlalchemy: sa.Engine
+class ManagedClusterSettings:
+    """
+    Settings for managing a CrateDB Cloud cluster.
+    """
 
+    cluster_id: t.Union[str, None] = None
+    cluster_name: t.Union[str, None] = None
+    subscription_id: t.Union[str, None] = None
+    organization_id: t.Union[str, None] = None
+    username: t.Union[str, None] = None
+    password: t.Union[str, None] = None
 
-class ClusterBase(abc.ABC):
-    @abstractmethod
-    def load_table(
-        self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
-    ):
-        raise NotImplementedError("Child class needs to implement this method")
+    settings_spec = [
+        Setting(
+            click=click.Option(
+                param_decls=["--cluster-id"],
+                envvar="CRATEDB_CLOUD_CLUSTER_ID",
+                help="CrateDB Cloud cluster identifier (UUID)",
+            ),
+            group="cluster-identifier",
+        ),
+        Setting(
+            click=click.Option(
+                param_decls=["--cluster-name"],
+                envvar="CRATEDB_CLOUD_CLUSTER_NAME",
+                help="CrateDB Cloud cluster name",
+            ),
+            group="cluster-identifier",
+        ),
+        Setting(
+            click=click.Option(
+                param_decls=["--subscription-id"],
+                envvar="CRATEDB_CLOUD_SUBSCRIPTION_ID",
+                help="CrateDB Cloud subscription identifier (UUID). Optionally needed for deploying clusters.",
+            ),
+        ),
+        Setting(
+            click=click.Option(
+                param_decls=["--organization-id"],
+                envvar="CRATEDB_CLOUD_ORGANIZATION_ID",
+                help="CrateDB Cloud organization identifier (UUID). Optionally needed for deploying clusters.",
+            ),
+        ),
+        Setting(
+            click=click.Option(
+                param_decls=["--username"],
+                envvar="CRATEDB_USERNAME",
+                help="Username for connecting to CrateDB.",
+            ),
+        ),
+        Setting(
+            click=click.Option(
+                param_decls=["--password"],
+                envvar="CRATEDB_PASSWORD",
+                help="Password for connecting to CrateDB.",
+            ),
+        ),
+    ]
 
-    @abstractmethod
-    def get_client_bundle(self) -> ClientBundle:
-        raise NotImplementedError("Child class needs to implement this method")
+    @classmethod
+    def from_cli_or_env(cls):
+        settings = obtain_settings(specs=cls.settings_spec)
+        check_mutual_exclusiveness(specs=cls.settings_spec, settings=settings)
+        return cls(**settings)
 
 
 class ManagedCluster(ClusterBase):
     """
-    Wrap a managed CrateDB database cluster on CrateDB Cloud.
+    Manage a CrateDB database cluster on CrateDB Cloud.
     """
-
-    settings_spec = RequiredMutuallyExclusiveSettingsGroup(
-        Setting(
-            name="--cluster-id",
-            envvar="CRATEDB_CLOUD_CLUSTER_ID",
-            help="The CrateDB Cloud cluster identifier, an UUID",
-        ),
-        Setting(
-            name="--cluster-name",
-            envvar="CRATEDB_CLOUD_CLUSTER_NAME",
-            help="The CrateDB Cloud cluster name",
-        ),
-    )
 
     def __init__(
         self,
         id: str = None,  # noqa: A002
         name: str = None,
+        settings: ManagedClusterSettings = None,
         address: DatabaseAddress = None,
         info: ClusterInformation = None,
     ):
         self.id = id
         self.name = name
+        self.settings = settings or ManagedClusterSettings()
         self.address = address
         self.info: ClusterInformation = info or ClusterInformation()
         self.exists: bool = False
+
+        # Default settings and sanity checks.
+        self.id = self.id or self.settings.cluster_id
+        self.name = self.name or self.settings.cluster_name
         if self.id is None and self.name is None:
             raise ValueError("Failed to address cluster: Either cluster identifier or name needs to be specified")
 
@@ -102,9 +146,10 @@ class ManagedCluster(ClusterBase):
             raise ValueError(
                 "Unable to obtain cluster identifier or name without accepting settings from user environment"
             )
+
+        settings = ManagedClusterSettings.from_cli_or_env()
         try:
-            cluster_id, cluster_name = cls.settings_spec.obtain_settings()
-            return cls(id=cluster_id, name=cluster_name)
+            return cls(settings=settings)
 
         # TODO: With `flexfun`, can this section be improved?
         except ValueError as ex:
@@ -186,7 +231,9 @@ class ManagedCluster(ClusterBase):
         # FIXME: Accept id or name.
         if self.name is None:
             raise ValueError("Need cluster name to deploy")
-        deploy_cluster(self.name)
+        deploy_cluster(
+            self.name, subscription_id=self.settings.subscription_id, organization_id=self.settings.organization_id
+        )
         return self
 
     @flexfun(domain="runtime")
@@ -239,26 +286,27 @@ class ManagedCluster(ClusterBase):
                 logger.error(f"{message}{texts.error()}")
                 raise OperationFailed(message)
 
-            # When exiting so, it is expected that error logging has taken place appropriately.
+        # When exiting so, it is expected that error logging has taken place appropriately.
         except CroudException as ex:
             msg = "Data loading failed: Unknown error"
             logger.exception(msg)
             raise OperationFailed(msg) from ex
 
+    @lru_cache(maxsize=1)  # noqa: B019
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
         """
-        Return a bundle of client handles to the CrateDB Cloud cluster.
+        Return a bundle of client handles to the CrateDB Cloud cluster database.
 
         - adapter: A high-level `DatabaseAdapter` instance, offering a few convenience methods.
         - dbapi: A DBAPI connection object, as provided by SQLAlchemy's `dbapi_connection`.
         - sqlalchemy: An SQLAlchemy `Engine` object.
         """
-        if username is None:
-            username = os.environ.get("CRATEDB_USERNAME")
-        if password is None:
-            password = os.environ.get("CRATEDB_PASSWORD")
         cratedb_http_url = self.info.cloud["url"]
         logger.info(f"Connecting to database cluster at: {cratedb_http_url}")
+        if username is None:
+            username = self.settings.username
+        if password is None:
+            password = self.settings.password
         address = DatabaseAddress.from_httpuri(cratedb_http_url)
         address.with_credentials(username=username, password=password)
         adapter = DatabaseAdapter(address.dburi)

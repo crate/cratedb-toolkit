@@ -1,5 +1,4 @@
 import json
-import os
 import typing as t
 from pathlib import Path
 
@@ -74,16 +73,17 @@ class CloudManager:
         from croud.__main__ import command_tree
         from croud.projects.commands import project_create
 
-        # TODO: Refactor elsewhere.
-        organization_id = organization_id or os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
+        arguments = [
+            f"--name={name}",
+        ]
+
+        if organization_id is not None:
+            arguments += [f"--org-id={organization_id}"]
 
         call = CroudCall(
             fun=project_create,
             specs=command_tree["projects"]["commands"]["create"]["extra_args"],
-            arguments=[
-                f"--org-id={organization_id}",
-                f"--name={name}",
-            ],
+            arguments=arguments,
         )
 
         wr = CroudWrapper(call=call)
@@ -107,9 +107,6 @@ class CloudManager:
         # TODO: What about `--sudo`?
         from croud.__main__ import command_tree
         from croud.clusters.commands import clusters_deploy
-
-        # TODO: Refactor elsewhere.
-        subscription_id = subscription_id or os.environ.get("CRATEDB_CLOUD_SUBSCRIPTION_ID")
 
         # Automatically use subscription, if there is only a single one. Otherwise, croak.
         if subscription_id is None:
