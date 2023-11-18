@@ -27,6 +27,16 @@ def argv_has_long_option() -> bool:
     return any("--" in arg for arg in sys.argv[1:])
 
 
+def init_dotenv():
+    """
+    Load environment variables from `.env` file.
+    """
+    if not CONFIG.RUNNING_ON_PYTEST:
+        dotenv_file = find_dotenv()
+        logger.info(f"Loading environment variables from .env file: {dotenv_file}")
+        load_dotenv(dotenv_file)
+
+
 def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str, str]:
     """
     Employ command-line parsing at runtime, using the `click` parser.
@@ -40,10 +50,7 @@ def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str
     - Environment variable prefix. Example: `export APPNAME_FOOBAR=bazqux`.
     """
     # Load environment variables from `.env` file.
-    if not CONFIG.RUNNING_ON_PYTEST:
-        dotenv_file = find_dotenv()
-        logger.info(f"Loading environment variables from .env file: {dotenv_file}")
-        load_dotenv(dotenv_file)
+    init_dotenv()
 
     # Decode settings from command-line arguments or environment variables.
     prog_name = prog_name or sys.argv[0]

@@ -188,3 +188,17 @@ def get_croud_output_formats() -> t.List[str]:
     from croud.config.schemas import OUTPUT_FORMATS
 
     return OUTPUT_FORMATS
+
+
+def table_fqn(table: str) -> str:
+    """
+    Return the table name, quoted, like `"<table>"`. When applicable,
+    use the full qualified name `"<schema>"."<table>"`.
+    """
+    if '"' in table:
+        return table
+    if "." in table:
+        schema, table = table.split(".")
+        return f'"{schema}"."{table}"'
+    else:
+        return f'"{table}"'
