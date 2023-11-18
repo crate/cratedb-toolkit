@@ -1,11 +1,14 @@
+from cratedb_toolkit.util.croud import table_fqn
+
+
 class GuidingTexts:
     """
     TODO: Add more richness / guidance to the text output.
     """
 
-    def __init__(self, admin_url: str = None, table_name: str = None):
+    def __init__(self, admin_url: str, table_name: str):
         self.admin_url = admin_url
-        self.table_name = table_name
+        self.table_name = table_fqn(table_name)
 
     def success(self):
         return f"""

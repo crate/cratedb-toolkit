@@ -1,22 +1,18 @@
 import click
 
-from cratedb_toolkit.cluster.util import get_cluster_info
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.cluster.util import get_cluster_by_id_or_name
+from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
 
 output_formats = get_crash_output_formats()
 
-cratedb_sqlalchemy_option = click.option(
-    "--cratedb-sqlalchemy-url", envvar="CRATEDB_SQLALCHEMY_URL", type=str, required=False, help="CrateDB SQLAlchemy URL"
-)
-
 
 @click.command()
-@cratedb_sqlalchemy_option
-@click.option(
-    "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=False, help="CrateDB Cloud cluster identifier"
-)
+@option_cluster_id
+@option_cluster_name
+@option_sqlalchemy_url
 @click.option("--username", envvar="CRATEDB_USERNAME", type=str, required=False, help="Username for CrateDB cluster")
 @click.option("--password", envvar="CRATEDB_PASSWORD", type=str, required=False, help="Password for CrateDB cluster")
 @click.option(
@@ -42,6 +38,7 @@ def cli(
     ctx: click.Context,
     cratedb_sqlalchemy_url: str,
     cluster_id: str,
+    cluster_name: str,
     username: str,
     password: str,
     schema: str,
@@ -60,8 +57,8 @@ def cli(
     if cratedb_sqlalchemy_url:
         address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
         cratedb_http_url = address.httpuri
-    elif cluster_id:
-        cluster_info = get_cluster_info(cluster_id=cluster_id)
+    elif cluster_id or cluster_name:
+        cluster_info = get_cluster_by_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
         cratedb_http_url = cluster_info.cloud["url"]
     else:
         raise ValueError(

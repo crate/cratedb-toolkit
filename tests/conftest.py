@@ -197,8 +197,9 @@ def mock_cloud_import():
         method="GET",
         url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
         json={
-            "url": "https://testdrive.example.org:4200/",
+            "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
             "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
+            "url": "https://testdrive.example.org:4200/",
             "name": "testcluster",
         },
     )

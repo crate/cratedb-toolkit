@@ -1,12 +1,17 @@
+import logging
 import sys
 
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.cluster.util import get_cluster_info
+from cratedb_toolkit import ManagedCluster
+from cratedb_toolkit.cluster.util import get_cluster_by_id_or_name
+from cratedb_toolkit.options import option_cluster_id, option_cluster_name
 from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.util.cli import boot_click, make_command
 from cratedb_toolkit.util.data import jd
+
+logger = logging.getLogger(__name__)
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
@@ -22,11 +27,10 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 
 
 @make_command(cli, name="info")
-@click.option(
-    "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=True, help="CrateDB Cloud cluster identifier"
-)
+@option_cluster_id
+@option_cluster_name
 @click.pass_context
-def info(ctx: click.Context, cluster_id: str):
+def info(ctx: click.Context, cluster_id: str, cluster_name: str):
     """
     Display CrateDB Cloud Cluster information
 
@@ -34,9 +38,35 @@ def info(ctx: click.Context, cluster_id: str):
     ctk cluster info --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
     croud clusters get e1e38d92-a650-48f1-8a70-8133f2d5c400 --format=json
     """
-    cluster_info = get_cluster_info(cluster_id=cluster_id)
+    cluster_info = get_cluster_by_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
     try:
         jd(cluster_info.asdict())
+
+    # When exiting so, it is expected that error logging has taken place appropriately.
+    except CroudException:
+        sys.exit(1)
+
+
+@make_command(cli, name="start")
+@option_cluster_id
+@option_cluster_name
+@click.pass_context
+def start(ctx: click.Context, cluster_id: str, cluster_name: str):
+    """
+    Display CrateDB Cloud Cluster information
+
+    ctk cluster start
+    ctk cluster start --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
+    ctk cluster start --cluster-name=Hotzenplotz
+    """
+
+    # Acquire database cluster handle.
+    cluster = ManagedCluster(id=cluster_id, name=cluster_name).start()
+    logger.info(f"Successfully acquired cluster: {cluster}")
+
+    # Output cluster information.
+    try:
+        jd(cluster.info.asdict())
 
     # When exiting so, it is expected that error logging has taken place appropriately.
     except CroudException:

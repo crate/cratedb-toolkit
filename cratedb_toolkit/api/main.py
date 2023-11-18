@@ -13,7 +13,10 @@ import click
 
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.api.model import ClientBundle, ClusterBase
-from cratedb_toolkit.cluster.util import deploy_cluster, get_cluster_by_name, get_cluster_info
+from cratedb_toolkit.cluster.util import (
+    deploy_cluster,
+    get_cluster_by_id_or_name,
+)
 from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import CroudException, OperationFailed
 from cratedb_toolkit.io.croud import CloudJob
@@ -173,16 +176,10 @@ class ManagedCluster(ClusterBase):
         TODO: Investigate callers, and reduce number of invocations.
         """
         try:
-            if self.id:
-                self.info = get_cluster_info(cluster_id=self.id)
-                self.name = self.info.cloud["name"]
-            elif self.name:
-                self.info = get_cluster_by_name(self.name)
-                self.id = self.info.cloud["id"]
-            else:
-                self.exists = False
-                raise ValueError("Failed to address cluster: Either cluster identifier or name needs to be specified")
-        except CroudException as ex:
+            self.info = get_cluster_by_id_or_name(cluster_id=self.id, cluster_name=self.name)
+            self.id = self.info.cloud["id"]
+            self.name = self.info.cloud["name"]
+        except (CroudException, ValueError) as ex:
             self.exists = False
             if "Cluster not found" not in str(ex):
                 raise

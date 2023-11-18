@@ -6,6 +6,7 @@ from pathlib import Path
 
 from cratedb_toolkit.cluster.croud import CloudCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
+from cratedb_toolkit.util.croud import table_fqn
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +80,7 @@ class CloudJob:
         """
         job_info = self.info
         if "destination" in job_info and "table" in job_info["destination"]:
-            table = job_info["destination"]["table"]
-            if '"' not in table and "." in table:
-                schema, table = table.split(".")
-                table = f'"{schema}"."{table}"'
-                job_info["destination"]["table"] = table
+            job_info["destination"]["table"] = table_fqn(job_info["destination"]["table"])
 
 
 class CloudIo:
