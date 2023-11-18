@@ -5,8 +5,8 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit import ManagedCluster
-from cratedb_toolkit.cluster.util import get_cluster_by_id_or_name
 from cratedb_toolkit.options import option_cluster_id, option_cluster_name
+from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.util.cli import boot_click, make_command
 from cratedb_toolkit.util.data import jd
@@ -38,7 +38,7 @@ def info(ctx: click.Context, cluster_id: str, cluster_name: str):
     ctk cluster info --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
     croud clusters get e1e38d92-a650-48f1-8a70-8133f2d5c400 --format=json
     """
-    cluster_info = get_cluster_by_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
+    cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
     try:
         jd(cluster_info.asdict())
 
