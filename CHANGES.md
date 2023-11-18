@@ -5,6 +5,7 @@
 - Settings: Added settings comparison utility. Thanks, @WalBeh.
 - Meta: Added parser for `https://cratedb.com/releases.json` file. Thanks, @WalBeh.
 - CFR: Added the ability to anonymize queries recorded by `collect`
+- Cloud API: SDK and CLI for CrateDB Cloud Cluster and Import APIs
 
 ## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through
