@@ -145,19 +145,6 @@ class TableAddress:
 
 
 @dataclasses.dataclass
-class ClusterInformation:
-    """
-    Manage a database cluster's information.
-    """
-
-    cratedb: t.Any = dataclasses.field(default_factory=dict)
-    cloud: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
-
-    def asdict(self):
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
 class InputOutputResource:
     """
     Manage information about an input or output resource.

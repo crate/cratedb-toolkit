@@ -1,8 +1,8 @@
 import click
 
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.cluster.util import get_cluster_by_id_or_name
 from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_sqlalchemy_url
+from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.util.cli import boot_click
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
 
@@ -58,7 +58,7 @@ def cli(
         address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
         cratedb_http_url = address.httpuri
     elif cluster_id or cluster_name:
-        cluster_info = get_cluster_by_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
+        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
         cratedb_http_url = cluster_info.cloud["url"]
     else:
         raise ValueError(

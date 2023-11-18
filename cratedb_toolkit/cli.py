@@ -15,6 +15,7 @@ from .query.cli import cli as query_cli
 from .settings.cli import cli as settings_cli
 from .shell.cli import cli as shell_cli
 from .util.setting import init_dotenv
+from .wtf.cli import cli as wtf_cli
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]

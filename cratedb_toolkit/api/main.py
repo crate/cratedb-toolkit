@@ -13,14 +13,12 @@ import click
 
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.api.model import ClientBundle, ClusterBase
-from cratedb_toolkit.cluster.util import (
-    deploy_cluster,
-    get_cluster_by_id_or_name,
-)
+from cratedb_toolkit.cluster.croud import CloudManager
+from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import CroudException, OperationFailed
 from cratedb_toolkit.io.croud import CloudJob
-from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, InputOutputResource, TableAddress
+from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.runtime import flexfun
@@ -176,7 +174,7 @@ class ManagedCluster(ClusterBase):
         TODO: Investigate callers, and reduce number of invocations.
         """
         try:
-            self.info = get_cluster_by_id_or_name(cluster_id=self.id, cluster_name=self.name)
+            self.info = ClusterInformation.from_id_or_name(cluster_id=self.id, cluster_name=self.name)
             self.id = self.info.cloud["id"]
             self.name = self.info.cloud["name"]
         except (CroudException, ValueError) as ex:
@@ -228,10 +226,15 @@ class ManagedCluster(ClusterBase):
         # FIXME: Accept id or name.
         if self.name is None:
             raise ValueError("Need cluster name to deploy")
-        deploy_cluster(
-            self.name, subscription_id=self.settings.subscription_id, organization_id=self.settings.organization_id
+        cm = CloudManager()
+        # TODO: Only create new project when needed. Otherwise, use existing project.
+        project = cm.create_project(name=self.name, organization_id=self.settings.organization_id)
+        project_id = project["id"]
+        logger.info(f"Created project: {project_id}")
+        cluster_info = cm.deploy_cluster(
+            name=self.name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
-        return self
+        return cluster_info
 
     @flexfun(domain="runtime")
     def load_table(
