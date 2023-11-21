@@ -153,14 +153,14 @@ class CrateDBFixture:
     CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
     """
 
-    def __init__(self, crate_version: str = "nightly"):
+    def __init__(self, crate_version: str = "nightly", **kwargs):
         self.cratedb: Optional[CrateDBContainer] = None
         self.image: str = "crate/crate:{}".format(crate_version)
         self.database: Optional[DatabaseAdapter] = None
-        self.setup()
+        self.setup(**kwargs)
 
-    def setup(self):
-        self.cratedb = CrateDBContainer(image=self.image)
+    def setup(self, **kwargs):
+        self.cratedb = CrateDBContainer(image=self.image, **kwargs)
         self.cratedb.start()
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
@@ -168,7 +168,7 @@ class CrateDBFixture:
         if self.cratedb:
             self.cratedb.stop()
 
-    def reset(self, tables: Optional[str] = None):
+    def reset(self, tables: Optional[list] = TestDrive.RESET_TABLES):
         if tables and self.database:
             for reset_table in tables:
                 self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
