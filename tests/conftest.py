@@ -37,7 +37,7 @@ def cratedb(cratedb_service):
     """
     Provide a fresh canvas to each test case invocation, by resetting database content.
     """
-    cratedb_service.reset(tables=TestDrive.RESET_TABLES)
+    cratedb_service.reset()
     yield cratedb_service
 
 
