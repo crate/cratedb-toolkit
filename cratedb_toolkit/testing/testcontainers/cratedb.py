@@ -19,6 +19,7 @@ from testcontainers.core.generic import DbContainer
 from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer, asbool
+from cratedb_toolkit.util import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +52,13 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
     CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "")
     CRATEDB_DB = os.environ.get("CRATEDB_DB", "doc")
     KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
+    CMD_OPTS = {
+        "discovery.type": "single-node",
+        "cluster.routing.allocation.disk.threshold_enabled": False,
+        "node.attr.storage": "hot",
+        "path.repo": "/tmp/snapshots",
+    }
 
-    # TODO: Dual-port use with 4200+5432.
     def __init__(
         self,
         image: str = "crate/crate:nightly",
@@ -61,34 +67,49 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         password: Optional[str] = None,
         dbname: Optional[str] = None,
         dialect: str = "crate",
+        cmd_opts: Optional[dict] = None,
+        extra_ports: Optional[list] = None,
         **kwargs,
     ) -> None:
         super().__init__(image=image, **kwargs)
 
         self._name = "testcontainers-cratedb"  # -{os.getpid()}
-        self._command = "-Cdiscovery.type=single-node -Ccluster.routing.allocation.disk.threshold_enabled=false"
-        # TODO: Generalize by obtaining more_opts from caller.
-        self._command += " -Cnode.attr.storage=hot"
-        self._command += " -Cpath.repo=/tmp/snapshots"
+
+        cmd_opts = cmd_opts if cmd_opts else {}
+        self._command = self._build_cmd({**self.CMD_OPTS, **cmd_opts})
 
         self.CRATEDB_USER = user or self.CRATEDB_USER
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
         self.CRATEDB_DB = dbname or self.CRATEDB_DB
 
         self.port_to_expose = port
+        self.extra_ports = extra_ports or []
         self.dialect = dialect
 
+    @staticmethod
+    def _build_cmd(opts: dict) -> str:
+        """
+        Return a string with command options concatenated and optimised for ES5 use
+        """
+        cmd = []
+        for key, val in opts.items():
+            if isinstance(val, bool):
+                val = str(val).lower()
+            cmd.append("-C{}={}".format(key, val))
+        return " ".join(cmd)
+
     def _configure(self) -> None:
-        self.with_exposed_ports(self.port_to_expose)
+        ports = [*[self.port_to_expose], *self.extra_ports]
+        self.with_exposed_ports(*ports)
         self.with_env("CRATEDB_USER", self.CRATEDB_USER)
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
 
-    def get_connection_url(self, host=None) -> str:
+    def get_connection_url(self, host=None, dialect=None) -> str:
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
         return super()._create_connection_url(
-            dialect=self.dialect,
+            dialect=dialect or self.dialect,
             username=self.CRATEDB_USER,
             password=self.CRATEDB_PASSWORD,
             host=host,
@@ -101,3 +122,65 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
         # TODO: Provide a client instance.
         wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
+
+
+class TestDrive:
+    """
+    Use different schemas for storing the subsystem database tables, and the
+    test/example data, so that they do not accidentally touch the default `doc`
+    schema.
+    """
+
+    EXT_SCHEMA = "testdrive-ext"
+    DATA_SCHEMA = "testdrive-data"
+
+    RESET_TABLES = [
+        f'"{EXT_SCHEMA}"."retention_policy"',
+        f'"{DATA_SCHEMA}"."raw_metrics"',
+        f'"{DATA_SCHEMA}"."sensor_readings"',
+        f'"{DATA_SCHEMA}"."testdrive"',
+        f'"{DATA_SCHEMA}"."foobar"',
+        f'"{DATA_SCHEMA}"."foobar_unique_single"',
+        f'"{DATA_SCHEMA}"."foobar_unique_composite"',
+        # cratedb_toolkit.io.{influxdb,mongodb}
+        '"testdrive"."demo"',
+    ]
+
+
+class CrateDBFixture:
+    """
+    A little helper wrapping Testcontainer's `CrateDBContainer` and
+    CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
+    """
+
+    def __init__(self, crate_version: str = "nightly"):
+        self.cratedb: Optional[CrateDBContainer] = None
+        self.image: str = "crate/crate:{}".format(crate_version)
+        self.database: Optional[DatabaseAdapter] = None
+        self.setup()
+
+    def setup(self):
+        self.cratedb = CrateDBContainer(image=self.image)
+        self.cratedb.start()
+        self.database = DatabaseAdapter(dburi=self.get_connection_url())
+
+    def finalize(self):
+        if self.cratedb:
+            self.cratedb.stop()
+
+    def reset(self, tables: Optional[str] = None):
+        if tables and self.database:
+            for reset_table in tables:
+                self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
+
+    def get_connection_url(self, *args, **kwargs):
+        if self.cratedb:
+            return self.cratedb.get_connection_url(*args, **kwargs)
+        return None
+
+    @property
+    def http_url(self):
+        """
+        Return a URL for HTTP interface
+        """
+        return self.get_connection_url(dialect="http")
