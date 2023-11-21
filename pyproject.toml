@@ -235,6 +235,8 @@ extend-ignore = [
   "RET504",
   # Unnecessary `elif` after `return` statement
   "RET505",
+  # Probable insecure usage of temporary file or directory
+  "S108",
 ]
 
 extend-exclude = [
