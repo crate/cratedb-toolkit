@@ -98,9 +98,18 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
             cmd.append("-C{}={}".format(key, val))
         return " ".join(cmd)
 
-    def _configure(self) -> None:
+    def _configure_ports(self) -> None:
+        """
+        Bind all the ports exposed inside the container to the same port on the host
+        """
         ports = [*[self.port_to_expose], *self.extra_ports]
-        self.with_exposed_ports(*ports)
+        for port in ports:
+            # If random port is needed on the host, use host=None
+            # or invoke self.with_exposed_ports
+            self.with_bind_ports(container=port, host=port)
+
+    def _configure(self) -> None:
+        self._configure_ports()
         self.with_env("CRATEDB_USER", self.CRATEDB_USER)
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
