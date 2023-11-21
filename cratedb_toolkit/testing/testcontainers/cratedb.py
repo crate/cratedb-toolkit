@@ -10,6 +10,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+# This is for Python 3.7 and 3.8 to support generic types
+# like `dict` instead of `typing.Dict
+from __future__ import annotations
+
 import logging
 import os
 from typing import Optional
