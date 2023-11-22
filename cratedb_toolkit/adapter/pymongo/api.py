@@ -19,6 +19,7 @@ class PyMongoCrateDbAdapter:
         self.__enter__()
 
     def __enter__(self):
+        self.configure_sqlalchemy()
         self.activate_pymongo_adapter()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -26,6 +27,21 @@ class PyMongoCrateDbAdapter:
         Restore patched functions.
         """
         pymongo.collection.Collection = pymongo.database.Collection = self.collection_backup  # type: ignore[misc]
+
+    def configure_sqlalchemy(self):
+        """
+        Configure CrateDB SQLAlchemy dialect.
+
+        Setting the CrateDB column policy to `dynamic` means that new columns
+        can be added without needing to explicitly change the table definition
+        by running corresponding `ALTER TABLE` statements.
+
+        https://cratedb.com/docs/crate/reference/en/latest/general/ddl/column-policy.html#dynamic
+        """
+        # TODO: Provide unpatching hook.
+        from cratedb_toolkit.util.pandas import patch_pandas_io_sqldatabase_with_dialect_parameters
+
+        patch_pandas_io_sqldatabase_with_dialect_parameters(table_kwargs={"crate_column_policy": "'dynamic'"})
 
     def activate_pymongo_adapter(self):
         """
