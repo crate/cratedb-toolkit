@@ -71,6 +71,30 @@ def test_pymongo_insert_one_single(
     assert results == [{"x": 42}]
 
 
+def test_pymongo_insert_one_multiple(
+    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture
+):
+    """
+    Verify the basic data insert operation `insert_one` works well, when called multiple times.
+    It should dynamically and gradually extend the database schema.
+    """
+
+    # Insert records.
+    collection: pymongo.collection.Collection = pymongo_client[TESTDRIVE_DATA_SCHEMA].foobar
+    inserted_id_x = collection.insert_one({"x": 42}).inserted_id
+    inserted_id_y = collection.insert_one({"y": 84}).inserted_id
+
+    # TODO: Can this be made type-compatible, by swapping in the surrogate implementation?
+    assert isinstance(inserted_id_x, AmendedObjectId)
+    assert isinstance(inserted_id_y, AmendedObjectId)
+
+    cratedb.database.run_sql(f'REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}"."foobar";')
+    results = cratedb.database.run_sql(
+        f'SELECT * FROM "{TESTDRIVE_DATA_SCHEMA}"."foobar" ORDER BY _id;', records=True  # noqa: S608
+    )
+    assert results == [{"x": 42, "y": None}, {"x": None, "y": 84}]
+
+
 def test_pymongo_count_documents(
     pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture
 ):
