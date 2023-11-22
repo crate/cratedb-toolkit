@@ -18,7 +18,7 @@ source .venv/bin/activate
 
 Install project in sandbox mode.
 ```shell
-pip install --editable='.[develop,test]'
+pip install --editable='.[io,test,develop]'
 ```
 
 Run tests. `TC_KEEPALIVE` keeps the auxiliary service containers running, which

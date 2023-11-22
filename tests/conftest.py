@@ -3,11 +3,29 @@
 import pytest
 import responses
 
-from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBFixture, TestDrive
+from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBFixture
 from cratedb_toolkit.util.common import setup_logging
 
-TESTDRIVE_DATA_SCHEMA = TestDrive.DATA_SCHEMA
-TESTDRIVE_EXT_SCHEMA = TestDrive.EXT_SCHEMA
+# Use different schemas for storing the subsystem database tables, and the
+# test/example data, so that they do not accidentally touch the default `doc`
+# schema.
+
+TESTDRIVE_DATA_SCHEMA = "testdrive-data"
+TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
+RESET_TABLES = [
+    f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policy"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_single"',
+    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_composite"',
+    # cratedb_toolkit.io.{influxdb,mongodb}
+    '"testdrive"."demo"',
+]
+
+CRATEDB_HTTP_PORT = 44209
+CRATEDB_SETTINGS = {"http.port": CRATEDB_HTTP_PORT}
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -18,7 +36,7 @@ def configure_database_schema(session_mocker):
 
     If not configured otherwise, the test suite currently uses `testdrive-ext`.
     """
-    session_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TestDrive.EXT_SCHEMA})
+    session_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
 
 
 @pytest.fixture(scope="session")
@@ -27,9 +45,10 @@ def cratedb_service():
     Provide a CrateDB service instance to the test suite.
     """
     db = CrateDBFixture()
-    db.reset()
+    db.start(port=CRATEDB_HTTP_PORT, cmd_opts=CRATEDB_SETTINGS)
+    db.reset(tables=RESET_TABLES)
     yield db
-    db.finalize()
+    db.stop()
 
 
 @pytest.fixture(scope="function")
@@ -37,7 +56,7 @@ def cratedb(cratedb_service):
     """
     Provide a fresh canvas to each test case invocation, by resetting database content.
     """
-    cratedb_service.reset()
+    cratedb_service.reset(tables=RESET_TABLES)
     yield cratedb_service
 
 
