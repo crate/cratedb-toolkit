@@ -151,7 +151,6 @@ class CrateDBFixture:
         """
         Start testcontainer, used for tests set up
         """
-        logger.debug("Starting container % with args %", self.image, **kwargs)
         self.cratedb = CrateDBContainer(image=self.image, **kwargs)
         self.cratedb.start()
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
