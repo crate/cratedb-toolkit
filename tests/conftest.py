@@ -9,7 +9,6 @@ from cratedb_toolkit.util.common import setup_logging
 # Use different schemas for storing the subsystem database tables, and the
 # test/example data, so that they do not accidentally touch the default `doc`
 # schema.
-
 TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
 RESET_TABLES = [
@@ -45,7 +44,7 @@ def cratedb_service():
     Provide a CrateDB service instance to the test suite.
     """
     db = CrateDBFixture()
-    db.start(port=CRATEDB_HTTP_PORT, cmd_opts=CRATEDB_SETTINGS)
+    db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
     db.reset(tables=RESET_TABLES)
     yield db
     db.stop()
