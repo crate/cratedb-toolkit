@@ -6,9 +6,9 @@ import colorlog
 from colorlog.escape_codes import escape_codes
 
 
-def setup_logging(level=logging.INFO, verbose: bool = False):
+def setup_logging(level=logging.INFO, verbose: bool = False, width: int = 36):
     reset = escape_codes["reset"]
-    log_format = f"%(asctime)-15s [%(name)-36s] %(log_color)s%(levelname)-8s:{reset} %(message)s"
+    log_format = f"%(asctime)-15s [%(name)-{width}s] %(log_color)s%(levelname)-8s:{reset} %(message)s"
 
     handler = colorlog.StreamHandler()
     handler.setFormatter(colorlog.ColoredFormatter(log_format))
