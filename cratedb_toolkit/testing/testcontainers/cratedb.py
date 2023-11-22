@@ -43,6 +43,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
             >>> import sqlalchemy
 
             >>> cratedb_container = CrateDBContainer("crate:5.2.3")
+            >>> cratedb_container.start()
             >>> with cratedb_container as cratedb:
             ...     engine = sqlalchemy.create_engine(cratedb.get_connection_url())
             ...     with engine.begin() as connection:
@@ -65,15 +66,29 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
     def __init__(
         self,
         image: str = "crate/crate:nightly",
-        port: int = 4200,
+        ports: Optional[dict] = None,
         user: Optional[str] = None,
         password: Optional[str] = None,
         dbname: Optional[str] = None,
         dialect: str = "crate",
         cmd_opts: Optional[dict] = None,
-        extra_ports: Optional[list] = None,
         **kwargs,
     ) -> None:
+        """
+        :param image: docker hub image path with optional tag
+        :param ports: optional dict that maps a port inside the container to a port on the host machine;
+                      `None` as a map value generates a random port;
+                      Dicts are ordered. By convention the first key-val pair is designated to the HTTP interface.
+                      Example: {4200: None, 5432: 15431} - port 4200 inside the container will be mapped
+                      to a random port on the host, internal port 5432 for PSQL interface will be mapped
+                      to the 15432 port on the host.
+        :param user:  optional username to access the DB; if None, try respective environment variable
+        :param password: optional password to access the DB; if None, try respective environment variable
+        :param dbname: optional database name to access the DB; if None, try respective environment variable
+        :param dialect: a string with the dialect to generate a DB URI
+        :param cmd_opts: an optional dict with CLI arguments to be passed to the DB entrypoint inside the container
+        :param kwargs: misc keyword arguments
+        """
         super().__init__(image=image, **kwargs)
 
         self._name = "testcontainers-cratedb"
@@ -85,8 +100,8 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
         self.CRATEDB_DB = dbname or self.CRATEDB_DB
 
-        self.port_to_expose = port
-        self.extra_ports = extra_ports or []
+        self.port_mapping = ports if ports else {4200: None}
+        self.port_to_expose, _ = list(self.port_mapping.items())[0]
         self.dialect = dialect
 
     @staticmethod
@@ -105,17 +120,18 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         """
         Bind all the ports exposed inside the container to the same port on the host
         """
-        ports = [*[self.port_to_expose], *self.extra_ports]
-        for port in ports:
-            # If random port is needed on the host, use host=None
-            # or invoke self.with_exposed_ports
-            self.with_bind_ports(container=port, host=port)
+        # If host_port is `None`, a random port to be generated
+        for container_port, host_port in self.port_mapping.items():
+            self.with_bind_ports(container=container_port, host=host_port)
 
-    def _configure(self) -> None:
-        self._configure_ports()
+    def _configure_credentials(self) -> None:
         self.with_env("CRATEDB_USER", self.CRATEDB_USER)
         self.with_env("CRATEDB_PASSWORD", self.CRATEDB_PASSWORD)
         self.with_env("CRATEDB_DB", self.CRATEDB_DB)
+
+    def _configure(self) -> None:
+        self._configure_ports()
+        self._configure_credentials()
 
     def get_connection_url(self, host=None, dialect=None) -> str:
         # TODO: When using `db_name=self.CRATEDB_DB`:
