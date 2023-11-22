@@ -58,7 +58,6 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
     KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
     CMD_OPTS = {
         "discovery.type": "single-node",
-        "cluster.routing.allocation.disk.threshold_enabled": False,
         "node.attr.storage": "hot",
         "path.repo": "/tmp/snapshots",
     }
@@ -77,7 +76,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
     ) -> None:
         super().__init__(image=image, **kwargs)
 
-        self._name = "testcontainers-cratedb"  # -{os.getpid()}
+        self._name = "testcontainers-cratedb"
 
         cmd_opts = cmd_opts if cmd_opts else {}
         self._command = self._build_cmd({**self.CMD_OPTS, **cmd_opts})
@@ -137,29 +136,6 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
 
 
-class TestDrive:
-    """
-    Use different schemas for storing the subsystem database tables, and the
-    test/example data, so that they do not accidentally touch the default `doc`
-    schema.
-    """
-
-    EXT_SCHEMA = "testdrive-ext"
-    DATA_SCHEMA = "testdrive-data"
-
-    RESET_TABLES = [
-        f'"{EXT_SCHEMA}"."retention_policy"',
-        f'"{DATA_SCHEMA}"."raw_metrics"',
-        f'"{DATA_SCHEMA}"."sensor_readings"',
-        f'"{DATA_SCHEMA}"."testdrive"',
-        f'"{DATA_SCHEMA}"."foobar"',
-        f'"{DATA_SCHEMA}"."foobar_unique_single"',
-        f'"{DATA_SCHEMA}"."foobar_unique_composite"',
-        # cratedb_toolkit.io.{influxdb,mongodb}
-        '"testdrive"."demo"',
-    ]
-
-
 class CrateDBFixture:
     """
     A little helper wrapping Testcontainer's `CrateDBContainer` and
@@ -168,25 +144,37 @@ class CrateDBFixture:
 
     def __init__(self, crate_version: str = "nightly", **kwargs):
         self.cratedb: Optional[CrateDBContainer] = None
-        self.image: str = "crate/crate:{}".format(crate_version)
         self.database: Optional[DatabaseAdapter] = None
-        self.setup(**kwargs)
+        self.image: str = "crate/crate:{}".format(crate_version)
 
-    def setup(self, **kwargs):
+    def start(self, **kwargs):
+        """
+        Start testcontainer, used for tests set up
+        """
+        logger.debug("Starting container % with args %", self.image, **kwargs)
         self.cratedb = CrateDBContainer(image=self.image, **kwargs)
         self.cratedb.start()
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
-    def finalize(self):
+    def stop(self):
+        """
+        Stop testcontainer, used for tests tear down
+        """
         if self.cratedb:
             self.cratedb.stop()
 
-    def reset(self, tables: Optional[list] = TestDrive.RESET_TABLES):
+    def reset(self, tables: Optional[list] = None):
+        """
+        Drop tables from the given list, used for tests set up or tear down
+        """
         if tables and self.database:
             for reset_table in tables:
                 self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
 
     def get_connection_url(self, *args, **kwargs):
+        """
+        Return a URL for SQLAlchemy DB engine
+        """
         if self.cratedb:
             return self.cratedb.get_connection_url(*args, **kwargs)
         return None
