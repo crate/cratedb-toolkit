@@ -3,7 +3,7 @@
 import pytest
 import responses
 
-from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBFixture
+from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from cratedb_toolkit.util.common import setup_logging
 
 # Use different schemas for storing the subsystem database tables, and the
@@ -43,7 +43,7 @@ def cratedb_service():
     """
     Provide a CrateDB service instance to the test suite.
     """
-    db = CrateDBFixture()
+    db = CrateDBTestAdapter()
     db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
     db.reset(tables=RESET_TABLES)
     yield db
