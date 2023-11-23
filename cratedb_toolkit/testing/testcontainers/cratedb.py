@@ -152,7 +152,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
 
 
-class CrateDBFixture:
+class CrateDBTestAdapter:
     """
     A little helper wrapping Testcontainer's `CrateDBContainer` and
     CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
@@ -194,9 +194,8 @@ class CrateDBFixture:
             return self.cratedb.get_connection_url(*args, **kwargs)
         return None
 
-    @property
-    def http_url(self):
+    def get_http_url(self, **kwargs):
         """
-        Return a URL for HTTP interface
+        Return a URL for CrateDB's HTTP endpoint
         """
-        return self.get_connection_url(dialect="http")
+        return self.get_connection_url(dialect="http", **kwargs)
