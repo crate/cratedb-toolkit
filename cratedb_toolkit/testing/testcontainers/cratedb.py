@@ -70,7 +70,6 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         user: Optional[str] = None,
         password: Optional[str] = None,
         dbname: Optional[str] = None,
-        dialect: str = "crate",
         cmd_opts: Optional[dict] = None,
         **kwargs,
     ) -> None:
@@ -79,13 +78,12 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         :param ports: optional dict that maps a port inside the container to a port on the host machine;
                       `None` as a map value generates a random port;
                       Dicts are ordered. By convention the first key-val pair is designated to the HTTP interface.
-                      Example: {4200: None, 5432: 15431} - port 4200 inside the container will be mapped
+                      Example: {4200: None, 5432: 15432} - port 4200 inside the container will be mapped
                       to a random port on the host, internal port 5432 for PSQL interface will be mapped
                       to the 15432 port on the host.
-        :param user:  optional username to access the DB; if None, try respective environment variable
-        :param password: optional password to access the DB; if None, try respective environment variable
-        :param dbname: optional database name to access the DB; if None, try respective environment variable
-        :param dialect: a string with the dialect to generate a DB URI
+        :param user:  optional username to access the DB; if None, try `CRATEDB_USER` environment variable
+        :param password: optional password to access the DB; if None, try `CRATEDB_PASSWORD` environment variable
+        :param dbname: optional database name to access the DB; if None, try `CRATEDB_DB` environment variable
         :param cmd_opts: an optional dict with CLI arguments to be passed to the DB entrypoint inside the container
         :param kwargs: misc keyword arguments
         """
@@ -102,7 +100,6 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
 
         self.port_mapping = ports if ports else {4200: None}
         self.port_to_expose, _ = list(self.port_mapping.items())[0]
-        self.dialect = dialect
 
     @staticmethod
     def _build_cmd(opts: dict) -> str:
@@ -133,11 +130,18 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         self._configure_ports()
         self._configure_credentials()
 
-    def get_connection_url(self, host=None, dialect=None) -> str:
+    def get_connection_url(self, dialect: str = "crate", host: Optional[str] = None) -> str:
+        """
+        Return a connection URL to the DB
+
+        :param host: optional string
+        :param dialect: a string with the dialect name to generate a DB URI
+        :return: string containing a connection URL to te DB
+        """
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
         return super()._create_connection_url(
-            dialect=dialect or self.dialect,
+            dialect=dialect,
             username=self.CRATEDB_USER,
             password=self.CRATEDB_PASSWORD,
             host=host,
@@ -199,3 +203,12 @@ class CrateDBTestAdapter:
         Return a URL for CrateDB's HTTP endpoint
         """
         return self.get_connection_url(dialect="http", **kwargs)
+
+    @property
+    def http_url(self):
+        """
+        Return a URL for CrateDB's HTTP endpoint.
+
+        Used to stay backward compatible with the downstream code.
+        """
+        return self.get_http_url()
