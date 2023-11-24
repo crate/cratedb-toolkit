@@ -91,7 +91,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
 
         self._name = "testcontainers-cratedb"
 
-        cmd_opts = cmd_opts if cmd_opts else {}
+        cmd_opts = cmd_opts or {}
         self._command = self._build_cmd({**self.CMD_OPTS, **cmd_opts})
 
         self.CRATEDB_USER = user or self.CRATEDB_USER
@@ -110,7 +110,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         for key, val in opts.items():
             if isinstance(val, bool):
                 val = str(val).lower()
-            cmd.append("-C{}={}".format(key, val))
+            cmd.append(f"-C{key}={val}")
         return " ".join(cmd)
 
     def _configure_ports(self) -> None:
