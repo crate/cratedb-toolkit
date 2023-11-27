@@ -1,18 +1,22 @@
 import io
 import logging
-from typing import Any, Mapping, Optional, Union
+from collections import abc
+from typing import Any, Iterable, Iterator, Mapping, Optional, Union
 
 import pandas as pd
 from bson.raw_bson import RawBSONDocument
+from pymongo import common
 from pymongo.client_session import ClientSession
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
-from pymongo.results import InsertOneResult
+from pymongo.results import InsertManyResult, InsertOneResult
 from pymongo.typings import _DocumentType
 
 from cratedb_toolkit.adapter.pymongo.cursor import cursor_factory
-from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
+from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId as ObjectId
 from cratedb_toolkit.util import DatabaseAdapter
+
+from sqlalchemy_cratedb.support import insert_bulk
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +54,9 @@ def collection_factory(cratedb: DatabaseAdapter):
             session: Optional[ClientSession] = None,
             comment: Optional[Any] = None,
         ) -> InsertOneResult:
-            logger.debug(
-                f"Pretending to insert document into MongoDB: database={self.database.name}, collection={self.name}"
-            )
-            logger.debug(f"Document: {document}")
+            logger.debug(f"Reading document: {document}")
             data = pd.DataFrame.from_records([document])
-            # logger.debug(f"Dataframe: {self.get_df_info()}, {data.tail()}")  # noqa: ERA001
+            # logger.debug(f"Dataframe: {self.get_df_info(data)}, {data.tail()}")  # noqa: ERA001
             logger.debug(f"Inserting record into CrateDB: schema={self.database.name}, table={self.name}")
 
             object_id_cratedb: Optional[str] = None
@@ -101,8 +102,53 @@ def collection_factory(cratedb: DatabaseAdapter):
             if object_id_cratedb is None:
                 raise ValueError("Object may have been created, but there is no object id")
 
-            object_id_mongodb = AmendedObjectId.from_str(object_id_cratedb)
+            object_id_mongodb = ObjectId.from_str(object_id_cratedb)
             logger.debug(f"Created object with id: {object_id_mongodb!r}")
             return InsertOneResult(inserted_id=object_id_mongodb, acknowledged=True)
+
+        def insert_many(
+            self,
+            documents: Iterable[Union[_DocumentType, RawBSONDocument]],
+            ordered: bool = True,
+            bypass_document_validation: bool = False,
+            session: Optional[ClientSession] = None,
+            comment: Optional[Any] = None,
+        ) -> InsertManyResult:
+            if not isinstance(documents, abc.Iterable) or isinstance(documents, abc.Mapping) or not documents:
+                raise TypeError("documents must be a non-empty list")
+            inserted_ids: list[ObjectId] = []
+
+            def gen() -> Iterator[Mapping[str, Any]]:
+                """A generator that validates documents and handles _ids."""
+                for document in documents:
+                    common.validate_is_document_type("document", document)
+                    if not isinstance(document, RawBSONDocument):
+                        if "_id" in document:
+                            identifier = ObjectId(document["_id"])
+                        else:
+                            identifier = ObjectId()
+                            document["_id"] = str(identifier)  # type: ignore[index]
+                        inserted_ids.append(identifier)
+                    yield document
+
+            logger.debug("Converting documents")
+            documents_real = list(gen())
+
+            logger.debug(f"Reading documents: {documents_real}")
+            data = pd.DataFrame.from_records(documents_real)
+            logger.debug(f"Dataframe: {self.get_df_info(data)}, {data.tail()}")  # noqa: ERA001
+            logger.debug(f"Inserting records into CrateDB: schema={self.database.name}, table={self.name}")
+
+            data.to_sql(
+                name=self.name,
+                schema=self.database.name,
+                con=cratedb.engine,
+                index=False,
+                # TODO: Handle `append` vs. `replace`.
+                if_exists="append",
+                method=insert_bulk,
+            )
+
+            return InsertManyResult(inserted_ids, acknowledged=True)
 
     return AmendedCollection

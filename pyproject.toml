@@ -155,6 +155,12 @@ mongodb = [
   "python-bsonjs<0.5",
   "rich<14,>=3.3.2",
 ]
+pymongo = [
+  "jessiql==1.0.0rc1",
+  "pandas==2.1.*",
+  "pymongo==4.8.*",
+  "sqlalchemy<2",
+]
 release = [
   "build<2",
   "twine<6",

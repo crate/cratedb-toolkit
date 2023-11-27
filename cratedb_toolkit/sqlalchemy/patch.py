@@ -4,12 +4,16 @@ import json
 from decimal import Decimal
 from uuid import UUID
 
+from sqlalchemy_cratedb.dialect import TYPES_MAP
+
 try:
     import numpy as np
 
     has_numpy = True
 except ImportError:
     has_numpy = False
+
+from sqlalchemy import types as sqltypes
 
 
 def patch_encoder():
@@ -45,3 +49,11 @@ class CrateJsonEncoderWithNumPy(json.JSONEncoder):
             elif isinstance(o, np.ndarray):
                 return o.tolist()
         return json.JSONEncoder.default(self, o)
+
+
+def patch_types_map():
+    """
+    Register missing timestamp data type.
+    """
+    # TODO: Submit patch to `crate-python`.
+    TYPES_MAP["timestamp without time zone"] = sqltypes.TIMESTAMP
