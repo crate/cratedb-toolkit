@@ -90,10 +90,10 @@ dependencies = [
   "colorlog",
   "crash",
   "crate[sqlalchemy]>=0.34",
-  "croud==1.8",
+  "croud",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
-  "sqlalchemy>=2",
+  "sqlalchemy",
   "sqlparse<0.5",
 ]
 [project.optional-dependencies]
@@ -122,6 +122,11 @@ mongodb = [
   "pymongo<5,>=3.10.1",
   "python-bsonjs<0.4",
   "rich<14,>=3.3.2",
+]
+pymongo = [
+  "jessiql==1.0.0rc1",
+  "pymongo<5,>=3.10.1",
+  "sqlalchemy<2.0",
 ]
 release = [
   "build<2",

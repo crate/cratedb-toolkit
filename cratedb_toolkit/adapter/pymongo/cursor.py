@@ -1,20 +1,25 @@
 import copy
 import logging
+import warnings
 from collections import deque
 from typing import Any, Iterable, Mapping, Optional, Union
 
+import sqlalchemy as sa
 from bson import SON
 from pymongo import CursorType, helpers
 from pymongo.client_session import ClientSession
 from pymongo.collation import validate_collation_or_none
 from pymongo.collection import Collection
-from pymongo.common import validate_is_document_type
+from pymongo.common import validate_is_document_type, validate_is_mapping
 from pymongo.cursor import _QUERY_OPTIONS, Cursor, _Hint, _Sort
 from pymongo.errors import InvalidOperation
 from pymongo.message import _GetMore, _Query
 from pymongo.read_preferences import _ServerMode
 from pymongo.typings import _Address, _CollationIn, _DocumentType
+from pymongo.write_concern import validate_boolean
+from sqlalchemy.util import to_list
 
+from cratedb_toolkit.adapter.pymongo.reactor import mongodb_query, table_to_model
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
 from cratedb_toolkit.util import DatabaseAdapter
 
@@ -77,7 +82,6 @@ def cursor_factory(cratedb: DatabaseAdapter):
                 self.__explicit_session = False
 
             spec: Mapping[str, Any] = filter or {}
-            """
             validate_is_mapping("filter", spec)
             if not isinstance(skip, int):
                 raise TypeError("skip must be an instance of int")
@@ -112,7 +116,6 @@ def cursor_factory(cratedb: DatabaseAdapter):
             if allow_disk_use is not None:
                 allow_disk_use = validate_boolean("allow_disk_use", allow_disk_use)
 
-            """
             if projection is not None:
                 projection = helpers._fields_list_to_dict(projection, "projection")
 
@@ -279,6 +282,12 @@ def cursor_factory(cratedb: DatabaseAdapter):
 
             return len(self.__data)
 
+        def sort(self, key_or_list: _Hint, direction: Optional[Union[int, str]] = None) -> Cursor[_DocumentType]:
+            """ """
+            keys = helpers._index_list(key_or_list, direction)
+            self.__ordering = to_list(helpers._index_document(keys).to_dict())  # type: ignore[assignment]
+            return self
+
         def __send_message(self, operation: Union[_Query, _GetMore]) -> None:
             """
             Usually sends a query or getmore operation and handles the response to/from a MongoDB server.
@@ -286,6 +295,19 @@ def cursor_factory(cratedb: DatabaseAdapter):
             with a CrateDB server instead.
 
             TODO: OperationFailure / self.close() / PinnedResponse / explain / batching
+            """
+            metadata = sa.MetaData(schema=operation.db)
+            table_name = operation.coll
+
+            table = sa.Table(table_name, metadata, autoload_with=cratedb.engine)
+            table.append_column(sa.Column("_id", sa.String(), primary_key=True, system=True))
+            model = table_to_model(table)
+
+            query = mongodb_query(
+                model=model,
+                filter=dict(self.__spec) or {},
+                sort=self.__ordering and list(self.__ordering) or ["_id"],
+            )
             """
             tbl = f'"{operation.db}"."{operation.coll}"'
             sql = f"SELECT *, _id FROM {tbl}"  # noqa: S608
@@ -307,6 +329,8 @@ def cursor_factory(cratedb: DatabaseAdapter):
                     sql += f" LIMIT {operation.limit}"
             logger.debug(f"Running SQL: {sql}")
             records = cratedb.run_sql(sql, records=True)
+            """
+            records = query.fetchall(cratedb.connection)
             for record in records:
                 record["_id"] = AmendedObjectId.from_str(record["_id"])
             self.__data = deque(records)

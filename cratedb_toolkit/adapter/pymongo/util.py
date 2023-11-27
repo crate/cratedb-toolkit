@@ -32,7 +32,11 @@ class AmendedObjectId:
         return f"ObjectId('{self!s}')"
 
     def __generate(self) -> None:
-        """Generate a new value for this ObjectId."""
+        """
+        Generate a new value for this ObjectId.
+
+        TODO: Generate IDs of the same width like CrateDB.
+        """
         # 4 bytes current time
         oid = struct.pack(">I", int(time.time()))
 

@@ -3,7 +3,11 @@ from unittest.mock import patch
 import pymongo.collection
 
 from cratedb_toolkit.adapter.pymongo.collection import collection_factory
+from cratedb_toolkit.sqlalchemy.patch import patch_types_map
 from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.pandas import patch_pandas_sqltable_with_extended_mapping
+
+patch_types_map()
 
 
 class PyMongoCrateDbAdapter:
@@ -39,9 +43,10 @@ class PyMongoCrateDbAdapter:
         https://cratedb.com/docs/crate/reference/en/latest/general/ddl/column-policy.html#dynamic
         """
         # TODO: Provide unpatching hook.
-        from cratedb_toolkit.util.pandas import patch_pandas_io_sqldatabase_with_dialect_parameters
+        from cratedb_toolkit.util.pandas import patch_pandas_sqltable_with_dialect_parameters
 
-        patch_pandas_io_sqldatabase_with_dialect_parameters(table_kwargs={"crate_column_policy": "'dynamic'"})
+        patch_pandas_sqltable_with_dialect_parameters(table_kwargs={"crate_column_policy": "'dynamic'"})
+        patch_pandas_sqltable_with_extended_mapping()
 
     def activate_pymongo_adapter(self):
         """

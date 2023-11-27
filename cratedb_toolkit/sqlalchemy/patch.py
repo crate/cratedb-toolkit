@@ -1,6 +1,8 @@
 import typing as t
 
 import sqlalchemy as sa
+from crate.client.sqlalchemy.dialect import TYPES_MAP
+from sqlalchemy import types as sqltypes
 
 
 def patch_inspector():
@@ -32,3 +34,11 @@ def patch_inspector():
         return get_table_names_dist(self, connection=connection, schema=schema, **kw)
 
     CrateDialect.get_table_names = get_table_names  # type: ignore
+
+
+def patch_types_map():
+    """
+    Register missing timestamp data type.
+    """
+    # TODO: Submit patch to `crate-python`.
+    TYPES_MAP["timestamp without time zone"] = sqltypes.TIMESTAMP
