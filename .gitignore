@@ -2,6 +2,7 @@
 .eggs
 .env
 .idea
+.mypy_cache
 *.pyc
 .venv*
 __pycache__

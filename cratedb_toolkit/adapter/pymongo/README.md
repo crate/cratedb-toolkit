@@ -27,7 +27,7 @@ with PyMongoCrateDbAdapter(dburi="crate://crate@localhost:4200"):
     inserted_id = collection.insert_one({"author": "Mike", "text": "My first blog post!"}).inserted_id
     print(inserted_id)
 
-    document = collection.find({"author": "Mike"})
+    document = collection.find_one({"author": "Mike"})
     print(document)
 ```
 
