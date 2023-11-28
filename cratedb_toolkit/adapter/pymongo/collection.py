@@ -1,3 +1,6 @@
+# Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
+from __future__ import annotations
+
 import io
 import logging
 from collections import abc
@@ -11,12 +14,11 @@ from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 from pymongo.results import InsertManyResult, InsertOneResult
 from pymongo.typings import _DocumentType
+from sqlalchemy_cratedb.support import insert_bulk
 
 from cratedb_toolkit.adapter.pymongo.cursor import cursor_factory
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId as ObjectId
 from cratedb_toolkit.util import DatabaseAdapter
-
-from sqlalchemy_cratedb.support import insert_bulk
 
 logger = logging.getLogger(__name__)
 

@@ -1,3 +1,6 @@
+# Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
+from __future__ import annotations
+
 import copy
 import logging
 import warnings
@@ -17,7 +20,6 @@ from pymongo.message import _GetMore, _Query
 from pymongo.read_preferences import _ServerMode
 from pymongo.typings import _Address, _CollationIn, _DocumentType
 from pymongo.write_concern import validate_boolean
-from sqlalchemy.util import to_list
 
 from cratedb_toolkit.adapter.pymongo.reactor import mongodb_query, table_to_model
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
@@ -286,7 +288,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
         def sort(self, key_or_list: _Hint, direction: Optional[Union[int, str]] = None) -> Cursor[_DocumentType]:
             """ """
             keys = helpers._index_list(key_or_list, direction)
-            self.__ordering = to_list(helpers._index_document(keys).to_dict())  # type: ignore[assignment]
+            self.__ordering = helpers._index_document(keys)
             return self
 
         def __send_message(self, operation: Union[_Query, _GetMore]) -> None:
