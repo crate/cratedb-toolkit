@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import datetime as dt
 import typing as t
 from unittest import mock
@@ -5,10 +6,15 @@ from unittest import mock
 import pymongo
 import pytest
 
+from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
+from tests.conftest import check_sqlalchemy1
+
+check_sqlalchemy1(allow_module_level=True)
+
 from cratedb_toolkit.adapter.pymongo import PyMongoCrateDbAdapter
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
 from cratedb_toolkit.util.date import truncate_milliseconds
-from tests.conftest import TESTDRIVE_DATA_SCHEMA, CrateDBFixture
+from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 pytestmark = pytest.mark.mongodb
 
@@ -62,7 +68,10 @@ def test_pymongo_metadata(pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client
 
 
 def test_pymongo_insert_one_single(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify a single basic data insert operation `insert_one` works well.
@@ -85,7 +94,10 @@ def test_pymongo_insert_one_single(
 
 
 def test_pymongo_insert_one_multiple(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify the basic data insert operation `insert_one` works well, when called multiple times.
@@ -112,7 +124,10 @@ def test_pymongo_insert_one_multiple(
 
 
 def test_pymongo_insert_many(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify the basic data insert operation `insert_many` works well.
@@ -138,7 +153,10 @@ def test_pymongo_insert_many(
 
 
 def test_pymongo_count_documents(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify the `count_documents` operation works well.
@@ -161,7 +179,10 @@ def test_pymongo_count_documents(
 
 
 def test_pymongo_roundtrip_document(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify round-tripping a documents works well.
@@ -208,8 +229,20 @@ def test_pymongo_roundtrip_document(
     assert document_loaded == document_original
 
 
+def test_example_program(cratedb: CrateDBTestAdapter):
+    """
+    Verify that the program `examples/pymongo_adapter.py` works.
+    """
+    from examples.pymongo_adapter import main
+
+    main(dburi=cratedb.database.dburi)
+
+
 def test_pymongo_tutorial(
-    pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient, cratedb: CrateDBFixture, sync_writes
+    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_client: pymongo.MongoClient,
+    cratedb: CrateDBTestAdapter,
+    sync_writes,
 ):
     """
     Verify the PyMongo Tutorial works well.

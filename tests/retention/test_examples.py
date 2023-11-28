@@ -5,7 +5,7 @@ from unittest.mock import patch
 import responses
 
 
-def test_example_edit(store):
+def test_example_edit(store, needs_sqlalchemy2):
     """
     Verify that the program `examples/retention_edit.py` works.
     """

@@ -191,7 +191,7 @@ def test_run_delete_dryrun(caplog, store, database, raw_metrics, policies):
     assert database.count_records(raw_metrics) == 6
 
 
-def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
+def test_run_delete_with_tags_match(store, database, sensor_readings, policies, needs_sqlalchemy2):
     """
     Verify a basic DELETE retention policy through the CLI, with using correct (matching) tags.
     """
@@ -214,7 +214,7 @@ def test_run_delete_with_tags_match(store, database, sensor_readings, policies):
     assert database.count_records(f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"') == 0
 
 
-def test_run_delete_with_tags_unknown(caplog, store, database, sensor_readings, policies):
+def test_run_delete_with_tags_unknown(caplog, store, database, sensor_readings, policies, needs_sqlalchemy2):
     """
     Verify a basic DELETE retention policy through the CLI, with using wrong (not matching) tags.
     """
@@ -266,7 +266,9 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
     assert database.count_records(raw_metrics) == 6
 
 
-def test_run_snapshot_aws_s3(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, minio):
+def test_run_snapshot_aws_s3(
+    caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, minio, needs_sqlalchemy2
+):
     """
     Verify the "SNAPSHOT" strategy using an object storage with AWS S3 API.
     Invokes `cratedb-retention run --strategy=snapshot`.

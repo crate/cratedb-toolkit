@@ -6,6 +6,7 @@
 - Add documentation.
 - Add missing essential querying features: Examples: sort order, skip, limit
 - Add missing essential methods. Example: `db.my_collection.drop()`.
+- Make write-synchronization behavior (refresh table) configurable.
 
 ## Iteration +2
 

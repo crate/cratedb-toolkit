@@ -9,7 +9,6 @@ import sqlalchemy as sa
 from sqlalchemy import MetaData, Table
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.selectable import NamedFromClause
 
 from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, RetentionStrategy
 from cratedb_toolkit.util.database import DatabaseAdapter, sa_is_empty
@@ -36,12 +35,14 @@ class SQLAlchemyTagHelperMixin:
         """
         Return list of SQL WHERE constraint clauses from given tags.
         """
+        from sqlalchemy.sql.selectable import NamedFromClause  # type: ignore[attr-defined]
+
         table: NamedFromClause = self.table  # type: ignore[attr-defined]
         constraints = []
         for tag in tags:
             if not tag:
                 continue
-            constraint = table.c[self.tag_column][tag] != sa.Null()
+            constraint = table.c[self.tag_column][tag] != sa.Null()  # type: ignore[attr-defined]
             constraints.append(constraint)
         return sa.and_(sa.true(), *constraints)
 

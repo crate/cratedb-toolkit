@@ -2,6 +2,8 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import pytest
 import responses
+import sqlalchemy as sa
+from verlib2 import Version
 
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from cratedb_toolkit.util.common import setup_logging
@@ -44,7 +46,10 @@ def cratedb_service():
     Provide a CrateDB service instance to the test suite.
     """
     db = CrateDBTestAdapter()
-    db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
+    db.start(
+        ports={CRATEDB_HTTP_PORT: None},
+        cmd_opts=CRATEDB_SETTINGS,
+    )
     db.reset(tables=RESET_TABLES)
     yield db
     db.stop()
@@ -89,6 +94,42 @@ def cloud_cluster_mock():
             ],
         )
     )
+
+
+IS_SQLALCHEMY1 = Version(sa.__version__) < Version("2")
+IS_SQLALCHEMY2 = Version(sa.__version__) >= Version("2")
+
+
+@pytest.fixture(scope="module")
+def needs_sqlalchemy1_module():
+    """
+    Use this for annotating pytest test case functions testing subsystems which need SQLAlchemy 1.x.
+    """
+    check_sqlalchemy1()
+
+
+def check_sqlalchemy1(**kwargs):
+    """
+    Skip pytest test cases or modules testing subsystems which need SQLAlchemy 1.x.
+    """
+    if not IS_SQLALCHEMY1:
+        raise pytest.skip("This feature or subsystem needs SQLAlchemy 1.x", **kwargs)
+
+
+@pytest.fixture
+def needs_sqlalchemy2():
+    """
+    Use this for annotating pytest test case functions testing subsystems which need SQLAlchemy 2.x.
+    """
+    check_sqlalchemy2()
+
+
+def check_sqlalchemy2(**kwargs):
+    """
+    Skip pytest test cases or modules testing subsystems which need SQLAlchemy 2.x.
+    """
+    if not IS_SQLALCHEMY2:
+        raise pytest.skip("This feature or subsystem needs SQLAlchemy 2.x", **kwargs)
 
 
 setup_logging()

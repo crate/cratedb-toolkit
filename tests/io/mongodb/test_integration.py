@@ -6,15 +6,25 @@ from unittest import mock
 
 import pytest
 
-from tests.io.mongodb.conftest import RESET_DATABASES
+from tests.conftest import check_sqlalchemy2
 
 pytestmark = pytest.mark.mongodb
 
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
+
+@pytest.fixture(scope="module", autouse=True)
+def check_prerequisites():
+    """
+    This subsystem needs SQLAlchemy 2.x.
+    """
+    check_sqlalchemy2()
+
+
 from cratedb_toolkit.io.mongodb.core import gather_collections
 from cratedb_toolkit.testing.testcontainers.mongodb import MongoDbContainerWithKeepalive
+from tests.io.mongodb.conftest import RESET_DATABASES
 
 logger = logging.getLogger(__name__)
 

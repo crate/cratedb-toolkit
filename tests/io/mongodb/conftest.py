@@ -2,6 +2,8 @@ import logging
 
 import pytest
 
+from tests.conftest import check_sqlalchemy2
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +55,7 @@ def mongodb_service():
     """
     Provide an MongoDB service instance to the test suite.
     """
+    check_sqlalchemy2()
     db = MongoDBFixture()
     db.reset()
     yield db

@@ -93,8 +93,8 @@ dependencies = [
   "croud",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
-  "sqlalchemy",
   "sqlparse<0.5",
+  "verlib2==0.2",
 ]
 [project.optional-dependencies]
 all = [
@@ -115,6 +115,7 @@ io = [
   "cr8",
   "dask<=2023.10.1,>=2020",
   "pandas<3,>=1",
+  "sqlalchemy>=2",
 ]
 mongodb = [
   "cr8",
@@ -125,8 +126,9 @@ mongodb = [
 ]
 pymongo = [
   "jessiql==1.0.0rc1",
+  "pandas<3,>=2",
   "pymongo<5,>=3.10.1",
-  "sqlalchemy<2.0",
+  "sqlalchemy<2",
 ]
 release = [
   "build<2",

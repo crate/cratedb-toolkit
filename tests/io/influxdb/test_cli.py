@@ -15,7 +15,7 @@ pytest.importorskip(
 from influxio.model import InfluxDbAdapter
 
 
-def test_influxdb2_load_table(caplog, cratedb, influxdb):
+def test_influxdb2_load_table(caplog, cratedb, influxdb, needs_sqlalchemy2):
     """
     CLI test: Invoke `ctk load table` for InfluxDB.
     """

@@ -24,7 +24,9 @@ References
 ==========
 - https://github.com/mongodb/mongo-python-driver
 """
+import datetime as dt
 import logging
+import time
 
 import pymongo
 from pymongo.database import Database
@@ -35,7 +37,7 @@ from cratedb_toolkit.util.common import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def main():
+def mongodb_workload():
     client = pymongo.MongoClient(
         "localhost", 27017, timeoutMS=100, connectTimeoutMS=100, socketTimeoutMS=100, serverSelectionTimeoutMS=100
     )
@@ -46,45 +48,70 @@ def main():
     logger.info(f"Using database: {db.name}")
     logger.info(f"Using collection: {db.my_collection}")
 
-    # Insert records.
-    inserted_id = db.my_collection.insert_one({"x": 5}).inserted_id
-    logger.info(f"Inserted object: {inserted_id!r}")
+    # TODO: Dropping a collection is not implemented yet.
+    # db.my_collection.drop()  # noqa: ERA001
+
+    # Insert document.
+    documents = [
+        {
+            "author": "Mike",
+            "text": "My first blog post!",
+            "tags": ["mongodb", "python", "pymongo"],
+            "date": dt.datetime.now(tz=dt.timezone.utc),
+        },
+        {
+            "author": "Eliot",
+            "title": "MongoDB is fun",
+            "text": "and pretty easy too!",
+            "date": dt.datetime(2009, 11, 10, 10, 45),
+        },
+    ]
+    result = db.my_collection.insert_many(documents)
+    logger.info(f"Inserted document identifiers: {result.inserted_ids!r}")
 
     # FIXME: Refresh table.
+    time.sleep(1)
 
-    # Query records.
+    # Query documents.
     document_count = db.my_collection.count_documents({})
     logger.info(f"Total document count: {document_count}")
 
     # Find single document.
-    document = db.my_collection.find_one()
+    document = db.my_collection.find_one({"author": "Mike"})
     logger.info(f"[find_one] Response document: {document}")
 
-    # Assorted basic find operations, with sorting and paging.
-    print("results:", end=" ")
+    # Run a few basic retrieval operations, with sorting and paging.
+    print("Whole collection")
     for item in db.my_collection.find():
-        print(item["x"], end=", ")
+        print(item)
     print()
 
-    print("results:", end=" ")
-    for item in db.my_collection.find().sort("x", pymongo.ASCENDING):
-        print(item["x"], end=", ")
+    print("Sort ascending")
+    for item in db.my_collection.find().sort("author", pymongo.ASCENDING):
+        print(item)
     print()
 
-    print("results:", end=" ")
-    for item in db.my_collection.find().sort("x", pymongo.DESCENDING):
-        print(item["x"], end=", ")
+    print("Sort descending")
+    for item in db.my_collection.find().sort("author", pymongo.DESCENDING):
+        print(item)
     print()
 
-    results = [item["x"] for item in db.my_collection.find().limit(2).skip(1)]
-    print("results:", results)
-    print("length:", len(results))
+    print("Paging")
+    for item in db.my_collection.find().limit(2).skip(1):
+        print(item)
+    print()
 
 
-if __name__ == "__main__":
+def main(dburi: str = None):
+    dburi = dburi or "crate://crate@localhost:4200"
+
     # setup_logging(level=logging.DEBUG, width=42)  # noqa: ERA001
     setup_logging(level=logging.INFO, width=20)
 
     # Context manager use.
-    with PyMongoCrateDbAdapter(dburi="crate://crate@localhost:4200"):
-        main()
+    with PyMongoCrateDbAdapter(dburi=dburi):
+        mongodb_workload()
+
+
+if __name__ == "__main__":
+    main()

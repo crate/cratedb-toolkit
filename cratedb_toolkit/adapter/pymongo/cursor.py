@@ -1,3 +1,6 @@
+# Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
+from __future__ import annotations
+
 import copy
 import logging
 import warnings
