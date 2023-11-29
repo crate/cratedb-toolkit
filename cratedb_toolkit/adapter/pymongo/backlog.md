@@ -7,6 +7,7 @@
 - Add missing essential querying features: Examples: sort order, skip, limit
 - Add missing essential methods. Example: `db.my_collection.drop()`.
 - Make write-synchronization behavior (refresh table) configurable.
+- Handle deeply nested documents of various types.
 
 ## Iteration +2
 
@@ -25,6 +26,7 @@
   ```python
   jessiql.exc.InvalidColumnError: Invalid column "x" for "Surrogate" specified in sort
   ```
+- Run (parts of) the PyMongo test suite?
 
 
 ## Done
