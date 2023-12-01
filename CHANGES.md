@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+- Add `cratedb-wtf` diagnostics program
+
 ## 2024/06/11 v0.0.13
 - Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`
 

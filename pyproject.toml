@@ -90,12 +90,16 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crash",
-  'importlib-metadata; python_version <= "3.7"',
+  "fastapi<0.105",
+  'importlib-metadata; python_version < "3.8"',
+  'importlib-resources; python_version < "3.9"',
+  "polars<0.21",
   "python-dotenv<2",
   "python-slugify<9",
   "sqlalchemy-cratedb>=0.36.1,<1",
   "sqlparse<0.6",
   'typing-extensions<5; python_version <= "3.7"',
+  "uvicorn<0.25",
 ]
 [project.optional-dependencies]
 all = [
@@ -167,6 +171,7 @@ repository = "https://github.com/crate-workbench/cratedb-toolkit"
 [project.scripts]
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 cratedb-toolkit = "cratedb_toolkit.cli:cli"
+cratedb-wtf = "cratedb_toolkit.wtf.cli:cli"
 ctk = "cratedb_toolkit.cli:cli"
 migr8 = "cratedb_toolkit.io.mongodb.cli:main"
 [project.entry-points.pytest11]
