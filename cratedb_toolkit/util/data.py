@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import sys
 import typing as t
@@ -7,7 +8,7 @@ def jd(data: t.Any):
     """
     Pretty-print JSON with indentation.
     """
-    print(json.dumps(data, indent=2), file=sys.stdout)  # noqa: T201
+    print(json.dumps(data, indent=2, cls=JSONEncoderPlus), file=sys.stdout)  # noqa: T201
 
 
 def str_contains(haystack, *needles):
@@ -18,9 +19,9 @@ def str_contains(haystack, *needles):
     return any(needle in haystack for needle in needles)
 
 
-# from sqlalchemy.util.langhelpers
-# from paste.deploy.converters
 def asbool(obj: t.Any) -> bool:
+    # from sqlalchemy.util.langhelpers
+    # from paste.deploy.converters
     if isinstance(obj, str):
         obj = obj.strip().lower()
         if obj in ["true", "yes", "on", "y", "t", "1"]:
@@ -30,3 +31,15 @@ def asbool(obj: t.Any) -> bool:
         else:
             raise ValueError("String is not true/false: %r" % obj)
     return bool(obj)
+
+
+class JSONEncoderPlus(json.JSONEncoder):
+    """
+    https://stackoverflow.com/a/27058505
+    """
+
+    def default(self, o):
+        if isinstance(o, dt.datetime):
+            return o.isoformat()
+
+        return json.JSONEncoder.default(self, o)

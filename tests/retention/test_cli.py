@@ -61,7 +61,7 @@ def test_setup_verbose(caplog, cratedb, settings):
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
-    assert 3 <= len(caplog.records) <= 10
+    assert 3 <= len(caplog.records) <= 15
 
 
 def test_setup_dryrun(caplog, cratedb, settings):

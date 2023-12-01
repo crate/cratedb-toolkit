@@ -72,13 +72,15 @@ def boot_with_dburi():
     return dburi
 
 
-def make_command(cli, name, helpfun=None, aliases=None):
+def make_command(cli, name, help=None, aliases=None):  # noqa: A002
     """
     Convenience shortcut for creating a subcommand.
     """
     kwargs = {}
-    if helpfun:
-        kwargs["help"] = docstring_format_verbatim(helpfun.__doc__)
+    if isinstance(help, str):
+        kwargs["help"] = help
+    elif callable(help):
+        kwargs["help"] = docstring_format_verbatim(help.__doc__)
     return cli.command(
         name,
         context_settings={"max_content_width": 120},

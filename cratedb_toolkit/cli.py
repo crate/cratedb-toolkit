@@ -7,6 +7,7 @@ from .cluster.cli import cli as cloud_cli
 from .io.cli import cli as io_cli
 from .job.cli import cli_list_jobs
 from .shell.cli import cli as shell_cli
+from .wtf.cli import cli as wtf_cli
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
@@ -21,4 +22,5 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 cli.add_command(cloud_cli, name="cluster")
 cli.add_command(io_cli, name="load")
 cli.add_command(shell_cli, name="shell")
+cli.add_command(wtf_cli, name="wtf")
 cli.add_command(cli_list_jobs)
