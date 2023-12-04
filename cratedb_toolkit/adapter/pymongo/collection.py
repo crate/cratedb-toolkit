@@ -49,6 +49,10 @@ def collection_factory(cratedb: DatabaseAdapter):
             buffer.seek(0)
             return buffer.read()
 
+        def create_index(self, *args, **kwargs):
+            # Support APScheduler
+            pass
+
         def insert_one(
             self: Collection,
             document: Union[_DocumentType, RawBSONDocument],

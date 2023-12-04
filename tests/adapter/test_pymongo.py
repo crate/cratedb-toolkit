@@ -5,6 +5,7 @@ from unittest import mock
 
 import pymongo
 import pytest
+from pytz.tzinfo import DstTzInfo
 
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from tests.conftest import check_sqlalchemy1
@@ -337,3 +338,47 @@ def test_pymongo_tutorial(
     result = db.profiles.create_index([("user_id", pymongo.ASCENDING)], unique=True)
     assert sorted(list(db.profiles.index_information())) == ['_id_', 'user_id_1']
     """
+
+
+def test_foo():
+    class CronTrigger:
+        year: str
+        month: str
+        week: str
+        day: str
+        day_of_week: str
+        hour: str
+        minute: str
+        second: str
+
+    job_state = {
+        "args": ("select * from testx",),
+        "coalesce": False,
+        "executor": "default",
+        "func": "scheduler:my_job",
+        "id": "0",
+        "kwargs": {},
+        "max_instances": 4,
+        "misfire_grace_time": 1,
+        "name": "my_job",
+        "next_run_time": dt.datetime(2023, 12, 1, 20, 2, tzinfo=DstTzInfo("Europe/Vienna")),
+        "trigger": CronTrigger(
+            month="*", day="*", day_of_week="*", hour="*", minute="2-3,25", timezone="Europe/Vienna"
+        ),
+        "version": 1,
+    }
+
+    def add_job(self, job):
+        from pprint import pprint
+
+        # pprint(job.__getstate__())
+        try:
+            self.collection.insert_one(
+                {
+                    "_id": job.id,
+                    "next_run_time": datetime_to_utc_timestamp(job.next_run_time),
+                    "job_state": Binary(pickle.dumps(job.__getstate__(), self.pickle_protocol)),
+                }
+            )
+        except DuplicateKeyError:
+            raise ConflictingIdError(job.id)
