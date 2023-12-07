@@ -129,7 +129,7 @@ release = [
   "twine<5",
 ]
 test = [
-  "pueblo[dataframe]@ git+https://github.com/pyveci/pueblo.git@develop",
+  "pueblo[dataframe]",
   "pytest<8",
   "pytest-cov<5",
   "pytest-mock<4",
