@@ -102,7 +102,7 @@ all = [
   "cratedb-toolkit[influxdb,io,mongodb]",
 ]
 develop = [
-  "black<24",
+  "black[jupyter]<24",
   "mypy==1.6.1",
   "poethepoet<0.25",
   "pyproject-fmt<1.4",
