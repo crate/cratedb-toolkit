@@ -25,7 +25,7 @@ authors = [
   { name = "Marija Selakovic", email = "marija@crate.io" },
   { name = "Andreas Motl", email = "andreas.motl@crate.io" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -46,6 +46,7 @@ classifiers = [
   "Operating System :: Unix",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -85,7 +86,7 @@ dynamic = [
 dependencies = [
   "boltons<24",
   "click<9",
-  "click-aliases<2,>=1.0.3",
+  "click-aliases<2,>=1.0.4",
   "colorama<1",
   "colorlog",
   "crash",
