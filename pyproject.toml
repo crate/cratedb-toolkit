@@ -103,7 +103,7 @@ all = [
 ]
 develop = [
   "black[jupyter]<24",
-  "mypy==1.6.1",
+  "mypy==1.7.1",
   "poethepoet<0.25",
   "pyproject-fmt<1.6",
   "ruff==0.1.3",
