@@ -1,5 +1,7 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import os
+
 import pytest
 import responses
 
@@ -28,7 +30,21 @@ CRATEDB_SETTINGS = {"http.port": CRATEDB_HTTP_PORT}
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_database_schema(session_mocker):
+def prune_environment():
+    """
+    Delete all environment variables starting with `CRATEDB_` or `CRATE_`,
+    to prevent leaking from the developer's environment to the test suite.
+    """
+    delete_items = []
+    for envvar in os.environ.keys():
+        if envvar.startswith("CRATEDB_") or envvar.startswith("CRATE_"):
+            delete_items.append(envvar)
+    for envvar in delete_items:
+        del os.environ[envvar]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_database_schema(session_mocker, prune_environment):
     """
     Configure the machinery to use a different schema for storing subsystem database
     tables, so that they do not accidentally touch the production system.
