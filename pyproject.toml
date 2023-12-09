@@ -94,7 +94,7 @@ dependencies = [
   "croud==1.8",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
-  "sqlalchemy>=2",
+  "sqlalchemy",
   "sqlparse<0.5",
 ]
 [project.optional-dependencies]
