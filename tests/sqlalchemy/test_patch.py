@@ -4,7 +4,6 @@ import json
 import pytest
 import sqlalchemy as sa
 
-from cratedb_toolkit.sqlalchemy import patch_inspector
 from cratedb_toolkit.sqlalchemy.patch import CrateJsonEncoderWithNumPy
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
@@ -37,7 +36,6 @@ def test_inspector_patched(database):
     This verifies that it still works, when it properly has been assigned to
     the `?schema=` connection string URL parameter.
     """
-    patch_inspector()
     tablename = f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"'
     inspector: sa.Inspector = sa.inspect(database.engine)
     database.run_sql(f"CREATE TABLE {tablename} AS SELECT 1")
