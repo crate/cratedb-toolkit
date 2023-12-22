@@ -4,6 +4,8 @@
 ## Unreleased
 - Add `ctk cfr` and `ctk wtf` diagnostics programs
 - Remove support for Python 3.7
+- SQLAlchemy dialect: Use `sqlalchemy-cratedb>=0.37.0`
+  This includes the fix to the `get_table_names()` reflection method.
 
 ## 2024/06/11 v0.0.13
 - Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`
