@@ -91,7 +91,7 @@ dependencies = [
   "colorlog",
   "crash",
   "crate[sqlalchemy]>=0.34",
-  "croud==1.8",
+  "croud==1.10.0",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
   "sqlalchemy",
