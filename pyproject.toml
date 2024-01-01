@@ -106,7 +106,7 @@ develop = [
   "mypy==1.8.0",
   "poethepoet<0.25",
   "pyproject-fmt<1.6",
-  "ruff==0.1.7",
+  "ruff==0.1.9",
   "validate-pyproject<0.16",
 ]
 influxdb = [
