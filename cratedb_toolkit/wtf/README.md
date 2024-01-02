@@ -26,10 +26,15 @@ Display database cluster log messages.
 cratedb-wtf logs
 ```
 
-Statistics.
+Collect and display job statistics.
 ```shell
 cratedb-wtf job-statistics collect
 cratedb-wtf job-statistics view
+```
+
+Record complete outcomes of `info` and `job-info`.
+```shell
+cratedb-wtf record
 ```
 
 

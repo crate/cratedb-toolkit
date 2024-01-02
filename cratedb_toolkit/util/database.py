@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Crate.io Inc.
+# Copyright (c) 2023-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import io
 import os
@@ -28,10 +28,9 @@ class DatabaseAdapter:
     Wrap SQLAlchemy connection to database.
     """
 
-    def __init__(self, dburi: str):
+    def __init__(self, dburi: str, echo: bool = False):
         self.dburi = dburi
-        # TODO: Make `echo=True` configurable.
-        self.engine = sa.create_engine(self.dburi, echo=False)
+        self.engine = sa.create_engine(self.dburi, echo=echo)
         self.connection = self.engine.connect()
 
     def run_sql(self, sql: t.Union[str, Path, io.IOBase], records: bool = False, ignore: str = None):

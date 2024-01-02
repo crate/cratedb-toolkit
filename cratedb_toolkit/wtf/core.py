@@ -1,5 +1,7 @@
 # Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import typing as t
+
 import boltons.ecoutils
 
 from cratedb_toolkit.util.platform import PlatformInfo
@@ -35,13 +37,15 @@ class InfoContainer(InfoContainerBase):
         return super().to_dict(data={"system": self.system(), "database": self.database()})
 
     def system(self):
-        data = {}
+        data: t.Dict[str, t.Any] = {}
         data["remark"] = (
             "This section includes system information about the machine running CrateDB "
             'Toolkit, effectively about the "compute" domain.'
         )
         data["application"] = PlatformInfo.application()
         data["eco"] = boltons.ecoutils.get_profile(scrub=self.scrub)
+        # `version_info` is a list of mixed data types: [3, 11, 6, "final", 0].
+        data["eco"]["python"]["version_info"] = str(data["eco"]["python"]["version_info"])
         # data["libraries"] = PlatformInfo.libraries()  # noqa: ERA001
         return data
 
