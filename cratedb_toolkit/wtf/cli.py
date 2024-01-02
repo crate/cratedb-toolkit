@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023, Crate.io Inc.
+# Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
 import os
@@ -16,6 +16,7 @@ from cratedb_toolkit.util.cli import (
 )
 from cratedb_toolkit.util.data import jd
 from cratedb_toolkit.wtf.core import InfoContainer, JobInfoContainer, LogContainer
+from cratedb_toolkit.wtf.recorder import InfoRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +177,16 @@ def job_statistics_view(ctx: click.Context):
     response["meta"]["remark"] = "WIP! This is a work in progress. The output format will change."
     response["data"]["stats"] = cratedb_toolkit.wtf.query_collector.read_stats()
     jd(response)
+
+
+@make_command(cli, "record", "Record `info` and `job-info` outcomes.")
+@click.pass_context
+def record(ctx: click.Context):
+    cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
+    scrub = ctx.meta.get("scrub", False)
+    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url, echo=False)
+    recorder = InfoRecorder(adapter=adapter, scrub=scrub)
+    recorder.record_forever()
 
 
 @make_command(cli, "serve", help_serve)
