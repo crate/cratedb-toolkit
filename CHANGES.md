@@ -3,6 +3,9 @@
 
 ## Unreleased
 
+
+## 2024/12/18 v0.0.3
+
 - Add SQL runner utility primitives to `io.sql` namespace
 - Add `import_csv_pandas` and `import_csv_dask` utility primitives
 - data: Add subsystem for "loading" data.
@@ -14,6 +17,8 @@
 - MongoDB: Improve UX by using `ctk load table mongodb://...`
 - load table: Refactor to use more OO
 - Add `examples/cloud_import.py`
+- Adapt testcontainers to be agnostic of the testing framework.
+  Thanks, @pilosus.
 
 
 ## 2023/11/06 v0.0.2
