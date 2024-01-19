@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Packaging: Use `cloud` extra to install relevant packages
 
 
 ## 2024/12/18 v0.0.3

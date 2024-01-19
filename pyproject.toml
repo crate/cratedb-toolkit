@@ -91,7 +91,6 @@ dependencies = [
   "colorlog",
   "crash",
   "crate[sqlalchemy]>=0.34",
-  "croud==1.10.0",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
   "sqlalchemy",
@@ -99,7 +98,10 @@ dependencies = [
 ]
 [project.optional-dependencies]
 all = [
-  "cratedb-toolkit[influxdb,io,mongodb]",
+  "cratedb-toolkit[cloud,influxdb,io,mongodb]",
+]
+cloud = [
+  "croud==1.10.0",
 ]
 develop = [
   "black[jupyter]<24",
@@ -271,7 +273,7 @@ format = [
   # Configure Ruff not to auto-fix (remove!):
   # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
   { cmd = "ruff --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
-  { cmd = "pyproject-fmt pyproject.toml" },
+  { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
 ]
 
 lint = [

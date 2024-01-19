@@ -65,7 +65,7 @@ jobs:
         pip install "setuptools>=64" --upgrade
 
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[io,test,develop]
+        pip install --use-pep517 --prefer-binary --editable=.[cloud,io,test,develop]
 
     - name: Run linter and software tests
       run: |

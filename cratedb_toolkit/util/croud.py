@@ -9,9 +9,12 @@ import typing as t
 from unittest.mock import patch
 
 import yaml
-from croud.parser import Argument
 
 from cratedb_toolkit.exception import CroudException
+
+if t.TYPE_CHECKING:
+    from croud.parser import Argument
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class CroudCall:
     fun: t.Callable
-    specs: t.List[Argument]
+    specs: t.List["Argument"]
     arguments: t.List[str]
 
 
