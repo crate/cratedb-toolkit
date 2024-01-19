@@ -8,7 +8,6 @@ from abc import abstractmethod
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.cluster.util import get_cluster_info
 from cratedb_toolkit.exception import CroudException, OperationFailed
-from cratedb_toolkit.io.croud import CloudIo
 from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, InputOutputResource, TableAddress
 
 logger = logging.getLogger(__name__)
@@ -44,6 +43,7 @@ class ManagedCluster(ClusterBase):
 
         https://console.cratedb.cloud
         """
+        from cratedb_toolkit.io.croud import CloudIo
 
         target = target or TableAddress()
 

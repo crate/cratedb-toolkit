@@ -5,7 +5,10 @@ import click
 from cratedb_toolkit.job.croud import jobs_list
 from cratedb_toolkit.util.croud import get_croud_output_formats
 
-output_formats = get_croud_output_formats()
+try:
+    output_formats = get_croud_output_formats()
+except ImportError:
+    output_formats = ["UNKNOWN"]
 
 
 @click.command(name="list-jobs")
