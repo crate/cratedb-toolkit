@@ -104,7 +104,7 @@ cloud = [
   "croud==1.10.0",
 ]
 develop = [
-  "black[jupyter]<24",
+  "black[jupyter]<25",
   "mypy==1.8.0",
   "poethepoet<0.25",
   "pyproject-fmt<1.6",
