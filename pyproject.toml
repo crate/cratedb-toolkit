@@ -101,7 +101,7 @@ all = [
   "cratedb-toolkit[cloud,influxdb,io,mongodb]",
 ]
 cloud = [
-  "croud==1.10.0",
+  "croud==1.10.1",
 ]
 develop = [
   "black[jupyter]<25",
