@@ -1,9 +1,11 @@
-.idea
-.venv*
 *.egg-info
 .eggs
-__pycache__
+.env
+.idea
 *.pyc
+.venv*
+__pycache__
 dist
 .coverage*
 coverage.xml
+/tmp
