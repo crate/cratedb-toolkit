@@ -71,6 +71,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         password: Optional[str] = None,
         dbname: Optional[str] = None,
         cmd_opts: Optional[dict] = None,
+        name: Optional[str] = None,
         **kwargs,
     ) -> None:
         """
@@ -89,7 +90,7 @@ class CrateDBContainer(KeepaliveContainer, DbContainer):
         """
         super().__init__(image=image, **kwargs)
 
-        self._name = "testcontainers-cratedb"
+        self._name = name or "testcontainers-cratedb"
 
         cmd_opts = cmd_opts or {}
         self._command = self._build_cmd({**self.CMD_OPTS, **cmd_opts})
@@ -162,16 +163,17 @@ class CrateDBTestAdapter:
     CrateDB Toolkit's `DatabaseAdapter`, agnostic of the test framework.
     """
 
-    def __init__(self, crate_version: str = "nightly", **kwargs):
+    def __init__(self, crate_version: str = "nightly", name: str = None, **kwargs):
         self.cratedb: Optional[CrateDBContainer] = None
         self.database: Optional[DatabaseAdapter] = None
         self.image: str = "crate/crate:{}".format(crate_version)
+        self.name = name
 
     def start(self, **kwargs):
         """
         Start testcontainer, used for tests set up
         """
-        self.cratedb = CrateDBContainer(image=self.image, **kwargs)
+        self.cratedb = CrateDBContainer(image=self.image, name=self.name, **kwargs)
         self.cratedb.start()
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
