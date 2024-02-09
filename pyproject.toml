@@ -144,7 +144,6 @@ test = [
 testing = [
   "testcontainers<4",
 ]
-
 [project.urls]
 changelog = "https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.rst"
 documentation = "https://github.com/crate-workbench/cratedb-toolkit"
@@ -155,6 +154,8 @@ cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 cratedb-toolkit = "cratedb_toolkit.cli:cli"
 ctk = "cratedb_toolkit.cli:cli"
 migr8 = "cratedb_toolkit.io.mongodb.cli:main"
+[project.entry-points.pytest11]
+cratedb_service = "cratedb_toolkit.testing.pytest"
 
 [tool.black]
 line-length = 120
