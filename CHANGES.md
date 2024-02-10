@@ -2,10 +2,17 @@
 
 
 ## Unreleased
+
+
+## 2024/02/10 v0.0.4
+
 - Packaging: Use `cloud` extra to install relevant packages
+- Dependencies: Add `testing` extra, which installs `testcontainers` only
+- Testing: Export `cratedb_service` fixture as pytest11 entrypoint
+- Sandbox: Reduce number of extras by just using `all`
 
 
-## 2024/12/18 v0.0.3
+## 2024/01/18 v0.0.3
 
 - Add SQL runner utility primitives to `io.sql` namespace
 - Add `import_csv_pandas` and `import_csv_dask` utility primitives
