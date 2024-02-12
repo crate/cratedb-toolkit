@@ -4,6 +4,13 @@
 ## Unreleased
 
 
+## 2024/02/12 v0.0.5
+
+- Do not always activate pytest11 entrypoint to pytest fixture
+  `cratedb_service`, as it depends on the `testcontainers` package,
+  which is not always installed.
+
+
 ## 2024/02/10 v0.0.4
 
 - Packaging: Use `cloud` extra to install relevant packages
