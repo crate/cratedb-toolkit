@@ -106,7 +106,7 @@ cloud = [
 develop = [
   "black[jupyter]<25",
   "mypy==1.8.0",
-  "poethepoet<0.25",
+  "poethepoet<0.26",
   "pyproject-fmt<1.8",
   "ruff==0.1.15",
   "validate-pyproject<0.17",
