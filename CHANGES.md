@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- Added `cratedb_toolkit.datasets` subsystem
+
 
 ## 2024/02/12 v0.0.5
 

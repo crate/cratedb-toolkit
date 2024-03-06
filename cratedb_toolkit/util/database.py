@@ -74,12 +74,18 @@ class DatabaseAdapter:
         else:
             return results
 
-    def count_records(self, tablename_full: str):
+    def count_records(self, tablename_full: str, errors: t.Literal["raise", "ignore"] = "raise"):
         """
         Return number of records in table.
         """
         sql = f"SELECT COUNT(*) AS count FROM {tablename_full};"  # noqa: S608
-        results = self.run_sql(sql=sql)
+        try:
+            results = self.run_sql(sql=sql)
+        except ProgrammingError as ex:
+            is_candidate = "RelationUnknown" not in str(ex)
+            if is_candidate and errors == "raise":
+                raise
+            return 0
         return results[0][0]
 
     def table_exists(self, tablename_full: str) -> bool:
@@ -98,6 +104,28 @@ class DatabaseAdapter:
         Run a `REFRESH TABLE ...` command.
         """
         sql = f"REFRESH TABLE {tablename_full};"  # noqa: S608
+        self.run_sql(sql=sql)
+        return True
+
+    def prune_table(self, tablename_full: str, errors: t.Literal["raise", "ignore"] = "raise"):
+        """
+        Run a `DELETE FROM ...` command.
+        """
+        sql = f"DELETE FROM {tablename_full};"  # noqa: S608
+        try:
+            self.run_sql(sql=sql)
+        except ProgrammingError as ex:
+            is_candidate = "RelationUnknown" not in str(ex)
+            if is_candidate and errors == "raise":
+                raise
+            return False
+        return True
+
+    def drop_table(self, tablename_full: str):
+        """
+        Run a `DROP TABLE ...` command.
+        """
+        sql = f"DROP TABLE IF EXISTS {tablename_full};"  # noqa: S608
         self.run_sql(sql=sql)
         return True
 

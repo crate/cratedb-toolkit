@@ -142,6 +142,7 @@ test = [
   "testcontainers-mongodb==0.0.1rc1",
 ]
 testing = [
+  "python-slugify<9",
   "testcontainers<4",
 ]
 [project.urls]
