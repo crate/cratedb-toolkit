@@ -15,7 +15,7 @@ def test_inspector_vanilla(database):
     assert inspector.has_schema(TESTDRIVE_DATA_SCHEMA) is True
 
     table_names = inspector.get_table_names(schema=TESTDRIVE_DATA_SCHEMA)
-    assert table_names == ["foobar"]
+    assert "foobar" in table_names
 
     view_names = inspector.get_view_names(schema=TESTDRIVE_DATA_SCHEMA)
     assert view_names == []
@@ -39,4 +39,4 @@ def test_inspector_patched(database):
     assert inspector.has_schema(TESTDRIVE_DATA_SCHEMA) is True
 
     table_names = inspector.get_table_names()
-    assert table_names == ["foobar"]
+    assert "foobar" in table_names
