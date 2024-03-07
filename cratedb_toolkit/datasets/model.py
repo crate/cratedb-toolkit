@@ -103,10 +103,12 @@ class DatasetToDatabaseTableAdapter:
         cardinality = self.db.count_records(self.table, errors="ignore")
         has_data = cardinality > 0
 
-        if not has_data and not if_exists == "noop":
-            if self.init_sql is None:
-                raise ValueError("SQL for loading data is missing")
-            self.run_sql(self.init_sql)
+        if if_exists == "noop" and has_data:
+            return
+
+        if self.init_sql is None:
+            raise ValueError("SQL for loading data is missing")
+        self.run_sql(self.init_sql)
 
     def run_sql(self, sql: str):
         for statement in sqlparse.parse(sql):
