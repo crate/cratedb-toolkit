@@ -3,6 +3,9 @@
 
 ## Unreleased
 
+
+## 2024/03/07 v0.0.6
+
 - Added `cratedb_toolkit.datasets` subsystem, for acquiring datasets
   from cratedb-datasets and Kaggle.
 
