@@ -3,8 +3,9 @@
 
 ## Unreleased
 
-- datasets: Fix dataset loader
 
+## 2024/03/07 v0.0.7
+- datasets: Fix dataset loader
 
 ## 2024/03/07 v0.0.6
 
