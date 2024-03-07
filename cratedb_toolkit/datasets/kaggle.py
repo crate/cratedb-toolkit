@@ -2,7 +2,7 @@ from cratedb_toolkit.datasets.model import Dataset
 from cratedb_toolkit.datasets.store import registry
 
 the_weather_dataset_daily = Dataset(
-    title="The Weather Dataset",
+    title="The Weather Dataset: Daily Weather",
     reference="kaggle://guillemservera/global-daily-climate-data/daily_weather.parquet",
     documentation="https://www.kaggle.com/datasets/guillemservera/global-daily-climate-data",
     ddl="""
@@ -27,4 +27,23 @@ the_weather_dataset_daily = Dataset(
 )
 
 
+the_weather_dataset_cities = Dataset(
+    title="The Weather Dataset: Cities",
+    reference="kaggle://guillemservera/global-daily-climate-data/cities.csv",
+    documentation="https://www.kaggle.com/datasets/guillemservera/global-daily-climate-data",
+    ddl="""
+        CREATE TABLE IF NOT EXISTS {table} (
+           "station_id" TEXT,
+           "city_name" TEXT,
+           "country" TEXT,
+           "state" TEXT,
+           "iso2" TEXT,
+           "iso3" TEXT,
+           "loc" GEO_POINT
+        )
+    """,
+)
+
+
 registry.add(the_weather_dataset_daily)
+registry.add(the_weather_dataset_cities)
