@@ -51,7 +51,7 @@ def configure_database_schema(session_mocker, prune_environment):
 
     If not configured otherwise, the test suite currently uses `testdrive-ext`.
     """
-    session_mocker.patch("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
+    session_mocker.patch.dict("os.environ", {"CRATEDB_EXT_SCHEMA": TESTDRIVE_EXT_SCHEMA})
 
 
 @pytest.fixture(scope="session")

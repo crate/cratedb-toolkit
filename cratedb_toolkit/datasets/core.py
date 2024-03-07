@@ -1,3 +1,4 @@
+import cratedb_toolkit.datasets.kaggle  # noqa: F401
 import cratedb_toolkit.datasets.tutorial  # noqa: F401
 
 from .model import Dataset
