@@ -93,15 +93,20 @@ dependencies = [
   "crate[sqlalchemy]>=0.34",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
+  "python-slugify<9",
   "sqlalchemy",
   "sqlparse<0.5",
 ]
 [project.optional-dependencies]
 all = [
-  "cratedb-toolkit[cloud,influxdb,io,mongodb]",
+  "cratedb-toolkit[cloud,datasets,influxdb,io,mongodb]",
 ]
 cloud = [
   "croud==1.10.1",
+]
+datasets = [
+  "datasets<3",
+  "kaggle<2",
 ]
 develop = [
   "black[jupyter]<25",
@@ -142,7 +147,6 @@ test = [
   "testcontainers-mongodb==0.0.1rc1",
 ]
 testing = [
-  "python-slugify<9",
   "testcontainers<4",
 ]
 [project.urls]

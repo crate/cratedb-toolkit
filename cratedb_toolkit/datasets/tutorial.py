@@ -2,33 +2,38 @@ from cratedb_toolkit.datasets.model import Dataset
 from cratedb_toolkit.datasets.store import registry
 
 devices_info = Dataset(
-    name="tutorial/devices-info",
+    reference="tutorial/devices-info",
     data_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/devices_info.json.gz",
-    load_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_devices_info.sql",
+    init_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_devices_info.sql",
+    init_includes_loading=True,
 )
 
 devices_readings = Dataset(
-    name="tutorial/devices-readings",
+    reference="tutorial/devices-readings",
     data_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/devices_readings.json.gz",
-    load_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_devices_readings.sql",
+    init_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_devices_readings.sql",
+    init_includes_loading=True,
 )
 
 marketing = Dataset(
-    name="tutorial/marketing",
+    reference="tutorial/marketing",
     data_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_marketing.json.gz",
-    load_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_marketing.sql",
+    init_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_marketing.sql",
+    init_includes_loading=True,
 )
 
 netflix = Dataset(
-    name="tutorial/netflix",
+    reference="tutorial/netflix",
     data_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_netflix.json.gz",
-    load_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_netflix.sql",
+    init_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_netflix.sql",
+    init_includes_loading=True,
 )
 
 weather = Dataset(
-    name="tutorial/weather-basic",
+    reference="tutorial/weather-basic",
     data_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz",
-    load_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_weather.sql",
+    init_url="https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/load_weather.sql",
+    init_includes_loading=True,
 )
 
 registry.add(devices_info)
