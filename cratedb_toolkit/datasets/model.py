@@ -6,6 +6,11 @@ import sqlparse
 
 from cratedb_toolkit.util import DatabaseAdapter
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  # type: ignore[assignment]
+
 
 @dataclasses.dataclass
 class Dataset:
@@ -68,7 +73,7 @@ class DatasetToDatabaseTableAdapter:
 
     def create(
         self,
-        if_exists: t.Literal["append", "noop", "replace"] = "noop",
+        if_exists: Literal["append", "noop", "replace"] = "noop",
         drop: bool = False,
     ):
         """
@@ -95,7 +100,7 @@ class DatasetToDatabaseTableAdapter:
 
     def load(
         self,
-        if_exists: t.Literal["append", "noop", "replace"] = "noop",
+        if_exists: Literal["append", "noop", "replace"] = "noop",
         drop: bool = False,
     ):
         self.create(if_exists=if_exists, drop=drop)

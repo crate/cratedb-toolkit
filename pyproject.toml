@@ -96,6 +96,7 @@ dependencies = [
   "python-slugify<9",
   "sqlalchemy",
   "sqlparse<0.5",
+  'typing-extensions<5; python_version <= "3.7"',
 ]
 [project.optional-dependencies]
 all = [

@@ -13,6 +13,11 @@ from sqlalchemy.sql.elements import AsBoolean
 
 from cratedb_toolkit.util.data import str_contains
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  # type: ignore[assignment]
+
 
 def run_sql(dburi: str, sql: str, records: bool = False):
     return DatabaseAdapter(dburi=dburi).run_sql(sql=sql, records=records)
@@ -74,7 +79,7 @@ class DatabaseAdapter:
         else:
             return results
 
-    def count_records(self, tablename_full: str, errors: t.Literal["raise", "ignore"] = "raise"):
+    def count_records(self, tablename_full: str, errors: Literal["raise", "ignore"] = "raise"):
         """
         Return number of records in table.
         """
@@ -107,7 +112,7 @@ class DatabaseAdapter:
         self.run_sql(sql=sql)
         return True
 
-    def prune_table(self, tablename_full: str, errors: t.Literal["raise", "ignore"] = "raise"):
+    def prune_table(self, tablename_full: str, errors: Literal["raise", "ignore"] = "raise"):
         """
         Run a `DELETE FROM ...` command.
         """

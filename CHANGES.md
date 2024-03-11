@@ -2,7 +2,7 @@
 
 
 ## Unreleased
-
+- datasets: Fix compatibility with Python 3.7
 
 ## 2024/03/07 v0.0.7
 - datasets: Fix dataset loader
