@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Dependencies: Use `dask[dataframe]`
 
 ## 2024/03/11 v0.0.8
 - datasets: Fix compatibility with Python 3.7
