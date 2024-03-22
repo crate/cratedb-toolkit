@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/03/22 v0.0.9
 - Dependencies: Use `dask[dataframe]`
 
 ## 2024/03/11 v0.0.8
