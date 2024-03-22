@@ -118,7 +118,7 @@ develop = [
   "validate-pyproject<0.17",
 ]
 influxdb = [
-  "influxio==0.1.1",
+  "influxio==0.1.2",
 ]
 io = [
   "cr8",
