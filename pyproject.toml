@@ -148,7 +148,7 @@ test = [
   "testcontainers-mongodb==0.0.1rc1",
 ]
 testing = [
-  "testcontainers<4",
+  "testcontainers<5",
 ]
 [project.urls]
 changelog = "https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.rst"
