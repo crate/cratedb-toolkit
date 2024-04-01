@@ -140,7 +140,7 @@ test = [
   "cratedb-toolkit[testing]",
   "pueblo[dataframe]",
   "pytest<9",
-  "pytest-cov<5",
+  "pytest-cov<6",
   "pytest-mock<4",
   "responses<0.25",
   "testcontainers-azurite==0.0.1rc1",
