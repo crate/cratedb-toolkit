@@ -139,7 +139,7 @@ release = [
 test = [
   "cratedb-toolkit[testing]",
   "pueblo[dataframe]",
-  "pytest<8",
+  "pytest<9",
   "pytest-cov<5",
   "pytest-mock<4",
   "responses<0.25",
