@@ -2,6 +2,9 @@
 
 
 ## Unreleased
+- Dependencies: Unpin upper version bound of `dask`. Otherwise, compatibility
+  issues can not be resolved quickly, like with Python 3.11.9.
+  https://github.com/dask/dask/issues/11038
 
 ## 2024/03/22 v0.0.9
 - Dependencies: Use `dask[dataframe]`
