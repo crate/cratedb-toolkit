@@ -12,7 +12,7 @@ pytest.importorskip(
     "influxdb_client", reason="Skipping InfluxDB tests because 'influxdb-client' package is not installed"
 )
 
-from influxio.model import InfluxDbAdapter
+from influxio.adapter import InfluxDbApiAdapter
 
 
 def test_influxdb2_load_table(caplog, cratedb, influxdb):
@@ -27,7 +27,7 @@ def test_influxdb2_load_table(caplog, cratedb, influxdb):
     df = dff.make("dateindex")
 
     # Populate source database.
-    adapter = InfluxDbAdapter.from_url(influxdb_url)
+    adapter = InfluxDbApiAdapter.from_url(influxdb_url)
     adapter.ensure_bucket()
     adapter.write_df(df)
 
