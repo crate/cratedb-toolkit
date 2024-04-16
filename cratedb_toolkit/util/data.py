@@ -2,6 +2,9 @@ import datetime as dt
 import json
 import sys
 import typing as t
+from pathlib import Path
+
+from yarl import URL
 
 
 def jd(data: t.Any):
@@ -43,3 +46,9 @@ class JSONEncoderPlus(json.JSONEncoder):
             return o.isoformat()
 
         return json.JSONEncoder.default(self, o)
+
+
+def path_from_url(url: str):
+    url_obj = URL(url)
+    path = Path((url_obj.host or "") + (url_obj.path or ""))
+    return path.absolute()

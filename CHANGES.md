@@ -2,7 +2,7 @@
 
 
 ## Unreleased
-- Add `cratedb-wtf` diagnostics program
+- Add `ctk cfr` and `ctk wtf` diagnostics programs
 
 ## 2024/06/11 v0.0.13
 - Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`

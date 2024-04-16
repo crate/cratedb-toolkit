@@ -98,6 +98,7 @@ dependencies = [
   "python-slugify<9",
   "sqlalchemy-cratedb>=0.36.1,<1",
   "sqlparse<0.6",
+  "tqdm<5",
   'typing-extensions<5; python_version <= "3.7"',
   "uvicorn<0.25",
 ]

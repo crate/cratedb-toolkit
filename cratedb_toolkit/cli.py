@@ -3,6 +3,7 @@ from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.util.cli import boot_click
 
+from .cfr.cli import cli as cfr_cli
 from .cluster.cli import cli as cloud_cli
 from .io.cli import cli as io_cli
 from .job.cli import cli_list_jobs
@@ -19,6 +20,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
     return boot_click(ctx, verbose, debug)
 
 
+cli.add_command(cfr_cli, name="cfr")
 cli.add_command(cloud_cli, name="cluster")
 cli.add_command(io_cli, name="load")
 cli.add_command(shell_cli, name="shell")
