@@ -108,3 +108,26 @@ def click_options_from_dataclass(cls):
         return f
 
     return decorator
+
+
+def error_level_by_debug(debug: bool):
+    if debug:
+        return logger.exception
+    else:
+        return logger.error
+
+
+def running_with_debug(ctx: click.Context) -> bool:
+    return (
+        (ctx.parent and ctx.parent.params.get("debug", False))
+        or (ctx.parent and ctx.parent.parent and ctx.parent.parent.params.get("debug", False))
+        or False
+    )
+
+
+def error_logger(about: t.Union[click.Context, bool]) -> t.Callable:
+    if isinstance(about, click.Context):
+        return error_level_by_debug(running_with_debug(about))
+    if isinstance(about, bool):
+        return error_level_by_debug(about)
+    raise TypeError(f"Unknown type for argument: {about}")

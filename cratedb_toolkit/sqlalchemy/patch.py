@@ -1,5 +1,11 @@
+import calendar
+import datetime as dt
+import json
 import typing as t
+from decimal import Decimal
+from uuid import UUID
 
+import numpy as np
 import sqlalchemy as sa
 
 
@@ -35,3 +41,37 @@ def patch_inspector():
         return get_table_names_dist(self, connection=connection, schema=schema, **kw)
 
     dialect.get_table_names = get_table_names  # type: ignore
+
+
+def patch_encoder():
+    import crate.client.http
+
+    crate.client.http.CrateJsonEncoder = CrateJsonEncoderWithNumPy
+
+
+class CrateJsonEncoderWithNumPy(json.JSONEncoder):
+    epoch_aware = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+    epoch_naive = dt.datetime(1970, 1, 1)
+
+    def default(self, o):
+        # Vanilla CrateDB Python.
+        if isinstance(o, (Decimal, UUID)):
+            return str(o)
+        if isinstance(o, dt.datetime):
+            if o.tzinfo is not None:
+                delta = o - self.epoch_aware
+            else:
+                delta = o - self.epoch_naive
+            return int(delta.microseconds / 1000.0 + (delta.seconds + delta.days * 24 * 3600) * 1000.0)
+        if isinstance(o, dt.date):
+            return calendar.timegm(o.timetuple()) * 1000
+
+        # NumPy ndarray and friends.
+        # https://stackoverflow.com/a/49677241
+        if isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
+        elif isinstance(o, np.ndarray):
+            return o.tolist()
+        return json.JSONEncoder.default(self, o)
