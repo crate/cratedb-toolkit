@@ -12,6 +12,7 @@ Prerequisites
 - Tables for storing retention policies need to be created once manually in
   CrateDB. See the file setup/schema.sql in this repository.
 """
+
 import dataclasses
 import logging
 
