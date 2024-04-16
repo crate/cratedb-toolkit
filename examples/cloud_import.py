@@ -32,6 +32,7 @@ Synopsis
     python examples/cloud_import.py e1e38d92-a650-48f1-8a70-8133f2d5c400
 
 """
+
 import logging
 import os
 import sys

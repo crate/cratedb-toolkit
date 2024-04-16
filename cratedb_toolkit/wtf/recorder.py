@@ -40,7 +40,8 @@ class InfoRecorder:
                 )
             )
             self.adapter.connection.execute(
-                sa.text(f"INSERT INTO {table} (info) VALUES (:info)"), {"info": sample.to_dict()["data"]}  # noqa: S608
+                sa.text(f"INSERT INTO {table} (info) VALUES (:info)"),  # noqa: S608
+                {"info": sample.to_dict()["data"]},
             )
 
     def record_forever(self):
