@@ -41,7 +41,7 @@ def cli(ctx: click.Context, cratedb_sqlalchemy_url: str, verbose: bool, debug: b
 
 
 @make_command(cli, "sys-export")
-@click.argument("target", envvar="CFR_TARGET", type=str, required=False, default="file://./cfr/sys")
+@click.argument("target", envvar="CFR_TARGET", type=str, required=False, default="file://./cfr")
 @click.pass_context
 def sys_export(ctx: click.Context, target: str):
     cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]

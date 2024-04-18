@@ -3,6 +3,7 @@
 
 ## Unreleased
 - Add `ctk cfr` and `ctk wtf` diagnostics programs
+- Remove support for Python 3.7
 
 ## 2024/06/11 v0.0.13
 - Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`

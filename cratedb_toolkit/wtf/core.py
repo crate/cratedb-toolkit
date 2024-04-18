@@ -1,6 +1,7 @@
 # Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import typing as t
+from functools import cached_property
 
 import boltons.ecoutils
 
@@ -32,6 +33,10 @@ class InfoContainer(InfoContainerBase):
             Library.Shards.translog_uncommitted,
             Library.Shards.translog_uncommitted_size,
         )
+
+    @cached_property
+    def cluster_name(self):
+        return self.evaluate_element(Library.Health.cluster_name)
 
     def to_dict(self, data=None):
         return super().to_dict(data={"system": self.system(), "database": self.database()})
