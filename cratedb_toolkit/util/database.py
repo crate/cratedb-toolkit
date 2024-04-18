@@ -78,11 +78,11 @@ class DatabaseAdapter:
         else:
             return results
 
-    def count_records(self, tablename_full: str, errors: Literal["raise", "ignore"] = "raise"):
+    def count_records(self, name: str, errors: Literal["raise", "ignore"] = "raise"):
         """
         Return number of records in table.
         """
-        sql = f"SELECT COUNT(*) AS count FROM {tablename_full};"  # noqa: S608
+        sql = f"SELECT COUNT(*) AS count FROM {quote_table_name(name)};"  # noqa: S608
         try:
             results = self.run_sql(sql=sql)
         except ProgrammingError as ex:
@@ -92,30 +92,30 @@ class DatabaseAdapter:
             return 0
         return results[0][0]
 
-    def table_exists(self, tablename_full: str) -> bool:
+    def table_exists(self, name: str) -> bool:
         """
         Check whether given table exists.
         """
-        sql = f"SELECT 1 FROM {tablename_full} LIMIT 1;"  # noqa: S608
+        sql = f"SELECT 1 FROM {quote_table_name(name)} LIMIT 1;"  # noqa: S608
         try:
             self.run_sql(sql=sql)
             return True
         except Exception:
             return False
 
-    def refresh_table(self, tablename_full: str):
+    def refresh_table(self, name: str):
         """
         Run a `REFRESH TABLE ...` command.
         """
-        sql = f"REFRESH TABLE {tablename_full};"  # noqa: S608
+        sql = f"REFRESH TABLE {quote_table_name(name)};"  # noqa: S608
         self.run_sql(sql=sql)
         return True
 
-    def prune_table(self, tablename_full: str, errors: Literal["raise", "ignore"] = "raise"):
+    def prune_table(self, name: str, errors: Literal["raise", "ignore"] = "raise"):
         """
         Run a `DELETE FROM ...` command.
         """
-        sql = f"DELETE FROM {tablename_full};"  # noqa: S608
+        sql = f"DELETE FROM {quote_table_name(name)};"  # noqa: S608
         try:
             self.run_sql(sql=sql)
         except ProgrammingError as ex:
@@ -125,11 +125,11 @@ class DatabaseAdapter:
             return False
         return True
 
-    def drop_table(self, tablename_full: str):
+    def drop_table(self, name: str):
         """
         Run a `DROP TABLE ...` command.
         """
-        sql = f"DROP TABLE IF EXISTS {tablename_full};"  # noqa: S608
+        sql = f"DROP TABLE IF EXISTS {quote_table_name(name)};"  # noqa: S608
         self.run_sql(sql=sql)
         return True
 
@@ -332,3 +332,21 @@ def decode_database_table(url: str) -> t.Tuple[str, str]:
         if url_.scheme == "crate" and not database:
             database = url_.query_params.get("schema")
     return database, table
+
+
+def quote_table_name(name: str) -> str:
+    """
+    Quote table name if not happened already.
+
+    In:  foo
+    Out: "foo"
+
+    In:  "foo"
+    Out: "foo"
+
+    In:  foo.bar
+    Out: foo.bar
+    """
+    if '"' not in name and "." not in name:
+        name = f'"{name}"'
+    return name
