@@ -107,6 +107,7 @@ class SystemTableExporter:
         return pl.read_database(
             query=sql,  # noqa: S608
             connection=self.adapter.engine,
+            infer_schema_length=1000,
         )
 
     def dump_table(self, frame: pl.DataFrame, file: t.Union[t.TextIO, None] = None):
@@ -132,6 +133,7 @@ class SystemTableExporter:
         path_data.mkdir(parents=True, exist_ok=True)
         table_count = 0
         for tablename in tqdm(system_tables, disable=None):
+            logger.debug(f"Exporting table: {tablename}")
             if tablename in SystemTableKnowledge.REFLECTION_BLOCKLIST:
                 continue
 

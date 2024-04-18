@@ -32,6 +32,18 @@
 - Store `CRATEDB_CLOUD_CLUSTER_ID` into `cratedb_toolkit.constants`
 - Cloud Tests: Verify file uploads
 - Docs: Add examples in more languages: Java, JavaScript, Lua, PHP
+- Docs:
+  - https://pypi.org/project/red-panda/
+  - https://pypi.org/project/redpanda/
+    https://github.com/amancevice/redpanda
+  - https://pypi.org/project/alyeska/
+- Kafka:
+  - https://github.com/bakdata/streams-bootstrap
+  - https://pypi.org/project/kashpy/
+- CFR/WTF
+  - https://github.com/peekjef72/sql_exporter
+- Migrate / I/O adapter
+  - https://community.cratedb.com/t/migrating-from-postgresql-or-timescale-to-cratedb/620
 
 ## Iteration +2.5
 - Retention: Improve retention subsystem CLI API.
