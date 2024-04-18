@@ -27,6 +27,7 @@ from tqdm import tqdm
 from cratedb_toolkit.sqlalchemy.patch import patch_encoder
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import error_logger
+from cratedb_toolkit.wtf.core import InfoContainer
 
 logger = logging.getLogger(__name__)
 
@@ -96,16 +97,16 @@ class SystemTableExporter:
         self.target = target
         self.data_format = data_format
         self.adapter = DatabaseAdapter(dburi=self.dburi)
-        self.engine = self.adapter.engine
+        self.info = InfoContainer(adapter=self.adapter)
         self.inspector = SystemTableInspector(dburi=self.dburi)
         self.target.mkdir(exist_ok=True, parents=True)
 
     def read_table(self, tablename: str) -> pl.DataFrame:
         sql = f'SELECT * FROM "{SystemTableKnowledge.SYS_SCHEMA}"."{tablename}"'  # noqa: S608
-        # logger.info(f"Running SQL: {sql}")  # noqa: ERA001
+        logger.debug(f"Running SQL: {sql}")
         return pl.read_database(
             query=sql,  # noqa: S608
-            connection=self.engine,
+            connection=self.adapter.engine,
         )
 
     def dump_table(self, frame: pl.DataFrame, file: t.Union[t.TextIO, None] = None):
@@ -122,7 +123,7 @@ class SystemTableExporter:
 
     def save(self) -> Path:
         timestamp = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-        path = self.target / timestamp
+        path = self.target / self.info.cluster_name / timestamp / "sys"
         logger.info(f"Exporting system tables to: {path}")
         system_tables = self.inspector.table_names()
         path_schema = path / ExportSettings.SCHEMA_PATH
@@ -133,8 +134,6 @@ class SystemTableExporter:
         for tablename in tqdm(system_tables, disable=None):
             if tablename in SystemTableKnowledge.REFLECTION_BLOCKLIST:
                 continue
-
-            table_count += 1
 
             path_table_schema = path_schema / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.sql"
             path_table_data = path_data / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.{self.data_format}"
@@ -148,6 +147,9 @@ class SystemTableExporter:
             df = self.read_table(tablename=tablename)
             if df.is_empty():
                 continue
+
+            table_count += 1
+
             mode = "w"
             if self.data_format in ["parquet", "pq"]:
                 mode = "wb"
@@ -187,6 +189,7 @@ class SystemTableImporter:
 
         logger.info(f"Importing system tables from: {self.source}")
 
+        table_count = 0
         for tablename in tqdm(self.table_names()):
             tablename_restored = ExportSettings.TABLE_FILENAME_PREFIX + tablename
 
@@ -196,6 +199,8 @@ class SystemTableImporter:
             # Skip import of non-existing or empty files.
             if not path_table_data.exists() or path_table_data.stat().st_size == 0:
                 continue
+
+            table_count += 1
 
             # Invoke SQL DDL.
             schema_sql = path_table_schema.read_text()
@@ -208,6 +213,7 @@ class SystemTableImporter:
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
 
+        logger.info(f"Successfully imported {table_count} system tables")
         # df.to_pandas().to_sql(name=tablename, con=self.adapter.engine, if_exists="append", index=False)  # noqa: ERA001, E501
 
     def load_table(self, path: Path) -> pl.DataFrame:
