@@ -24,6 +24,7 @@ from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer, asbool
 from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import quote_table_name
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +189,7 @@ class CrateDBTestAdapter:
         """
         if tables and self.database:
             for reset_table in tables:
-                self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
+                self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {quote_table_name(reset_table)};")
 
     def get_connection_url(self, *args, **kwargs):
         """
