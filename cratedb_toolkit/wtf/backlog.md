@@ -10,6 +10,8 @@
 - High-level analysis, evaluating a set of threshold rules 
 - High-level summary reports with heuristics support
 - Network diagnostics?
+- Provide a GUI?
+  https://github.com/davep/pispy
 
 ## Iteration +3
 - Make it work with CrateDB Cloud.
