@@ -103,7 +103,7 @@ all = [
   "cratedb-toolkit[cloud,datasets,influxdb,io,mongodb]",
 ]
 cloud = [
-  "croud==1.10.1",
+  "croud==1.11.1",
 ]
 datasets = [
   "datasets<3",
