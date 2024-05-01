@@ -142,7 +142,7 @@ test = [
   "pytest<9",
   "pytest-cov<6",
   "pytest-mock<4",
-  "responses<0.25",
+  "responses<0.26",
   "testcontainers-azurite==0.0.1rc1",
   "testcontainers-minio==0.0.1rc1",
   "testcontainers-mongodb==0.0.1rc1",
