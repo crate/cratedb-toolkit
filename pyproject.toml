@@ -111,10 +111,10 @@ datasets = [
 ]
 develop = [
   "black[jupyter]<25",
-  "mypy==1.8.0",
+  "mypy<1.11",
   "poethepoet<0.27",
   "pyproject-fmt<1.8",
-  "ruff==0.3.4",
+  "ruff<0.5",
   "validate-pyproject<0.17",
 ]
 influxdb = [
