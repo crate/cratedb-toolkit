@@ -1,4 +1,4 @@
-# Changes for cratedb-toolkit
+# Changelog
 
 
 ## Unreleased
