@@ -1,4 +1,4 @@
-# Data retention and expiration toolkit for CrateDB
+# Retention and Expiration
 
 ## About
 
@@ -78,7 +78,8 @@ This retention policy implements the following directive.
 > the column `ts_day`, which is older than **1** day at the given cutoff date when
 > running the retention job.
 
-[implementation](cratedb_toolkit/retention/strategy/delete.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
+[implementation][strategy-delete] | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-implementation-of-data-retention-policy/913) 
+
 
 ### REALLOCATE
 
@@ -107,7 +108,8 @@ This retention policy implements the following directive.
 > the column `ts_day`, which is older than **60** days at the given cutoff date, to
 > nodes tagged with the `storage=warm` attribute.
 
-[implementation](cratedb_toolkit/retention/strategy/reallocate.py) | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
+[implementation][strategy-reallocate] | [tutorial](https://community.crate.io/t/cratedb-and-apache-airflow-building-a-hot-cold-storage-data-retention-policy/934)
+
 
 ### SNAPSHOT
 
@@ -149,7 +151,8 @@ This retention policy implements the following directive.
 > date, to a previously created repository called `export_cold`. Delete the corresponding
 > data afterwards.
 
-[implementation](cratedb_toolkit/retention/strategy/snapshot.py) | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
+[implementation][strategy-snapshot] | [tutorial](https://community.crate.io/t/building-a-data-retention-policy-for-cratedb-with-apache-airflow/1001)
+
 
 ## Data model
 
@@ -278,7 +281,7 @@ installed by using the corresponding Python package, or it can alternatively be 
 on the command line using Podman or Docker.
 
 For installing the package, please refer to the [install documentation
-section](../README.md#install).
+section](#install).
 
 ```shell
 cratedb-retention --version
@@ -474,7 +477,10 @@ job.start()
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
-[`examples/retention_retire_cutoff.py`]: examples/retention_retire_cutoff.py
+[`examples/retention_retire_cutoff.py`]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/retention_retire_cutoff.py
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
+[strategy-delete]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/delete.py
+[strategy-reallocate]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/reallocate.py
+[strategy-snapshot]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/snapshot.py
 [time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009
