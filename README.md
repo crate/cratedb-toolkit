@@ -65,15 +65,17 @@ ctk --version
 
 ## Development
 
-For installing a development sandbox, please refer to the [development sandbox
-documentation].
+Contributions are very much welcome. Please visit the [](#sandbox)
+documentation to learn about how to spin up a sandbox environment on your
+workstation, or create a [ticket][Issues] to report a bug or share an idea
+about a possible feature.
+
 
 
 [Changelog]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.md
 [Community Forum]: https://community.crate.io/
 [CrateDB]: https://crate.io/products/cratedb
 [CrateDB Cloud]: https://console.cratedb.cloud/
-[development sandbox documentation]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/doc/sandbox.md
 [Documentation]: https://cratedb-toolkit.readthedocs.io/
 [DWIM]: https://en.wikipedia.org/wiki/DWIM
 [Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues

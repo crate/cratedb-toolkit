@@ -15,65 +15,6 @@
 :start-line: 12
 ```
 
-## About
-
-This software package includes a range of modules and subsystems to work
-with CrateDB and CrateDB Cloud efficiently.
-
-You can use CrateDB Toolkit to run data I/O procedures and automation tasks
-of different kinds around CrateDB and CrateDB Cloud. It can be used both as
-a standalone program, and as a library.
-
-It aims for [DWIM]-like usefulness and [UX], and provides CLI and HTTP
-interfaces, and others.
-
-
-## Features
-
-- **Capable:** Connect to the InfluxDB HTTP API, or read from an InfluxDB
-  TSM data directory directly.
-
-- **Versatile:** Use it as a command-line program, pipeline element,
-  or as a library within your own applications.
-
-- **Polyglot:** Support I/O operations between InfluxDB, any SQL database
-  supported by SQLAlchemy, file formats supported by pandas/Dask, and
-  the native InfluxDB line protocol (ILP), on both import and export
-  directions.
-
-
-## Synopsis
-
-```shell
-
-# Export from API to database.
-influxio copy \
-    "http://example:token@localhost:8086/testdrive/demo" \
-    "sqlite://export.sqlite?table=demo"
-
-# Export from data directory to line protocol format.
-influxio copy \
-    "file:///path/to/influxdb/engine?bucket-id=372d1908eab801a6&measurement=demo" \
-    "file://export.lp"
-```
-
-
-## Documentation
-
-Please visit the [README](#readme) document to learn what you can do with
-the `influxio` package. Effectively, it is all about the `influxio copy`
-primitive, which accepts a range of variants on its `SOURCE` and `TARGET`
-arguments, in URL formats.
-
-
-## Development
-
-Contributions are very much welcome. Please visit the [](#sandbox)
-documentation to learn about how to spin up a sandbox environment on your
-workstation, or create a [ticket][Issues] to report a bug or share an idea
-about a possible feature.
-
-
 
 ```{toctree}
 :maxdepth: 3
