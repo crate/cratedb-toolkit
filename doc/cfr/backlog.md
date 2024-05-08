@@ -1,4 +1,4 @@
-# CFR Backlog
+# CrateDB CFR Backlog
 
 ## Iteration +1
 - Software tests
@@ -16,6 +16,8 @@
 - Wie komme ich ans `crate.yaml`?
 - Wie komme ich an die Logfiles? `docker log`?
 - Use OpenTelemetry traces in one way or another?
+- Possibly tap into profiling, using JFR, [profefe](https://github.com/profefe/profefe),
+  and/or [Grafana Pyroscope](https://github.com/grafana/pyroscope).
 
 ## Done
 - Cluster name muss in `cfr/<name>/sys/<timestamp>`, für multi-tenancy operations.

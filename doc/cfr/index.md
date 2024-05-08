@@ -1,8 +1,14 @@
+(cfr)=
 # CrateDB Cluster Flight Recorder (CFR)
 
 CFR helps collecting information about CrateDB clusters for support requests
 and self-service debugging.
 
+## Install
+```shell
+pip install --upgrade cratedb-toolkit
+```
+Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
 
 ## Synopsis
 
@@ -25,7 +31,7 @@ ctk cfr sys-import file://./cfr/crate/2024-04-18T01-13-41/sys
 ```
 
 
-## Configuration
+## Usage
 
 ### Target and source directories
 
@@ -82,4 +88,12 @@ cfr sys-export
 Import system table information.
 ```shell
 cfr sys-import cfr/crate/2024-04-18T01-13-41/sys
+```
+
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+backlog
 ```

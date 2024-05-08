@@ -25,6 +25,8 @@ install
 datasets
 io/index
 retention
+Cluster Flight Recorder (CFR) <cfr/index>
+Ad Hoc Diagnosis (WTF) <wtf/index>
 ```
 
 ```{toctree}
