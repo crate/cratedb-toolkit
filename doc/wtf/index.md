@@ -1,8 +1,14 @@
-# cratedb-wtf
+(wtf)=
+# CrateDB WTF
 
 A diagnostics utility in the spirit of [git-wtf], [grafana-wtf], and [pip.wtf].
 It is still a work-in-progress, but it is usable already.
 
+## Install
+```shell
+pip install --upgrade cratedb-toolkit
+```
+Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
 
 ## Synopsis
 
@@ -47,6 +53,14 @@ cratedb-wtf --debug serve --reload
 Consume collected status information via HTTP.
 ```shell
 http http://127.0.0.1:4242/info/all
+```
+
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+backlog
 ```
 
 

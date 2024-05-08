@@ -1,8 +1,13 @@
-# cratedb-wtf backlog
+# CrateDB WTF Backlog
 
 ## Iteration +1
 - Display differences to the standard configuration
 - `tail -f` for `sys.jobs_log` and friends
+  See [discussion and suggestions](https://github.com/crate-workbench/cratedb-toolkit/pull/88#pullrequestreview-1759838520).
+- Check if the patch includes relevant details from here.
+  https://community.cratedb.com/t/monitoring-an-on-premises-cratedb-cluster-with-prometheus-and-grafana/1236
+- Inform about table sizes, like Admin UI is doing it.
+- Inform about [shard imbalances](https://community.cratedb.com/t/cratedb-database-logs-showing-shard-is-now-inactive-and-threads-are-getting-blocked/1617/16).
 
 ## Iteration +2
 - Make `cratedb-wtf logs` also optionally consider `sys.` tables. 
