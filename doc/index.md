@@ -11,16 +11,8 @@
 [![Status][badge-status]][project-pypi]
 [![Package version][badge-package-version]][project-pypi]
 
-» [Documentation]
-| [Changelog]
-| [PyPI]
-| [Issues]
-| [Source code]
-| [License]
-
-
 ```{include} readme.md
-:start-line: 22
+:start-line: 12
 ```
 
 ## About
@@ -89,9 +81,9 @@ about a possible feature.
 :hidden:
 
 install
+datasets
 io/index
 retention
-datasets
 ```
 
 ```{toctree}
