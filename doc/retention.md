@@ -3,7 +3,9 @@
 ## About
 
 A data retention and expiration management subsystem for CrateDB, implementing
-different retention strategies.
+multiple strategies.
+
+### Details
 
 The application manages the life-cycle of data stored in CrateDB, handling
 concerns of data expiry, size reduction, and archival. Within a system storing

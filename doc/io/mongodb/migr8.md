@@ -1,13 +1,15 @@
-# MongoDB → CrateDB Migration Tool
+(migr8)=
+# migr8
+
+## About
 
 A utility program, called `migr8`, supporting data migrations
 between MongoDB and CrateDB.
 
-A one-stop command `ctk load table mongodb://...`, wrapping the `migr8`
-steps into a complete pipeline, to facilitate convenient data transfers.
-
-
-## About
+:::{tip}
+Please also visit the documentation about the [](#mongodb-loader)
+to learn about a more high-level interface.
+:::
 
 ### Details
 
