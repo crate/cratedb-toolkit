@@ -41,7 +41,7 @@ Contributions of all kinds are much welcome, in order to make it more solid,
 and to add features.
 
 Breaking changes should be expected until a 1.0 release, so version pinning is
-strongly recommended, especially when you use it as a library.
+strongly recommended, especially when using it as a library.
 
 
 ## Install
@@ -53,12 +53,13 @@ pip install --upgrade cratedb-toolkit
 
 Verify installation.
 ```shell
-cratedb-toolkit --version
+ctk --version
 ```
 
 Run with Docker.
 ```shell
-docker run --rm "ghcr.io/crate-workbench/cratedb-toolkit" cratedb-toolkit --version
+alias ctk="docker run --rm "ghcr.io/crate-workbench/cratedb-toolkit" ctk"
+ctk --version
 ```
 
 

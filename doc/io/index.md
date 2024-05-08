@@ -1,9 +1,13 @@
-# Load and extract data into/from CrateDB
+# I/O Subsystem
 
+Load and extract data into/from CrateDB.
 
 ## About
+Using the InfluxDB and MongoDB I/O subsystems, you can transfer data from
+[InfluxDB] and [MongoDB] to [CrateDB] and [CrateDB Cloud].
 
-A one-stop command `ctk load table` to load data into CrateDB database tables.
+## What's inside
+A one-stop command `ctk load table` to load data into database tables.
 
 
 ## Installation
@@ -78,76 +82,16 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 - Exercise data imports from AWS S3 and other Object Storage providers.
 
 
-## InfluxDB
+```{toctree}
+:maxdepth: 2
+:hidden:
 
-Using the adapter to [influxio], you can transfer data from InfluxDB to CrateDB.
-
-Import two data points into InfluxDB.
-```shell
-export INFLUX_ORG=example
-export INFLUX_TOKEN=token
-export INFLUX_BUCKET_NAME=testdrive
-export INFLUX_MEASUREMENT=demo
-influx bucket create
-influx write --precision=s "${INFLUX_MEASUREMENT},region=amazonas temperature=42.42,humidity=84.84 1556896326"
-influx write --precision=s "${INFLUX_MEASUREMENT},region=amazonas temperature=45.89,humidity=77.23,windspeed=5.4 1556896327"
-influx query "from(bucket:\"${INFLUX_BUCKET_NAME}\") |> range(start:-100y)"
-```
-
-Transfer data.
-```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
-crash --command "SELECT * FROM testdrive.demo;"
-```
-
-Todo: More convenient table querying.
-```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
-ctk shell --command "SELECT * FROM testdrive.demo;"
-ctk show table "testdrive.demo"
+InfluxDB <influxdb/index>
+MongoDB <mongodb/index>
 ```
 
 
-## MongoDB
-
-Using the MongoDB subsystem, you can transfer data from MongoDB to CrateDB.
-
-Import two data points into MongoDB.
-```shell
-mongosh mongodb://localhost:27017/testdrive <<EOF
-db.demo.remove({})
-db.demo.insertMany([
-  {
-    timestamp: new Date(1556896326),
-    region: "amazonas",
-    temperature: 42.42,
-    humidity: 84.84,
-  },
-  {
-    timestamp: new Date(1556896327),
-    region: "amazonas",
-    temperature: 45.89,
-    humidity: 77.23,
-    windspeed: 5.4,
-  },
-])
-db.demo.find({})
-EOF
-```
-
-Todo: Use `mongoimport`.
-```shell
-mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
-```
-
-Transfer data.
-```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table mongodb://localhost:27017/testdrive/demo
-crash --command "SELECT * FROM testdrive.demo;"
-```
-
-
+[CrateDB]: https://github.com/crate/crate
 [CrateDB Cloud]: https://console.cratedb.cloud/
-[influxio]: https://github.com/daq-tools/influxio
+[InfluxDB]: https://github.com/influxdata/influxdb
+[MongoDB]: https://github.com/mongodb/mongo

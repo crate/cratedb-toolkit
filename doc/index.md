@@ -89,7 +89,9 @@ about a possible feature.
 :hidden:
 
 install
+io/index
 retention
+datasets
 ```
 
 ```{toctree}
@@ -103,14 +105,6 @@ backlog
 ```
 
 
-
-[Changelog]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.md
-[development documentation]: https://cratedb-toolkit.readthedocs.io/sandbox.html
-[Documentation]: https://cratedb-toolkit.readthedocs.io/
-[Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues
-[License]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
-[PyPI]: https://pypi.org/project/cratedb-toolkit/
-[Source code]: https://github.com/crate-workbench/cratedb-toolkit
 [cratedb-toolkit]: https://cratedb-toolkit.readthedocs.io/
 [influxio]: https://influxio.readthedocs.io/
 

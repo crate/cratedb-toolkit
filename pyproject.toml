@@ -127,6 +127,7 @@ docs = [
   "sphinxext-opengraph<1",
 ]
 influxdb = [
+  "cratedb-toolkit[io]",
   "influxio==0.2.0",
 ]
 io = [
@@ -135,7 +136,7 @@ io = [
   "pandas<3,>=1",
 ]
 mongodb = [
-  "cr8",
+  "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
   "python-bsonjs<0.5",
@@ -221,7 +222,7 @@ markers = [
 [tool.ruff]
 line-length = 120
 
-select = [
+lint.select = [
   # Bandit
   "S",
   # Bugbear
@@ -249,7 +250,7 @@ select = [
   "RET",
 ]
 
-extend-ignore = [
+lint.extend-ignore = [
   # zip() without an explicit strict= parameter
   "B905",
   # df is a bad variable name. Be kinder to your future self.
@@ -267,7 +268,7 @@ extend-exclude = [
   "workbench.py",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "doc/conf.py" = ["A001", "ERA001"]
 "tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
 "examples/*" = ["T201"]  # Allow `print`
@@ -303,12 +304,12 @@ format = [
   { cmd = "black ." },
   # Configure Ruff not to auto-fix (remove!):
   # unused imports (F401), unused variables (F841), `print` statements (T201), and commented-out code (ERA001).
-  { cmd = "ruff --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
+  { cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001 ." },
   { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
 ]
 
 lint = [
-  { cmd = "ruff ." },
+  { cmd = "ruff check ." },
   { cmd = "black --check ." },
   { cmd = "validate-pyproject pyproject.toml" },
   { cmd = "mypy" },
