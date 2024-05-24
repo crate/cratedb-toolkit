@@ -17,6 +17,9 @@ https://docs.sqlalchemy.org/en/20/faq/metadata_schema.html#how-can-i-get-the-cre
 
 import datetime as dt
 import logging
+import os
+import tarfile
+import tempfile
 import typing as t
 from pathlib import Path
 
@@ -87,19 +90,42 @@ class SystemTableInspector:
         return sql
 
 
-class SystemTableExporter:
+class PathProvider:
+
+    def __init__(self, path: t.Union[Path]):
+        self.path = path
+
+
+class Archive:
+
+    def __init__(self, path_provider: PathProvider):
+        self.path_provider = path_provider
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.target_path = self.path_provider.path
+        self.path_provider.path = Path(self.temp_dir.name)
+
+    def close(self):
+        self.temp_dir.cleanup()
+
+    def make_tarfile(self) -> Path:
+        source_path = self.path_provider.path
+        with tarfile.open(self.target_path, "x:gz") as tar:
+            tar.add(source_path.absolute(), arcname=os.path.basename(source_path))
+        return self.target_path
+
+
+class SystemTableExporter(PathProvider):
     """
     Export schema and data from CrateDB system tables.
     """
 
     def __init__(self, dburi: str, target: t.Union[Path], data_format: DataFormat = "jsonl"):
+        super().__init__(target)
         self.dburi = dburi
-        self.target = target
         self.data_format = data_format
         self.adapter = DatabaseAdapter(dburi=self.dburi)
         self.info = InfoContainer(adapter=self.adapter)
         self.inspector = SystemTableInspector(dburi=self.dburi)
-        self.target.mkdir(exist_ok=True, parents=True)
 
     def read_table(self, tablename: str) -> pl.DataFrame:
         sql = f'SELECT * FROM "{SystemTableKnowledge.SYS_SCHEMA}"."{tablename}"'  # noqa: S608
@@ -123,8 +149,9 @@ class SystemTableExporter:
             raise NotImplementedError(f"Output format not implemented: {self.data_format}")
 
     def save(self) -> Path:
+        self.path.mkdir(exist_ok=True, parents=True)
         timestamp = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-        path = self.target / self.info.cluster_name / timestamp / "sys"
+        path = self.path / self.info.cluster_name / timestamp / "sys"
         logger.info(f"Exporting system tables to: {path}")
         system_tables = self.inspector.table_names()
         path_schema = path / ExportSettings.SCHEMA_PATH

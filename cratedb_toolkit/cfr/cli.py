@@ -6,7 +6,7 @@ import sys
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.cfr.systable import SystemTableExporter, SystemTableImporter
+from cratedb_toolkit.cfr.systable import Archive, SystemTableExporter, SystemTableImporter
 from cratedb_toolkit.util.cli import (
     boot_click,
     error_logger,
@@ -46,8 +46,20 @@ def cli(ctx: click.Context, cratedb_sqlalchemy_url: str, verbose: bool, debug: b
 def sys_export(ctx: click.Context, target: str):
     cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
     try:
-        stc = SystemTableExporter(dburi=cratedb_sqlalchemy_url, target=path_from_url(target))
+        target_path = path_from_url(target)
+        stc = SystemTableExporter(dburi=cratedb_sqlalchemy_url, target=target_path)
+
+        archive = None
+        if target_path.name.endswith(".tgz") or target_path.name.endswith(".tar.gz"):
+            archive = Archive(stc)
+
         path = stc.save()
+
+        if archive is not None:
+            path = archive.make_tarfile()
+            archive.close()
+            logger.info(f"Created archive file {target}")
+
         jd({"path": str(path)})
     except Exception as ex:
         error_logger(ctx)(ex)
