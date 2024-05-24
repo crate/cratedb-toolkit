@@ -6,7 +6,7 @@ It is still a work-in-progress, but it is usable already.
 
 ## Install
 ```shell
-pip install --upgrade cratedb-toolkit
+pip install --upgrade 'cratedb-toolkit'
 ```
 Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
 
@@ -45,6 +45,11 @@ cratedb-wtf record
 
 
 ## HTTP API
+
+Install.
+```shell
+pip install --upgrade 'cratedb-toolkit[service]'
+```
 
 Expose collected status information. 
 ```shell
