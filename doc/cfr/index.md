@@ -6,7 +6,7 @@ and self-service debugging.
 
 ## Install
 ```shell
-pip install --upgrade cratedb-toolkit
+pip install --upgrade 'cratedb-toolkit[cfr]'
 ```
 Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
 

@@ -96,15 +96,20 @@ dependencies = [
   "polars<0.21",
   "python-dotenv<2",
   "python-slugify<9",
+  "pyyaml<7",
   "sqlalchemy-cratedb>=0.36.1,<1",
   "sqlparse<0.6",
   "tqdm<5",
   'typing-extensions<5; python_version <= "3.7"',
-  "uvicorn<0.25",
+  "yarl<1.10",
 ]
 [project.optional-dependencies]
 all = [
-  "cratedb-toolkit[cloud,datasets,influxdb,io,mongodb]",
+  "cratedb-toolkit[full,influxdb,mongodb]",
+]
+cfr = [
+  "pandas<3,>=1",
+  "pyarrow<17",
 ]
 cloud = [
   "croud==1.11.1",
@@ -130,6 +135,9 @@ docs = [
   "sphinxcontrib-mermaid<1",
   "sphinxext-opengraph<1",
 ]
+full = [
+  "cratedb-toolkit[cfr,cloud,datasets,io,service]",
+]
 influxdb = [
   "cratedb-toolkit[io]",
   "influxio>=0.2.1,<1",
@@ -149,6 +157,10 @@ mongodb = [
 release = [
   "build<2",
   "twine<6",
+]
+service = [
+  "fastapi<0.105",
+  "uvicorn<0.25",
 ]
 test = [
   "cratedb-toolkit[testing]",
