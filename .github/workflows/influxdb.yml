@@ -89,4 +89,4 @@ jobs:
         flags: influxdb
         env_vars: OS,PYTHON
         name: codecov-umbrella
-        fail_ci_if_error: true
+        fail_ci_if_error: false
