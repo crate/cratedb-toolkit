@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Dependencies: Update to `influxio<1`
 
 ## 2024/04/10 v0.0.10
 - Dependencies: Unpin upper version bound of `dask`. Otherwise, compatibility

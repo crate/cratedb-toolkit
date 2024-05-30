@@ -128,7 +128,7 @@ docs = [
 ]
 influxdb = [
   "cratedb-toolkit[io]",
-  "influxio==0.2.0",
+  "influxio<1",
 ]
 io = [
   "cr8",
