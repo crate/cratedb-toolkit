@@ -5,10 +5,13 @@ import logging
 import typing as t
 from abc import abstractmethod
 
+from yarl import URL
+
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.cluster.util import get_cluster_info
 from cratedb_toolkit.exception import CroudException, OperationFailed
 from cratedb_toolkit.model import ClusterInformation, DatabaseAddress, InputOutputResource, TableAddress
+from cratedb_toolkit.util.data import asbool
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +112,11 @@ class StandaloneCluster(ClusterBase):
         if source_url.startswith("influxdb"):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
-            source_url = source_url.replace("influxdb2://", "http://")
+            http_scheme = "http://"
+            source_url_obj = URL(source_url)
+            if asbool(source_url_obj.query.get("ssl")):
+                http_scheme = "https://"
+            source_url = source_url.replace("influxdb2://", http_scheme)
             if not influxdb_copy(source_url, target_url, progress=True):
                 msg = "Data loading failed"
                 logger.error(msg)

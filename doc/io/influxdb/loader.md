@@ -16,9 +16,14 @@ working with InfluxDB.
 pip install --upgrade 'cratedb-toolkit[influxdb]'
 ```
 
-## Example
-Import two data points into InfluxDB.
+## Examples
 
+### Workstation
+
+An exemplary walkthrough, copying data from InfluxDB to CrateDB, both services
+expected to be listening on `localhost`.
+
+Import two data points into InfluxDB.
 ```shell
 export INFLUX_ORG=example
 export INFLUX_TOKEN=token
@@ -47,6 +52,19 @@ ctk show table "testdrive.demo"
 :::{todo}
 - More convenient table querying.
 :::
+
+
+### Cloud
+
+A canonical invocation for copying data from InfluxDB Cloud to CrateDB Cloud.
+Please note the `ssl=true` query parameter at the end of both database
+connection URLs.
+
+```shell
+ctk load table \
+  "influxdb2://9fafc869a91a3517:T268DVLDHD8...oPic4A==@eu-central-1-1.aws.cloud2.influxdata.com/testdrive/demo?ssl=true" \
+  --cratedb-sqlalchemy-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+```
 
 
 [influxio]: inv:influxio:*:label#index
