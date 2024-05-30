@@ -2,7 +2,8 @@
 
 
 ## Unreleased
-- Dependencies: Update to `influxio<1`
+- Fix InfluxDB Cloud <-> CrateDB Cloud connectivity by propagating
+  `ssl=true` query argument. Update dependencies to `influxio>=0.2.1,<1`.
 
 ## 2024/04/10 v0.0.10
 - Dependencies: Unpin upper version bound of `dask`. Otherwise, compatibility
