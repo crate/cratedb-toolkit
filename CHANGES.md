@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/05/30 v0.0.11
 - Fix InfluxDB Cloud <-> CrateDB Cloud connectivity by propagating
   `ssl=true` query argument. Update dependencies to `influxio>=0.2.1,<1`.
 
