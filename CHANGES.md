@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/05/30 v0.0.12
 - Fix InfluxDB Cloud <-> CrateDB Cloud connectivity by using
   `ssl=true` query argument also for `influxdb2://` source URLs.
 
