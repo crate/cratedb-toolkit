@@ -115,7 +115,7 @@ develop = [
   "poethepoet<0.27",
   "pyproject-fmt<1.8",
   "ruff<0.5",
-  "validate-pyproject<0.17",
+  "validate-pyproject<0.19",
 ]
 docs = [
   "furo",
