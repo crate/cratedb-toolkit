@@ -119,7 +119,7 @@ develop = [
 ]
 docs = [
   "furo",
-  "myst-parser[linkify]<3,>=0.18",
+  "myst-parser[linkify]>=0.18,<4",
   "sphinx-autobuild==2021.3.14", # Newer versions stopped "watching" appropriately?
   "sphinx-copybutton",
   "sphinx-design-elements<1",
