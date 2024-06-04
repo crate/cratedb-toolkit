@@ -20,7 +20,7 @@ def filenames(path: Path):
     return sorted([item.name for item in path.iterdir()])
 
 
-def test_cfr_cli_export(cratedb, tmp_path, caplog):
+def test_cfr_cli_export_success(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-export` works.
     """
@@ -49,7 +49,26 @@ def test_cfr_cli_export(cratedb, tmp_path, caplog):
     assert len(data_files) >= 10
 
 
-def test_cfr_cli_import(cratedb, tmp_path, caplog):
+def test_cfr_cli_export_failure(cratedb, tmp_path, caplog):
+    """
+    Verify `ctk cfr sys-export` failure.
+    """
+
+    # Invoke command.
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": "crate://foo.bar/", "CFR_TARGET": str(tmp_path)})
+    result = runner.invoke(
+        cli,
+        args="--debug sys-export",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 1
+
+    # Verify log output.
+    assert "Failed to establish a new connection" in caplog.text or "Failed to resolve" in caplog.text
+    assert result.output == ""
+
+
+def test_cfr_cli_import_success(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-import` works.
     """
@@ -108,3 +127,22 @@ def test_cfr_cli_import(cratedb, tmp_path, caplog):
 
     cratedb.database.run_sql('REFRESH TABLE "sys-operations"')
     assert cratedb.database.count_records("sys-operations") == 1
+
+
+def test_cfr_cli_import_failure(cratedb, tmp_path, caplog):
+    """
+    Verify `ctk cfr sys-import` failure.
+    """
+
+    # Invoke command.
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": "crate://foo.bar/", "CFR_SOURCE": str(tmp_path)})
+    result = runner.invoke(
+        cli,
+        args="--debug sys-import",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 1
+
+    # Verify log output.
+    assert "Failed to establish a new connection" in caplog.text or "Failed to resolve" in caplog.text
+    assert result.output == ""
