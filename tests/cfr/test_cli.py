@@ -43,10 +43,10 @@ def test_cfr_cli_export(cratedb, tmp_path, caplog):
     assert filenames(path) == ["data", "schema"]
 
     schema_files = filenames(path / "schema")
-    data_files = filenames(path / "schema")
+    data_files = filenames(path / "data")
 
     assert len(schema_files) >= 19
-    assert len(data_files) >= 19
+    assert len(data_files) >= 10
 
 
 def test_cfr_cli_import(cratedb, tmp_path, caplog):
