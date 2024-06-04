@@ -144,8 +144,9 @@ cli.add_command(job_statistics, name="job-statistics", aliases=["jobstats"])
 
 
 @make_command(job_statistics, "collect", "Collect queries from sys.jobs_log.")
+@click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
 @click.pass_context
-def job_statistics_collect(ctx: click.Context):
+def job_statistics_collect(ctx: click.Context, once: bool):
     """
     Run jobs_log collector.
 
@@ -153,7 +154,11 @@ def job_statistics_collect(ctx: click.Context):
     """
     import cratedb_toolkit.wtf.query_collector
 
-    cratedb_toolkit.wtf.query_collector.main()
+    cratedb_toolkit.wtf.query_collector.init()
+    if once:
+        cratedb_toolkit.wtf.query_collector.record_once()
+    else:
+        cratedb_toolkit.wtf.query_collector.record_forever()
 
 
 @make_command(job_statistics, "view", "View job statistics about collected queries.")
@@ -180,13 +185,17 @@ def job_statistics_view(ctx: click.Context):
 
 
 @make_command(cli, "record", "Record `info` and `job-info` outcomes.")
+@click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
 @click.pass_context
-def record(ctx: click.Context):
+def record(ctx: click.Context, once: bool):
     cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
     adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url, echo=False)
     recorder = InfoRecorder(adapter=adapter, scrub=scrub)
-    recorder.record_forever()
+    if once:
+        recorder.record_once()
+    else:
+        recorder.record_forever()
 
 
 @make_command(cli, "serve", help_serve)

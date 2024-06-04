@@ -164,6 +164,7 @@ service = [
 ]
 test = [
   "cratedb-toolkit[testing]",
+  "httpx<0.28",
   "pueblo[dataframe]",
   "pytest<9",
   "pytest-cov<6",
@@ -288,6 +289,7 @@ extend-exclude = [
 [tool.ruff.lint.per-file-ignores]
 "doc/conf.py" = ["A001", "ERA001"]
 "tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
+"tests/wtf/test_http.py" = ["E402"]
 "examples/*" = ["T201"]  # Allow `print`
 "cratedb_toolkit/retention/cli.py" = ["T201"]  # Allow `print`
 "cratedb_toolkit/sqlalchemy/__init__.py" = ["F401"]  # Allow `module´ imported but unused

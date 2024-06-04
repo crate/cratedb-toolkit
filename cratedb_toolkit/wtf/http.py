@@ -2,9 +2,9 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
 import os
-import typing as t
 from functools import lru_cache
 
+import typing_extensions as t
 from fastapi import Depends, FastAPI, HTTPException
 
 from cratedb_toolkit.util import DatabaseAdapter
