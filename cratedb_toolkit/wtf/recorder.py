@@ -55,4 +55,5 @@ class InfoRecorder:
                 self.record_once()
             except Exception:
                 logger.exception("Failed to record information snapshot")
+            logger.info(f"Sleeping for {self.interval_seconds} seconds")
             time.sleep(self.interval_seconds)

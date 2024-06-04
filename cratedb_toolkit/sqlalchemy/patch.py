@@ -5,8 +5,14 @@ import typing as t
 from decimal import Decimal
 from uuid import UUID
 
-import numpy as np
 import sqlalchemy as sa
+
+try:
+    import numpy as np
+
+    has_numpy = True
+except ImportError:
+    has_numpy = False
 
 
 def patch_inspector():
@@ -68,10 +74,11 @@ class CrateJsonEncoderWithNumPy(json.JSONEncoder):
 
         # NumPy ndarray and friends.
         # https://stackoverflow.com/a/49677241
-        if isinstance(o, np.integer):
-            return int(o)
-        elif isinstance(o, np.floating):
-            return float(o)
-        elif isinstance(o, np.ndarray):
-            return o.tolist()
+        if has_numpy:
+            if isinstance(o, np.integer):
+                return int(o)
+            elif isinstance(o, np.floating):
+                return float(o)
+            elif isinstance(o, np.ndarray):
+                return o.tolist()
         return json.JSONEncoder.default(self, o)

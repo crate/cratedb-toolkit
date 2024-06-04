@@ -14,6 +14,13 @@ from cratedb_toolkit.util.common import setup_logging
 TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
 RESET_TABLES = [
+    # FIXME: Let all subsystems use configured schema instead of hard-coded ones.
+    '"doc"."clusterinfo"',
+    '"doc"."jobinfo"',
+    '"ext"."clusterinfo"',
+    '"ext"."jobinfo"',
+    '"stats"."statement_log"',
+    '"stats"."last_execution"',
     f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policy"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
     f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',

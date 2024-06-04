@@ -102,7 +102,7 @@ def init_stmts(stmts):
 
 
 def write_stats_to_db():
-    logger.info("Writing statistics to database")
+    logger.info(f"Writing statistics to database table: {stmt_log_table}")
     write_query_stmt = (
         f"INSERT INTO {stmt_log_table} "
         f"(id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used) "
@@ -230,17 +230,22 @@ def scrape_db():
     last_scrape = next_scrape
 
 
-def run():
+def record_once():
+    logger.info("Recording information snapshot")
     scrape_db()
     write_stats_to_db()
 
 
-def main():
-    init()
+def record_forever():
     while True:
-        run()
+        record_once()
         logger.info(f"Sleeping for {interval} seconds")
         time.sleep(interval)
+
+
+def main():
+    init()
+    record_forever()
 
 
 if __name__ == "__main__":
