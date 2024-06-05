@@ -59,7 +59,7 @@ def cratedb_custom_service():
     """
     Provide a CrateDB service instance to the test suite.
     """
-    db = CrateDBTestAdapter()
+    db = CrateDBTestAdapter(name="testcontainers-cratedb-custom")
     db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
     db.reset(tables=RESET_TABLES)
     yield db
