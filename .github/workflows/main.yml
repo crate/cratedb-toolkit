@@ -9,11 +9,9 @@ on:
   # Allow job to be triggered manually.
   workflow_dispatch:
 
-  # Run job each second night after CrateDB nightly has been published.
-  # The reason about "why each second night", is because free capacity
-  # for Codecov uploads is limited.
+  # Run job each night after CrateDB nightly has been published.
   schedule:
-    - cron: '0 3 */2 * *'
+    - cron: '0 3 * * *'
 
 # Cancel in-progress jobs when pushing to the same branch.
 concurrency:
