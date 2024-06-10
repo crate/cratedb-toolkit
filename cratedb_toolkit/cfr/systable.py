@@ -166,7 +166,7 @@ class SystemTableExporter(PathProvider):
 
             path_table_schema = path_schema / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.sql"
             path_table_data = path_data / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.{self.data_format}"
-            tablename_out = f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}"
+            tablename_out = self.adapter.quote_relation_name(f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}")
 
             # Write schema file.
             with open(path_table_schema, "w") as fh_schema:

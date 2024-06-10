@@ -108,6 +108,22 @@ def test_cfr_cli_export_failure(cratedb, tmp_path, caplog):
     assert result.output == ""
 
 
+def test_cfr_cli_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    result = runner.invoke(
+        cli,
+        args="--debug sys-export",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    path = Path(json.loads(result.output)["path"])
+    sys_cluster_table_schema = path / "schema" / "sys-cluster.sql"
+    with open(sys_cluster_table_schema, "r") as f:
+        content = f.read()
+        assert '"sys-cluster"' in content, "Table name missing or not quoted"
+
+
 def test_cfr_cli_import_success(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-import` works.
