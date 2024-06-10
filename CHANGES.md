@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`
 
 ## 2024/05/30 v0.0.12
 - Fix InfluxDB Cloud <-> CrateDB Cloud connectivity by using

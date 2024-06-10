@@ -20,6 +20,7 @@ def setup_logging(level=logging.INFO, verbose: bool = False):
         logging.getLogger("sqlalchemy").setLevel(level)
 
     logging.getLogger("crate.client").setLevel(level)
+    logging.getLogger("sqlalchemy_cratedb").setLevel(level)
     logging.getLogger("urllib3.connectionpool").setLevel(level)
 
     # logging.getLogger("docker.auth").setLevel(logging.INFO)  # noqa: ERA001
