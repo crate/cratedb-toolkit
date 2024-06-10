@@ -244,7 +244,11 @@ class DatabaseAdapter:
         Import CSV data using pandas.
         """
         import pandas as pd
-        from crate.client.sqlalchemy.support import insert_bulk
+
+        try:
+            from sqlalchemy_cratedb.support import insert_bulk
+        except ImportError:  # pragma: nocover
+            from crate.client.sqlalchemy.support import insert_bulk
 
         df = pd.read_csv(filepath)
         with self.engine.connect() as connection:
@@ -267,7 +271,11 @@ class DatabaseAdapter:
         """
         import dask.dataframe as dd
         import pandas as pd
-        from crate.client.sqlalchemy.support import insert_bulk
+
+        try:
+            from sqlalchemy_cratedb.support import insert_bulk
+        except ImportError:  # pragma: nocover
+            from crate.client.sqlalchemy.support import insert_bulk
 
         # Set a few defaults.
         npartitions = npartitions or os.cpu_count()
