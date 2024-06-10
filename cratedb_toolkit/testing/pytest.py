@@ -10,7 +10,7 @@ try:
         """
         Provide a CrateDB service instance to the test suite.
         """
-        db = CrateDBTestAdapter()
+        db = CrateDBTestAdapter(crate_version="nightly")
         db.start()
         yield db
         db.stop()
