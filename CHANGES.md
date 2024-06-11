@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+## 2024/06/11 v0.0.13
 - Dependencies: Migrate from `crate[sqlalchemy]` to `sqlalchemy-cratedb`
 
 ## 2024/05/30 v0.0.12
