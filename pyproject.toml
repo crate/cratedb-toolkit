@@ -90,11 +90,10 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crash",
-  "crate==1.0.0dev0",
   'importlib-metadata; python_version <= "3.7"',
   "python-dotenv<2",
   "python-slugify<9",
-  "sqlalchemy-cratedb",
+  "sqlalchemy-cratedb>=0.36.1,<1",
   "sqlparse<0.6",
   'typing-extensions<5; python_version <= "3.7"',
 ]
