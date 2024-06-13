@@ -33,6 +33,38 @@ class DatabaseAdapter:
         self.engine = sa.create_engine(self.dburi, echo=echo)
         self.connection = self.engine.connect()
 
+    def quote_relation_name(self, ident: str) -> str:
+        """
+        Quote the given, possibly full-qualified, relation name if needed.
+
+        In:  foo
+        Out: foo
+
+        In:  Foo
+        Out: "Foo"
+
+        In:  "Foo"
+        Out: "Foo"
+
+        In:  foo.bar
+        Out: "foo"."bar"
+
+        In:  "foo.bar"
+        Out: "foo.bar"
+        """
+        if ident[0] == '"' and ident[len(ident) - 1] == '"':
+            return ident
+        if "." in ident:
+            parts = ident.split(".")
+            if len(parts) > 2:
+                raise ValueError(f"Invalid relation name {ident}")
+            return (
+                self.engine.dialect.identifier_preparer.quote_schema(parts[0])
+                + "."
+                + self.engine.dialect.identifier_preparer.quote(parts[1])
+            )
+        return self.engine.dialect.identifier_preparer.quote(ident=ident)
+
     def run_sql(self, sql: t.Union[str, Path, io.IOBase], records: bool = False, ignore: str = None):
         """
         Run SQL statement, and return results, optionally ignoring exceptions.
@@ -82,7 +114,7 @@ class DatabaseAdapter:
         """
         Return number of records in table.
         """
-        sql = f"SELECT COUNT(*) AS count FROM {quote_table_name(name)};"  # noqa: S608
+        sql = f"SELECT COUNT(*) AS count FROM {self.quote_relation_name(name)};"  # noqa: S608
         try:
             results = self.run_sql(sql=sql)
         except ProgrammingError as ex:
@@ -96,7 +128,7 @@ class DatabaseAdapter:
         """
         Check whether given table exists.
         """
-        sql = f"SELECT 1 FROM {quote_table_name(name)} LIMIT 1;"  # noqa: S608
+        sql = f"SELECT 1 FROM {self.quote_relation_name(name)} LIMIT 1;"  # noqa: S608
         try:
             self.run_sql(sql=sql)
             return True
@@ -107,7 +139,7 @@ class DatabaseAdapter:
         """
         Run a `REFRESH TABLE ...` command.
         """
-        sql = f"REFRESH TABLE {quote_table_name(name)};"  # noqa: S608
+        sql = f"REFRESH TABLE {self.quote_relation_name(name)};"  # noqa: S608
         self.run_sql(sql=sql)
         return True
 
@@ -115,7 +147,7 @@ class DatabaseAdapter:
         """
         Run a `DELETE FROM ...` command.
         """
-        sql = f"DELETE FROM {quote_table_name(name)};"  # noqa: S608
+        sql = f"DELETE FROM {self.quote_relation_name(name)};"  # noqa: S608
         try:
             self.run_sql(sql=sql)
         except ProgrammingError as ex:
@@ -129,7 +161,7 @@ class DatabaseAdapter:
         """
         Run a `DROP TABLE ...` command.
         """
-        sql = f"DROP TABLE IF EXISTS {quote_table_name(name)};"  # noqa: S608
+        sql = f"DROP TABLE IF EXISTS {self.quote_relation_name(name)};"  # noqa: S608
         self.run_sql(sql=sql)
         return True
 
@@ -332,21 +364,3 @@ def decode_database_table(url: str) -> t.Tuple[str, str]:
         if url_.scheme == "crate" and not database:
             database = url_.query_params.get("schema")
     return database, table
-
-
-def quote_table_name(name: str) -> str:
-    """
-    Quote table name if not happened already.
-
-    In:  foo
-    Out: "foo"
-
-    In:  "foo"
-    Out: "foo"
-
-    In:  foo.bar
-    Out: foo.bar
-    """
-    if '"' not in name and "." not in name:
-        name = f'"{name}"'
-    return name
