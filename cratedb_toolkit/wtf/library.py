@@ -423,16 +423,11 @@ class Library:
             name="shard_allocation",
             sql="""
                 SELECT
-                    IF(s.primary = TRUE, 'primary', 'replica') AS shard_type,
-                    COALESCE(shards, 0) AS shards
-                FROM
-                    UNNEST([true, false]) s(primary)
-                LEFT JOIN (
-                  SELECT primary, COUNT(*) AS shards
+                    IF(primary = TRUE, 'primary', 'replica') AS shard_type,
+                    COUNT(*) AS shards
                   FROM sys.allocations
                   WHERE current_state != 'STARTED'
                   GROUP BY 1
-                ) a ON s.primary = a.primary;
             """,
             label="Shard Allocation",
             description="Support identifying issues with shard allocation.",
