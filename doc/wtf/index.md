@@ -51,7 +51,7 @@ Install.
 pip install --upgrade 'cratedb-toolkit[service]'
 ```
 
-Expose collected status information. 
+Expose collected status information.
 ```shell
 cratedb-wtf --debug serve --reload
 ```
@@ -59,6 +59,17 @@ Consume collected status information via HTTP.
 ```shell
 http http://127.0.0.1:4242/info/all
 ```
+
+Make the service listen on a specific address.
+```shell
+ctk wtf serve --listen 0.0.0.0:8042
+```
+
+:::{note}
+The `--reload` option is suitable for development scenarios where you intend
+to have the changes to the code become available while editing, in near
+real-time.
+:::
 
 
 ```{toctree}

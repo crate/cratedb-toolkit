@@ -15,7 +15,8 @@ def start_service(app: str, listen_address: t.Union[str, None] = None, reload: b
     if listen_address is None:
         listen_address = "127.0.0.1:4242"
 
-    host, port = listen_address.split(":")
+    host, _, port = listen_address.partition(":")
+    port = port or "0"
     port_int = int(port)
 
     logger.info(f"Starting HTTP web service on http://{listen_address}")

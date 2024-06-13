@@ -38,4 +38,4 @@ def info(category: str, adapter: t.Annotated[DatabaseAdapter, Depends(database_a
 
 
 def start(listen_address: t.Union[str, None] = None, reload: bool = False):  # pragma: no cover
-    start_service(app="cratedb_toolkit.wtf.http:app")
+    start_service(app="cratedb_toolkit.wtf.http:app", listen_address=listen_address, reload=reload)
