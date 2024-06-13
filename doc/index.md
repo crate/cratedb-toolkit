@@ -34,9 +34,10 @@ Ad Hoc Diagnosis (WTF) <wtf/index>
 :caption: Workbench
 :hidden:
 
-sandbox
 changes
 backlog
+sandbox
+release
 ```
 
 
