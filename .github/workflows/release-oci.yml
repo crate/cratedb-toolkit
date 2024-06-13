@@ -1,5 +1,5 @@
 # Stage OCI container images through GitHub Actions (GHA) to GitHub Container Registry (GHCR).
-name: OCI
+name: Release OCI to GHCR
 
 on:
   pull_request: ~
