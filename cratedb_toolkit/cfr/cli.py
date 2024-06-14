@@ -1,6 +1,7 @@
 # Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
+import multiprocessing
 import sys
 
 import click
@@ -77,3 +78,10 @@ def sys_import(ctx: click.Context, source: str):
     except Exception as ex:
         error_logger(ctx)(ex)
         sys.exit(1)
+
+
+if getattr(sys, "frozen", False):
+    # https://github.com/pyinstaller/pyinstaller/issues/6368
+    multiprocessing.freeze_support()
+    # https://stackoverflow.com/questions/45090083/freeze-a-program-created-with-pythons-click-pacage
+    cli(sys.argv[1:])

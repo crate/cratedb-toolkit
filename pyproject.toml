@@ -110,8 +110,8 @@ all = [
   "cratedb-toolkit[full,influxdb,mongodb]",
 ]
 cfr = [
-  "pandas<3,>=1",
-  "pyarrow<17",
+  "pandas<2.2",
+  "pyarrow<16.1",
 ]
 cloud = [
   "croud==1.11.1",
@@ -167,6 +167,9 @@ release = [
   "build<2",
   "twine<6",
 ]
+release-cfr = [
+  "pyinstaller<7",
+]
 service = [
   "fastapi<0.112",
   "uvicorn<0.31",
@@ -195,6 +198,7 @@ documentation = "https://github.com/crate-workbench/cratedb-toolkit"
 homepage = "https://github.com/crate-workbench/cratedb-toolkit"
 repository = "https://github.com/crate-workbench/cratedb-toolkit"
 [project.scripts]
+cratedb-cfr = "cratedb_toolkit.cfr.cli:cli"
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 cratedb-toolkit = "cratedb_toolkit.cli:cli"
 cratedb-wtf = "cratedb_toolkit.wtf.cli:cli"
@@ -355,3 +359,5 @@ release = [
 ]
 
 test = { cmd = "pytest" }
+
+build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr"}

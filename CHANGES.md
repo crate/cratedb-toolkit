@@ -7,6 +7,7 @@
 - MongoDB: Added adapter amalgamating PyMongo to use CrateDB as backend
 - SQLAlchemy: Clean up and refactor SQLAlchemy polyfills
   to `cratedb_toolkit.util.sqlalchemy`
+- CFR: Build as a self-contained program using PyInstaller
 
 ## 2024/06/18 v0.0.14
 - Add `ctk cfr` and `ctk wtf` diagnostics programs
