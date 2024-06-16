@@ -58,7 +58,7 @@ ctk --version
 
 Run with Docker.
 ```shell
-alias ctk="docker run --rm "ghcr.io/crate-workbench/cratedb-toolkit" ctk"
+alias ctk="docker run --rm ghcr.io/crate-workbench/cratedb-toolkit ctk"
 ctk --version
 ```
 
