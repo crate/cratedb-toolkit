@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/06/18 v0.0.14
 - Add `ctk cfr` and `ctk wtf` diagnostics programs
 - Remove support for Python 3.7
 - SQLAlchemy dialect: Use `sqlalchemy-cratedb>=0.37.0`
