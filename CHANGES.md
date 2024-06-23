@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- IO: Added the `if-exists` query parameter by updating to influxio 0.4.0.
 
 ## 2024/06/18 v0.0.14
 - Add `ctk cfr` and `ctk wtf` diagnostics programs

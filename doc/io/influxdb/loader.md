@@ -16,7 +16,7 @@ working with InfluxDB.
 pip install --upgrade 'cratedb-toolkit[influxdb]'
 ```
 
-## Examples
+## Usage
 
 ### Workstation
 
@@ -64,6 +64,27 @@ connection URLs.
 ctk load table \
   "influxdb2://9fafc869a91a3517:T268DVLDHD8...oPic4A==@eu-central-1-1.aws.cloud2.influxdata.com/testdrive/demo?ssl=true" \
   --cratedb-sqlalchemy-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+```
+
+## Parameters
+
+### `if-exists`
+
+The target table will be created automatically, if it does not exist. If it
+does exist, the `if-exists` URL query parameter can be used to configure this
+behavior. The default value is `fail`, the possible values are:
+
+* `fail`: Raise a ValueError.
+* `replace`: Drop the table before inserting new values.
+* `append`: Insert new values to the existing table.
+
+:::{rubric} Example usage
+:::
+In order to always replace the target table, i.e. to drop and re-create it
+prior to inserting data, use `?if-exists=replace`.
+```shell
+export CRATEDB_SQLALCHEMY_URL="crate://crate@localhost:4200/testdrive/demo?if-exists=replace"
+ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
 ```
 
 
