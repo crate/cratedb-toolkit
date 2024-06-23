@@ -140,7 +140,7 @@ full = [
 ]
 influxdb = [
   "cratedb-toolkit[io]",
-  "influxio>=0.3.1,<1",
+  "influxio>=0.4,<1",
 ]
 io = [
   "cr8",
