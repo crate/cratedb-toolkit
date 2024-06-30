@@ -66,9 +66,11 @@ def load_table(
     elif cratedb_sqlalchemy_url:
         address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
     elif cratedb_http_url:
-        address = DatabaseAddress.from_httpuri(cratedb_sqlalchemy_url)
+        address = DatabaseAddress.from_httpuri(cratedb_http_url)
     else:
         raise KeyError(error_message)
+
+    logger.info(f"Database address: {address}")
 
     # Encapsulate source and target parameters.
     resource = InputOutputResource(url=url, format=format_, compression=compression)

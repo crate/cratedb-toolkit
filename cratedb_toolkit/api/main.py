@@ -4,7 +4,9 @@ import json
 import logging
 import typing as t
 from abc import abstractmethod
+from collections import OrderedDict
 
+from sqlalchemy_cratedb.support import table_kwargs
 from yarl import URL
 
 from cratedb_toolkit.api.guide import GuidingTexts
@@ -107,6 +109,19 @@ class StandaloneCluster(ClusterBase):
         ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
         ctk load table mongodb://localhost:27017/testdrive/demo
         """
+
+        logger.info(f"Loading table from {resource} to {self.address}")
+
+        # Acquire optional special CrateDB SQL DDL options.
+        ddl_dialect_options = self.address.sqlalchemy_dialect_options
+        if ddl_dialect_options:
+            logger.info(f"Using CrateDB dialect options: {ddl_dialect_options}")
+
+        # Override SQL DDL options for SQLAlchemy at runtime.
+        with table_kwargs(**ddl_dialect_options):
+            return self.load_table_real(resource, target)
+
+    def load_table_real(self, resource: InputOutputResource, target: TableAddress):
         source_url = resource.url
         target_url = self.address.dburi
         if source_url.startswith("influxdb"):

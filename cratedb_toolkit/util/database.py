@@ -113,6 +113,10 @@ class DatabaseAdapter:
     def count_records(self, name: str, errors: Literal["raise", "ignore"] = "raise"):
         """
         Return number of records in table.
+
+        metadata = sa.MetaData()
+        query = sa.select(sa.func.count()).select_from(sa.Table(TABLE_NAME, metadata))
+        results = session.execute(query)
         """
         sql = f"SELECT COUNT(*) AS count FROM {self.quote_relation_name(name)};"  # noqa: S608
         try:

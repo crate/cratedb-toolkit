@@ -73,6 +73,13 @@ class DatabaseAddress:
         uri.path = ""
         return uri, TableAddress(database, table)
 
+    @property
+    def sqlalchemy_dialect_options(self) -> t.Dict[str, str]:
+        """
+        Compute dictionary of SQLAlchemy dialect options in `<dialect>_<option> = <value>` format.
+        """
+        return SQLAlchemyDialectOptions.from_url(self.uri)
+
 
 @dataclasses.dataclass
 class TableAddress:
