@@ -12,11 +12,13 @@ import time
 from collections import OrderedDict
 
 import typing_extensions as t
+from boltons.iterutils import flatten
 from fastapi import APIRouter, Depends, Request
 from vasuki import generate_nagamani19_hash
 
 from cratedb_toolkit.adapter.rockset.server.dependencies import database_adapter
 from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import get_table_names
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,10 @@ async def execute(request: Request, adapter: t.Annotated[DatabaseAdapter, Depend
     user_request = await request.json()
     time_start = time.time_ns()
 
+    # Decode SQL query expression.
     sql = user_request["sql"]["query"]
+    table_names = flatten(get_table_names(sql))
+
     parameters = None
     if "parameters" in user_request["sql"]:
         parameters = translate_parameters(user_request["sql"]["parameters"])
@@ -53,9 +58,7 @@ async def execute(request: Request, adapter: t.Annotated[DatabaseAdapter, Depend
     )
     time_duration = time.time_ns() - time_start
     return {
-        "collections": [
-            "UNKNOWN",
-        ],
+        "collections": table_names,
         "query_id": query_id,
         "results": results,
         "results_total_doc_count": len(results),
