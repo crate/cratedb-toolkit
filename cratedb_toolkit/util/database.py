@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlalchemy as sa
 import sqlparse
 from boltons.urlutils import URL
+from cratedb_sqlparse import sqlparse as sqlparse_cratedb
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 
@@ -370,3 +371,14 @@ def decode_database_table(url: str) -> t.Tuple[str, str]:
         if url_.scheme == "crate" and not database:
             database = url_.query_params.get("schema")
     return database, table
+
+
+def get_table_names(sql: str) -> t.List[t.List[str]]:
+    """
+    Decode table names from SQL statements.
+    """
+    names = []
+    statements = sqlparse_cratedb(sql)
+    for statement in statements:
+        names.append([statement.metadata.table_name])
+    return names

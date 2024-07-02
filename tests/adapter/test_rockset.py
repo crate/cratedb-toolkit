@@ -87,7 +87,7 @@ def test_rockset_query(cratedb, mocker):
     assert response.status_code == 200
 
     assert info == {
-        "collections": ["UNKNOWN"],
+        "collections": ["foobar"],
         "query_id": mock.ANY,
         "results": [{"id": "foo", "field": "value"}],
         "results_total_doc_count": 1,
