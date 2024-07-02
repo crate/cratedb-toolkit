@@ -23,6 +23,7 @@
 
 install
 datasets
+adapter/index
 io/index
 retention
 Cluster Flight Recorder (CFR) <cfr/index>
