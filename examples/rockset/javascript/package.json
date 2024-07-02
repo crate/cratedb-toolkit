@@ -1,0 +1,40 @@
+{
+  "name": "@cratedb/rockset-client-example",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "description": "Example program for using the official Rockset Javascript/Typescript Client with CrateDB backend.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "directories": {
+  },
+  "dependencies": {
+    "@rockset/client": "0.9.2"
+  },
+  "devDependencies": {
+  },
+  "resolutions": {
+    "node-fetch": "^2.6.7"
+  },
+  "repository": "https://github.com/crate-workbench/cratedb-toolkit",
+  "scripts": {
+    "basic": "node basic.js"
+  },
+  "author": "Crate.io GmbH",
+  "keywords": [
+    "rockset",
+    "database",
+    "cratedb",
+    "emulator",
+    "information analysis"
+  ],
+  "bugs": {
+    "url": "https://github.com/crate-workbench/cratedb-toolkit/issues"
+  },
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

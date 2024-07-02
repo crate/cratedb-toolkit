@@ -65,7 +65,13 @@ class DatabaseAdapter:
             )
         return self.engine.dialect.identifier_preparer.quote(ident=ident)
 
-    def run_sql(self, sql: t.Union[str, Path, io.IOBase], records: bool = False, ignore: str = None):
+    def run_sql(
+        self,
+        sql: t.Union[str, Path, io.IOBase],
+        parameters: t.Mapping[str, str] = None,
+        records: bool = False,
+        ignore: str = None,
+    ):
         """
         Run SQL statement, and return results, optionally ignoring exceptions.
         """
@@ -81,21 +87,21 @@ class DatabaseAdapter:
             raise TypeError("SQL statement type must be either string, Path, or IO handle")
 
         try:
-            return self.run_sql_real(sql=sql_effective, records=records)
+            return self.run_sql_real(sql=sql_effective, parameters=parameters, records=records)
         except Exception as ex:
             if not ignore:
                 raise
             if ignore not in str(ex):
                 raise
 
-    def run_sql_real(self, sql: str, records: bool = False):
+    def run_sql_real(self, sql: str, parameters: t.Mapping[str, str] = None, records: bool = False):
         """
         Invoke SQL statement, and return results.
         """
         results = []
         with self.engine.connect() as connection:
             for statement in sqlparse.split(sql):
-                result = connection.execute(sa.text(statement))
+                result = connection.execute(sa.text(statement), parameters)
                 data: t.Any
                 if records:
                     rows = result.mappings().fetchall()

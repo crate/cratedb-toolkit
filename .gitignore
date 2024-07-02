@@ -9,7 +9,9 @@ dist
 build
 .coverage*
 coverage.xml
+node_modules
 /cfr
 /doc/_build
 /tmp
+/var
 /DOWNLOAD
