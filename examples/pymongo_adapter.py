@@ -32,7 +32,7 @@ import time
 import pymongo
 from pymongo.database import Database
 
-from cratedb_toolkit.adapter.pymongo import PyMongoCrateDbAdapter
+from cratedb_toolkit.adapter.pymongo import PyMongoCrateDBAdapter
 from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ def main(dburi: str = None):
     setup_logging(level=logging.INFO, width=20)
 
     # Context manager use.
-    with PyMongoCrateDbAdapter(dburi=dburi):
+    with PyMongoCrateDBAdapter(dburi=dburi):
         mongodb_workload()
 
 

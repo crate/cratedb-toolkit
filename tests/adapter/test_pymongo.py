@@ -12,7 +12,7 @@ from tests.conftest import check_sqlalchemy1
 
 check_sqlalchemy1(allow_module_level=True)
 
-from cratedb_toolkit.adapter.pymongo import PyMongoCrateDbAdapter
+from cratedb_toolkit.adapter.pymongo import PyMongoCrateDBAdapter
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
 from cratedb_toolkit.util.date import truncate_milliseconds
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
@@ -25,7 +25,7 @@ def pymongo_cratedb(cratedb):
     """
     Enable the PyMongo -> CrateDB adapter.
     """
-    with PyMongoCrateDbAdapter(dburi=cratedb.database.dburi) as adapter:
+    with PyMongoCrateDBAdapter(dburi=cratedb.database.dburi) as adapter:
         yield adapter
 
 
@@ -53,7 +53,7 @@ def sync_writes(cratedb):
     return refresh
 
 
-def test_pymongo_metadata(pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client: pymongo.MongoClient):
+def test_pymongo_metadata(pymongo_cratedb: PyMongoCrateDBAdapter, pymongo_client: pymongo.MongoClient):
     """
     Verify attribute access to the database and collection handles works well.
     """
@@ -69,7 +69,7 @@ def test_pymongo_metadata(pymongo_cratedb: PyMongoCrateDbAdapter, pymongo_client
 
 
 def test_pymongo_insert_one_single(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,
@@ -96,7 +96,7 @@ def test_pymongo_insert_one_single(
 
 
 def test_pymongo_insert_one_multiple(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,
@@ -127,7 +127,7 @@ def test_pymongo_insert_one_multiple(
 
 
 def test_pymongo_insert_many(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,
@@ -156,7 +156,7 @@ def test_pymongo_insert_many(
 
 
 def test_pymongo_count_documents(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,
@@ -182,7 +182,7 @@ def test_pymongo_count_documents(
 
 
 def test_pymongo_roundtrip_document(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,
@@ -242,7 +242,7 @@ def test_example_program(cratedb: CrateDBTestAdapter):
 
 
 def test_pymongo_tutorial(
-    pymongo_cratedb: PyMongoCrateDbAdapter,
+    pymongo_cratedb: PyMongoCrateDBAdapter,
     pymongo_client: pymongo.MongoClient,
     cratedb: CrateDBTestAdapter,
     sync_writes,

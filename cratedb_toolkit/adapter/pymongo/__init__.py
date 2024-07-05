@@ -1,1 +1,1 @@
-from .api import PyMongoCrateDbAdapter  # noqa: F401
+from .api import PyMongoCrateDBAdapter  # noqa: F401

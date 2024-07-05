@@ -16,11 +16,12 @@ docker run --rm -it --name=cratedb \
 
 
 ## Synopsis
+
 ```python
 import pymongo
-from cratedb_toolkit.adapter.pymongo import PyMongoCrateDbAdapter
+from cratedb_toolkit.adapter.pymongo import PyMongoCrateDBAdapter
 
-with PyMongoCrateDbAdapter(dburi="crate://crate@localhost:4200"):
+with PyMongoCrateDBAdapter(dburi="crate://crate@localhost:4200"):
     client = pymongo.MongoClient("localhost", 27017)
     collection = client.foo.bar
 

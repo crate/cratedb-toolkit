@@ -8,7 +8,7 @@ from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.pandas import patch_pandas_sqltable_with_extended_mapping
 
 
-class PyMongoCrateDbAdapter:
+class PyMongoCrateDBAdapter:
     """
     Patch PyMongo to talk to CrateDB.
     """
