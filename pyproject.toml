@@ -160,7 +160,7 @@ release = [
   "twine<6",
 ]
 service = [
-  "fastapi<0.105",
+  "fastapi<0.112",
   "uvicorn<0.31",
 ]
 test = [
