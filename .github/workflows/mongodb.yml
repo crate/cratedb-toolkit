@@ -70,7 +70,7 @@ jobs:
         pip install "setuptools>=64" --upgrade
 
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[mongodb,test,develop]
+        pip install --use-pep517 --prefer-binary --editable=.[mongodb,test-mongodb,develop]
 
     - name: Downgrade pymongo on MongoDB 2
       if: matrix.mongodb-version == '2'

@@ -173,6 +173,9 @@ test = [
   "responses<0.26",
   "testcontainers-azurite==0.0.1rc1",
   "testcontainers-minio==0.0.1rc1",
+]
+test-mongodb = [
+  "cratedb-toolkit[test]",
   "testcontainers-mongodb==0.0.1rc1",
 ]
 testing = [
