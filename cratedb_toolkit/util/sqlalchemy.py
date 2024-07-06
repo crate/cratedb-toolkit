@@ -1,3 +1,9 @@
+"""
+Patches and polyfills, mostly for SQLAlchemy.
+
+TODO: Refactor to `crate` or `sqlalchemy-cratedb` packages.
+"""
+
 import calendar
 import datetime as dt
 import json

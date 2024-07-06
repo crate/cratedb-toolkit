@@ -5,6 +5,8 @@
 - IO: Added the `if-exists` query parameter by updating to influxio 0.4.0.
 - Rockset: Added CrateDB Rockset Adapter, a HTTP API emulation layer
 - MongoDB: Added adapter amalgamating PyMongo to use CrateDB as backend
+- SQLAlchemy: Clean up and refactor SQLAlchemy polyfills
+  to `cratedb_toolkit.util.sqlalchemy`
 
 ## 2024/06/18 v0.0.14
 - Add `ctk cfr` and `ctk wtf` diagnostics programs
