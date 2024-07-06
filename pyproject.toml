@@ -168,6 +168,7 @@ release = [
   "twine<6",
 ]
 release-cfr = [
+  "poethepoet<0.28",
   "pyinstaller<7",
 ]
 service = [

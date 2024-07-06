@@ -1,0 +1,75 @@
+# Stage PyInstaller application bundles through GitHub Actions (GHA) to GitHub Workflow Artifacts.
+# https://github.com/actions/upload-artifact#where-does-the-upload-go
+
+name: "Release: Application Bundle"
+
+on:
+  pull_request: ~
+  push:
+    tags:
+      - '*'
+
+jobs:
+
+  cfr:
+    name: "CFR for OS ${{ matrix.os }}"
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+          "macos-13",        # Intel
+          "macos-latest",    # ARM
+          "ubuntu-latest",   # Intel
+          "windows-latest",  # Intel
+        ]
+      # TODO: Also build for Linux/ARM, because this platform gets more traction in datacenters.
+      # - https://github.blog/changelog/2024-06-03-actions-arm-based-linux-and-windows-runners-are-now-in-public-beta/
+      # - https://arm-software.github.io/AVH/main/infrastructure/html/avh_gh.html
+      # - via: https://github.com/actions/partner-runner-images
+
+    steps:
+
+    - name: Acquire sources
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Set up project
+      run: pip install --use-pep517 --prefer-binary --editable='.[cfr,release-cfr]'
+
+    - name: Build application bundle
+      run: poe build-cfr
+
+    - name: Compute artifact suffix (OS-ARCH)
+      id: artifact-suffix
+      uses: ASzc/change-string-case-action@v6
+      with:
+        string: "${{ runner.os }}-${{ runner.arch }}"
+
+    - name: Upload artifact to Workflow Artifacts (Linux and macOS)
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: "cratedb-cfr-${{ steps.artifact-suffix.outputs.lowercase }}"
+        path: dist/cratedb-cfr
+
+    - name: Upload artifact to Workflow Artifacts (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: "cratedb-cfr-${{ steps.artifact-suffix.outputs.lowercase }}"
+        path: dist/cratedb-cfr.exe
+
+    - name: Upload artifact to release assets
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: echo "Not implemented yet."
+      # TODO: Upload to release assets, when invoked on "tag" event.
+      # https://github.com/grafana-toolbox/grafana-client/blob/4.1.0/.github/workflows/release.yml#L27-L42
+      # https://github.com/marketplace/actions/create-release
