@@ -6,5 +6,6 @@ mostly for demonstration purposes.
 ```{toctree}
 :maxdepth: 3
 
-rockset
+PyMongo Adapter <pymongo>
+Rockset Adapter <rockset>
 ```
