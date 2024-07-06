@@ -91,13 +91,11 @@ class SystemTableInspector:
 
 
 class PathProvider:
-
     def __init__(self, path: t.Union[Path]):
         self.path = path
 
 
 class Archive:
-
     def __init__(self, path_provider: PathProvider):
         self.path_provider = path_provider
         self.temp_dir = tempfile.TemporaryDirectory()

@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 
-def test_cratedb_summits(cratedb):
+def test_cratedb_summits(cratedb, needs_sqlalchemy2):
     """
     Just to verify communication with CrateDB works.
     """
@@ -22,7 +22,7 @@ def test_cratedb_summits(cratedb):
             ]
 
 
-def test_database_insert(cratedb):
+def test_database_insert(cratedb, needs_sqlalchemy2):
     """
     Verify that inserting two records and reading them back works well.
     """
