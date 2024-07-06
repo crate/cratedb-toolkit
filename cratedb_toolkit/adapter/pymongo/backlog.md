@@ -2,7 +2,7 @@
 
 ## Iteration +1
 - Upstream / converge patches.
-  - `cratedb_toolkit/sqlalchemy/patch.py`
+  - `cratedb_toolkit/util/sqlalchemy.py`
   - `cratedb_toolkit/util/pandas.py`
   - `cratedb_toolkit/adapter/pymongo/api.py::adjust_sqlalchemy`
   - `cratedb_toolkit/adapter/pymongo/collection.py::insert_returning_id`

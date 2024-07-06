@@ -4,7 +4,7 @@ import json
 import pytest
 import sqlalchemy as sa
 
-from cratedb_toolkit.sqlalchemy.patch import CrateJsonEncoderWithNumPy
+from cratedb_toolkit.util.sqlalchemy import CrateJsonEncoderWithNumPy
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 
