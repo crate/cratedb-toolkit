@@ -9,7 +9,7 @@ from cratedb_toolkit.retention.store import RetentionPolicyStore
 from cratedb_toolkit.testing.testcontainers.azurite import ExtendedAzuriteContainer
 from cratedb_toolkit.testing.testcontainers.minio import ExtendedMinioContainer
 from cratedb_toolkit.util.database import DatabaseAdapter, run_sql
-from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA
+from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA, check_sqlalchemy2
 
 
 @pytest.fixture()
@@ -26,6 +26,7 @@ def store(database, settings):
     Provide a client database adapter, which is connected to the test database instance.
     The retention policy database table schema has been established.
     """
+    check_sqlalchemy2()
     setup_schema(settings=settings)
     rps = RetentionPolicyStore(settings=settings)
     yield rps

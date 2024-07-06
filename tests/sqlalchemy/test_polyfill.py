@@ -62,7 +62,7 @@ def get_unique_model_composite():
     return FooBarComposite
 
 
-def test_autoincrement_vanilla(database):
+def test_autoincrement_vanilla(database, needs_sqlalchemy2):
     """
     When using a model including an autoincrement column, and not assigning a value, CrateDB will fail.
     """
@@ -77,7 +77,7 @@ def test_autoincrement_vanilla(database):
         )
 
 
-def test_autoincrement_polyfill(database):
+def test_autoincrement_polyfill(database, needs_sqlalchemy2):
     """
     When using a model including an autoincrement column, and the corresponding polyfill
     is installed, the procedure will succeed.

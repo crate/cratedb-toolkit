@@ -24,7 +24,7 @@ def test_import_csv_pandas(cratedb, dummy_csv):
     assert result == [(2,)]
 
 
-def test_import_csv_dask(cratedb, dummy_csv):
+def test_import_csv_dask(cratedb, dummy_csv, needs_sqlalchemy2):
     """
     Invoke convenience function `import_csv_dask`, and verify database content.
     """
@@ -36,7 +36,7 @@ def test_import_csv_dask(cratedb, dummy_csv):
     assert result == [(2,)]
 
 
-def test_import_csv_dask_with_progressbar(cratedb, dummy_csv):
+def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2):
     """
     Invoke convenience function `import_csv_dask`, and verify database content.
     This time, use `progress=True` to make Dask display a progress bar.

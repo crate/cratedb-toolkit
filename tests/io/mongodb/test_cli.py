@@ -5,11 +5,20 @@ from click.testing import CliRunner
 from pueblo.testing.dataframe import DataFrameFactory
 
 from cratedb_toolkit.cli import cli
+from tests.conftest import check_sqlalchemy2
 
 pytestmark = pytest.mark.mongodb
 
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def check_prerequisites():
+    """
+    This subsystem needs SQLAlchemy 2.x.
+    """
+    check_sqlalchemy2()
 
 
 def test_version():

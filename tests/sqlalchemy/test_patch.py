@@ -8,7 +8,7 @@ from cratedb_toolkit.sqlalchemy.patch import CrateJsonEncoderWithNumPy
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 
-def test_inspector_vanilla(database):
+def test_inspector_vanilla(database, needs_sqlalchemy2):
     """
     Vanilla SQLAlchemy Inspector tests.
     """
@@ -28,7 +28,7 @@ def test_inspector_vanilla(database):
     assert indexes == []
 
 
-def test_inspector_patched(database):
+def test_inspector_patched(database, needs_sqlalchemy2):
     """
     Patched SQLAlchemy Inspector tests.
 

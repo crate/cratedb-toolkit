@@ -84,7 +84,7 @@ def test_list_tags(store):
     assert tags == ["bar", "foo"]
 
 
-def test_delete_by_tag(store):
+def test_delete_by_tag(store, needs_sqlalchemy2):
     """
     Verify deleting a retention policy by single tag.
     """
@@ -122,7 +122,7 @@ def test_delete_by_tag(store):
     assert len(store.retrieve()) == 1
 
 
-def test_delete_by_all_tags(store):
+def test_delete_by_all_tags(store, needs_sqlalchemy2):
     """
     Verify deleting a retention policy by multiple tags.
 
@@ -178,7 +178,7 @@ def test_delete_unknown(caplog, store):
     assert "Retention policy not found with id: unknown" in caplog.messages
 
 
-def test_delete_by_tag_unknown(caplog, store):
+def test_delete_by_tag_unknown(caplog, store, needs_sqlalchemy2):
     """
     Verify behavior when deleting items by unknown tag
     """
@@ -194,7 +194,7 @@ def test_delete_by_tag_unknown(caplog, store):
     assert "No retention policies found with tags: ['unknown']" in caplog.messages
 
 
-def test_delete_by_all_tags_unknown(caplog, store):
+def test_delete_by_all_tags_unknown(caplog, store, needs_sqlalchemy2):
     """
     Verify behavior when deleting items by unknown tag
     """
