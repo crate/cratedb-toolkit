@@ -1,5 +1,5 @@
 # Stage Python source distribution and wheel packages through GitHub Actions (GHA) to Python Package Index (PyPI).
-name: Release to PyPI
+name: "Release: Python package to PyPI"
 
 on:
   push:
