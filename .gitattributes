@@ -1,0 +1,2 @@
+cratedb-cfr filter=lfs diff=lfs merge=lfs -text
+cratedb-cfr.exe filter=lfs diff=lfs merge=lfs -text
