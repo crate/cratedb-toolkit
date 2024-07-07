@@ -62,5 +62,14 @@ jobs:
         name: "cratedb-cfr-${{ steps.artifact-suffix.outputs.lowercase }}"
         path: dist/cratedb-cfr.exe
 
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v3
+
+    - name: Upload artifact to GitHub Pages 🚀
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: dist
+        target-folder: "tmp/${{ steps.artifact-suffix.outputs.lowercase }}"
+
     # TODO: Upload to release assets or GitHub Pages, when invoked on "tag" event.
     #if: startsWith(github.event.ref, 'refs/tags')
