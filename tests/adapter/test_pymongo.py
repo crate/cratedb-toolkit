@@ -288,7 +288,8 @@ def test_pymongo_tutorial(
     # Getting a Single Document With find_one().
     # https://pymongo.readthedocs.io/en/stable/tutorial.html#getting-a-single-document-with-find-one
     document_loaded = posts.find_one({"author": "Mike"})
-    assert "mongodb" in document_loaded["tags"]
+    # Remark: Order of items is not guaranteed, so one of both records is returned.
+    assert "mongodb" in document_loaded["tags"] or "bulk" in document_loaded["tags"]
 
     # Querying By ObjectId.
     # https://pymongo.readthedocs.io/en/stable/tutorial.html#querying-by-objectid
