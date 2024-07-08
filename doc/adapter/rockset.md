@@ -119,7 +119,7 @@ or plain HTTP conversations.
 [Execute SQL Query]: https://docs.rockset.com/documentation/reference/query
 [Ingest Related Limits]: https://docs.rockset.com/documentation/docs/ingest-related-limits
 [Java example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/java/Basic.java
-[JavaScript example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/javascript/basic.py
+[JavaScript example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/javascript/basic.js
 [Python example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/python/basic.py
 [Rockset HTTP API]: https://docs.rockset.com/documentation/reference/rest-api
 [Shell example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/shell/basic.sh
