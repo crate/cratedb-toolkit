@@ -65,7 +65,7 @@ Currently, the API key has no significance.
 
 Install the emulation package.
 ```shell
-pip install --upgrade 'cratedb-toolkit[service] @ git+https://github.com/crate-workbench/cratedb-toolkit.git@collab/rockset'
+pip install --upgrade 'cratedb-toolkit[service]'
 ```
 
 Start CrateDB.
