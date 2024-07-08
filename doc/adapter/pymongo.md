@@ -51,7 +51,7 @@ with PyMongoCrateDBAdapter(dburi="crate://crate@localhost:4200"):
 
 Install the emulation package.
 ```shell
-pip install --upgrade 'cratedb-toolkit[pymongo] @ git+https://github.com/crate-workbench/cratedb-toolkit.git@pymongo-adapter'
+pip install --upgrade 'cratedb-toolkit[pymongo]'
 ```
 
 Start CrateDB.
