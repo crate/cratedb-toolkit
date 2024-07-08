@@ -1,7 +1,7 @@
 (cfr)=
 # CrateDB Cluster Flight Recorder (CFR)
 
-CFR helps collecting information about CrateDB clusters for support requests
+CFR helps to collect information about CrateDB clusters for support requests
 and self-service debugging.
 
 ## Install
