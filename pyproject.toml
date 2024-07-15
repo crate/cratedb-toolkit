@@ -111,7 +111,7 @@ all = [
 ]
 cfr = [
   "pandas<2.2",
-  "pyarrow<16.1",
+  "pyarrow<16.2",
 ]
 cloud = [
   "croud==1.11.1",
