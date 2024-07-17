@@ -89,5 +89,5 @@ subsystem.
 [MongoDB Limits and Thresholds]: https://www.mongodb.com/docs/manual/reference/limits/
 [MongoDB "Getting Started" tutorial]: https://pymongo.readthedocs.io/en/stable/tutorial.html
 [PyMongo]: https://github.com/mongodb/mongo-python-driver
-[Python example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/pymongo_adapter.py
-[test cases]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/tests/adapter/test_pymongo.py
+[Python example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/pymongo_adapter.py
+[test cases]: https://github.com/crate/cratedb-toolkit/blob/main/tests/adapter/test_pymongo.py

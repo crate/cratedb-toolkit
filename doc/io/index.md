@@ -19,7 +19,7 @@ pip install --upgrade 'cratedb-toolkit[all]'
 
 Development version.
 ```shell
-pip install --upgrade 'cratedb-toolkit[all] @ git+https://github.com/crate-workbench/cratedb-toolkit.git'
+pip install --upgrade 'cratedb-toolkit[all] @ git+https://github.com/crate/cratedb-toolkit.git'
 ```
 
 ## General Notes

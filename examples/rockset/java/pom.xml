@@ -9,7 +9,7 @@
     <version>0.0.1</version>
 
     <name>Example program for using the official Rockset Java Client with CrateDB backend</name>
-    <url>https://github.com/crate-workbench/cratedb-toolkit</url>
+    <url>https://github.com/crate/cratedb-toolkit</url>
 
     <repositories>
         <repository>

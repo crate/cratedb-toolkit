@@ -45,17 +45,17 @@ release
 [cratedb-toolkit]: https://cratedb-toolkit.readthedocs.io/
 [influxio]: https://influxio.readthedocs.io/
 
-[badge-coverage]: https://codecov.io/gh/crate-workbench/cratedb-toolkit/branch/main/graph/badge.svg
+[badge-coverage]: https://codecov.io/gh/crate/cratedb-toolkit/branch/main/graph/badge.svg
 [badge-documentation]: https://img.shields.io/readthedocs/cratedb-toolkit
 [badge-downloads-per-month]: https://pepy.tech/badge/cratedb-toolkit/month
-[badge-license]: https://img.shields.io/github/license/crate-workbench/cratedb-toolkit.svg
+[badge-license]: https://img.shields.io/github/license/crate/cratedb-toolkit.svg
 [badge-package-version]: https://img.shields.io/pypi/v/cratedb-toolkit.svg
 [badge-python-versions]: https://img.shields.io/pypi/pyversions/cratedb-toolkit.svg
 [badge-status]: https://img.shields.io/pypi/status/cratedb-toolkit.svg
-[badge-tests]: https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml/badge.svg
-[project-codecov]: https://codecov.io/gh/crate-workbench/cratedb-toolkit
+[badge-tests]: https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml/badge.svg
+[project-codecov]: https://codecov.io/gh/crate/cratedb-toolkit
 [project-documentation]: https://cratedb-toolkit.readthedocs.io/
 [project-downloads]: https://pepy.tech/project/cratedb-toolkit/
-[project-license]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
+[project-license]: https://github.com/crate/cratedb-toolkit/blob/main/LICENSE
 [project-pypi]: https://pypi.org/project/cratedb-toolkit
-[project-tests]: https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml
+[project-tests]: https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml

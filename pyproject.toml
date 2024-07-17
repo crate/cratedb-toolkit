@@ -194,11 +194,11 @@ testing = [
   "testcontainers<5",
 ]
 [project.urls]
-Changelog = "https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.rst"
-Documentation = "https://github.com/crate-workbench/cratedb-toolkit"
-Homepage = "https://github.com/crate-workbench/cratedb-toolkit"
-Issues = "https://github.com/crate-workbench/cratedb-toolkit/issues"
-Repository = "https://github.com/crate-workbench/cratedb-toolkit"
+Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
+Documentation = "https://cratedb-toolkit.readthedocs.io/"
+Homepage = "https://cratedb-toolkit.readthedocs.io/"
+Issues = "https://github.com/crate/cratedb-toolkit/issues"
+Repository = "https://github.com/crate/cratedb-toolkit"
 [project.scripts]
 cratedb-cfr = "cratedb_toolkit.cfr.cli:cli"
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"

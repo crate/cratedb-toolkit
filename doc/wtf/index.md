@@ -8,7 +8,7 @@ It is still a work-in-progress, but it is usable already.
 ```shell
 pip install --upgrade 'cratedb-toolkit'
 ```
-Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
+Alternatively, use the Docker image at `ghcr.io/crate/cratedb-toolkit`.
 
 ## Synopsis
 
