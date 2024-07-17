@@ -64,12 +64,14 @@ jobs:
     - name: Set up project
       run: |
 
-        # `setuptools 0.64.0` adds support for editable install hooks (PEP 660).
+        # `setuptools 64` adds support for editable install hooks (PEP 660).
         # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
-        pip install "setuptools>=64" --upgrade
+        # `setuptools 71` significantly re-vendors setuptools packages, causing hiccups on Python 3.8.
+        # https://github.com/pypa/setuptools/pull/4457
+        pip install "setuptools>=64,<71" --upgrade
 
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[full,test,develop]
+        pip install --use-pep517 --prefer-binary --editable='.[full,test,develop]'
 
     - name: Run linter and software tests
       env:
