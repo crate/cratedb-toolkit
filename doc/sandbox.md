@@ -41,3 +41,14 @@ Format code.
 ```shell
 poe format
 ```
+
+
+## Troubleshooting
+Docker is needed to provide service instances to the test suite. If your Docker
+daemon is not running or available, you will receive an error message like that:
+```python
+docker.errors.DockerException: Error while fetching server API version:
+    ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))
+AttributeError: 'CrateDBContainer' object has no attribute '_container'
+```
+In order to fix the problem, just start your Docker daemon.

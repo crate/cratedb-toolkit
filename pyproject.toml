@@ -150,6 +150,7 @@ io = [
   "sqlalchemy>=2",
 ]
 mongodb = [
+  "commons-codec[mongodb]==0.0.2",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",

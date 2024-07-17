@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- `ctk load table`: Added support for MongoDB Change Streams
 
 ## 2024/07/08 v0.0.15
 - IO: Added the `if-exists` query parameter by updating to influxio 0.4.0.

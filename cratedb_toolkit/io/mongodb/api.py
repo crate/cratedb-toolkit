@@ -1,6 +1,7 @@
 import argparse
 import logging
 
+from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.cr8 import cr8_insert_json
@@ -68,3 +69,41 @@ def mongodb_copy(source_url, target_url, progress: bool = False):
     cr8_insert_json(infile=buffer, hosts=cratedb_address.httpuri, table=cratedb_table_address.fullname)
 
     return True
+
+
+def mongodb_relay_cdc(source_url, target_url, progress: bool = False):
+    """
+    Synopsis
+    --------
+    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo-cdc
+    ctk load table mongodb+cdc://localhost:27017/testdrive/demo
+
+    Backlog
+    -------
+    TODO: Run on multiple collections.
+    TODO: Run on the whole database.
+    TODO: Accept parameters like `if_exists="append,replace"`.
+    TODO: Propagate parameters like `scan="full"`.
+    """
+    logger.info("Running MongoDB CDC relay")
+
+    # Decode database URL.
+    mongodb_address = DatabaseAddress.from_string(source_url)
+    mongodb_uri, mongodb_collection_address = mongodb_address.decode()
+    mongodb_database = mongodb_collection_address.schema
+    mongodb_collection = mongodb_collection_address.table
+
+    cratedb_address = DatabaseAddress.from_string(target_url)
+    cratedb_uri, cratedb_table_address = cratedb_address.decode()
+
+    # Configure machinery.
+    relay = MongoDBCDCRelayCrateDB(
+        mongodb_url=str(mongodb_uri),
+        mongodb_database=mongodb_database,
+        mongodb_collection=mongodb_collection,
+        cratedb_sqlalchemy_url=str(cratedb_uri),
+        cratedb_table=cratedb_table_address.fullname,
+    )
+
+    # Invoke machinery.
+    relay.start()
