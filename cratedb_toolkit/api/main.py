@@ -122,11 +122,17 @@ class StandaloneCluster(ClusterBase):
                 logger.error(msg)
                 raise OperationFailed(msg)
         elif source_url.startswith("mongodb"):
-            from cratedb_toolkit.io.mongodb.api import mongodb_copy
+            if "+cdc" in source_url:
+                source_url = source_url.replace("+cdc", "")
+                from cratedb_toolkit.io.mongodb.api import mongodb_relay_cdc
 
-            if not mongodb_copy(source_url, target_url, progress=True):
-                msg = "Data loading failed"
-                logger.error(msg)
-                raise OperationFailed(msg)
+                mongodb_relay_cdc(source_url, target_url, progress=True)
+            else:
+                from cratedb_toolkit.io.mongodb.api import mongodb_copy
+
+                if not mongodb_copy(source_url, target_url, progress=True):
+                    msg = "Data loading failed"
+                    logger.error(msg)
+                    raise OperationFailed(msg)
         else:
             raise NotImplementedError("Importing resource not implemented yet")
