@@ -386,7 +386,7 @@ that some retention policy strategies will not work on single-node installations
 ```shell
 export CRATEDB_URI='crate://localhost/'
 export CRATEDB_HOST='http://localhost:4200/'
-export OCI_IMAGE='ghcr.io/crate-workbench/cratedb-retention:nightly'
+export OCI_IMAGE='ghcr.io/crate/cratedb-retention:nightly'
 ```
 
 Display version number.
@@ -479,10 +479,10 @@ job.start()
 [downsampling]: https://docs.victoriametrics.com/#downsampling
 [downsampling a time series data stream]: https://www.elastic.co/guide/en/elasticsearch/reference/current/downsampling.html
 [downsampling and data retention]: https://docs.influxdata.com/influxdb/v1.8/guides/downsample_and_retain/
-[`examples/retention_retire_cutoff.py`]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/retention_retire_cutoff.py
+[`examples/retention_retire_cutoff.py`]: https://github.com/crate/cratedb-toolkit/blob/main/examples/retention_retire_cutoff.py
 [rolling up historical data]: https://www.elastic.co/guide/en/elasticsearch/reference/current/rollup-overview.html
 [roll-up]: https://en.wikipedia.org/wiki/OLAP_cube#Operations
-[strategy-delete]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/delete.py
-[strategy-reallocate]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/reallocate.py
-[strategy-snapshot]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/snapshot.py
+[strategy-delete]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/delete.py
+[strategy-reallocate]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/reallocate.py
+[strategy-snapshot]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/retention/strategy/snapshot.py
 [time bucketing]: https://community.crate.io/t/resampling-time-series-data-with-date-bin/1009

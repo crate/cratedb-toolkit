@@ -1,10 +1,10 @@
 # CrateDB Toolkit
 
-[![Tests](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml/badge.svg)](https://github.com/crate-workbench/cratedb-toolkit/actions/workflows/main.yml)
-[![Test coverage](https://img.shields.io/codecov/c/gh/crate-workbench/cratedb-toolkit.svg)](https://codecov.io/gh/crate-workbench/cratedb-toolkit/)
+[![Tests](https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml/badge.svg)](https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml)
+[![Test coverage](https://img.shields.io/codecov/c/gh/crate/cratedb-toolkit.svg)](https://codecov.io/gh/crate/cratedb-toolkit/)
 [![Python versions](https://img.shields.io/pypi/pyversions/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
 
-[![License](https://img.shields.io/github/license/crate-workbench/cratedb-toolkit.svg)](https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/crate/cratedb-toolkit.svg)](https://github.com/crate/cratedb-toolkit/blob/main/LICENSE)
 [![Status](https://img.shields.io/pypi/status/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
 [![PyPI](https://img.shields.io/pypi/v/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
 [![Downloads](https://pepy.tech/badge/cratedb-toolkit/month)](https://pepy.tech/project/cratedb-toolkit/)
@@ -58,7 +58,7 @@ ctk --version
 
 Run with Docker.
 ```shell
-alias ctk="docker run --rm ghcr.io/crate-workbench/cratedb-toolkit ctk"
+alias ctk="docker run --rm ghcr.io/crate/cratedb-toolkit ctk"
 ctk --version
 ```
 
@@ -72,14 +72,14 @@ about a possible feature.
 
 
 
-[Changelog]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/CHANGES.md
+[Changelog]: https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md
 [Community Forum]: https://community.crate.io/
 [CrateDB]: https://crate.io/products/cratedb
 [CrateDB Cloud]: https://console.cratedb.cloud/
 [Documentation]: https://cratedb-toolkit.readthedocs.io/
 [DWIM]: https://en.wikipedia.org/wiki/DWIM
-[Issues]: https://github.com/crate-workbench/cratedb-toolkit/issues
-[License]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/LICENSE
+[Issues]: https://github.com/crate/cratedb-toolkit/issues
+[License]: https://github.com/crate/cratedb-toolkit/blob/main/LICENSE
 [PyPI]: https://pypi.org/project/cratedb-toolkit/
-[Source code]: https://github.com/crate-workbench/cratedb-toolkit
+[Source code]: https://github.com/crate/cratedb-toolkit
 [UX]: https://en.wikipedia.org/wiki/User_experience

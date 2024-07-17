@@ -8,7 +8,7 @@ and self-service debugging.
 ```shell
 pip install --upgrade 'cratedb-toolkit[cfr]'
 ```
-Alternatively, use the Docker image at `ghcr.io/crate-workbench/cratedb-toolkit`.
+Alternatively, use the Docker image at `ghcr.io/crate/cratedb-toolkit`.
 
 ## Synopsis
 
@@ -77,7 +77,7 @@ docker run --rm -it \
 Define the database URI address, and an alias to the `cfr` program.
 ```shell
 echo "CRATEDB_SQLALCHEMY_URL=crate://localhost/" > .env
-alias cfr="docker run --rm -it --network=host --volume=$(PWD)/cfr:/cfr --env-file=.env ghcr.io/crate-workbench/cratedb-toolkit:latest ctk cfr"
+alias cfr="docker run --rm -it --network=host --volume=$(PWD)/cfr:/cfr --env-file=.env ghcr.io/crate/cratedb-toolkit:latest ctk cfr"
 ```
 
 Export system table information.

@@ -4,7 +4,7 @@
 
 Acquire sources.
 ```shell
-git clone https://github.com/crate-workbench/cratedb-toolkit
+git clone https://github.com/crate/cratedb-toolkit
 cd cratedb-toolkit
 ```
 

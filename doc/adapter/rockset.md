@@ -114,12 +114,12 @@ or plain HTTP conversations.
 
 [Add Documents]: https://docs.rockset.com/documentation/reference/adddocuments
 [API Rate Limits]: https://docs.rockset.com/documentation/docs/api-rate-limits
-[CLI example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/cli/basic.sh
+[CLI example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/rockset/cli/basic.sh
 [CrateDB]: https://cratedb.com/database
 [Execute SQL Query]: https://docs.rockset.com/documentation/reference/query
 [Ingest Related Limits]: https://docs.rockset.com/documentation/docs/ingest-related-limits
-[Java example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/java/Basic.java
-[JavaScript example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/javascript/basic.js
-[Python example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/python/basic.py
+[Java example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/rockset/java/Basic.java
+[JavaScript example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/rockset/javascript/basic.js
+[Python example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/rockset/python/basic.py
 [Rockset HTTP API]: https://docs.rockset.com/documentation/reference/rest-api
-[Shell example program]: https://github.com/crate-workbench/cratedb-toolkit/blob/main/examples/rockset/shell/basic.sh
+[Shell example program]: https://github.com/crate/cratedb-toolkit/blob/main/examples/rockset/shell/basic.sh

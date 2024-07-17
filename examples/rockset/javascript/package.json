@@ -15,7 +15,7 @@
   "resolutions": {
     "node-fetch": "^2.6.7"
   },
-  "repository": "https://github.com/crate-workbench/cratedb-toolkit",
+  "repository": "https://github.com/crate/cratedb-toolkit",
   "scripts": {
     "basic": "node basic.js"
   },
@@ -28,7 +28,7 @@
     "information analysis"
   ],
   "bugs": {
-    "url": "https://github.com/crate-workbench/cratedb-toolkit/issues"
+    "url": "https://github.com/crate/cratedb-toolkit/issues"
   },
   "types": "dist/index.d.ts",
   "files": [

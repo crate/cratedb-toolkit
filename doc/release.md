@@ -12,7 +12,7 @@ triggered, building and publishing different kinds of artefacts.
 
 - OCI container images, published to the GitHub Container Registry (GHCR).
 
-  https://github.com/crate-workbench/cratedb-toolkit/pkgs/container/cratedb-toolkit
+  https://github.com/crate/cratedb-toolkit/pkgs/container/cratedb-toolkit
 
 The signal to start the release pipeline is by tagging the Git repository,
 and pushing that tag to remote.
@@ -32,7 +32,7 @@ On branch `main`:
   ```
 - On GitHub, designate a new release, copying in the relevant section
   from the CHANGELOG.
-  https://github.com/crate-workbench/cratedb-toolkit/releases
+  https://github.com/crate/cratedb-toolkit/releases
 
 Optionally, build the package and upload to PyPI manually.
 ```shell
