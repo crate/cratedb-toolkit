@@ -42,7 +42,16 @@ jobs:
         cache-dependency-path: 'pyproject.toml'
 
     - name: Set up project
-      run: pip install --use-pep517 --prefer-binary --editable='.[cfr,release-cfr]'
+      run: |
+
+        # `setuptools 64` adds support for editable install hooks (PEP 660).
+        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
+        # `setuptools 71` significantly re-vendors setuptools packages, causing hiccups on Python 3.8.
+        # https://github.com/pypa/setuptools/pull/4457
+        pip install "setuptools>=64,<71" --upgrade
+
+        # Install package in editable mode.
+        pip install --use-pep517 --prefer-binary --editable='.[cfr,release-cfr]'
 
     - name: Build application bundle
       run: poe build-cfr
