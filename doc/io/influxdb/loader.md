@@ -39,7 +39,6 @@ Transfer data from InfluxDB bucket/measurement into CrateDB schema/table.
 ```shell
 export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
-crash --command "SELECT * FROM testdrive.demo;"
 ```
 
 Query data in CrateDB.

@@ -385,6 +385,6 @@ def cursor_factory(cratedb: DatabaseAdapter):
             if isinstance(index, str):
                 self.__hint = index
             else:
-                self.__hint = helpers._index_document(index)
+                self.__hint = SON(helpers._index_document(index))
 
     return AmendedCursor

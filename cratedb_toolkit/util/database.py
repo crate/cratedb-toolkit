@@ -32,6 +32,7 @@ class DatabaseAdapter:
     def __init__(self, dburi: str, echo: bool = False):
         self.dburi = dburi
         self.engine = sa.create_engine(self.dburi, echo=echo)
+        # TODO: Make that go away.
         self.connection = self.engine.connect()
 
     def quote_relation_name(self, ident: str) -> str:
