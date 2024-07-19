@@ -11,6 +11,7 @@ from boltons.urlutils import URL
 from cratedb_sqlparse import sqlparse as sqlparse_cratedb
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
+from sqlalchemy_cratedb.dialect import CrateDialect
 
 from cratedb_toolkit.util.data import str_contains
 
@@ -24,6 +25,10 @@ def run_sql(dburi: str, sql: str, records: bool = False):
     return DatabaseAdapter(dburi=dburi).run_sql(sql=sql, records=records)
 
 
+# Just an instance of the dialect used for quoting purposes.
+dialect = CrateDialect()
+
+
 class DatabaseAdapter:
     """
     Wrap SQLAlchemy connection to database.
@@ -35,37 +40,43 @@ class DatabaseAdapter:
         # TODO: Make that go away.
         self.connection = self.engine.connect()
 
-    def quote_relation_name(self, ident: str) -> str:
+    @staticmethod
+    def quote_relation_name(ident: str) -> str:
         """
-        Quote the given, possibly full-qualified, relation name if needed.
+        Quote a simple or full-qualified table/relation name, when needed.
 
-        In:  foo
-        Out: foo
+        Simple:         <table>
+        Full-qualified: <schema>.<table>
 
-        In:  Foo
-        Out: "Foo"
+        Happy path examples:
 
-        In:  "Foo"
-        Out: "Foo"
+            foo => foo
+            Foo => "Foo"
+            "Foo" => "Foo"
+            foo.bar => foo.bar
+            foo-bar.baz_qux => "foo-bar".baz_qux
 
-        In:  foo.bar
-        Out: "foo"."bar"
+        Such input strings will not be modified:
 
-        In:  "foo.bar"
-        Out: "foo.bar"
+            "foo.bar" => "foo.bar"
         """
-        if ident[0] == '"' and ident[len(ident) - 1] == '"':
+
+        # Heuristically consider that if a quote exists at the beginning or the end
+        # of the input string, that the relation name has been quoted already.
+        if ident.startswith('"') or ident.endswith('"'):
             return ident
+
+        # Heuristically consider if a dot is included, that it's a full-qualified
+        # identifier like <schema>.<table>. It needs to be split, in order to apply
+        # identifier quoting properly.
         if "." in ident:
             parts = ident.split(".")
             if len(parts) > 2:
                 raise ValueError(f"Invalid relation name {ident}")
             return (
-                self.engine.dialect.identifier_preparer.quote_schema(parts[0])
-                + "."
-                + self.engine.dialect.identifier_preparer.quote(parts[1])
+                dialect.identifier_preparer.quote_schema(parts[0]) + "." + dialect.identifier_preparer.quote(parts[1])
             )
-        return self.engine.dialect.identifier_preparer.quote(ident=ident)
+        return dialect.identifier_preparer.quote(ident=ident)
 
     def run_sql(
         self,

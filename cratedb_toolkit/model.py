@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from boltons.urlutils import URL
 
-from cratedb_toolkit.util.database import decode_database_table
+from cratedb_toolkit.util.database import DatabaseAdapter, decode_database_table
 
 
 @dataclasses.dataclass
@@ -85,12 +85,10 @@ class TableAddress:
 
     @property
     def fullname(self):
-        if self.schema is None and self.table is None:
-            raise ValueError("Uninitialized table address can not be serialized")
-        if self.schema and self.table:
-            return f'"{self.schema}"."{self.table}"'
-        else:
-            return f'"{self.table}"'
+        """
+        Return a full-qualified quoted table identifier.
+        """
+        return DatabaseAdapter.quote_relation_name(f"{self.schema}.{self.table}")
 
 
 @dataclasses.dataclass
