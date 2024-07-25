@@ -182,11 +182,6 @@ aws dynamodb execute-statement --statement \
   "SELECT * FROM \"demo-source\";"
 ```
 
-Truncate DynamoDB collection.
-```shell
-aws dynamodb execute-statement --statement \
-  "DELETE FROM \"demo-source\" WHERE ${READING_WHERE};"
-```
 
 (ecr-repository-policy)=
 ### ECR Repository Policy
