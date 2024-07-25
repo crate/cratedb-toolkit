@@ -2,8 +2,11 @@
 
 
 ## Unreleased
+
+## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
 - Fix dependency with the `kaggle` package, downgrade to `kaggle==1.6.14`
+- DynamoDB CDC: Add demo to support reading DynamoDB change data capture
 
 ## 2024/07/08 v0.0.15
 - IO: Added the `if-exists` query parameter by updating to influxio 0.4.0.
