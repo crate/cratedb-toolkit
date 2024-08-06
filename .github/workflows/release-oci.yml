@@ -56,8 +56,8 @@ jobs:
           if [[ -f release/oci/test.yml ]]; then
             export DOCKER_BUILDKIT=1
             export COMPOSE_DOCKER_CLI_BUILD=1
-            docker-compose --file release/oci/test.yml build
-            docker-compose --file release/oci/test.yml run sut
+            docker compose --file release/oci/test.yml build
+            docker compose --file release/oci/test.yml run sut
           fi
 
   build-and-publish:
