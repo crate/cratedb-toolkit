@@ -6,6 +6,7 @@
 - MongoDB: Fix missing output on STDOUT for `migr8 export`
 - MongoDB: Improve timestamp parsing by using `python-dateutil`
 - MongoDB: Converge `_id` input field to `id` column instead of dropping it
+- MongoDB: Make user interface use stderr, so stdout is for data only
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
