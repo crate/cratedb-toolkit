@@ -38,7 +38,7 @@ def gather_collections(database) -> t.List[str]:
 
     rich.print(tbl)
 
-    rich.print("\nCollections to exclude: (eg: '0 1 2', '0, 1, 2', '0-2')")
+    rich.print("\nCollections to exclude: (eg: '0 1 2', '0, 1, 2', '0-2'). Leave empty for using all connections.")
 
     sys.stderr.write("> ")
     collections_to_ignore = parse_input_numbers(input())

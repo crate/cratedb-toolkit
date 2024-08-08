@@ -80,7 +80,7 @@ migr8 --help
 To extract a description of the schema of a collection, use the
 `extract` subcommand. For example:
 
-    migr8 extract --host localhost --port 27017 --database test_db
+    migr8 extract --host localhost --port 27017 --database test_db > mongodb_schema.json
 
 After connecting to the designated MongoDB server, it will
 look at the collections within that database, and will prompt you which
