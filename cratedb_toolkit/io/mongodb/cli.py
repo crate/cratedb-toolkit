@@ -82,10 +82,13 @@ def translate_from_file(args):
     """
     Read in a JSON file and extract the schema from it.
     """
-
-    with open(args.infile) as f:
-        schema = json.load(f)
-        translate(schema)
+    fp: t.TextIO
+    if args.infile:
+        fp = open(args.infile, "r")
+    else:
+        fp = sys.stdin
+    schema = json.load(fp)
+    translate(schema)
 
 
 def export_to_stdout(args):

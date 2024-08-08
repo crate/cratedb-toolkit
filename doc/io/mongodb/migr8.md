@@ -80,7 +80,7 @@ migr8 --help
 To extract a description of the schema of a collection, use the
 `extract` subcommand. For example:
 
-    migr8 extract --host localhost --port 27017 --database test_db > mongodb_schema.json
+    migr8 extract --host localhost --port 27017 --database test_db --out mongodb_schema.json
 
 After connecting to the designated MongoDB server, it will
 look at the collections within that database, and will prompt you which
@@ -174,7 +174,7 @@ mostly consistent data-types.
 Once a schema description has been extracted, it can be translated
 into a CrateDB schema definition using the `translate` subcommand:
 
-    migr8 translate -i mongodb_schema.json
+    migr8 translate --infile mongodb_schema.json
 
 This will attempt to translate the description into a best-fit CrateDB
 table definition. Where datatypes are ambiguous, it will *choose the
@@ -191,6 +191,11 @@ CREATE TABLE IF NOT EXISTS "doc"."test" (
         "humidity" INTEGER
     )
 );
+```
+
+You can also connect both programs to each other, to execute both steps at once.
+```shell
+migr8 extract ... | migr8 translate
 ```
 
 
