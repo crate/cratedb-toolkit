@@ -95,7 +95,7 @@ def extract(args) -> t.Dict[str, t.Any]:
 
     schemas = {}
     for collection in filtered_collections:
-        schemas[collection] = extract_schema_from_collection(db[collection], partial)
+        schemas[collection] = extract_schema_from_collection(db[collection], partial, limit=args.limit)
     return schemas
 
 
@@ -121,6 +121,6 @@ def export(args) -> t.IO[bytes]:
     """
     buffer = io.BytesIO()
     client, db = get_mongodb_client_database(args, document_class=RawBSONDocument)
-    collection_to_json(db[args.collection], file=buffer)
+    collection_to_json(db[args.collection], fp=buffer, limit=args.limit)
     buffer.seek(0)
     return buffer

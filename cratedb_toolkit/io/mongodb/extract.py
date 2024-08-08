@@ -84,7 +84,7 @@ progressbar = progress.Progress(
 )
 
 
-def extract_schema_from_collection(collection: Collection, partial: bool) -> t.Dict[str, t.Any]:
+def extract_schema_from_collection(collection: Collection, partial: bool, limit: int = 0) -> t.Dict[str, t.Any]:
     """
     Extract a schema definition from a collection.
 
@@ -100,7 +100,7 @@ def extract_schema_from_collection(collection: Collection, partial: bool) -> t.D
     with progressbar:
         t = progressbar.add_task(collection.name, total=count)
         try:
-            for document in collection.find():
+            for document in collection.find().limit(limit=limit):
                 schema["count"] += 1
                 schema["document"] = extract_schema_from_document(document, schema["document"])
                 progressbar.update(t, advance=1)
