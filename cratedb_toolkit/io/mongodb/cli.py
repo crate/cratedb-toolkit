@@ -2,10 +2,13 @@ import argparse
 import json
 import sys
 
-import rich
+from rich.console import Console
 
 from cratedb_toolkit import __version__
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
+
+console = Console(stderr=True)
+rich = console
 
 
 def extract_parser(subargs):
@@ -62,7 +65,7 @@ def extract_to_file(args):
     """
 
     schema = extract(args)
-    rich.print(f"\nWriting resulting schema to {args.out}...")
+    rich.print(f"\nWriting resulting schema to {args.out}")
     with open(args.out, "w") as out:
         json.dump(schema, out, indent=4)
     rich.print("[green bold]Done![/green bold]")
@@ -83,10 +86,7 @@ def export_to_stdout(args):
 
 
 def main():
-    rich.print(
-        "\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n",
-        file=sys.stderr,
-    )
+    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
     args = get_args()
     if args.command == "extract":
         extract_to_file(args)

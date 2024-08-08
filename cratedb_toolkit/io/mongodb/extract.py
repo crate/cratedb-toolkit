@@ -69,6 +69,10 @@ import typing as t
 import bson
 from pymongo.collection import Collection
 from rich import progress
+from rich.console import Console
+
+console = Console(stderr=True)
+rich = console
 
 progressbar = progress.Progress(
     progress.TextColumn("{task.description} ", justify="left"),
@@ -76,6 +80,7 @@ progressbar = progress.Progress(
     "[progress.percentage]{task.percentage:>3.1f}% ({task.completed}/{task.total})",
     "•",
     progress.TimeRemainingColumn(),
+    console=console,
 )
 
 
