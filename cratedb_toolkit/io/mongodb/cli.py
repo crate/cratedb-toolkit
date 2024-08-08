@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 
 import rich
 
@@ -78,11 +79,14 @@ def translate_from_file(args):
 
 
 def export_to_stdout(args):
-    export(args)
+    sys.stdout.buffer.write(export(args).read())
 
 
 def main():
-    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
+    rich.print(
+        "\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n",
+        file=sys.stderr,
+    )
     args = get_args()
     if args.command == "extract":
         extract_to_file(args)
