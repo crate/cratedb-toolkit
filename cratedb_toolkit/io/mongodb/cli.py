@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+import typing as t
 
 from rich.console import Console
 
@@ -23,7 +24,7 @@ def extract_parser(subargs):
         choices=["full", "partial"],
         help="Whether to fully scan the MongoDB collections or only partially.",
     )
-    parser.add_argument("-o", "--out", default="mongodb_schema.json")
+    parser.add_argument("-o", "--out", required=False)
 
 
 def translate_parser(subargs):
@@ -65,10 +66,16 @@ def extract_to_file(args):
     """
 
     schema = extract(args)
-    rich.print(f"\nWriting resulting schema to {args.out}")
-    with open(args.out, "w") as out:
-        json.dump(schema, out, indent=4)
-    rich.print("[green bold]Done![/green bold]")
+
+    out_label = args.out or "stdout"
+    rich.print(f"\nWriting resulting schema to {out_label}")
+    fp: t.TextIO
+    if args.out:
+        fp = open(args.out, "w")
+    else:
+        fp = sys.stdout
+    json.dump(schema, fp=fp, indent=4)
+    fp.flush()
 
 
 def translate_from_file(args):
