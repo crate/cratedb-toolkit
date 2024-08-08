@@ -25,32 +25,19 @@ Export the documents from a MongoDB collection as JSON, to be ingested into Crat
 """
 
 import calendar
-import re
 import sys
 import typing as t
-from datetime import datetime, timedelta
 
 import bsonjs
+import dateutil.parser as dateparser
 import orjson as json
 import pymongo.collection
-
-_TZINFO_RE = re.compile(r"([+\-])?(\d\d):?(\d\d)")
 
 
 def date_converter(value):
     if isinstance(value, int):
         return value
-    dt = datetime.strptime(value[:-5], "%Y-%m-%dT%H:%M:%S.%f")
-    iso_match = _TZINFO_RE.match(value[-5:])
-    if iso_match:
-        sign, hours, minutes = iso_match.groups()
-        tzoffset = int(hours) * 3600 + int(minutes) * 60
-        if sign == "-":
-            dt = dt + timedelta(seconds=tzoffset)
-        else:
-            dt = dt - timedelta(seconds=tzoffset)
-    else:
-        raise Exception("Can't parse datetime string {0}".format(value))
+    dt = dateparser.parse(value)
     return calendar.timegm(dt.utctimetuple()) * 1000
 
 
