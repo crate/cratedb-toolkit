@@ -36,6 +36,7 @@ from functools import reduce
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
 
 TYPES = {
+    "OID": "TEXT",
     "DATETIME": "TIMESTAMP WITH TIME ZONE",
     "INT64": "INTEGER",
     "STRING": "TEXT",

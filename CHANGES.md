@@ -11,6 +11,7 @@
 - MongoDB: Make `migr8 translate` read from stdin by default
 - MongoDB: Improve user interface messages
 - MongoDB: Strip single leading underscore character from all top-level fields
+- MongoDB: Map OID types to CrateDB TEXT columns
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
