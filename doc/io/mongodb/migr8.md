@@ -66,9 +66,14 @@ invoke `export` and `cr8` to actually transfer data.
 
 ## Usage for `migr8`
 
-The program `migr8` offers three subcommands (`extract`, `translate`, `export`),
+The program `migr8` offers three subcommands `extract`, `translate`, and `export`,
 to conclude data transfers from MongoDB to CrateDB. Please read this section
 carefully to learn how they can be used successfully.
+
+If you intend to evaluate `migr8` on a small portion of your data in MongoDB, the
+`--limit` command-line option for the `migr8 extract` and `migr8 export`
+subcommands might be useful. Using `--limit 10000` is usually both good and fast
+enough, to assess if the schema translation and data transfer works well.
 
 ```shell
 migr8 --version
