@@ -72,7 +72,10 @@ def extract_value(value, parent_type=None):
 
 def convert(d):
     newdict = {}
-    del d["_id"]
+    # TODO: More columns can start with underscore `_`.
+    if "_id" in d:
+        d["id"] = d["_id"]
+        del d["_id"]
     for k, v in d.items():
         newdict[k] = extract_value(v)
     return newdict
