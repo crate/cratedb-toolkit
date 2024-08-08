@@ -91,7 +91,7 @@ def extract(args) -> t.Dict[str, t.Any]:
 
         partial = full != "y"
 
-        rich.print(f"\nExecuting a [red bold]{'partial' if partial else 'full'}[/red bold] scan...")
+        rich.print(f"\nExecuting a [red bold]{'partial' if partial else 'full'}[/red bold] scan")
 
     schemas = {}
     for collection in filtered_collections:
@@ -110,7 +110,6 @@ def translate(schemas, schemaname: str = None) -> t.Dict[str, str]:
         syntax = Syntax(query, "sql")
         rich.print(f"Collection [blue bold]'{collection}'[/blue bold]:")
         rich.print(syntax)
-        rich.print()
     return result
 
 
