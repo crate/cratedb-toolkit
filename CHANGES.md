@@ -8,6 +8,7 @@
 - MongoDB: Converge `_id` input field to `id` column instead of dropping it
 - MongoDB: Make user interface use stderr, so stdout is for data only
 - MongoDB: Make `migr8 extract` write to stdout by default
+- MongoDB: Make `migr8 translate` read from stdin by default
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
