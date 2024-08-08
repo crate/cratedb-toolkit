@@ -75,7 +75,7 @@ console = Console(stderr=True)
 rich = console
 
 progressbar = progress.Progress(
-    progress.TextColumn("{task.description} ", justify="left"),
+    progress.TextColumn("Processing collection: {task.description} ", justify="left"),
     progress.BarColumn(bar_width=None),
     "[progress.percentage]{task.percentage:>3.1f}% ({task.completed}/{task.total})",
     "•",

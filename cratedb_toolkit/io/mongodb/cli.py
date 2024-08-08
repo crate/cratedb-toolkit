@@ -68,7 +68,7 @@ def extract_to_file(args):
     schema = extract(args)
 
     out_label = args.out or "stdout"
-    rich.print(f"\nWriting resulting schema to {out_label}")
+    rich.print(f"Writing resulting schema to {out_label}")
     fp: t.TextIO
     if args.out:
         fp = open(args.out, "w")
@@ -96,11 +96,14 @@ def export_to_stdout(args):
 
 
 def main():
-    rich.print("\n[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter :: Schema Extractor\n\n")
     args = get_args()
+    headline_prefix = "[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter"
     if args.command == "extract":
+        rich.print(f"{headline_prefix} -> Schema Extractor")
         extract_to_file(args)
     elif args.command == "translate":
+        rich.print(f"{headline_prefix} -> Schema Translator")
         translate_from_file(args)
     elif args.command == "export":
+        rich.print(f"{headline_prefix} -> Data Exporter")
         export_to_stdout(args)
