@@ -1,12 +1,14 @@
 import io
 import logging
+import sys
 import typing as t
 
 import pymongo
 import pymongo.database
-import rich
 from bson.raw_bson import RawBSONDocument
+from rich.console import Console
 from rich.syntax import Syntax
+from rich.table import Table
 
 from .export import collection_to_json
 from .extract import extract_schema_from_collection
@@ -14,6 +16,9 @@ from .translate import translate as translate_schema
 from .util import parse_input_numbers
 
 logger = logging.getLogger(__name__)
+
+console = Console(stderr=True)
+rich = console
 
 
 def gather_collections(database) -> t.List[str]:
@@ -23,7 +28,7 @@ def gather_collections(database) -> t.List[str]:
 
     collections = database.list_collection_names()
 
-    tbl = rich.table.Table(show_header=True, header_style="bold blue")
+    tbl = Table(show_header=True, header_style="bold blue")
     tbl.add_column("Id", width=3)
     tbl.add_column("Collection Name")
     tbl.add_column("Estimated Size")
@@ -35,7 +40,8 @@ def gather_collections(database) -> t.List[str]:
 
     rich.print("\nCollections to exclude: (eg: '0 1 2', '0, 1, 2', '0-2')")
 
-    collections_to_ignore = parse_input_numbers(input("> "))
+    sys.stderr.write("> ")
+    collections_to_ignore = parse_input_numbers(input())
     filtered_collections = []
     for i, c in enumerate(collections):
         if i not in collections_to_ignore:
@@ -80,7 +86,8 @@ def extract(args) -> t.Dict[str, t.Any]:
     else:
         rich.print("\nDo a [red bold]full[/red bold] collection scan?")
         rich.print("A full scan will iterate over all documents in the collection, a partial only one document. (Y/n)")
-        full = input(">  ").strip().lower()
+        sys.stderr.write("> ")
+        full = input().strip().lower()
 
         partial = full != "y"
 
