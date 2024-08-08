@@ -1,4 +1,7 @@
 import re
+import typing as t
+
+from cratedb_toolkit.util.data_dict import OrderedDictX
 
 
 def parse_input_numbers(s: str):
@@ -21,3 +24,16 @@ def parse_input_numbers(s: str):
             except ValueError:
                 pass
     return options
+
+
+def sanitize_field_names(data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
+    """
+    CrateDB does not accept leading underscores as top-level column names, like `_foo`.
+
+    Utility function to rename all relevant column names, keeping their order intact.
+    """
+    d = OrderedDictX(data)
+    for name in d.keys():
+        if name.startswith("_") and name[1] != "_":
+            d.rename_key(name, name[1:])
+    return d

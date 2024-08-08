@@ -10,6 +10,7 @@
 - MongoDB: Make `migr8 extract` write to stdout by default
 - MongoDB: Make `migr8 translate` read from stdin by default
 - MongoDB: Improve user interface messages
+- MongoDB: Strip single leading underscore character from all top-level fields
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams

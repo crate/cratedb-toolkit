@@ -33,6 +33,8 @@ import dateutil.parser as dateparser
 import orjson as json
 import pymongo.collection
 
+from cratedb_toolkit.io.mongodb.util import sanitize_field_names
+
 
 def date_converter(value):
     if isinstance(value, int):
@@ -72,11 +74,7 @@ def extract_value(value, parent_type=None):
 
 def convert(d):
     newdict = {}
-    # TODO: More columns can start with underscore `_`.
-    if "_id" in d:
-        d["id"] = d["_id"]
-        del d["_id"]
-    for k, v in d.items():
+    for k, v in sanitize_field_names(d).items():
         newdict[k] = extract_value(v)
     return newdict
 
