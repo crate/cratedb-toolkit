@@ -141,7 +141,7 @@ def indent_sql(query: str) -> str:
         if len(line) >= 1:
             if line[-1] == "(":
                 indent += 4
-            elif line[-1] == ")":
+            elif line[-1] == ")" or line[-2:] == "),":
                 indent -= 4
     return "\n".join(lines)
 
