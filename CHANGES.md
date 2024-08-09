@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Processor: Updated Kinesis Lambda processor to understand AWS DMS
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
