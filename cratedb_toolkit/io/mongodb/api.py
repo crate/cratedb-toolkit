@@ -1,5 +1,6 @@
 import argparse
 import logging
+from pathlib import Path
 
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
@@ -10,7 +11,7 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 logger = logging.getLogger(__name__)
 
 
-def mongodb_copy(source_url, target_url, limit: int = 0, progress: bool = False):
+def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
     """
     Synopsis
     --------
@@ -36,7 +37,12 @@ def mongodb_copy(source_url, target_url, limit: int = 0, progress: bool = False)
     # 1. Extract schema from MongoDB collection.
     logger.info(f"Extracting schema from MongoDB: {mongodb_database}.{mongodb_collection}")
     extract_args = argparse.Namespace(
-        url=str(mongodb_uri), database=mongodb_database, collection=mongodb_collection, scan="full", limit=limit
+        url=str(mongodb_uri),
+        database=mongodb_database,
+        collection=mongodb_collection,
+        scan="full",
+        transformation=transformation,
+        limit=limit,
     )
     mongodb_schema = extract(extract_args)
     count = mongodb_schema[mongodb_collection]["count"]
@@ -65,7 +71,11 @@ def mongodb_copy(source_url, target_url, limit: int = 0, progress: bool = False)
         f"source={mongodb_collection_address.fullname}, target={cratedb_table_address.fullname}"
     )
     export_args = argparse.Namespace(
-        url=str(mongodb_uri), database=mongodb_database, collection=mongodb_collection, limit=limit
+        url=str(mongodb_uri),
+        database=mongodb_database,
+        collection=mongodb_collection,
+        transformation=transformation,
+        limit=limit,
     )
     buffer = export(export_args)
     cr8_insert_json(infile=buffer, hosts=cratedb_address.httpuri, table=cratedb_table_address.fullname)

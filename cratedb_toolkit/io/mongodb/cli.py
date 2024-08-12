@@ -2,11 +2,13 @@ import argparse
 import json
 import sys
 import typing as t
+from pathlib import Path
 
 from rich.console import Console
 
 from cratedb_toolkit import __version__
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
+from cratedb_toolkit.util.common import setup_logging
 
 console = Console(stderr=True)
 rich = console
@@ -25,6 +27,7 @@ def extract_parser(subargs):
         help="Whether to fully scan the MongoDB collections or only partially.",
     )
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
+    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
     parser.add_argument("-o", "--out", required=False)
 
 
@@ -44,6 +47,7 @@ def export_parser(subargs):
     parser.add_argument("--port", default=27017, help="MongoDB port")
     parser.add_argument("--database", required=True, help="MongoDB database")
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
+    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
 
 
 def get_args():
@@ -98,6 +102,7 @@ def export_to_stdout(args):
 
 
 def main():
+    setup_logging()
     args = get_args()
     headline_prefix = "[green bold]MongoDB[/green bold] -> [blue bold]CrateDB[/blue bold] Exporter"
     if args.command == "extract":

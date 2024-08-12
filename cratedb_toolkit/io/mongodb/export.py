@@ -32,6 +32,7 @@ import dateutil.parser as dateparser
 import orjson as json
 import pymongo.collection
 
+from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
 
 
@@ -87,7 +88,9 @@ def convert(d):
     return newdict
 
 
-def collection_to_json(collection: pymongo.collection.Collection, fp: t.IO[t.Any], limit: int = 0):
+def collection_to_json(
+    collection: pymongo.collection.Collection, fp: t.IO[t.Any], tm: TransformationManager = None, limit: int = 0
+):
     """
     Export a MongoDB collection's documents to standard JSON.
     The output is suitable to be consumed by the `cr8` program.
@@ -101,5 +104,8 @@ def collection_to_json(collection: pymongo.collection.Collection, fp: t.IO[t.Any
     for document in collection.find().limit(limit):
         bson_json = bsonjs.dumps(document.raw)
         json_object = json.loads(bson_json)
-        fp.write(json.dumps(convert(json_object)))
+        data = convert(json_object)
+        if tm:
+            data = tm.apply_transformations(collection.database.name, collection.name, data)
+        fp.write(json.dumps(data))
         fp.write(b"\n")

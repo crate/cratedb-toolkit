@@ -14,6 +14,7 @@
 - MongoDB: Map OID types to CrateDB TEXT columns
 - MongoDB: Make `migr8 extract` and `migr8 export` accept the `--limit` option
 - MongoDB: Fix indentation in prettified SQL output of `migr8 translate`
+- MongoDB: Add capability to give type hints and add transformations
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams

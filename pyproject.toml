@@ -154,7 +154,7 @@ kinesis = [
   "lorrystream @ git+https://github.com/daq-tools/lorrystream.git@55cf456fdcd3",
 ]
 mongodb = [
-  "commons-codec[mongodb]==0.0.3",
+  "commons-codec[mongodb,zyp]==0.0.4",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",

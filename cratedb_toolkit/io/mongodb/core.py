@@ -2,6 +2,7 @@ import io
 import logging
 import sys
 import typing as t
+from collections import OrderedDict
 
 import pymongo
 import pymongo.database
@@ -12,6 +13,7 @@ from rich.table import Table
 
 from .export import collection_to_json
 from .extract import extract_schema_from_collection
+from .transform import TransformationManager
 from .translate import translate as translate_schema
 from .util import parse_input_numbers
 
@@ -38,7 +40,7 @@ def gather_collections(database) -> t.List[str]:
 
     rich.print(tbl)
 
-    rich.print("\nCollections to exclude: (eg: '0 1 2', '0, 1, 2', '0-2'). Leave empty for using all connections.")
+    rich.print("\nCollections to exclude: (eg: '0 1 2', '0, 1, 2', '0-2'). Leave empty to use all collections.")
 
     sys.stderr.write("> ")
     collections_to_ignore = parse_input_numbers(input())
@@ -93,9 +95,12 @@ def extract(args) -> t.Dict[str, t.Any]:
 
         rich.print(f"\nExecuting a [red bold]{'partial' if partial else 'full'}[/red bold] scan")
 
-    schemas = {}
-    for collection in filtered_collections:
-        schemas[collection] = extract_schema_from_collection(db[collection], partial, limit=args.limit)
+    tm = TransformationManager(path=args.transformation)
+    schemas = OrderedDict()
+    for collection_name in filtered_collections:
+        collection_schema = extract_schema_from_collection(db[collection_name], partial, limit=args.limit)
+        tm.apply_type_overrides(db.name, collection_name, collection_schema)
+        schemas[collection_name] = collection_schema
     return schemas
 
 
@@ -119,8 +124,9 @@ def export(args) -> t.IO[bytes]:
 
     TODO: Run on multiple collections, like `extract`.
     """
+    tm = TransformationManager(path=args.transformation)
     buffer = io.BytesIO()
     client, db = get_mongodb_client_database(args, document_class=RawBSONDocument)
-    collection_to_json(db[args.collection], fp=buffer, limit=args.limit)
+    collection_to_json(db[args.collection], fp=buffer, tm=tm, limit=args.limit)
     buffer.seek(0)
     return buffer

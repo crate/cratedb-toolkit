@@ -1,0 +1,20 @@
+meta:
+  type: zyp-project
+  version: 1
+collections:
+- address:
+    container: testdrive-db
+    name: foobar-collection
+  schema:
+    rules:
+    - pointer: /some_date
+      type: DATETIME
+    - pointer: /another_date
+      type: DATETIME
+  bucket:
+    values:
+      rules:
+      - pointer: /some_date
+        transformer: to_unixtime
+      - pointer: /another_date
+        transformer: to_unixtime
