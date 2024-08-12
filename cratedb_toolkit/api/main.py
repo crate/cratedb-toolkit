@@ -4,6 +4,7 @@ import json
 import logging
 import typing as t
 from abc import abstractmethod
+from pathlib import Path
 
 from yarl import URL
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class ClusterBase(abc.ABC):
     @abstractmethod
-    def load_table(self, resource: InputOutputResource, target: TableAddress):
+    def load_table(self, resource: InputOutputResource, target: TableAddress, transformation: Path):
         raise NotImplementedError("Child class needs to implement this method")
 
 
@@ -35,7 +36,9 @@ class ManagedCluster(ClusterBase):
     def __post_init__(self):
         logger.info(f"Connecting to CrateDB Cloud Cluster: {self.cloud_id}")
 
-    def load_table(self, resource: InputOutputResource, target: t.Optional[TableAddress] = None):
+    def load_table(
+        self, resource: InputOutputResource, target: t.Optional[TableAddress] = None, transformation: Path = None
+    ):
         """
         Load data into a database table on CrateDB Cloud.
 
@@ -96,7 +99,7 @@ class StandaloneCluster(ClusterBase):
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
 
-    def load_table(self, resource: InputOutputResource, target: TableAddress):
+    def load_table(self, resource: InputOutputResource, target: TableAddress, transformation: Path = None):
         """
         Load data into a database table on a standalone CrateDB Server.
 
@@ -109,11 +112,11 @@ class StandaloneCluster(ClusterBase):
         """
         source_url = resource.url
         target_url = self.address.dburi
+        source_url_obj = URL(source_url)
         if source_url.startswith("influxdb"):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
             http_scheme = "http://"
-            source_url_obj = URL(source_url)
             if asbool(source_url_obj.query.get("ssl")):
                 http_scheme = "https://"
             source_url = source_url.replace("influxdb2://", http_scheme)
@@ -130,7 +133,13 @@ class StandaloneCluster(ClusterBase):
             else:
                 from cratedb_toolkit.io.mongodb.api import mongodb_copy
 
-                if not mongodb_copy(source_url, target_url, progress=True):
+                if not mongodb_copy(
+                    source_url,
+                    target_url,
+                    transformation=transformation,
+                    limit=source_url_obj.query.get("limit", 0),
+                    progress=True,
+                ):
                     msg = "Data loading failed"
                     logger.error(msg)
                     raise OperationFailed(msg)

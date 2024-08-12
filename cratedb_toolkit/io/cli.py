@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import click
 from click_aliases import ClickAliasedGroup
@@ -35,6 +36,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 @click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
 @click.option("--compression", type=str, required=False, help="Compression format of the import resource")
+@click.option("--transformation", type=Path, required=False, help="Path to Zyp transformation file")
 @click.pass_context
 def load_table(
     ctx: click.Context,
@@ -46,6 +48,7 @@ def load_table(
     table: str,
     format_: str,
     compression: str,
+    transformation: Path,
 ):
     """
     Import data into CrateDB and CrateDB Cloud clusters.
@@ -82,4 +85,4 @@ def load_table(
         cluster = StandaloneCluster(address=address)
     else:
         raise NotImplementedError("Unable to select backend")
-    return cluster.load_table(resource=resource, target=target)
+    return cluster.load_table(resource=resource, target=target, transformation=transformation)

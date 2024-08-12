@@ -56,3 +56,8 @@ Use `mongoimport`.
 mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
 ```
 :::
+
+
+docker run -it --rm --network=host --volume ~/Downloads/applications_snp.quotes.json:/data/applications_snp.quotes.json mongo:7 mongoimport --db=testdrive --collection=carrier-quotes /data/applications_snp.quotes.json --jsonArray
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/carrier-quotes
+ctk load table mongodb://localhost:27017/testdrive/carrier-quotes

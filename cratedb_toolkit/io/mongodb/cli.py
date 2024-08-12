@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 import typing as t
+from pathlib import Path
 
 from rich.console import Console
 
@@ -25,6 +26,7 @@ def extract_parser(subargs):
         help="Whether to fully scan the MongoDB collections or only partially.",
     )
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
+    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
     parser.add_argument("-o", "--out", required=False)
 
 
@@ -44,6 +46,7 @@ def export_parser(subargs):
     parser.add_argument("--port", default=27017, help="MongoDB port")
     parser.add_argument("--database", required=True, help="MongoDB database")
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
+    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
 
 
 def get_args():
