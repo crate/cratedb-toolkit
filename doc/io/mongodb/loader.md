@@ -49,6 +49,13 @@ ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
 
+## Using Zyp transformations
+You can use [Zyp transformations] to change the shape of the data while being
+transferred. In order to add it to the pipeline, use the `--transformation`
+command line option on the `migr8 extract` and `migr8 export` commands.
+
+You can find an example file at `examples/zyp-transformation.yaml`.
+
 
 :::{todo}
 Use `mongoimport`.
@@ -56,3 +63,6 @@ Use `mongoimport`.
 mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
 ```
 :::
+
+
+[Zyp transformations]: https://commons-codec.readthedocs.io/zyp/index.html
