@@ -162,7 +162,7 @@ mongodb = [
 ]
 pymongo = [
   "jessiql==1.0.0rc1",
-  "pandas==2.1.*",
+  "pandas>=2.1,<2.3",
   "pymongo==4.8.*",
   "sqlalchemy<2",
 ]
