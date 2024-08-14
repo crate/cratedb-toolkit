@@ -392,5 +392,8 @@ def get_table_names(sql: str) -> t.List[t.List[str]]:
     names = []
     statements = sqlparse_cratedb(sql)
     for statement in statements:
-        names.append([statement.metadata.table_name])
+        local_names = []
+        for table in statement.metadata.tables:
+            local_names.append(table.name)
+        names.append(local_names)
     return names
