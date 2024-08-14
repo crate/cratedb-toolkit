@@ -89,7 +89,7 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crash",
-  "cratedb-sqlparse==0.0.4",
+  "cratedb-sqlparse==0.0.6",
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
   "polars<1.5",
