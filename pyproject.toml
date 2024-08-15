@@ -151,7 +151,7 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
-  "lorrystream @ git+https://github.com/daq-tools/lorrystream.git@55cf456fdcd3",
+  "lorrystream @ git+https://github.com/daq-tools/lorrystream.git@kinesis",
 ]
 mongodb = [
   "commons-codec[mongodb,zyp]==0.0.4",
