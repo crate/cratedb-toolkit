@@ -16,6 +16,7 @@
 - MongoDB: Fix indentation in prettified SQL output of `migr8 translate`
 - MongoDB: Add capability to give type hints and add transformations
 - Dependencies: Adjust code for lorrystream version 0.0.3
+- Dependencies: Update to lorrystream 0.0.4 and commons-codec 0.0.6
 
 ## 2024/07/25 v0.0.16
 - `ctk load table`: Added support for MongoDB Change Streams
