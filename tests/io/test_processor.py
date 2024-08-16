@@ -3,6 +3,10 @@ import sys
 
 import pytest
 
+pytestmark = pytest.mark.kinesis
+
+pytest.importorskip("commons_codec", reason="Only works with commons-codec installed")
+
 
 @pytest.fixture
 def reset_handler():
