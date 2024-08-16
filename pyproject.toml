@@ -151,10 +151,10 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
-  "lorrystream[carabas]==0.0.3",
+  "lorrystream[carabas]==0.0.4",
 ]
 mongodb = [
-  "commons-codec[mongodb,zyp]==0.0.4",
+  "commons-codec[mongodb,zyp]==0.0.6",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
