@@ -107,7 +107,7 @@ dependencies = [
 ]
 [project.optional-dependencies]
 all = [
-  "cratedb-toolkit[full,influxdb,kinesis,mongodb]",
+  "cratedb-toolkit[full,influxdb,mongodb]",
 ]
 cfr = [
   "pandas<2.2",
