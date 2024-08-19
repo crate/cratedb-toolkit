@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/08/19 v0.0.17
 - Processor: Updated Kinesis Lambda processor to understand AWS DMS
 - MongoDB: Fix missing output on STDOUT for `migr8 export`
 - MongoDB: Improve timestamp parsing by using `python-dateutil`
