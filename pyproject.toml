@@ -165,7 +165,7 @@ pymongo = [
   "jessiql==1.0.0rc1",
   "pandas==2.1.*",
   "pymongo==4.8.*",
-  "sqlalchemy<2",
+  "sqlalchemy<3",
 ]
 release = [
   "build<2",
