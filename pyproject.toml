@@ -92,7 +92,7 @@ dependencies = [
   "cratedb-sqlparse==0.0.6",
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
-  "polars<1.5",
+  "polars<1.6",
   "python-dateutil<3",
   "python-dotenv<2",
   "python-slugify<9",
