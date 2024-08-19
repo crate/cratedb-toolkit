@@ -137,6 +137,10 @@ docs = [
   "sphinxcontrib-mermaid<1",
   "sphinxext-opengraph<1",
 ]
+dynamodb = [
+  "boto3",
+  "commons-codec",
+]
 full = [
   "cratedb-toolkit[cfr,cloud,datasets,io,service]",
 ]
@@ -188,6 +192,7 @@ test = [
   "pytest-mock<4",
   "responses<0.26",
   "testcontainers-azurite==0.0.1rc1",
+  "testcontainers-localstack==0.0.1rc1",
   "testcontainers-minio==0.0.1rc1",
 ]
 test-mongodb = [
@@ -254,6 +259,7 @@ testpaths = [
 xfail_strict = true
 markers = [
   "examples",
+  "dynamodb",
   "influxdb",
   "kinesis",
   "mongodb",

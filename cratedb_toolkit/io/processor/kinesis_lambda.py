@@ -34,6 +34,7 @@ import json
 import logging
 import os
 import sys
+import typing as t
 
 import sqlalchemy as sa
 from commons_codec.exception import UnknownOperationError
@@ -77,6 +78,7 @@ except Exception as ex:
 
 # TODO: Automatically create destination table.
 # TODO: Propagate mapping definitions and other settings.
+cdc: t.Union[DMSTranslatorCrateDB, DynamoCDCTranslatorCrateDB]
 if MESSAGE_FORMAT == "dms":
     cdc = DMSTranslatorCrateDB(column_types=column_types)
 elif MESSAGE_FORMAT == "dynamodb":

@@ -113,7 +113,15 @@ class StandaloneCluster(ClusterBase):
         source_url = resource.url
         target_url = self.address.dburi
         source_url_obj = URL(source_url)
-        if source_url.startswith("influxdb"):
+        if source_url.startswith("dynamodb"):
+            from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
+
+            if not dynamodb_copy(source_url, target_url, progress=True):
+                msg = "Data loading failed"
+                logger.error(msg)
+                raise OperationFailed(msg)
+
+        elif source_url.startswith("influxdb"):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
             http_scheme = "http://"
