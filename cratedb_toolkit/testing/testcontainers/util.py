@@ -72,7 +72,8 @@ class KeepaliveContainer(DockerContainer):
         define the `CRATEDB_KEEPALIVE` or `TC_KEEPALIVE` environment variables.
         """
 
-        self._configure()
+        if hasattr(self, "_configure"):
+            self._configure()
 
         if self._name is None:
             raise ValueError(
@@ -110,7 +111,8 @@ class KeepaliveContainer(DockerContainer):
                 logger.info(f"Starting container: {container_id} ({container_name})")
                 self._container.start()
 
-        self._connect()
+        if hasattr(self, "_connect"):
+            self._connect()
         return self
 
     def stop(self, **kwargs):

@@ -1,0 +1,94 @@
+---
+name: "Tests: DynamoDB"
+
+on:
+  pull_request:
+    branches: ~
+    paths:
+    - '.github/workflows/dynamodb.yml'
+    - 'cratedb_toolkit/io/dynamodb/**'
+    - 'pyproject.toml'
+  push:
+    branches: [ main ]
+    paths:
+    - '.github/workflows/dynamodb.yml'
+    - 'cratedb_toolkit/io/dynamodb/**'
+    - 'pyproject.toml'
+
+  # Allow job to be triggered manually.
+  workflow_dispatch:
+
+  # Run job each second night after CrateDB nightly has been published.
+  # The reason about "why each second night", is because free capacity
+  # for Codecov uploads is limited.
+  schedule:
+    - cron: '0 3 */2 * *'
+
+# Cancel in-progress jobs when pushing to the same branch.
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+
+  tests:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        # TODO: yarl, dependency of influxio, is currently not available on Python 3.12.
+        #       https://github.com/aio-libs/yarl/pull/942
+        python-version: ["3.8", "3.11"]
+        localstack-version: ["3.6"]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+      LOCALSTACK_VERSION: ${{ matrix.localstack-version }}
+      # Do not tear down Testcontainers
+      TC_KEEPALIVE: true
+
+    name: "
+    Python ${{ matrix.python-version }}, 
+    LocalStack ${{ matrix.localstack-version }}, 
+    OS ${{ matrix.os }}
+    "
+    steps:
+
+    - name: Acquire sources
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Set up project
+      run: |
+
+        # `setuptools 0.64.0` adds support for editable install hooks (PEP 660).
+        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
+        pip install "setuptools>=64" --upgrade
+
+        # Install package in editable mode.
+        pip install --use-pep517 --prefer-binary --editable=.[dynamodb,test,develop]
+
+    - name: Run linter and software tests
+      run: |
+        pytest -m dynamodb
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        files: ./coverage.xml
+        flags: dynamodb
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: false
