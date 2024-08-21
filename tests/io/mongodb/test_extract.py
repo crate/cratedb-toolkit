@@ -23,6 +23,21 @@ class TestExtractTypes(unittest.TestCase):
         schema = trim_schema(extract.extract_schema_from_document(data, {}))
         self.assertDictEqual(schema, expected)
 
+    def test_integer_types(self):
+        """
+        Validate extraction of numeric types INTEGER vs. BIGINT.
+        """
+        data = {
+            "integer": 2147483647,
+            "bigint": 1563051934000,
+        }
+        expected = {
+            "integer": "INTEGER",
+            "bigint": "BIGINT",
+        }
+        schema = trim_schema(extract.extract_schema_from_document(data, {}))
+        self.assertDictEqual(schema, expected)
+
     def test_bson_types(self):
         data = {
             "a": bson.ObjectId("55153a8014829a865bbf700d"),
