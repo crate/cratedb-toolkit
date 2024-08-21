@@ -33,7 +33,7 @@ class TestExtractTypes(unittest.TestCase):
         }
         expected = {
             "integer": "INTEGER",
-            "bigint": "BIGINT",
+            "bigint": "INT64",
         }
         schema = trim_schema(extract.extract_schema_from_document(data, {}))
         self.assertDictEqual(schema, expected)
@@ -50,7 +50,7 @@ class TestExtractTypes(unittest.TestCase):
         expected = {
             "datetime": "DATETIME",
             "datetimems": "TIMESTAMP",
-            "decimal128": "DOUBLE",
+            "decimal128": "DECIMAL",
             "int64": "INT64",
             "objectid": "OID",
             "timestamp": "TIMESTAMP",

@@ -171,7 +171,7 @@ TYPES_MAP = {
     bson.datetime.datetime: "DATETIME",
     bson.Timestamp: "TIMESTAMP",
     bson.DatetimeMS: "TIMESTAMP",
-    bson.Decimal128: "DOUBLE",
+    bson.Decimal128: "DECIMAL",
     bson.Int64: "INT64",
     # primitive types
     str: "STRING",
@@ -196,5 +196,5 @@ def get_type(value):
         if -(2**31) <= value <= 2**31 - 1:
             return "INTEGER"
         else:
-            return "BIGINT"
+            return "INT64"
     return TYPES_MAP.get(type_, "UNKNOWN")
