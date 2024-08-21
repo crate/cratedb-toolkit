@@ -4,7 +4,7 @@
 # - https://vsupalov.com/buildkit-cache-mount-dockerfile/
 # - https://github.com/FernandoMiguel/Buildkit#mounttypecache
 
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
