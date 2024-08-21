@@ -98,12 +98,12 @@ def extract_schema_from_collection(collection: Collection, partial: bool, limit:
     else:
         count = collection.estimated_document_count()
     with progressbar:
-        t = progressbar.add_task(collection.name, total=count)
+        task = progressbar.add_task(collection.name, total=count)
         try:
             for document in collection.find().limit(limit=limit):
                 schema["count"] += 1
                 schema["document"] = extract_schema_from_document(document, schema["document"])
-                progressbar.update(t, advance=1)
+                progressbar.update(task, advance=1)
                 if partial:
                     break
         except KeyboardInterrupt:
@@ -148,20 +148,20 @@ def extract_schema_from_array(array: list, schema: dict):
     """
 
     for item in array:
-        t = get_type(item)
-        if t not in schema:
-            if t == "OBJECT":
-                schema[t] = {"count": 0, "document": {}}
-            elif t == "ARRAY":
-                schema[t] = {"count": 0, "types": {}}
+        type_ = get_type(item)
+        if type_ not in schema:
+            if type_ == "OBJECT":
+                schema[type_] = {"count": 0, "document": {}}
+            elif type_ == "ARRAY":
+                schema[type_] = {"count": 0, "types": {}}
             else:
-                schema[t] = {"count": 0}
+                schema[type_] = {"count": 0}
 
-        schema[t]["count"] += 1
-        if t == "OBJECT":
-            schema[t]["document"] = extract_schema_from_document(item, schema[t]["document"])
-        elif t == "ARRAY":
-            schema[t]["types"] = extract_schema_from_array(item, schema[t]["types"])
+        schema[type_]["count"] += 1
+        if type_ == "OBJECT":
+            schema[type_]["document"] = extract_schema_from_document(item, schema[type_]["document"])
+        elif type_ == "ARRAY":
+            schema[type_]["types"] = extract_schema_from_array(item, schema[type_]["types"])
     return schema
 
 
@@ -176,7 +176,7 @@ TYPES_MAP = {
     bool: "BOOLEAN",
     int: "INTEGER",
     float: "FLOAT",
-    # collection types
+    # container types
     list: "ARRAY",
     dict: "OBJECT",
 }

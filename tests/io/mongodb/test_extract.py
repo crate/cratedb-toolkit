@@ -1,5 +1,7 @@
 # ruff: noqa: E402
+import typing as t
 import unittest
+from collections import OrderedDict
 
 import pytest
 
@@ -16,54 +18,49 @@ from cratedb_toolkit.io.mongodb import extract
 
 class TestExtractTypes(unittest.TestCase):
     def test_primitive_types(self):
-        i = {"a": "a", "b": True, "c": 3, "d": 4.4}
+        data = {"a": "a", "b": True, "c": 3, "d": 4.4}
         expected = {"a": "STRING", "b": "BOOLEAN", "c": "INTEGER", "d": "FLOAT"}
-        s = extract.extract_schema_from_document(i, {})
-        for key, value in expected.items():
-            types = list(s[key]["types"].keys())
-            self.assertListEqual([value], types)
+        schema = trim_schema(extract.extract_schema_from_document(data, {}))
+        self.assertDictEqual(schema, expected)
 
     def test_bson_types(self):
-        i = {
+        data = {
             "a": bson.ObjectId("55153a8014829a865bbf700d"),
             "b": bson.datetime.datetime.now(),
             "c": bson.Timestamp(0, 0),
         }
         expected = {"a": "OID", "b": "DATETIME", "c": "TIMESTAMP"}
-        s = extract.extract_schema_from_document(i, {})
-        for key, value in expected.items():
-            types = list(s[key]["types"].keys())
-            self.assertListEqual([value], types)
+        schema = trim_schema(extract.extract_schema_from_document(data, {}))
+        self.assertDictEqual(schema, expected)
 
     def test_collection_types(self):
-        i = {"a": [1, 2, 3], "b": {"a": "hello world"}}
+        data = {"a": [1, 2, 3], "b": {"a": "hello world"}}
         expected = {"a": "ARRAY", "b": "OBJECT"}
-        s = extract.extract_schema_from_document(i, {})
-        for key, value in expected.items():
-            types = list(s[key]["types"].keys())
-            self.assertListEqual([value], types)
+        schema = trim_schema(extract.extract_schema_from_document(data, {}))
+        self.assertDictEqual(schema, expected)
 
     def test_list_subtypes(self):
-        i = {
+        data = {
             "a": ["a", "b", 3],
             "b": [[1, 2, 3]],
             "c": [{"a": "a"}, {"a": "b"}],
         }
 
-        subtypes = extract.extract_schema_from_array(i["a"], {})
+        subtypes = extract.extract_schema_from_array(data["a"], {})
         self.assertListEqual(["STRING", "INTEGER"], list(subtypes.keys()))
 
-        subtypes = extract.extract_schema_from_array(i["b"], {})
+        subtypes = extract.extract_schema_from_array(data["b"], {})
         self.assertListEqual(["ARRAY"], list(subtypes.keys()))
         self.assertListEqual(["INTEGER"], list(subtypes["ARRAY"]["types"].keys()))
 
-        subtypes = extract.extract_schema_from_array(i["c"], {})
+        subtypes = extract.extract_schema_from_array(data["c"], {})
         self.assertListEqual(["OBJECT"], list(subtypes.keys()))
 
     def test_object_type(self):
-        i = {"a": {"b": "c"}}
-        s = extract.extract_schema_from_document(i, {})
-        self.assertListEqual(["OBJECT"], list(s["a"]["types"].keys()))
+        data = {"a": {"b": "c"}}
+        expected = {"a": "OBJECT"}
+        schema = trim_schema(extract.extract_schema_from_document(data, {}))
+        self.assertDictEqual(schema, expected)
 
 
 class TestTypeCount(unittest.TestCase):
@@ -84,3 +81,15 @@ class TestTypeCount(unittest.TestCase):
         self.assertEqual(s["a"]["types"]["INTEGER"]["count"], 1)
         self.assertEqual(s["a"]["types"]["STRING"]["count"], 1)
         self.assertEqual(s["a"]["types"]["BOOLEAN"]["count"], 1)
+
+
+def get_types(schema_item) -> t.List[str]:
+    return list(schema_item["types"].keys())
+
+
+def trim_schema(schema) -> t.Dict[str, t.Any]:
+    result = OrderedDict()
+    for key, value in schema.items():
+        types = get_types(value)
+        result[key] = types[0]
+    return result
