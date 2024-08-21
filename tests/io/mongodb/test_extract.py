@@ -40,11 +40,21 @@ class TestExtractTypes(unittest.TestCase):
 
     def test_bson_types(self):
         data = {
-            "a": bson.ObjectId("55153a8014829a865bbf700d"),
-            "b": bson.datetime.datetime.now(),
-            "c": bson.Timestamp(0, 0),
+            "datetime": bson.datetime.datetime.now(),
+            "datetimems": bson.DatetimeMS(1563051934000),
+            "decimal128": bson.Decimal128("42.42"),
+            "int64": bson.Int64(42),
+            "objectid": bson.ObjectId("55153a8014829a865bbf700d"),
+            "timestamp": bson.Timestamp(0, 0),
         }
-        expected = {"a": "OID", "b": "DATETIME", "c": "TIMESTAMP"}
+        expected = {
+            "datetime": "DATETIME",
+            "datetimems": "TIMESTAMP",
+            "decimal128": "DOUBLE",
+            "int64": "INT64",
+            "objectid": "OID",
+            "timestamp": "TIMESTAMP",
+        }
         schema = trim_schema(extract.extract_schema_from_document(data, {}))
         self.assertDictEqual(schema, expected)
 
