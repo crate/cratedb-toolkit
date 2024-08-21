@@ -155,7 +155,7 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
-  "lorrystream[carabas]==0.0.4",
+  "lorrystream[carabas]",
 ]
 mongodb = [
   "commons-codec[mongodb,zyp]",
