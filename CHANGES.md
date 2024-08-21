@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Dependencies: Unpin commons-codec, to always use the latest version
 
 ## 2024/08/19 v0.0.17
 - Processor: Updated Kinesis Lambda processor to understand AWS DMS
