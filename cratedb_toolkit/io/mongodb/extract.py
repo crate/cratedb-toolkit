@@ -170,7 +170,9 @@ TYPES_MAP = {
     bson.ObjectId: "OID",
     bson.datetime.datetime: "DATETIME",
     bson.Timestamp: "TIMESTAMP",
-    bson.int64.Int64: "INT64",
+    bson.DatetimeMS: "TIMESTAMP",
+    bson.Decimal128: "DOUBLE",
+    bson.Int64: "INT64",
     # primitive types
     str: "STRING",
     bool: "BOOLEAN",

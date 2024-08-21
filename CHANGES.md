@@ -6,6 +6,8 @@
 - Dependencies: Unpin lorrystream, to always use the latest version
 - MongoDB: Improve type mapper by discriminating between
   `INTEGER` and `BIGINT`
+- MongoDB: Improve type mapper by supporting BSON `DatetimeMS`,
+  `Decimal128`, and `Int64` types
 
 ## 2024/08/19 v0.0.17
 - Processor: Updated Kinesis Lambda processor to understand AWS DMS
