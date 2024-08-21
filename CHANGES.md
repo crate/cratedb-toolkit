@@ -4,6 +4,8 @@
 ## Unreleased
 - Dependencies: Unpin commons-codec, to always use the latest version
 - Dependencies: Unpin lorrystream, to always use the latest version
+- MongoDB: Improve type mapper by discriminating between
+  `INTEGER` and `BIGINT`
 
 ## 2024/08/19 v0.0.17
 - Processor: Updated Kinesis Lambda processor to understand AWS DMS

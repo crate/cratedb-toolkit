@@ -182,5 +182,17 @@ TYPES_MAP = {
 }
 
 
-def get_type(o):
-    return TYPES_MAP.get(type(o), "UNKNOWN")
+def get_type(value):
+    """
+    Resolve value type via type map, with special treatment for integer types.
+
+    INTEGER: -2^31 to 2^31-1
+    BIGINT: -2^63 to 2^63-1
+    """
+    type_ = type(value)
+    if type_ is int:
+        if -(2**31) <= value <= 2**31 - 1:
+            return "INTEGER"
+        else:
+            return "BIGINT"
+    return TYPES_MAP.get(type_, "UNKNOWN")
