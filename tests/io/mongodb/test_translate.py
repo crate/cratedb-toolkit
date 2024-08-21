@@ -11,7 +11,7 @@ class TestTranslate(unittest.TestCase):
     def test_types_translation(self):
         i = [
             ("DATETIME", "TIMESTAMP WITH TIME ZONE"),
-            ("INT64", "INTEGER"),
+            ("INT64", "BIGINT"),
             ("STRING", "TEXT"),
             ("BOOLEAN", "BOOLEAN"),
             ("INTEGER", "INTEGER"),
