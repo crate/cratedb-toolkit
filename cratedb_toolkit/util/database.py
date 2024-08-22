@@ -13,6 +13,7 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 from sqlalchemy_cratedb.dialect import CrateDialect
 
+from cratedb_toolkit.model import TableAddress
 from cratedb_toolkit.util.data import str_contains
 
 try:
@@ -348,6 +349,14 @@ class DatabaseAdapter:
             method=insert_bulk,
             parallel=True,
         )
+
+    def describe_table_columns(self, table_name: str):
+        """
+        Introspect table schema returning defined columns and their types.
+        """
+        inspector = sa.inspect(self.engine)
+        table_address = TableAddress.from_string(table_name)
+        return inspector.get_columns(table_name=t.cast(str, table_address.table), schema=table_address.schema)
 
 
 def sa_is_empty(thing):

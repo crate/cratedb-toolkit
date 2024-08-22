@@ -4,8 +4,6 @@ from copy import deepcopy
 
 from boltons.urlutils import URL
 
-from cratedb_toolkit.util.database import DatabaseAdapter, decode_database_table
-
 
 @dataclasses.dataclass
 class DatabaseAddress:
@@ -68,6 +66,8 @@ class DatabaseAddress:
         """
         Decode database and table names, and sanitize database URI.
         """
+        from cratedb_toolkit.util.database import decode_database_table
+
         database, table = decode_database_table(self.dburi)
         uri = deepcopy(self.uri)
         uri.path = ""
@@ -88,7 +88,13 @@ class TableAddress:
         """
         Return a full-qualified quoted table identifier.
         """
+        from cratedb_toolkit.util import DatabaseAdapter
+
         return DatabaseAdapter.quote_relation_name(f"{self.schema}.{self.table}")
+
+    @classmethod
+    def from_string(cls, table_name_full: str) -> "TableAddress":
+        return TableAddress(*table_name_full.split("."))
 
 
 @dataclasses.dataclass

@@ -36,7 +36,7 @@ class TransformationManager:
         for rule in transformation.schema.rules:
             pointer = JsonPointer(f"/document{rule.pointer}/types")
             type_stats = pointer.resolve(collection_schema)
-            type_stats[rule.type] = 1e10
+            type_stats[rule.type] = {"count": int(9e10)}
 
     def apply_transformations(self, database_name: str, collection_name: str, data: t.Dict[str, t.Any]):
         if not self.active:
@@ -46,4 +46,6 @@ class TransformationManager:
             transformation: CollectionTransformation = self.project.get(address)
         except KeyError:
             return data
-        return transformation.bucket.apply(data)
+        if transformation.bucket:
+            return transformation.bucket.apply(data)
+        return data
