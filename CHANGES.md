@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- MongoDB: Fix and verify Zyp transformations
 
 ## 2024/08/21 v0.0.18
 - Dependencies: Unpin commons-codec, to always use the latest version
