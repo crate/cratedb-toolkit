@@ -3,6 +3,7 @@
 
 ## Unreleased
 - MongoDB: Fix and verify Zyp transformations
+- DMS/DynamoDB/MongoDB I/O: Use SQL with parameters instead of inlining values
 
 ## 2024/08/21 v0.0.18
 - Dependencies: Unpin commons-codec, to always use the latest version

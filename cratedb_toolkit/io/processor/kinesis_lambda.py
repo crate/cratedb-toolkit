@@ -25,7 +25,7 @@ Resources:
 # /// script
 # requires-python = ">=3.9"
 # dependencies = [
-#   "commons-codec",
+#   "commons-codec>=0.0.12",
 #   "sqlalchemy-cratedb==0.38.0",
 # ]
 # ///
@@ -40,7 +40,7 @@ import sqlalchemy as sa
 from commons_codec.exception import UnknownOperationError
 from commons_codec.model import ColumnTypeMapStore
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
-from commons_codec.transform.dynamodb import DynamoCDCTranslatorCrateDB
+from commons_codec.transform.dynamodb import DynamoDBCDCTranslator
 from sqlalchemy.util import asbool
 
 LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO")
@@ -78,11 +78,11 @@ except Exception as ex:
 
 # TODO: Automatically create destination table.
 # TODO: Propagate mapping definitions and other settings.
-cdc: t.Union[DMSTranslatorCrateDB, DynamoCDCTranslatorCrateDB]
+cdc: t.Union[DMSTranslatorCrateDB, DynamoDBCDCTranslator]
 if MESSAGE_FORMAT == "dms":
     cdc = DMSTranslatorCrateDB(column_types=column_types)
 elif MESSAGE_FORMAT == "dynamodb":
-    cdc = DynamoCDCTranslatorCrateDB(table_name=CRATEDB_TABLE)
+    cdc = DynamoDBCDCTranslator(table_name=CRATEDB_TABLE)
 
 # Create the database connection outside the handler to allow
 # connections to be re-used by subsequent function invocations.
@@ -123,8 +123,13 @@ def handler(event, context):
             logger.debug(f"Record Data: {record_data}")
 
             # Process record.
-            sql = cdc.to_sql(record_data)
-            connection.execute(sa.text(sql))
+            operation = cdc.to_sql(record_data)
+            connection.execute(sa.text(operation.statement), parameters=operation.parameters)
+
+            # Processing alternating CDC events requires write synchronization.
+            # FIXME: Needs proper table name quoting.
+            connection.execute(sa.text(f"REFRESH TABLE {CRATEDB_TABLE}"))
+
             connection.commit()
 
             # Bookkeeping.
