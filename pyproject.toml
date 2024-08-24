@@ -139,7 +139,7 @@ docs = [
 ]
 dynamodb = [
   "boto3",
-  "commons-codec",
+  "commons-codec>=0.0.12",
 ]
 full = [
   "cratedb-toolkit[cfr,cloud,datasets,io,service]",
@@ -155,10 +155,11 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
+  "commons-codec>=0.0.12",
   "lorrystream[carabas]",
 ]
 mongodb = [
-  "commons-codec[mongodb,zyp]>=0.0.4",
+  "commons-codec[mongodb,zyp]>=0.0.12",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",

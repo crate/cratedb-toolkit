@@ -44,9 +44,9 @@ class MongoDBCDCRelayCrateDB:
         # FIXME: Note that the function does not perform any sensible error handling yet.
         with self.cratedb_adapter.engine.connect() as connection:
             connection.execute(sa.text(self.cdc.sql_ddl))
-            for sql in self.cdc_to_sql():
-                if sql:
-                    connection.execute(sa.text(sql))
+            for operation in self.cdc_to_sql():
+                if operation:
+                    connection.execute(sa.text(operation.statement), operation.parameters)
 
     def cdc_to_sql(self):
         """

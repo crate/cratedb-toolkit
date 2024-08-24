@@ -8,6 +8,7 @@ from tests.conftest import check_sqlalchemy2
 pytestmark = pytest.mark.mongodb
 
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
+pytest.importorskip("bsonjs", reason="Skipping tests because bsonjs is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
 from cratedb_toolkit.io.mongodb.api import mongodb_copy  # noqa: E402
