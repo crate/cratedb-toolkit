@@ -139,7 +139,7 @@ docs = [
 ]
 dynamodb = [
   "boto3",
-  "commons-codec>=0.0.12",
+  "commons-codec @ git+https://github.com/crate/commons-codec.git@sql-where-params",
 ]
 full = [
   "cratedb-toolkit[cfr,cloud,datasets,io,service]",
@@ -155,11 +155,11 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
-  "commons-codec>=0.0.12",
+  "commons-codec @ git+https://github.com/crate/commons-codec.git@sql-where-params",
   "lorrystream[carabas]",
 ]
 mongodb = [
-  "commons-codec[mongodb,zyp]>=0.0.12",
+  "commons-codec[mongodb,zyp] @ git+https://github.com/crate/commons-codec.git@sql-where-params",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
