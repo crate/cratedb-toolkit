@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/08/26 v0.0.19
 - MongoDB: Fix and verify Zyp transformations
 - DMS/DynamoDB/MongoDB I/O: Use SQL with parameters instead of inlining values
 
