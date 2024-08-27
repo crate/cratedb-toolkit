@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- DMS/DynamoDB: Fix table name quoting within CDC processor handler
 
 ## 2024/08/26 v0.0.19
 - MongoDB: Fix and verify Zyp transformations
