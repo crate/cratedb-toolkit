@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/08/27 v0.0.20
 - DMS/DynamoDB: Fix table name quoting within CDC processor handler
 
 ## 2024/08/26 v0.0.19
