@@ -127,8 +127,7 @@ def handler(event, context):
             connection.execute(sa.text(operation.statement), parameters=operation.parameters)
 
             # Processing alternating CDC events requires write synchronization.
-            # FIXME: Needs proper table name quoting.
-            connection.execute(sa.text(f"REFRESH TABLE {CRATEDB_TABLE}"))
+            connection.execute(sa.text(f"REFRESH TABLE {cdc.quote_table_name(CRATEDB_TABLE)}"))
 
             connection.commit()
 
