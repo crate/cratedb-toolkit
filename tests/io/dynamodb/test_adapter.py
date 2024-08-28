@@ -13,7 +13,7 @@ RECORD = {
 
 
 def test_adapter_scan_success(dynamodb):
-    dynamodb_url = f"{dynamodb.get_connection_url()}/demo?region=us-east-1"
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/demo?region=us-east-1"
     adapter = DynamoDBAdapter(URL(dynamodb_url))
     adapter.scan("foo")
 
@@ -22,7 +22,7 @@ def test_adapter_scan_failure_consistent_read(dynamodb):
     """
     Check supplying invalid parameters to `DynamoDBAdapter` fails as expected.
     """
-    dynamodb_url = f"{dynamodb.get_connection_url()}/demo?region=us-east-1"
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/demo?region=us-east-1"
     adapter = DynamoDBAdapter(URL(dynamodb_url))
 
     with pytest.raises(ParamValidationError) as ex:
@@ -34,7 +34,7 @@ def test_adapter_scan_failure_page_size(dynamodb):
     """
     Check supplying invalid parameters to `DynamoDBAdapter` fails as expected.
     """
-    dynamodb_url = f"{dynamodb.get_connection_url()}/demo?region=us-east-1"
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/demo?region=us-east-1"
     adapter = DynamoDBAdapter(URL(dynamodb_url))
 
     with pytest.raises(ParamValidationError) as ex:

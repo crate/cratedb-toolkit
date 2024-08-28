@@ -158,6 +158,8 @@ io = [
   "sqlalchemy>=2",
 ]
 kinesis = [
+  "aiobotocore<2.15",
+  "async-kinesis<1.2",
   "commons-codec>=0.0.14",
   "lorrystream[carabas]>=0.0.6",
 ]

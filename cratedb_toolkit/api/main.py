@@ -138,9 +138,18 @@ class StandaloneCluster(ClusterBase):
                 logger.error("Data loading failed or incomplete")
                 return False
 
+        elif source_url_obj.scheme.startswith("kinesis"):
+            if "+cdc" in source_url_obj.scheme:
+                from cratedb_toolkit.io.kinesis.api import kinesis_relay
+
+                return kinesis_relay(str(source_url_obj), target_url)
+            else:
+                raise NotImplementedError("Loading full data via Kinesis not implemented yet")
+
         elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:
             if "+cdc" in source_url_obj.scheme:
                 source_url_obj.scheme = source_url_obj.scheme.replace("+cdc", "")
+
                 from cratedb_toolkit.io.mongodb.api import mongodb_relay_cdc
 
                 return mongodb_relay_cdc(str(source_url_obj), target_url, progress=True)

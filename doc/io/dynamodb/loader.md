@@ -6,6 +6,9 @@ Load data from DynamoDB into CrateDB using a one-stop command
 `ctk load table dynamodb://...`, in order to facilitate convenient
 data transfers to be used within data pipelines or ad hoc operations.
 
+It is the brother to the corresponding cdc-relay implementation,
+[](#dynamodb-cdc).
+
 ## Install
 ```shell
 pip install --upgrade 'cratedb-toolkit[dynamodb]'

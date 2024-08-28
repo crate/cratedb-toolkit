@@ -42,8 +42,8 @@ jobs:
         os: ["ubuntu-latest"]
         # TODO: yarl, dependency of influxio, is currently not available on Python 3.12.
         #       https://github.com/aio-libs/yarl/pull/942
-        python-version: ["3.8", "3.11"]
-        localstack-version: ["3.7"]
+        python-version: ["3.9", "3.11"]
+        localstack-version: ["3.6"]
 
     env:
       OS: ${{ matrix.os }}
@@ -78,7 +78,7 @@ jobs:
         pip install "setuptools>=64" --upgrade
 
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[dynamodb,test,develop]
+        pip install --use-pep517 --prefer-binary --editable=.[dynamodb,kinesis,test,develop]
 
     - name: Run linter and software tests
       run: |
