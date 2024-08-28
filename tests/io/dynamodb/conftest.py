@@ -29,7 +29,7 @@ class DynamoDBFixture:
         from cratedb_toolkit.testing.testcontainers.localstack import LocalStackContainerWithKeepalive
 
         self.container = LocalStackContainerWithKeepalive()
-        self.container.with_services("dynamodb")
+        self.container.with_services("dynamodb", "kinesis")
         self.container.start()
 
     def finalize(self):
@@ -44,9 +44,13 @@ class DynamoDBFixture:
         for database_name in RESET_TABLES:
             self.client.drop_database(database_name)
 
-    def get_connection_url(self):
+    def get_connection_url_dynamodb(self):
         url = URL(self.container.get_url())
         return f"dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}"
+
+    def get_connection_url_kinesis_dynamodb_cdc(self):
+        url = URL(self.container.get_url())
+        return f"kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}"
 
 
 @pytest.fixture(scope="session")
@@ -71,4 +75,4 @@ def dynamodb(dynamodb_service):
 
 @pytest.fixture(scope="session")
 def dynamodb_test_manager(dynamodb_service):
-    return DynamoDBTestManager(dynamodb_service.get_connection_url())
+    return DynamoDBTestManager(dynamodb_service.get_connection_url_dynamodb())

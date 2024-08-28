@@ -133,8 +133,6 @@ def test_processor_kinesis_dynamodb_insert_update(cratedb, reset_handler, mocker
     from cratedb_toolkit.io.processor.kinesis_lambda import handler
 
     # Define two CDC events: INSERT and UPDATE.
-    # They have to be conveyed separately because CrateDB needs a
-    # `REFRESH TABLE` operation between them.
     event = {
         "Records": [
             wrap_kinesis(DYNAMODB_CDC_INSERT_NESTED),
@@ -162,6 +160,6 @@ def wrap_kinesis(data):
         "eventID": "shardId-000000000006:49590338271490256608559692538361571095921575989136588898",
         "kinesis": {
             "sequenceNumber": "49590338271490256608559692538361571095921575989136588898",
-            "data": base64.b64encode(json.dumps(data).encode("utf-8")),
+            "data": base64.b64encode(json.dumps(data).encode("utf-8")).decode(),
         },
     }

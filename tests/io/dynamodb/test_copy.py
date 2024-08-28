@@ -16,7 +16,7 @@ def test_dynamodb_copy_success(caplog, cratedb, dynamodb, dynamodb_test_manager)
     """
 
     # Define source and target URLs.
-    dynamodb_url = f"{dynamodb.get_connection_url()}/demo?region=us-east-1"
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/demo?region=us-east-1"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Populate source database with data.

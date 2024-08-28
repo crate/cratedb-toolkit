@@ -10,7 +10,7 @@ def test_dynamodb_load_table(caplog, cratedb, dynamodb, dynamodb_test_manager):
     """
     CLI test: Invoke `ctk load table` for DynamoDB.
     """
-    dynamodb_url = f"{dynamodb.get_connection_url()}/ProductCatalog?region=us-east-1"
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/ProductCatalog?region=us-east-1"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Populate source database with sample dataset.
