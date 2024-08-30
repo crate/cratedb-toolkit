@@ -7,12 +7,14 @@ on:
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
+    - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
   push:
     branches: [ main ]
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
+    - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
 
   # Allow job to be triggered manually.
