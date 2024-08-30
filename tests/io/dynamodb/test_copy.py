@@ -1,4 +1,9 @@
+import pytest
+
 from cratedb_toolkit.io.dynamodb.copy import DynamoDBFullLoad
+
+pytestmark = pytest.mark.dynamodb
+
 
 RECORD_UTM = {
     "Id": {"N": "101"},
@@ -15,10 +20,17 @@ RECORD_UTM = {
             }
         ]
     },
+    "location": {
+        "M": {
+            "coordinates": {"L": [{"S": ""}]},
+            "meetingPoint": {"S": "At the end of the tunnel"},
+            "address": {"S": "Salzbergwerk Berchtesgaden"},
+        },
+    },
 }
 
 
-def test_dynamodb_copy_list_of_objects(caplog, cratedb, dynamodb, dynamodb_test_manager):
+def test_dynamodb_copy(caplog, cratedb, dynamodb, dynamodb_test_manager):
     """
     CLI test: Invoke `ctk load table` for DynamoDB.
     """
@@ -51,4 +63,9 @@ def test_dynamodb_copy_list_of_objects(caplog, cratedb, dynamodb, dynamodb_test_
                 "utm_source": "google",
             }
         ],
+        "location": {
+            "coordinates": [""],
+            "meetingPoint": "At the end of the tunnel",
+            "address": "Salzbergwerk Berchtesgaden",
+        },
     }
