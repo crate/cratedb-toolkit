@@ -30,7 +30,7 @@ class LocalStackContainerWithKeepalive(KeepaliveContainer, LocalStackContainer):
     useful when used within a test matrix. Its default value is `latest`.
     """
 
-    LOCALSTACK_VERSION = os.environ.get("LOCALSTACK_VERSION", "latest")
+    LOCALSTACK_VERSION = os.environ.get("LOCALSTACK_VERSION", "3.7")
 
     def __init__(
         self,
