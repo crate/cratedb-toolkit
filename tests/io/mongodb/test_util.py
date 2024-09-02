@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 
-from cratedb_toolkit.io.mongodb.util import parse_input_numbers
+from cratedb_toolkit.io.mongodb.util import parse_input_numbers, sanitize_field_names
 
 pytestmark = pytest.mark.mongodb
 
@@ -37,3 +37,6 @@ class TestInputNumberParser(unittest.TestCase):
         s = "0 1, 3 5-8, 9 12-10"
         parsed = parse_input_numbers(s)
         self.assertEqual(parsed, [0, 1, 3, 5, 6, 7, 8, 9, 10, 11, 12])
+
+    def test_sanitize_field_names(self):
+        assert sanitize_field_names({"_id": "foo"}) == {"__id": "foo"}

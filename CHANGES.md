@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- MongoDB: Rename columns with leading underscores to use double leading underscores
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
