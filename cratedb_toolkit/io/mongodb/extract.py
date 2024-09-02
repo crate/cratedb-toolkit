@@ -85,6 +85,10 @@ progressbar = progress.Progress(
 )
 
 
+# TODO: Make configurable.
+PARTIAL_SCAN_COUNT = 10_000
+
+
 def extract_schema_from_collection(collection: Collection, partial: bool, limit: int = 0) -> t.Dict[str, t.Any]:
     """
     Extract a schema definition from a collection.
@@ -95,7 +99,7 @@ def extract_schema_from_collection(collection: Collection, partial: bool, limit:
 
     schema: dict = {"count": 0, "document": {}}
     if partial:
-        count = 1
+        count = PARTIAL_SCAN_COUNT
     else:
         count = collection.estimated_document_count()
     with progressbar:
@@ -105,7 +109,7 @@ def extract_schema_from_collection(collection: Collection, partial: bool, limit:
                 schema["count"] += 1
                 schema["document"] = extract_schema_from_document(document, schema["document"])
                 progressbar.update(task, advance=1)
-                if partial:
+                if partial and schema["count"] >= PARTIAL_SCAN_COUNT:
                     break
         except KeyboardInterrupt:
             return schema
