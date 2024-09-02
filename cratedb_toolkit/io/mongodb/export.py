@@ -24,8 +24,10 @@
 Export the documents from a MongoDB collection as JSON, to be ingested into CrateDB.
 """
 
+import base64
 import calendar
 import typing as t
+from uuid import UUID
 
 import bsonjs
 import dateutil.parser as dateparser
@@ -65,6 +67,9 @@ def extract_value(value, parent_type=None):
     """
     if isinstance(value, dict):
         if len(value) == 1:
+            if "$binary" in value and value["$binary"]["subType"] in ["03", "04"]:
+                decoded = UUID(bytes=base64.b64decode(value["$binary"]["base64"]))
+                return extract_value(decoded, parent_type)
             for k, v in value.items():
                 if k.startswith("$"):
                     return extract_value(v, k.lstrip("$"))
