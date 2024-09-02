@@ -51,7 +51,7 @@ SQL_ECHO: bool = asbool(os.environ.get("SQL_ECHO", "false"))
 MESSAGE_FORMAT: str = os.environ.get("MESSAGE_FORMAT", "unknown")
 COLUMN_TYPES: str = os.environ.get("COLUMN_TYPES", "")
 CRATEDB_SQLALCHEMY_URL: str = os.environ.get("CRATEDB_SQLALCHEMY_URL", "crate://")
-CRATEDB_TABLE: str = os.environ.get("CRATEDB_TABLE", "default")
+CRATEDB_TABLE: t.Optional[str] = os.environ.get("CRATEDB_TABLE")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -127,7 +127,9 @@ def handler(event, context):
             connection.execute(sa.text(operation.statement), parameters=operation.parameters)
 
             # Processing alternating CDC events requires write synchronization.
-            connection.execute(sa.text(f"REFRESH TABLE {cdc.quote_table_name(CRATEDB_TABLE)}"))
+            # TODO: Improve interface.
+            if hasattr(cdc, "table_name"):
+                connection.execute(sa.text(f"REFRESH TABLE {cdc.table_name}"))
 
             connection.commit()
 
