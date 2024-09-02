@@ -65,11 +65,16 @@ OBJECT = "OBJECT ({object_type}) AS (\n{definition}\n)"
 def get_columns_definition(columns):
     columns_definition = []
     for column in columns:
-        if column[1]:
-            item = f"{column[1]}\n{column[0]}"
+        type_, name = column
+        if name:
+            item = f"{name}\n{type_}"
         else:
-            item = column[0]
-        columns_definition.append(item)
+            item = type_
+        if type_ == "UNKNOWN":
+            logger.warning(f"Unable to translate column: {name}")
+            continue
+        if item:
+            columns_definition.append(item)
     return columns_definition
 
 
