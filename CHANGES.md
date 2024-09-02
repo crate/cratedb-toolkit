@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
   Store them into a separate `OBJECT(IGNORED)` column in CrateDB.
 - DynamoDB: Add pagination support for `full-load` table loader
