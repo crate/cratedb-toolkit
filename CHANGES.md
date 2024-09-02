@@ -8,6 +8,8 @@
 - MongoDB: Fix processing empty arrays/lists. By default, assume `TEXT` as inner type.
 - MongoDB: For `ctk load table`, use "partial" scan for inferring the collection schema,
   based on the first 10,000 documents.
+- MongoDB: Skip leaking `UNKNOWN` fields into SQL DDL.
+  This means relevant column definitions will not be included into the SQL DDL.
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
