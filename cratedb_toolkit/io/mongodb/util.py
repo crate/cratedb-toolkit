@@ -28,12 +28,14 @@ def parse_input_numbers(s: str):
 
 def sanitize_field_names(data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
     """
-    CrateDB does not accept leading underscores as top-level column names, like `_foo`.
+    Rename top-level column names with single leading underscores to double leading underscores.
+    CrateDB does not accept singe leading underscores, like `_id`.
 
-    Utility function to rename all relevant column names, keeping their order intact.
+    This utility function to rename all relevant column names keeps their order intact.
+    When loosing order is acceptable, a more efficient variant could be used.
     """
     d = OrderedDictX(data)
     for name in d.keys():
-        if name.startswith("_") and name[1] != "_":
-            d.rename_key(name, name[1:])
+        if name.startswith("_") and not name.startswith("__"):
+            d.rename_key(name, f"_{name}")
     return d
