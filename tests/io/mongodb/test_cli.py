@@ -39,6 +39,7 @@ DOCUMENT_IN = {
         "name": "foobar",
         "active": True,
         "created": dateutil.parser.parse("2020-06-19T15:03:53.727Z"),
+        "timestamp": bson.datetime_ms.DatetimeMS(1455141600000),
     },
 }
 DOCUMENT_OUT = {
@@ -48,8 +49,20 @@ DOCUMENT_OUT = {
         "name": "foobar",
         "active": True,
         "created": 1592579033000,
+        "timestamp": 1455141600000,
     },
 }
+DOCUMENT_DDL = """
+CREATE TABLE IF NOT EXISTS "testdrive"."demo" (
+   "__id" TEXT,
+   "id" TEXT,
+   "value" OBJECT(DYNAMIC) AS (
+      "name" TEXT,
+      "active" BOOLEAN,
+      "created" TIMESTAMP WITH TIME ZONE,
+      "timestamp" TIMESTAMP WITH TIME ZONE
+   )
+)""".lstrip()
 
 
 def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
@@ -106,10 +119,15 @@ def test_mongodb_load_table_real(caplog, cratedb, mongodb):
     )
     assert result.exit_code == 0
 
-    # Verify data in target database.
+    # Verify metadata in target database.
     assert cratedb.database.table_exists("testdrive.demo") is True
     assert cratedb.database.refresh_table("testdrive.demo") is True
     assert cratedb.database.count_records("testdrive.demo") == 1
 
+    # Verify content in target database.
     results = cratedb.database.run_sql("SELECT * FROM testdrive.demo", records=True)
     assert results[0] == DOCUMENT_OUT
+
+    # Verify schema in target database.
+    results = cratedb.database.run_sql("SHOW CREATE TABLE testdrive.demo")
+    assert DOCUMENT_DDL in results[0][0]
