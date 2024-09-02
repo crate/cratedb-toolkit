@@ -40,7 +40,7 @@ def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int
         url=str(mongodb_uri),
         database=mongodb_database,
         collection=mongodb_collection,
-        scan="full",
+        scan="partial",
         transformation=transformation,
         limit=limit,
     )

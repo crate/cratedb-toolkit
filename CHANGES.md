@@ -6,6 +6,8 @@
 - MongoDB: Add support for UUID types
 - MongoDB: Improve reading timestamps in previous BSON formats
 - MongoDB: Fix processing empty arrays/lists. By default, assume `TEXT` as inner type.
+- MongoDB: For `ctk load table`, use "partial" scan for inferring the collection schema,
+  based on the first 10,000 documents.
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
