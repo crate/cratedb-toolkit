@@ -89,7 +89,7 @@ jobs:
         flags: main
         env_vars: OS,PYTHON
         name: codecov-umbrella
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
 
   tests-pymongo:
@@ -154,7 +154,7 @@ jobs:
         flags: pymongo
         env_vars: OS,PYTHON
         name: codecov-umbrella
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
 
   tests-kinesis:
@@ -219,4 +219,4 @@ jobs:
         flags: kinesis
         env_vars: OS,PYTHON
         name: codecov-umbrella
-        fail_ci_if_error: false
+        fail_ci_if_error: true
