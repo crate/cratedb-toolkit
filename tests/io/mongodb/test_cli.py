@@ -4,6 +4,7 @@ from uuid import UUID
 
 import dateutil
 import pytest
+import sqlparse
 from click.testing import CliRunner
 from pueblo.testing.dataframe import DataFrameFactory
 
@@ -33,13 +34,21 @@ def test_version():
     assert exitcode == 0
 
 
+DATETIME = dateutil.parser.parse("2020-06-19T15:03:53.727Z")
+
 DOCUMENT_IN = {
     "id": bson.Binary.from_uuid(UUID("d575540f-759d-4653-a4c4-4a9e410f1aa1")),
     "value": {
         "name": "foobar",
         "active": True,
-        "created": dateutil.parser.parse("2020-06-19T15:03:53.727Z"),
+        "created": DATETIME,
         "timestamp": bson.datetime_ms.DatetimeMS(1455141600000),
+        "list_date": [DATETIME, DATETIME],
+        "list_empty": [],
+        "list_float": [42.42, 43.43],
+        "list_integer": [42, 43],
+        "list_object": [{"foo": "bar"}, {"baz": "qux"}],
+        "list_string": ["foo", "bar"],
     },
 }
 DOCUMENT_OUT = {
@@ -50,6 +59,12 @@ DOCUMENT_OUT = {
         "active": True,
         "created": 1592579033000,
         "timestamp": 1455141600000,
+        "list_date": [1592579033000, 1592579033000],
+        "list_empty": [],
+        "list_float": [42.42, 43.43],
+        "list_integer": [42, 43],
+        "list_object": [{"foo": "bar"}, {"baz": "qux"}],
+        "list_string": ["foo", "bar"],
     },
 }
 DOCUMENT_DDL = """
@@ -60,7 +75,16 @@ CREATE TABLE IF NOT EXISTS "testdrive"."demo" (
       "name" TEXT,
       "active" BOOLEAN,
       "created" TIMESTAMP WITH TIME ZONE,
-      "timestamp" TIMESTAMP WITH TIME ZONE
+      "timestamp" TIMESTAMP WITH TIME ZONE,
+      "list_date" ARRAY(TIMESTAMP WITH TIME ZONE),
+      "list_empty" ARRAY(TEXT),
+      "list_float" ARRAY(REAL),
+      "list_integer" ARRAY(INTEGER),
+      "list_object" ARRAY(OBJECT(DYNAMIC) AS (
+         "foo" TEXT,
+         "baz" TEXT
+      )),
+      "list_string" ARRAY(TEXT)
    )
 )""".lstrip()
 
@@ -130,4 +154,6 @@ def test_mongodb_load_table_real(caplog, cratedb, mongodb):
 
     # Verify schema in target database.
     results = cratedb.database.run_sql("SHOW CREATE TABLE testdrive.demo")
-    assert DOCUMENT_DDL in results[0][0]
+    sql = results[0][0]
+    sql = sqlparse.format(sql)
+    assert sql.startswith(DOCUMENT_DDL)
