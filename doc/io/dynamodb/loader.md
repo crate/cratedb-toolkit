@@ -25,6 +25,23 @@ ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
 
+## Options
+
+### `page-size`
+The source URL accepts the `page-size` option to configure DynamoDB
+[pagination]. The default value is `1000`.
+```shell
+ctk load table .../ProductCatalog?region=us-east-1&page-size=5000
+```
+
+### `consistent-read`
+The source URL accepts the `consistent-read` option to configure DynamoDB
+[read consistency]. The default value is `false`.
+```shell
+ctk load table .../ProductCatalog?region=us-east-1&consistent-read=true
+```
+
+
 ## Variants
 
 ### CrateDB Cloud
@@ -66,3 +83,5 @@ docker run \
 
 [Credentials for accessing LocalStack AWS API]: https://docs.localstack.cloud/references/credentials/
 [Get started with DynamoDB on LocalStack]: https://docs.localstack.cloud/user-guide/aws/dynamodb/
+[pagination]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.Pagination
+[read consistency]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ReadConsistency

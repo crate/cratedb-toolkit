@@ -2,6 +2,9 @@
 
 
 ## Unreleased
+- DynamoDB: Add special decoding for varied lists.
+  Store them into a separate `OBJECT(IGNORED)` column in CrateDB.
+- DynamoDB: Add pagination support for `full-load` table loader
 
 ## 2024/08/27 v0.0.20
 - DMS/DynamoDB: Fix table name quoting within CDC processor handler
