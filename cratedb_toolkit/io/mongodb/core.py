@@ -57,7 +57,7 @@ def gather_collections(database) -> t.List[str]:
 
 def get_mongodb_client_database(args, **kwargs) -> t.Tuple[pymongo.MongoClient, pymongo.database.Database]:
     client: pymongo.MongoClient
-    client = pymongo.MongoClient(args.url, **kwargs)
+    client = pymongo.MongoClient(args.url, datetime_conversion="DATETIME_AUTO", **kwargs)
     db: pymongo.database.Database = client.get_database(args.database)
     return client, db
 

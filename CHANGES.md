@@ -4,6 +4,7 @@
 ## Unreleased
 - MongoDB: Rename columns with leading underscores to use double leading underscores
 - MongoDB: Add support for UUID types
+- MongoDB: Improve reading timestamps in previous BSON formats
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
