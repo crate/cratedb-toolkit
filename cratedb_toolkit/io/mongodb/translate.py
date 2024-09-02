@@ -31,9 +31,12 @@ for a field are integers, and 60% are strings), the translator will choose
 the type with the greatest proportion.
 """
 
+import logging
 from functools import reduce
 
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
+
+logger = logging.getLogger(__name__)
 
 TYPES = {
     "OID": "TEXT",
@@ -104,7 +107,14 @@ def determine_type(schema):
     Determine the type of specific field schema.
     """
 
-    types = schema.get("types", {})
+    # That's a workaround for empty arrays/lists.
+    # Let's assume an inner type of `TEXT`.
+    # TODO: Review mapping of empty arrays/lists.
+    if "types" not in schema or not schema["types"]:
+        logger.warning(f"Unable to determine type for incomplete schema: {schema}")
+        return "TEXT", None
+
+    types = schema["types"]
     type_ = max(types, key=lambda item: types[item]["count"])
     if type_ in TYPES:
         sql_type = TYPES.get(type_)
