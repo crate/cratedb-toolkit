@@ -123,7 +123,7 @@ datasets = [
 develop = [
   "black[jupyter]<25",
   "mypy<1.12",
-  "poethepoet<0.28",
+  "poethepoet<0.29",
   "pyproject-fmt<2.3",
   "ruff<0.7",
   "validate-pyproject<0.20",
@@ -177,7 +177,7 @@ release = [
   "twine<6",
 ]
 release-cfr = [
-  "poethepoet<0.28",
+  "poethepoet<0.29",
   "pyinstaller<7",
 ]
 service = [
