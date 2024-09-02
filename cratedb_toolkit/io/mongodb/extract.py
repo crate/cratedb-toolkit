@@ -67,6 +67,7 @@ An example schema may look like:
 import typing as t
 
 import bson
+from bson import OLD_UUID_SUBTYPE, UUID_SUBTYPE
 from pymongo.collection import Collection
 from rich import progress
 from rich.console import Console
@@ -197,4 +198,7 @@ def get_type(value):
             return "INTEGER"
         else:
             return "INT64"
+    if type_ is bson.binary.Binary:
+        if value.subtype in [OLD_UUID_SUBTYPE, UUID_SUBTYPE]:
+            return "UUID"
     return TYPES_MAP.get(type_, "UNKNOWN")

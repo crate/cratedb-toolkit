@@ -37,6 +37,7 @@ from cratedb_toolkit.io.mongodb.util import sanitize_field_names
 
 TYPES = {
     "OID": "TEXT",
+    "UUID": "TEXT",
     "DATETIME": "TIMESTAMP WITH TIME ZONE",
     "TIMESTAMP": "TIMESTAMP WITHOUT TIME ZONE",
     "INT64": "BIGINT",
