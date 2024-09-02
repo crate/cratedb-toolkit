@@ -57,10 +57,7 @@ def gather_collections(database) -> t.List[str]:
 
 def get_mongodb_client_database(args, **kwargs) -> t.Tuple[pymongo.MongoClient, pymongo.database.Database]:
     client: pymongo.MongoClient
-    if args.url:
-        client = pymongo.MongoClient(args.url, **kwargs)
-    else:
-        client = pymongo.MongoClient(args.host, int(args.port), **kwargs)
+    client = pymongo.MongoClient(args.url, **kwargs)
     db: pymongo.database.Database = client.get_database(args.database)
     return client, db
 

@@ -17,8 +17,6 @@ rich = console
 def extract_parser(subargs):
     parser = subargs.add_parser("extract", help="Extract a schema from a MongoDB database")
     parser.add_argument("--url", default="mongodb://localhost:27017", help="MongoDB URL")
-    parser.add_argument("--host", default="localhost", help="MongoDB host")
-    parser.add_argument("--port", default=27017, help="MongoDB port")
     parser.add_argument("--database", required=True, help="MongoDB database")
     parser.add_argument("--collection", help="MongoDB collection to create a schema for")
     parser.add_argument(
@@ -42,10 +40,8 @@ def translate_parser(subargs):
 def export_parser(subargs):
     parser = subargs.add_parser("export", help="Export a MongoDB collection as plain JSON")
     parser.add_argument("--url", default="mongodb://localhost:27017", help="MongoDB URL")
-    parser.add_argument("--collection", required=True)
-    parser.add_argument("--host", default="localhost", help="MongoDB host")
-    parser.add_argument("--port", default=27017, help="MongoDB port")
     parser.add_argument("--database", required=True, help="MongoDB database")
+    parser.add_argument("--collection", required=True, help="MongoDB collection to export")
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
     parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
 
