@@ -4,14 +4,12 @@ import os
 import unittest
 from unittest import mock
 
+import pymongo
 import pytest
 
 from tests.conftest import check_sqlalchemy2
 
 pytestmark = pytest.mark.mongodb
-
-pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
-pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
 
 @pytest.fixture(scope="module", autouse=True)

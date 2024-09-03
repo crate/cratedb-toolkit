@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 
-from cratedb_toolkit.io.mongodb.util import parse_input_numbers, sanitize_field_names
+from cratedb_toolkit.io.mongodb.util import parse_input_numbers, sanitize_field_names  # noqa: E402
 
 pytestmark = pytest.mark.mongodb
 

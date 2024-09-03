@@ -12,6 +12,9 @@
   This means relevant column definitions will not be included into the SQL DDL.
 - MongoDB: Make `ctk load table` use the `data OBJECT(DYNAMIC)` mapping strategy.
 - MongoDB: Sanitize lists of varying objects
+- MongoDB: Add `--treatment` option for applying special treatments to certain items
+  on real-world data
+- MongoDB: Use pagination on source collection, for creating batches towards CrateDB
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.

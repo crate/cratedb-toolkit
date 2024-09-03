@@ -1,6 +1,6 @@
 import re
-import typing as t
 
+from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.util.data_dict import OrderedDictX
 
 
@@ -26,7 +26,7 @@ def parse_input_numbers(s: str):
     return options
 
 
-def sanitize_field_names(data: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
+def sanitize_field_names(data: DocumentDict) -> DocumentDict:
     """
     Rename top-level column names with single leading underscores to double leading underscores.
     CrateDB does not accept singe leading underscores, like `_id`.

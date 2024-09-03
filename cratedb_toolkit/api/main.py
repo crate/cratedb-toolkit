@@ -37,7 +37,10 @@ class ManagedCluster(ClusterBase):
         logger.info(f"Connecting to CrateDB Cloud Cluster: {self.cloud_id}")
 
     def load_table(
-        self, resource: InputOutputResource, target: t.Optional[TableAddress] = None, transformation: Path = None
+        self,
+        resource: InputOutputResource,
+        target: t.Optional[TableAddress] = None,
+        transformation: Path = None,
     ):
         """
         Load data into a database table on CrateDB Cloud.

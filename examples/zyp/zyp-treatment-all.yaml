@@ -1,0 +1,24 @@
+# Zyp transformation defining a few special treatments to be applied to inbound data.
+---
+meta:
+  type: zyp-project
+  version: 1
+collections:
+- address:
+    container: testdrive
+    name: demo
+  treatment:
+    ignore_complex_lists: false
+    normalize_complex_lists: true
+    ignore_field:
+      - "ignore_toplevel"
+      - "ignore_nested"
+    convert_list:
+      - "to_list"
+    convert_string:
+      - "to_string"
+    convert_dict:
+      - name: "to_dict_scalar"
+        wrapper_name: "id"
+      - name: "user"
+        wrapper_name: "id"

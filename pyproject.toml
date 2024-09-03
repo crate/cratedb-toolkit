@@ -83,7 +83,9 @@ dynamic = [
   "version",
 ]
 dependencies = [
+  "attrs<25",
   "boltons<25",
+  "cattrs<24",
   "click<9",
   "click-aliases<2,>=1.0.4",
   "colorama<1",
@@ -159,7 +161,7 @@ kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 mongodb = [
-  "commons-codec[mongodb,zyp]>=0.0.14",
+  "commons-codec[mongodb,zyp]>=0.0.15",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
