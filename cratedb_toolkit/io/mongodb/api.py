@@ -3,7 +3,9 @@ import logging
 from pathlib import Path
 
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
+from cratedb_toolkit.io.mongodb.copy import MongoDBFullLoad
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
+from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.cr8 import cr8_insert_json
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -11,8 +13,10 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 logger = logging.getLogger(__name__)
 
 
-def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
+def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
     """
+    Transfer MongoDB collection using migr8.
+
     Synopsis
     --------
     export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
@@ -80,6 +84,42 @@ def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int
     buffer = export(export_args)
     cr8_insert_json(infile=buffer, hosts=cratedb_address.httpuri, table=cratedb_table_address.fullname)
 
+    return True
+
+
+def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
+    """
+    Transfer MongoDB collection using translator component.
+
+    Synopsis
+    --------
+    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    ctk load table mongodb://localhost:27017/testdrive/demo
+    """
+
+    # Decode database URL.
+    mongodb_address = DatabaseAddress.from_string(source_url)
+    mongodb_uri, mongodb_collection_address = mongodb_address.decode()
+    mongodb_database = mongodb_collection_address.schema
+    mongodb_collection = mongodb_collection_address.table
+
+    logger.info(f"Invoking MongoDBFullLoad. mongodb_uri={mongodb_uri}")
+
+    # Optionally configure transformations.
+    tm = None
+    if transformation:
+        tm = TransformationManager(path=transformation)
+
+    # Invoke `full-load` procedure.
+    mdb_full = MongoDBFullLoad(
+        mongodb_url=str(mongodb_uri),
+        mongodb_database=mongodb_database,
+        mongodb_collection=mongodb_collection,
+        cratedb_url=target_url,
+        tm=tm,
+        progress=progress,
+    )
+    mdb_full.start()
     return True
 
 

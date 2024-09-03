@@ -13,5 +13,5 @@ collections:
     name: demo
   schema:
     rules:
-    - pointer: /timestamp
+    - pointer: /data/timestamp
       type: DATETIME
