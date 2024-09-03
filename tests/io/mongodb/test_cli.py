@@ -52,41 +52,28 @@ DOCUMENT_IN = {
     },
 }
 DOCUMENT_OUT = {
-    "__id": mock.ANY,
-    "id": "d575540f-759d-4653-a4c4-4a9e410f1aa1",
-    "value": {
-        "name": "foobar",
-        "active": True,
-        "created": 1592579033000,
-        "timestamp": 1455141600000,
-        "list_date": [1592579033000, 1592579033000],
-        "list_empty": [],
-        "list_float": [42.42, 43.43],
-        "list_integer": [42, 43],
-        "list_object": [{"foo": "bar"}, {"baz": "qux"}],
-        "list_string": ["foo", "bar"],
+    "oid": mock.ANY,
+    "data": {
+        "_id": mock.ANY,
+        "id": "d575540f-759d-4653-a4c4-4a9e410f1aa1",
+        "value": {
+            "name": "foobar",
+            "active": True,
+            "created": 1592579033000,
+            "timestamp": 1455141600000,
+            "list_date": [1592579033000, 1592579033000],
+            "list_empty": [],
+            "list_float": [42.42, 43.43],
+            "list_integer": [42, 43],
+            "list_object": [{"foo": "bar"}, {"baz": "qux"}],
+            "list_string": ["foo", "bar"],
+        },
     },
 }
 DOCUMENT_DDL = """
 CREATE TABLE IF NOT EXISTS "testdrive"."demo" (
-   "__id" TEXT,
-   "id" TEXT,
-   "value" OBJECT(DYNAMIC) AS (
-      "name" TEXT,
-      "active" BOOLEAN,
-      "created" TIMESTAMP WITH TIME ZONE,
-      "timestamp" TIMESTAMP WITH TIME ZONE,
-      "list_date" ARRAY(TIMESTAMP WITH TIME ZONE),
-      "list_empty" ARRAY(TEXT),
-      "list_float" ARRAY(REAL),
-      "list_integer" ARRAY(INTEGER),
-      "list_object" ARRAY(OBJECT(DYNAMIC) AS (
-         "foo" TEXT,
-         "baz" TEXT
-      )),
-      "list_string" ARRAY(TEXT)
-   )
-)""".lstrip()
+   "oid" TEXT,
+   "data" OBJECT(DYNAMIC)""".lstrip()
 
 
 def test_mongodb_load_table_basic(caplog, cratedb, mongodb):

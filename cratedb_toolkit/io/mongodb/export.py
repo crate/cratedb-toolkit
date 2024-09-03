@@ -68,7 +68,7 @@ def extract_value(value, parent_type=None):
     if isinstance(value, dict):
         if len(value) == 1:
             if "$binary" in value and value["$binary"]["subType"] in ["03", "04"]:
-                decoded = UUID(bytes=base64.b64decode(value["$binary"]["base64"]))
+                decoded = str(UUID(bytes=base64.b64decode(value["$binary"]["base64"])))
                 return extract_value(decoded, parent_type)
             for k, v in value.items():
                 if k.startswith("$"):
