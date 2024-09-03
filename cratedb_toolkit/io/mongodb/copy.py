@@ -37,7 +37,7 @@ class MongoDBFullLoadTranslator(MongoDBCDCTranslatorCrateDB):
         """
 
         # Define SQL INSERT statement.
-        sql = f"INSERT INTO {self.table_name} " f"({self.ID_COLUMN}, {self.DATA_COLUMN}) " "VALUES (:oid, :record);"
+        sql = f"INSERT INTO {self.table_name} ({self.ID_COLUMN}, {self.DATA_COLUMN}) VALUES (:oid, :record);"
 
         # Converge MongoDB document to SQL parameters.
         record = extract_value(self.decode_bson(document))
@@ -100,16 +100,15 @@ class MongoDBFullLoad:
             records_out = 0
 
             for document in self.mongodb_collection.find().limit(self.mongodb_limit):
-                result_size = 1
-
                 try:
                     operation = self.translator.to_sql(document)
-                    logger.info("operation: %s", operation)
+                    logger.debug("SQL operation: %s", operation)
                 except Exception as ex:
                     logger_on_error(f"Transforming query failed: {ex}")
                     continue
                 try:
-                    connection.execute(sa.text(operation.statement), operation.parameters)
+                    result = connection.execute(sa.text(operation.statement), operation.parameters)
+                    result_size = result.rowcount
                     records_out += result_size
                     progress_bar.update(n=result_size)
                 except Exception as ex:

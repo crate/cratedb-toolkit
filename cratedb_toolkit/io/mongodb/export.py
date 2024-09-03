@@ -25,6 +25,7 @@ Export the documents from a MongoDB collection as JSON, to be ingested into Crat
 """
 
 import base64
+import builtins
 import calendar
 import typing as t
 from uuid import UUID
@@ -33,6 +34,7 @@ import bsonjs
 import dateutil.parser as dateparser
 import orjson as json
 import pymongo.collection
+from attrs import define
 
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
@@ -75,12 +77,55 @@ def extract_value(value, parent_type=None):
                     return extract_value(v, k.lstrip("$"))
         return {k.lstrip("$"): extract_value(v, parent_type) for (k, v) in value.items()}
     if isinstance(value, list):
+        if value and isinstance(value[0], dict):
+            lovos = ListOfVaryingObjectsSanitizer(value)
+            lovos.apply()
+
         return [extract_value(v, parent_type) for v in value]
     if parent_type:
         converter = type_converter.get(parent_type)
         if converter:
             return converter(value)
     return value
+
+
+@define
+class ListOfVaryingObjectsSanitizer:
+    """
+    CrateDB can not store lists of varying objects, so normalize them.
+    """
+
+    data: t.List[t.Dict[str, t.Any]]
+
+    def apply(self):
+        self.apply_rules(self.get_rules(self.type_stats()))
+
+    def type_stats(self) -> t.Dict[str, t.List[str]]:
+        types: t.Dict[str, t.List[str]] = {}
+        for item in self.data:
+            for key, value in item.items():
+                types.setdefault(key, []).append(type(value).__name__)
+        return types
+
+    def get_rules(self, all_types):
+        rules = []
+        for name, types in all_types.items():
+            if len(types) > 1:
+                rules.append({"name": name, "converter": self.get_best_converter(types)})
+        return rules
+
+    def apply_rules(self, rules):
+        for item in self.data:
+            for rule in rules:
+                name = rule["name"]
+                if name in item:
+                    item[name] = rule["converter"](item[name])
+
+    @staticmethod
+    def get_best_converter(types: t.List[str]) -> t.Callable:
+        if "str" in types:
+            return builtins.str
+        return lambda x: x
 
 
 def convert(d):
