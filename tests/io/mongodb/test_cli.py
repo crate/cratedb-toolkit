@@ -1,21 +1,22 @@
 import os
+from copy import deepcopy
+from pathlib import Path
 from unittest import mock
 from uuid import UUID
 
+import bson
 import dateutil
+import pymongo
 import pytest
 import sqlparse
 from click.testing import CliRunner
 from pueblo.testing.dataframe import DataFrameFactory
+from toolz import dissoc
 
 from cratedb_toolkit.cli import cli
 from tests.conftest import check_sqlalchemy2
 
 pytestmark = pytest.mark.mongodb
-
-bson = pytest.importorskip("bson", reason="Skipping tests because bson is not installed")
-pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
-pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -76,6 +77,14 @@ DOCUMENT_OUT = {
         },
     },
 }
+DOCUMENT_OUT_NO_COMPLEX_LISTS = deepcopy(DOCUMENT_OUT)
+DOCUMENT_OUT_NO_COMPLEX_LISTS["data"]["value"] = dissoc(
+    DOCUMENT_OUT["data"]["value"],
+    "list_object_symmetric",
+    "list_object_varying_string",
+    "list_object_varying_date",
+)
+
 DOCUMENT_DDL = """
 CREATE TABLE IF NOT EXISTS "testdrive"."demo" (
    "oid" TEXT,
@@ -114,12 +123,12 @@ def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
     assert cratedb.database.count_records("testdrive.demo") == 42
 
 
-def test_mongodb_load_table_real(caplog, cratedb, mongodb):
+def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
     """
     CLI test: Invoke `ctk load table` for MongoDB.
     """
-    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
     mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Populate source database.
     client: pymongo.MongoClient = mongodb.get_connection_client()
@@ -127,11 +136,13 @@ def test_mongodb_load_table_real(caplog, cratedb, mongodb):
     demo = testdrive.create_collection("demo")
     demo.insert_many([DOCUMENT_IN])
 
+    transformation = Path("examples/zyp/zyp-treatment-all.yaml")
+
     # Run transfer command.
     runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {mongodb_url}",
+        args=f"load table {mongodb_url} --transformation={transformation}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -144,6 +155,46 @@ def test_mongodb_load_table_real(caplog, cratedb, mongodb):
     # Verify content in target database.
     results = cratedb.database.run_sql("SELECT * FROM testdrive.demo", records=True)
     assert results[0] == DOCUMENT_OUT
+
+    # Verify schema in target database.
+    results = cratedb.database.run_sql("SHOW CREATE TABLE testdrive.demo")
+    sql = results[0][0]
+    sql = sqlparse.format(sql)
+    assert sql.startswith(DOCUMENT_DDL)
+
+
+def test_mongodb_load_table_complex_lists_ignore(caplog, cratedb, mongodb):
+    """
+    CLI test: Invoke `ctk load table` for MongoDB, with special parameter to ignore complex lists.
+    """
+    mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
+
+    # Populate source database.
+    client: pymongo.MongoClient = mongodb.get_connection_client()
+    testdrive = client.get_database("testdrive")
+    demo = testdrive.create_collection("demo")
+    demo.insert_many([DOCUMENT_IN])
+
+    transformation = Path("examples/zyp/zyp-treatment-ignore.yaml")
+
+    # Run transfer command.
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    result = runner.invoke(
+        cli,
+        args=f"load table {mongodb_url} --transformation={transformation}",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify metadata in target database.
+    assert cratedb.database.table_exists("testdrive.demo") is True
+    assert cratedb.database.refresh_table("testdrive.demo") is True
+    assert cratedb.database.count_records("testdrive.demo") == 1
+
+    # Verify content in target database.
+    results = cratedb.database.run_sql("SELECT * FROM testdrive.demo", records=True)
+    assert results[0] == DOCUMENT_OUT_NO_COMPLEX_LISTS
 
     # Verify schema in target database.
     results = cratedb.database.run_sql("SHOW CREATE TABLE testdrive.demo")

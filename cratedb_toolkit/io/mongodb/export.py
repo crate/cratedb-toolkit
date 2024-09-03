@@ -25,8 +25,8 @@ Export the documents from a MongoDB collection as JSON, to be ingested into Crat
 """
 
 import base64
-import builtins
 import calendar
+import logging
 import typing as t
 from uuid import UUID
 
@@ -34,10 +34,15 @@ import bsonjs
 import dateutil.parser as dateparser
 import orjson as json
 import pymongo.collection
+from attr import Factory
 from attrs import define
+from zyp.model.collection import CollectionTransformation
 
+from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
+
+logger = logging.getLogger(__name__)
 
 
 def date_converter(value):
@@ -60,81 +65,64 @@ type_converter = {
 }
 
 
-def extract_value(value, parent_type=None):
-    """
-    Decode MongoDB Extended JSON.
-
-    - https://www.mongodb.com/docs/manual/reference/mongodb-extended-json-v1/
-    - https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
-    """
-    if isinstance(value, dict):
-        if len(value) == 1:
-            if "$binary" in value and value["$binary"]["subType"] in ["03", "04"]:
-                decoded = str(UUID(bytes=base64.b64decode(value["$binary"]["base64"])))
-                return extract_value(decoded, parent_type)
-            for k, v in value.items():
-                if k.startswith("$"):
-                    return extract_value(v, k.lstrip("$"))
-        return {k.lstrip("$"): extract_value(v, parent_type) for (k, v) in value.items()}
-    if isinstance(value, list):
-        if value and isinstance(value[0], dict):
-            lovos = ListOfVaryingObjectsSanitizer(value)
-            lovos.apply()
-
-        return [extract_value(v, parent_type) for v in value]
-    if parent_type:
-        converter = type_converter.get(parent_type)
-        if converter:
-            return converter(value)
-    return value
-
-
 @define
-class ListOfVaryingObjectsSanitizer:
-    """
-    CrateDB can not store lists of varying objects, so normalize them.
-    """
+class CrateDBConverter:
+    transformation: CollectionTransformation = Factory(CollectionTransformation)
 
-    data: t.List[t.Dict[str, t.Any]]
+    def convert(self, data: DocumentDict) -> t.Dict[str, t.Any]:
+        """
+        Decode MongoDB Extended JSON, considering CrateDB specifics.
+        """
+        return self.extract_value(data)
 
-    def apply(self):
-        self.apply_rules(self.get_rules(self.type_stats()))
+    def extract_value(self, value: t.Any, parent_type: t.Optional[str] = None) -> t.Any:
+        """
+        Decode MongoDB Extended JSON.
 
-    def type_stats(self) -> t.Dict[str, t.List[str]]:
-        types: t.Dict[str, t.List[str]] = {}
-        for item in self.data:
-            for key, value in item.items():
-                types.setdefault(key, []).append(type(value).__name__)
-        return types
+        - https://www.mongodb.com/docs/manual/reference/mongodb-extended-json-v1/
+        - https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
+        """
+        if isinstance(value, dict):
+            # Custom adjustments to compensate shape anomalies in source data.
+            self.apply_special_treatments(value)
+            if len(value) == 1:
+                if "$binary" in value and value["$binary"]["subType"] in ["03", "04"]:
+                    decoded = str(UUID(bytes=base64.b64decode(value["$binary"]["base64"])))
+                    return self.extract_value(decoded, parent_type)
+                for k, v in value.items():
+                    if k.startswith("$"):
+                        return self.extract_value(v, k.lstrip("$"))
+            return {k.lstrip("$"): self.extract_value(v, parent_type) for (k, v) in value.items()}
+        if isinstance(value, list):
+            return [self.extract_value(v, parent_type) for v in value]
+        if parent_type:
+            converter = type_converter.get(parent_type)
+            if converter:
+                return converter(value)
+        return value
 
-    def get_rules(self, all_types):
-        rules = []
-        for name, types in all_types.items():
-            if len(types) > 1:
-                rules.append({"name": name, "converter": self.get_best_converter(types)})
-        return rules
+    def apply_special_treatments(self, value: t.Any):
+        """
+        Apply special treatments to value that can't be described otherwise up until now.
+        # Ignore certain items including anomalies that are not resolved, yet.
 
-    def apply_rules(self, rules):
-        for item in self.data:
-            for rule in rules:
-                name = rule["name"]
-                if name in item:
-                    item[name] = rule["converter"](item[name])
+        TODO: Needs an integration test feeding two records instead of just one.
+        """
 
-    @staticmethod
-    def get_best_converter(types: t.List[str]) -> t.Callable:
-        if "str" in types:
-            return builtins.str
-        return lambda x: x
+        if self.transformation is None or self.transformation.treatment is None:
+            return None
+
+        return self.transformation.treatment.apply(value)
 
 
 def convert(d):
     """
     Decode MongoDB Extended JSON, considering CrateDB specifics.
     """
+    converter = CrateDBConverter()
     newdict = {}
     for k, v in sanitize_field_names(d).items():
-        newdict[k] = extract_value(v)
+        newdict[k] = converter.convert(v)
     return newdict
 
 

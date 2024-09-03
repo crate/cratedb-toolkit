@@ -3,17 +3,12 @@ import typing as t
 import unittest
 from collections import OrderedDict
 
+import bson
 import pytest
 
-pytestmark = pytest.mark.mongodb
-
-pytest.importorskip("bson", reason="Skipping tests because bson is not installed")
-pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
-pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
-
-import bson
-
 from cratedb_toolkit.io.mongodb import extract
+
+pytestmark = pytest.mark.mongodb
 
 
 class TestExtractTypes(unittest.TestCase):
