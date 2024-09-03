@@ -47,7 +47,10 @@ DOCUMENT_IN = {
         "list_empty": [],
         "list_float": [42.42, 43.43],
         "list_integer": [42, 43],
-        "list_object": [{"foo": "bar"}, {"baz": "qux"}],
+        "list_object_symmetric": [{"foo": "bar"}, {"baz": "qux"}],
+        "list_object_varying_string": [{"value": 42}, {"value": "qux"}],
+        # TODO: Improve decoding of inner items.
+        "list_object_varying_date": [{"value": DATETIME}, {"value": "qux"}],
         "list_string": ["foo", "bar"],
     },
 }
@@ -65,7 +68,10 @@ DOCUMENT_OUT = {
             "list_empty": [],
             "list_float": [42.42, 43.43],
             "list_integer": [42, 43],
-            "list_object": [{"foo": "bar"}, {"baz": "qux"}],
+            "list_object_symmetric": [{"foo": "bar"}, {"baz": "qux"}],
+            "list_object_varying_string": [{"value": "42"}, {"value": "qux"}],
+            # TODO: Improve decoding of inner items.
+            "list_object_varying_date": [{"value": "{'$date': '2020-06-19T15:03:53.727Z'}"}, {"value": "qux"}],
             "list_string": ["foo", "bar"],
         },
     },

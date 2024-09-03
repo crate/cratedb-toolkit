@@ -11,6 +11,7 @@
 - MongoDB: Skip leaking `UNKNOWN` fields into SQL DDL.
   This means relevant column definitions will not be included into the SQL DDL.
 - MongoDB: Make `ctk load table` use the `data OBJECT(DYNAMIC)` mapping strategy.
+- MongoDB: Sanitize lists of varying objects
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.
