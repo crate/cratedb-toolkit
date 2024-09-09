@@ -1,0 +1,26 @@
+# A Zyp Transformation [1] file to support importing datasets
+# from mongodb-json-files [2] into CrateDB [3].
+#
+# Because CrateDB
+#
+# [1] https://commons-codec.readthedocs.io/zyp/
+# [2] https://github.com/ozlerhakan/mongodb-json-files
+# [3] https://cratedb.com/docs/guide/feature/
+---
+meta:
+  type: zyp-project
+  version: 1
+collections:
+- address:
+    container: datasets
+    name: companies
+  treatment:
+    ignore_field:
+      - "available_sizes"  # Dynamic nested arrays are not supported
+- address:
+    container: datasets
+    name: products
+  treatment:
+    ignore_field:
+      - "additional_tarriffs"  # Dynamic nested arrays are not supported
+      - "data"  # Dynamic nested arrays are not supported

@@ -70,7 +70,8 @@ class DatabaseAddress:
 
         database, table = decode_database_table(self.dburi)
         uri = deepcopy(self.uri)
-        uri.path = ""
+        if not uri.scheme.startswith("file"):
+            uri.path = ""
         return uri, TableAddress(database, table)
 
 

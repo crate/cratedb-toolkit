@@ -2,16 +2,16 @@
 import logging
 import typing as t
 
-import pymongo
 import sqlalchemy as sa
-from bson.raw_bson import RawBSONDocument
+from boltons.urlutils import URL
 from commons_codec.model import SQLOperation
 from commons_codec.transform.mongodb import MongoDBCDCTranslatorCrateDB
+from pymongo.cursor import Cursor
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from yarl import URL
 from zyp.model.collection import CollectionAddress
 
+from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.export import CrateDBConverter
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
@@ -44,6 +44,8 @@ class MongoDBFullLoadTranslator(MongoDBCDCTranslatorCrateDB):
         """
         Produce CrateDB SQL INSERT batch operation from multiple MongoDB documents.
         """
+        if isinstance(data, Cursor):
+            data = list(data)
         if not isinstance(data, list):
             data = [data]
 
@@ -68,34 +70,34 @@ class MongoDBFullLoad:
     def __init__(
         self,
         mongodb_url: str,
-        mongodb_database: str,
-        mongodb_collection: str,
         cratedb_url: str,
         tm: t.Union[TransformationManager, None],
-        mongodb_limit: int = 0,
-        on_error: t.Literal["ignore", "raise"] = "ignore",
+        on_error: t.Literal["ignore", "raise"] = "raise",
         progress: bool = False,
         debug: bool = True,
     ):
+        # Decode database URL: MongoDB.
+        self.mongodb_uri = URL(mongodb_url)
+        self.mongodb_adapter = mongodb_adapter_factory(self.mongodb_uri)
+
+        # Decode database URL: CrateDB.
         cratedb_address = DatabaseAddress.from_string(cratedb_url)
         cratedb_sqlalchemy_url, cratedb_table_address = cratedb_address.decode()
         cratedb_table = cratedb_table_address.fullname
 
-        self.mongodb_uri = URL(mongodb_url)
-        self.mongodb_client: pymongo.MongoClient = pymongo.MongoClient(
-            mongodb_url,
-            document_class=RawBSONDocument,
-            datetime_conversion="DATETIME_AUTO",
-        )
-        self.mongodb_collection = self.mongodb_client[mongodb_database][mongodb_collection]
-        self.mongodb_limit = mongodb_limit
         self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
         self.cratedb_table = self.cratedb_adapter.quote_relation_name(cratedb_table)
 
         # Transformation machinery.
         transformation = None
         if tm:
-            transformation = tm.project.get(CollectionAddress(container=mongodb_database, name=mongodb_collection))
+            address = CollectionAddress(
+                container=self.mongodb_adapter.database_name, name=self.mongodb_adapter.collection_name
+            )
+            try:
+                transformation = tm.project.get(address=address)
+            except KeyError:
+                pass
         self.converter = CrateDBConverter(transformation=transformation)
         self.translator = MongoDBFullLoadTranslator(table_name=self.cratedb_table, converter=self.converter, tm=tm)
 
@@ -103,14 +105,12 @@ class MongoDBFullLoad:
         self.progress = progress
         self.debug = debug
 
-        self.batch_size: int = int(self.mongodb_uri.query.get("batch-size", 250))
-
     def start(self):
         """
         Read items from DynamoDB table, convert to SQL INSERT statements, and submit to CrateDB.
         """
-        records_in = self.mongodb_collection.count_documents(filter={})
-        logger.info(f"Source: MongoDB collection={self.mongodb_collection} count={records_in}")
+        records_in = self.mongodb_adapter.record_count()
+        logger.info(f"Source: MongoDB collection={self.mongodb_adapter.collection_name} count={records_in}")
         logger_on_error = logger.warning
         if self.debug:
             logger_on_error = logger.exception
@@ -123,26 +123,20 @@ class MongoDBFullLoad:
             progress_bar = tqdm(total=records_in)
             records_out: int = 0
 
-            skip: int = 0
-            while True:
+            # Acquire batches of documents, convert to SQL operations, and submit to CrateDB.
+            for documents in self.mongodb_adapter.query():
                 progress_bar.set_description("ACQUIRE")
-                # Acquire batch of documents, and convert to SQL operation.
-                documents = self.mongodb_collection.find().skip(skip).limit(self.batch_size).batch_size(self.batch_size)
+
                 try:
-                    operation = self.translator.to_sql(list(documents))
+                    operation = self.translator.to_sql(documents)
                 except Exception as ex:
                     logger_on_error(f"Computing query failed: {ex}")
                     if self.on_error == "raise":
                         raise
-                    break
-
-                # When input data is exhausted, stop processing.
-                progress_bar.set_description("CHECK")
-                if not operation.parameters:
-                    break
+                    continue
 
                 # Submit operation to CrateDB.
-                progress_bar.set_description("SUBMIT")
+                progress_bar.set_description("SUBMIT ")
                 try:
                     result = connection.execute(sa.text(operation.statement), operation.parameters)
                     result_size = result.rowcount
@@ -154,9 +148,7 @@ class MongoDBFullLoad:
                     logger_on_error(f"Executing operation failed: {ex}\nOperation:\n{operation}")
                     if self.on_error == "raise":
                         raise
-
-                # Next page.
-                skip += self.batch_size
+                    continue
 
             progress_bar.close()
             connection.commit()

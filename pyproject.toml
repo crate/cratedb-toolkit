@@ -167,6 +167,7 @@ mongodb = [
   "pymongo<5,>=3.10.1",
   "python-bsonjs<0.5",
   "rich<14,>=3.3.2",
+  "undatum<1.1",
 ]
 pymongo = [
   "jessiql==1.0.0rc1",

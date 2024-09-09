@@ -15,6 +15,7 @@
 - MongoDB: Add `--treatment` option for applying special treatments to certain items
   on real-world data
 - MongoDB: Use pagination on source collection, for creating batches towards CrateDB
+- MongoDB: Unlock importing MongoDB Extended JSON files using `file+bson://...`
 
 ## 2024/09/02 v0.0.21
 - DynamoDB: Add special decoding for varied lists.

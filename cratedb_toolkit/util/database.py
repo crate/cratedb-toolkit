@@ -391,6 +391,12 @@ def decode_database_table(url: str) -> t.Tuple[str, str]:
         table = url_.query_params.get("table")
         if url_.scheme == "crate" and not database:
             database = url_.query_params.get("schema")
+        if database is None and table is None:
+            if url_.scheme.startswith("file"):
+                _, database, table = url_.path.rsplit("/", 2)
+                table, _ = table.split(".", 1)
+        if database is None and table is None:
+            raise ValueError("Database and table must be specified") from ex
     return database, table
 
 

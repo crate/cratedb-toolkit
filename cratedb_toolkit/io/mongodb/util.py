@@ -1,6 +1,9 @@
 import re
+import typing as t
 
-from cratedb_toolkit.io.mongodb.model import DocumentDict
+from pymongo.cursor import Cursor
+
+from cratedb_toolkit.io.mongodb.model import DocumentDict, Documents
 from cratedb_toolkit.util.data_dict import OrderedDictX
 
 
@@ -39,3 +42,20 @@ def sanitize_field_names(data: DocumentDict) -> DocumentDict:
         if name.startswith("_") and not name.startswith("__"):
             d.rename_key(name, f"_{name}")
     return d
+
+
+def batches(data: t.Union[Cursor, Documents], batch_size: int = 100) -> t.Generator[Documents, None, None]:
+    """
+    Generate batches of documents.
+    """
+    count = 0
+    buffer = []
+    for item in data:
+        buffer.append(item)
+        count += 1
+        if count >= batch_size:
+            yield buffer
+            buffer = []
+            count = 0
+    if buffer:
+        yield buffer
