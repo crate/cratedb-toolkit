@@ -1,5 +1,6 @@
 import argparse
 import logging
+import typing as t
 from pathlib import Path
 
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
@@ -41,12 +42,11 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
     # 1. Extract schema from MongoDB collection.
     logger.info(f"Extracting schema from MongoDB: {mongodb_database}.{mongodb_collection}")
     extract_args = argparse.Namespace(
-        url=str(mongodb_uri),
+        url=str(mongodb_uri) + f"&limit={limit}",
         database=mongodb_database,
         collection=mongodb_collection,
         scan="partial",
         transformation=transformation,
-        limit=limit,
     )
     mongodb_schema = extract(extract_args)
     count = mongodb_schema[mongodb_collection]["count"]
@@ -75,11 +75,10 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
         f"source={mongodb_collection_address.fullname}, target={cratedb_table_address.fullname}"
     )
     export_args = argparse.Namespace(
-        url=str(mongodb_uri),
+        url=str(mongodb_uri) + f"&limit={limit}",
         database=mongodb_database,
         collection=mongodb_collection,
         transformation=transformation,
-        limit=limit,
     )
     buffer = export(export_args)
     cr8_insert_json(infile=buffer, hosts=cratedb_address.httpuri, table=cratedb_table_address.fullname)
@@ -87,7 +86,7 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
     return True
 
 
-def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
+def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = None, progress: bool = False):
     """
     Transfer MongoDB collection using translator component.
 
@@ -97,13 +96,7 @@ def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int
     ctk load table mongodb://localhost:27017/testdrive/demo
     """
 
-    # Decode database URL.
-    mongodb_address = DatabaseAddress.from_string(source_url)
-    mongodb_uri, mongodb_collection_address = mongodb_address.decode()
-    mongodb_database = mongodb_collection_address.schema
-    mongodb_collection = mongodb_collection_address.table
-
-    logger.info(f"Invoking MongoDBFullLoad. mongodb_uri={mongodb_uri}")
+    logger.info(f"Invoking MongoDBFullLoad. source_url={source_url}")
 
     # Optionally configure transformations.
     tm = None
@@ -112,9 +105,7 @@ def mongodb_copy(source_url, target_url, transformation: Path = None, limit: int
 
     # Invoke `full-load` procedure.
     mdb_full = MongoDBFullLoad(
-        mongodb_url=str(mongodb_uri),
-        mongodb_database=mongodb_database,
-        mongodb_collection=mongodb_collection,
+        mongodb_url=source_url,
         cratedb_url=target_url,
         tm=tm,
         progress=progress,

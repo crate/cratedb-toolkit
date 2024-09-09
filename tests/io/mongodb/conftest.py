@@ -11,6 +11,7 @@ pytest.importorskip("bson", reason="Skipping tests because bson is not installed
 pytest.importorskip("bsonjs", reason="Skipping tests because bsonjs is not installed")
 pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 pytest.importorskip("rich", reason="Skipping tests because rich is not installed")
+pytest.importorskip("undatum", reason="Skipping tests because undatum is not installed")
 
 
 # Define databases to be deleted before running each test case.
