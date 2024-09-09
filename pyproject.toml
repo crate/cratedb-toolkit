@@ -114,7 +114,7 @@ cfr = [
   "pyarrow<17.1",
 ]
 cloud = [
-  "croud==1.11.1",
+  "croud==1.12.0",
 ]
 datasets = [
   "datasets<3",
