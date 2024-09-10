@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/09/10 v0.0.22
 - MongoDB: Rename columns with leading underscores to use double leading underscores
 - MongoDB: Add support for UUID types
 - MongoDB: Improve reading timestamps in previous BSON formats
