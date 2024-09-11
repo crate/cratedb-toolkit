@@ -1,5 +1,6 @@
 import glob
 import itertools
+import json
 import logging
 import typing as t
 from abc import abstractmethod
@@ -28,7 +29,7 @@ class MongoDBAdapterBase:
     database_name: str
     collection_name: str
 
-    _custom_query_parameters = ["batch-size", "limit", "offset"]
+    _custom_query_parameters = ["batch-size", "filter", "limit", "offset"]
 
     @classmethod
     def from_url(cls, url: t.Union[str, boltons.urlutils.URL, yarl.URL]):
@@ -53,6 +54,10 @@ class MongoDBAdapterBase:
     @cached_property
     def batch_size(self) -> int:
         return int(self.address.uri.query_params.get("batch-size", 500))
+
+    @cached_property
+    def filter(self) -> t.Union[str, None]:
+        return json.loads(self.address.uri.query_params.get("filter", "null"))
 
     @cached_property
     def limit(self) -> int:
@@ -100,6 +105,8 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
     def query(self):
         if not self._path.exists():
             raise FileNotFoundError(f"Resource not found: {self._path}")
+        if self.filter:
+            raise NotImplementedError("Using MongoDB filter expressions is not supported by Polars' NDJSON reader")
         if self.offset:
             raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
         if self._path.suffix in [".json", ".jsonl", ".ndjson"]:
@@ -129,6 +136,8 @@ class MongoDBResourceAdapter(MongoDBAdapterBase):
         return -1
 
     def query(self):
+        if self.filter:
+            raise NotImplementedError("Using MongoDB filter expressions is not supported by Polars' NDJSON reader")
         if self.offset:
             raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
         if self._url.path.endswith(".json") or self._url.path.endswith(".jsonl") or self._url.path.endswith(".ndjson"):
@@ -165,7 +174,12 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
         return self._mongodb_collection.count_documents(filter=filter_)
 
     def query(self):
-        data = self._mongodb_collection.find().batch_size(self.batch_size).skip(self.offset).limit(self.limit)
+        data = (
+            self._mongodb_collection.find(filter=self.filter)
+            .batch_size(self.batch_size)
+            .skip(self.offset)
+            .limit(self.limit)
+        )
         return batches(data, self.batch_size)
 
 

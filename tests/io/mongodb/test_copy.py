@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 from unittest import mock
 
@@ -57,6 +58,44 @@ def test_mongodb_copy_server_database(caplog, cratedb, mongodb):
     assert results[0]["data"] == data_out
     results = cratedb.database.run_sql("SELECT * FROM testdrive.demo2;", records=True)
     assert results[0]["data"] == data_out
+
+
+def test_mongodb_copy_server_collection_with_filter(caplog, cratedb, mongodb):
+    """
+    Verify MongoDB -> CrateDB data transfer for a specific collection, with filtering.
+    """
+
+    # Define source and target URLs.
+    filter_expression = json.dumps({"timestamp": {"$gt": 1563051934050}})
+    mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo?filter={filter_expression}"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
+
+    # Define data.
+    data_in = [
+        {"device": "Hotzenplotz", "temperature": 42.42, "timestamp": 1563051934000},
+        {"device": "Hotzenplotz", "temperature": 42.42, "timestamp": 1563051934100},
+    ]
+    data_out = deepcopy(data_in)
+    data_out[0].update({"_id": mock.ANY})
+    data_out[1].update({"_id": mock.ANY})
+
+    # Populate source database.
+    client: pymongo.MongoClient = mongodb.get_connection_client()
+    testdrive = client.get_database("testdrive")
+    demo = testdrive.create_collection("demo")
+    demo.insert_many(data_in)
+
+    # Run transfer command.
+    mongodb_copy(
+        mongodb_url,
+        cratedb_url,
+    )
+
+    # Verify data in target database.
+    cratedb.database.refresh_table("testdrive.demo")
+    assert cratedb.database.count_records("testdrive.demo") == 1
+    results = cratedb.database.run_sql("SELECT * FROM testdrive.demo;", records=True)
+    assert results[0]["data"] == data_out[1]
 
 
 def test_mongodb_copy_filesystem_folder(caplog, cratedb, mongodb):
