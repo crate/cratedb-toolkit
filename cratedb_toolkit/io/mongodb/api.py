@@ -130,6 +130,8 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
         logger.info(f"Inquiring collections at {source_url}")
         mongodb_uri = URL(source_url)
         cratedb_uri = URL(target_url)
+        if Path(mongodb_uri.path).is_absolute() and mongodb_uri.path[-1] != "/":
+            mongodb_uri.path += "/"
         if cratedb_uri.path[-1] != "/":
             cratedb_uri.path += "/"
         mongodb_query_parameters = mongodb_uri.query_params

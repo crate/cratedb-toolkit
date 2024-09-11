@@ -80,7 +80,7 @@ class MongoDBAdapterBase:
 
 
 @define
-class MongoDBFileAdapter(MongoDBAdapterBase):
+class MongoDBFilesystemAdapter(MongoDBAdapterBase):
     _path: Path = field(init=False)
 
     def setup(self):
@@ -114,6 +114,35 @@ class MongoDBFileAdapter(MongoDBAdapterBase):
 
 
 @define
+class MongoDBResourceAdapter(MongoDBAdapterBase):
+    _url: URL = field(init=False)
+
+    def setup(self):
+        self._url = self.address.uri
+        if "+bson" in self._url.scheme:
+            self._url.scheme = self._url.scheme.replace("+bson", "")
+
+    def get_collections(self) -> t.List[str]:
+        raise NotImplementedError("HTTP+BSON loader does not support directory inquiry yet")
+
+    def record_count(self, filter_=None) -> int:
+        return -1
+
+    def query(self):
+        if self.offset:
+            raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
+        if self._url.path.endswith(".json") or self._url.path.endswith(".jsonl") or self._url.path.endswith(".ndjson"):
+            data = pl.read_ndjson(
+                str(self._url), batch_size=self.batch_size, n_rows=self.limit or None, ignore_errors=True
+            ).to_dicts()
+        elif self._url.path.endswith(".bson"):
+            raise NotImplementedError("HTTP+BSON loader does not support .bson files yet. SIC")
+        else:
+            raise ValueError(f"Unsupported file type: {self._url}")
+        return batches(data, self.batch_size)
+
+
+@define
 class MongoDBServerAdapter(MongoDBAdapterBase):
     _mongodb_client: pymongo.MongoClient = field(init=False)
     _mongodb_collection: pymongo.collection.Collection = field(init=False)
@@ -142,7 +171,9 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
 
 def mongodb_adapter_factory(mongodb_uri: URL) -> MongoDBAdapterBase:
     if mongodb_uri.scheme.startswith("file"):
-        return MongoDBFileAdapter.from_url(mongodb_uri)
+        return MongoDBFilesystemAdapter.from_url(mongodb_uri)
+    elif mongodb_uri.scheme.startswith("http"):
+        return MongoDBResourceAdapter.from_url(mongodb_uri)
     elif mongodb_uri.scheme.startswith("mongodb"):
         return MongoDBServerAdapter.from_url(mongodb_uri)
     raise ValueError("Unable to create MongoDB adapter")

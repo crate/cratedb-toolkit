@@ -403,7 +403,7 @@ def decode_database_table(url: str) -> t.Tuple[str, t.Union[str, None]]:
             if url_.scheme == "crate" and not database:
                 database = url_.query_params.get("schema")
             if database is None and table is None:
-                if url_.scheme.startswith("file"):
+                if url_.scheme.startswith("file") or url_.scheme.startswith("http"):
                     _, database, table = url_.path.rsplit("/", 2)
 
                     # If table name is coming from a filesystem, strip suffix, e.g. `books-relaxed.ndjson`.

@@ -23,6 +23,10 @@ def test_mongodb_copy_server_database(caplog, cratedb, mongodb):
     Verify MongoDB -> CrateDB data transfer for all collections in a database.
     """
 
+    # Reset two database tables.
+    cratedb.database.run_sql('DROP TABLE IF EXISTS testdrive."demo1";')
+    cratedb.database.run_sql('DROP TABLE IF EXISTS testdrive."demo2";')
+
     # Define source and target URLs.
     mongodb_url = f"{mongodb.get_connection_url()}/testdrive"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive"
@@ -181,3 +185,29 @@ def test_mongodb_copy_filesystem_bson(caplog, cratedb):
     )
     timestamp_type = type_result[0]["type"]
     assert timestamp_type == "bigint"
+
+
+def test_mongodb_copy_http_json_relaxed(caplog, cratedb):
+    """
+    Verify MongoDB Extended JSON -> CrateDB data transfer, when source file is on HTTP.
+    """
+
+    # Define source and target URLs.
+    json_resource = "https+bson://github.com/ozlerhakan/mongodb-json-files/raw/master/datasets/books.json"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
+
+    # Run transfer command.
+    mongodb_copy(json_resource, cratedb_url)
+
+    # Verify metadata in target database.
+    assert cratedb.database.table_exists("testdrive.demo") is True
+    assert cratedb.database.refresh_table("testdrive.demo") is True
+    assert cratedb.database.count_records("testdrive.demo") == 431
+
+    # Verify content in target database.
+    results = cratedb.database.run_sql("SELECT * FROM testdrive.demo WHERE data['_id'] = 1;", records=True)
+    assert results[0]["data"]["authors"] == [
+        "W. Frank Ableson",
+        "Charlie Collins",
+        "Robi Sen",
+    ]

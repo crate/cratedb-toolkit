@@ -22,6 +22,10 @@ server instances and filesystems.
 
   Read files in [MongoDB Extended JSON] or [BSON] format from filesystem.
 
+- `http+bson://`
+
+  Read files in [MongoDB Extended JSON] or [BSON] format from HTTP resource.
+
 ## Install
 ```shell
 pip install --upgrade 'cratedb-toolkit[mongodb]'
@@ -63,13 +67,16 @@ Load data from MongoDB JSON/BSON files, for example produced by the
 `mongoexport` or `mongodump` programs.
 
 ```shell
-# Extended JSON, full path.
+# Extended JSON, filesystem, full path.
 ctk load table "file+bson:///path/to/mongodb-json-files/datasets/books.json"
 
-# Extended JSON, multiple files.
+# Extended JSON, HTTP resource.
+ctk load table "https+bson://github.com/ozlerhakan/mongodb-json-files/raw/master/datasets/books.json"
+
+# Extended JSON, filesystem, multiple files.
 ctk load table "file+bson:///path/to/mongodb-json-files/datasets/*.json"
 
-# BSON, compressed, relative path.
+# BSON, filesystem, relative path, compressed.
 ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
 ```
 
