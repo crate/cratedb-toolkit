@@ -91,15 +91,23 @@ The default batch size is 500. You can adjust the value by appending the HTTP
 URL query parameter `batch-size` to the source URL, like
 `mongodb+srv://managed.mongodb.net/ticker/stocks?batch-size=5000`.
 
-### Offset
-Use the HTTP URL query parameter `offset` on the source URL, like
-`&offset=42`, in order to start processing at this record from the
-beginning.
+### Filter
+Use the HTTP URL query parameter `filter` on the source URL, like
+`&filter={"exchange": {"$eq": "NASDAQ"}}`, in order to provide a MongoDB
+query filter as a JSON string.
+It works in the same way like `mongoexport`'s `--query` option.
+On more complex query expressions, make sure to properly encode the right
+value using URL/Percent Encoding.
 
 ### Limit
 Use the HTTP URL query parameter `limit` on the source URL, like
 `&limit=100`, in order to limit processing to a total number of
 records.
+
+### Offset
+Use the HTTP URL query parameter `offset` on the source URL, like
+`&offset=42`, in order to start processing at this record from the
+beginning.
 
 ## Zyp Transformations
 You can use [Zyp Transformations] to change the shape of the data while being
