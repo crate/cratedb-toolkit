@@ -133,6 +133,15 @@ class StandaloneCluster(ClusterBase):
                     progress=True,
                 )
 
+        elif source_url_obj.scheme.startswith("http"):
+            if "+bson" in source_url_obj.scheme or "+mongodb" in source_url_obj.scheme:
+                mongodb_copy_generic(
+                    str(source_url_obj),
+                    target_url,
+                    transformation=transformation,
+                    progress=True,
+                )
+
         elif source_url_obj.scheme.startswith("influxdb"):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
