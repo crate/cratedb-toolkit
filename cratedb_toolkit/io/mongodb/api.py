@@ -3,6 +3,9 @@ import logging
 import typing as t
 from pathlib import Path
 
+from boltons.urlutils import URL
+
+from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
 from cratedb_toolkit.io.mongodb.copy import MongoDBFullLoad
 from cratedb_toolkit.io.mongodb.core import export, extract, translate
@@ -96,22 +99,67 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
     ctk load table mongodb://localhost:27017/testdrive/demo
     """
 
-    logger.info(f"Invoking MongoDBFullLoad. source_url={source_url}")
+    logger.info(f"mongodb_copy. source={source_url}, target={target_url}")
 
     # Optionally configure transformations.
     tm = None
     if transformation:
         tm = TransformationManager(path=transformation)
 
+    tasks = []
+
+    has_table = True
+    if "*" in source_url:
+        has_table = False
+    mongodb_address = DatabaseAddress.from_string(source_url)
+    mongodb_uri, mongodb_collection_address = mongodb_address.decode()
+    if mongodb_collection_address.table is None:
+        has_table = False
+
     # Invoke `full-load` procedure.
-    mdb_full = MongoDBFullLoad(
-        mongodb_url=source_url,
-        cratedb_url=target_url,
-        tm=tm,
-        progress=progress,
-    )
-    mdb_full.start()
-    return True
+    if has_table:
+        tasks.append(
+            MongoDBFullLoad(
+                mongodb_url=source_url,
+                cratedb_url=target_url,
+                tm=tm,
+                progress=progress,
+            )
+        )
+    else:
+        logger.info(f"Inquiring collections at {source_url}")
+        mongodb_uri = URL(source_url)
+        cratedb_uri = URL(target_url)
+        if cratedb_uri.path[-1] != "/":
+            cratedb_uri.path += "/"
+        mongodb_query_parameters = mongodb_uri.query_params
+        mongodb_adapter = mongodb_adapter_factory(mongodb_uri)
+        collections = mongodb_adapter.get_collections()
+        logger.info(f"Discovered collections: {len(collections)}")
+        logger.debug(f"Processing collections: {collections}")
+        for collection_path in collections:
+            mongodb_uri_effective = mongodb_uri.navigate(Path(collection_path).name)
+            mongodb_uri_effective.query_params = mongodb_query_parameters
+            cratedb_uri_effective = cratedb_uri.navigate(Path(collection_path).stem)
+            tasks.append(
+                MongoDBFullLoad(
+                    mongodb_url=str(mongodb_uri_effective),
+                    cratedb_url=str(cratedb_uri_effective),
+                    tm=tm,
+                    progress=progress,
+                )
+            )
+
+    outcome = True
+    for task in tasks:
+        try:
+            outcome_task = task.start()
+        except Exception:
+            logger.exception("Task failed")
+            outcome_task = False
+        outcome = outcome and outcome_task
+
+    return outcome
 
 
 def mongodb_relay_cdc(source_url, target_url, progress: bool = False):

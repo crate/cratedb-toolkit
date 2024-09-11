@@ -1,3 +1,4 @@
+import glob
 import itertools
 import logging
 import typing as t
@@ -35,7 +36,6 @@ class MongoDBAdapterBase:
             url = str(url)
         mongodb_address = DatabaseAddress.from_string(url)
         mongodb_uri, mongodb_collection_address = mongodb_address.decode()
-        logger.info(f"Collection address: {mongodb_collection_address}")
         mongodb_database = mongodb_collection_address.schema
         mongodb_collection = mongodb_collection_address.table
         for custom_query_parameter in cls._custom_query_parameters:
@@ -67,6 +67,10 @@ class MongoDBAdapterBase:
         raise NotImplementedError()
 
     @abstractmethod
+    def get_collections(self) -> t.List[str]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def record_count(self, filter_=None) -> int:
         raise NotImplementedError()
 
@@ -82,6 +86,9 @@ class MongoDBFileAdapter(MongoDBAdapterBase):
     def setup(self):
         self._path = Path(self.address.uri.path)
 
+    def get_collections(self) -> t.List[str]:
+        return list(glob.glob(str(self._path)))
+
     def record_count(self, filter_=None) -> int:
         """
         https://stackoverflow.com/a/27517681
@@ -95,8 +102,10 @@ class MongoDBFileAdapter(MongoDBAdapterBase):
             raise FileNotFoundError(f"Resource not found: {self._path}")
         if self.offset:
             raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
-        if self._path.suffix in [".ndjson", ".jsonl"]:
-            data = pl.read_ndjson(self._path, batch_size=self.batch_size, n_rows=self.limit or None).to_dicts()
+        if self._path.suffix in [".json", ".jsonl", ".ndjson"]:
+            data = pl.read_ndjson(
+                self._path, batch_size=self.batch_size, n_rows=self.limit or None, ignore_errors=True
+            ).to_dicts()
         elif ".bson" in str(self._path):
             data = IterableData(str(self._path), options={"format_in": "bson"}).iter()
         else:
@@ -115,7 +124,12 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
             document_class=RawBSONDocument,
             datetime_conversion="DATETIME_AUTO",
         )
-        self._mongodb_collection = self._mongodb_client[self.database_name][self.collection_name]
+        if self.collection_name:
+            self._mongodb_collection = self._mongodb_client[self.database_name][self.collection_name]
+
+    def get_collections(self) -> t.List[str]:
+        database = self._mongodb_client.get_database(self.database_name)
+        return database.list_collection_names()
 
     def record_count(self, filter_=None) -> int:
         filter_ = filter_ or {}
