@@ -1,6 +1,7 @@
 # Copyright (c) 2023-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import io
+import logging
 import os
 import typing as t
 from pathlib import Path
@@ -21,6 +22,8 @@ try:
 except ImportError:
     from typing_extensions import Literal  # type: ignore[assignment]
 
+logger = logging.getLogger(__name__)
+
 
 def run_sql(dburi: str, sql: str, records: bool = False):
     return DatabaseAdapter(dburi=dburi).run_sql(sql=sql, records=records)
@@ -39,6 +42,7 @@ class DatabaseAdapter:
         self.dburi = dburi
         self.engine = sa.create_engine(self.dburi, echo=echo)
         # TODO: Make that go away.
+        logger.debug(f"Connecting to CrateDB: {dburi}")
         self.connection = self.engine.connect()
 
     @staticmethod
@@ -369,7 +373,7 @@ def sa_is_empty(thing):
     return isinstance(thing, AsBoolean)
 
 
-def decode_database_table(url: str) -> t.Tuple[str, str]:
+def decode_database_table(url: str) -> t.Tuple[str, t.Union[str, None]]:
     """
     Decode database and table names from database URI path and/or query string.
 
@@ -382,21 +386,33 @@ def decode_database_table(url: str) -> t.Tuple[str, str]:
           This one uses `boltons`, the other one uses `yarl`.
     """
     url_ = URL(url)
+    database, table = None, None
     try:
         database, table = url_.path.strip("/").split("/")
     except ValueError as ex:
         if "too many values to unpack" not in str(ex) and "not enough values to unpack" not in str(ex):
             raise
-        database = url_.query_params.get("database")
-        table = url_.query_params.get("table")
-        if url_.scheme == "crate" and not database:
-            database = url_.query_params.get("schema")
-        if database is None and table is None:
-            if url_.scheme.startswith("file"):
-                _, database, table = url_.path.rsplit("/", 2)
-                table, _ = table.split(".", 1)
-        if database is None and table is None:
-            raise ValueError("Database and table must be specified") from ex
+        try:
+            (database,) = url_.path.strip("/").split("/")
+        except ValueError as ex:
+            if "too many values to unpack" not in str(ex) and "not enough values to unpack" not in str(ex):
+                raise
+
+            database = url_.query_params.get("database")
+            table = url_.query_params.get("table")
+            if url_.scheme == "crate" and not database:
+                database = url_.query_params.get("schema")
+            if database is None and table is None:
+                if url_.scheme.startswith("file"):
+                    _, database, table = url_.path.rsplit("/", 2)
+
+                    # If table name is coming from a filesystem, strip suffix, e.g. `books-relaxed.ndjson`.
+                    if table:
+                        table, _ = table.split(".", 1)
+
+    if database is None and table is None:
+        raise ValueError("Database and table must be specified")
+
     return database, table
 
 

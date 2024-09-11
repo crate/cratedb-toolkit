@@ -76,16 +76,18 @@ class MongoDBFullLoad:
         progress: bool = False,
         debug: bool = True,
     ):
-        # Decode database URL: MongoDB.
         self.mongodb_uri = URL(mongodb_url)
+        self.cratedb_uri = URL(cratedb_url)
+
+        # Decode database URL: MongoDB.
         self.mongodb_adapter = mongodb_adapter_factory(self.mongodb_uri)
 
         # Decode database URL: CrateDB.
-        cratedb_address = DatabaseAddress.from_string(cratedb_url)
-        cratedb_sqlalchemy_url, cratedb_table_address = cratedb_address.decode()
-        cratedb_table = cratedb_table_address.fullname
+        self.cratedb_address = DatabaseAddress.from_string(cratedb_url)
+        self.cratedb_sqlalchemy_url, self.cratedb_table_address = self.cratedb_address.decode()
+        cratedb_table = self.cratedb_table_address.fullname
 
-        self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
+        self.cratedb_adapter = DatabaseAdapter(str(self.cratedb_sqlalchemy_url), echo=False)
         self.cratedb_table = self.cratedb_adapter.quote_relation_name(cratedb_table)
 
         # Transformation machinery.
@@ -107,10 +109,11 @@ class MongoDBFullLoad:
 
     def start(self):
         """
-        Read items from DynamoDB table, convert to SQL INSERT statements, and submit to CrateDB.
+        Read items from MongoDB table, convert to SQL INSERT statements, and submit to CrateDB.
         """
+        logger.info(f"Starting MongoDBFullLoad. source={self.mongodb_uri}, target={self.cratedb_uri}")
         records_in = self.mongodb_adapter.record_count()
-        logger.info(f"Source: MongoDB collection={self.mongodb_adapter.collection_name} count={records_in}")
+        logger.info(f"Source: MongoDB {self.mongodb_adapter.address} count={records_in}")
         logger_on_error = logger.warning
         if self.debug:
             logger_on_error = logger.exception
@@ -155,3 +158,4 @@ class MongoDBFullLoad:
             logger.info(f"Number of records written: {records_out}")
             if records_out == 0:
                 logger.warning("No data has been copied")
+        return True

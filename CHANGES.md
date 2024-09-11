@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+- MongoDB: Unlock processing multiple collections, either from server database,
+  or from filesystem directory
 
 ## 2024/09/10 v0.0.22
 - MongoDB: Rename columns with leading underscores to use double leading underscores
@@ -14,7 +16,7 @@
   This means relevant column definitions will not be included into the SQL DDL.
 - MongoDB: Make `ctk load table` use the `data OBJECT(DYNAMIC)` mapping strategy.
 - MongoDB: Sanitize lists of varying objects
-- MongoDB: Add `--treatment` option for applying special treatments to certain items
+- MongoDB: Add treatment option for applying special treatments to certain items
   on real-world data
 - MongoDB: Use pagination on source collection, for creating batches towards CrateDB
 - MongoDB: Unlock importing MongoDB Extended JSON files using `file+bson://...`

@@ -20,7 +20,7 @@ server instances and filesystems.
 
 - `file+bson://`
 
-  Read [MongoDB Extended JSON] format from filesystem.
+  Read files in [MongoDB Extended JSON] or [BSON] format from filesystem.
 
 ## Install
 ```shell
@@ -31,6 +31,19 @@ pip install --upgrade 'cratedb-toolkit[mongodb]'
 The MongoDB I/O adapter can process MongoDB data from different sources.
 This section enumerates relevant connectivity options on behalf of
 concrete usage examples.
+
+### MongoDB Atlas
+Transfer a single collection from MongoDB Atlas.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/ticker/stocks
+ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker/stocks?batch-size=5000"
+```
+
+Transfer all collections in database from MongoDB Atlas.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/ticker
+ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker?batch-size=5000"
+```
 
 ### MongoDB Community and Enterprise
 Transfer data from MongoDB database/collection into CrateDB schema/table.
@@ -45,33 +58,23 @@ ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
 
-### MongoDB Atlas
-Transfer data from MongoDB Atlas.
-```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker/stocks?batch-size=5000"
-```
-
 ### MongoDB JSON/BSON files
 Load data from MongoDB JSON/BSON files, for example produced by the
 `mongoexport` or `mongodump` programs.
-In order to get hold of a few samples worth of data, the canonical MongoDB C
-driver's [libbson test files] includes a few. In this case, let's acquire
-the collection at [mongodb-json-files].
-```shell
-git clone https://github.com/ozlerhakan/mongodb-json-files.git
-```
-```shell
-CRATEDB_SQLALCHEMY_BASEURL=crate://crate@localhost:4200/testdrive
-ctk load table \
-  "file+bson:///path/to/mongodb-json-files/datasets/books.json" \
-  --cratedb-sqlalchemy-url="${CRATEDB_SQLALCHEMY_BASEURL}/books"
-```
-Address relative and/or compressed BSON files like
-`file+bson:./tmp/testdrive/books.bson.gz`.
 
-Example queries that fit the schema of `books.json`, and more, can be
-found at [](#ready-made-queries).
+```shell
+# Extended JSON, full path.
+ctk load table "file+bson:///path/to/mongodb-json-files/datasets/books.json"
+
+# Extended JSON, multiple files.
+ctk load table "file+bson:///path/to/mongodb-json-files/datasets/*.json"
+
+# BSON, compressed, relative path.
+ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
+```
+
+To exercise a full example importing multiple MongoDB Extended JSON files,
+see [](#file-import-tutorial).
 
 
 ## Options
@@ -127,35 +130,68 @@ db.demo.find({})
 EOF
 ```
 
-(ready-made-queries)=
-### Ready-Made Queries
-The [mongodb-json-files] repository includes a few samples worth of data in MongoDB
-JSON/BSON format. After importing them, you may want to exercise those SQL queries,
-for example using Admin UI or crash.
+(file-import-tutorial)=
+### File Import Tutorial
 
-#### books.json
+The [mongodb-json-files] repository includes a few samples worth of data in
+MongoDB JSON/BSON format.
+
+:::{rubric} Load
+:::
+Acquire a copy of the repository.
+```shell
+git clone https://github.com/ozlerhakan/mongodb-json-files.git
+```
+The data import uses a Zyp project file [zyp-mongodb-json-files.yaml] that
+describes a few adjustments needed to import all files flawlessly. Let's
+acquire that file.
+```shell
+wget https://github.com/crate/cratedb-toolkit/raw/v0.0.22/examples/zyp/zyp-mongodb-json-files.yaml
+```
+Load all referenced `.json` files into corresponding tables within the CrateDB
+schema `datasets`, using a batch size of 2,500 items.
+```shell
+ctk load table \
+  "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
+  --cratedb-sqlalchemy-url="crate://crate@localhost:4200/datasets" \
+  --transformation zyp-mongodb-json-files.yaml
+```
+
+:::{rubric} Query
+:::
+After importing the example files, you may want to exercise those SQL queries,
+for example using Admin UI or crash, to get an idea about how to work with
+CrateDB SQL.
+
+**books.json**
 ```sql
 SELECT 
     data['title'] AS title, 
     LEFT(data['shortDescription'], 60) AS description, 
     DATE_FORMAT('%Y-%m-%d', data['publishedDate']) AS date,
     data['isbn'] AS isbn
-FROM testdrive.books 
+FROM datasets.books 
 WHERE 'Java' = ANY(data['categories'])
 ORDER BY title;
 ```
 
-#### city_inspections.json
+**city_inspections.json**
 ```sql
 SELECT
     data['sector'] AS sector, 
     data['business_name'] AS name
-FROM testdrive.city_inspections
+FROM datasets.city_inspections
 WHERE 
     data['result'] = 'Violation Issued' AND 
     UPPER(data['address']['city']) = 'STATEN ISLAND'
 ORDER BY sector, name;
 ```
+
+:::{tip}
+Alternatively, have a look at the canonical
+MongoDB C driver's [libbson test files].
+:::
+
 
 ### Backlog
 :::{todo}
@@ -167,8 +203,10 @@ ORDER BY sector, name;
 :::
 
 
+[BSON]: https://en.wikipedia.org/wiki/BSON
 [examples/zyp]: https://github.com/crate/cratedb-toolkit/tree/main/examples/zyp
 [libbson test files]: https://github.com/mongodb/mongo-c-driver/tree/master/src/libbson/tests/json
 [MongoDB Extended JSON]: https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
 [mongodb-json-files]: https://github.com/ozlerhakan/mongodb-json-files
 [Zyp Transformations]: https://commons-codec.readthedocs.io/zyp/index.html
+[zyp-mongodb-json-files.yaml]: https://github.com/crate/cratedb-toolkit/blob/v0.0.22/examples/zyp/zyp-mongodb-json-files.yaml
