@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from pathlib import Path
 from unittest import mock
 
 import pymongo
@@ -98,9 +99,37 @@ def test_mongodb_copy_server_collection_with_filter(caplog, cratedb, mongodb):
     assert results[0]["data"] == data_out[1]
 
 
-def test_mongodb_copy_filesystem_folder(caplog, cratedb, mongodb):
+def test_mongodb_copy_filesystem_folder_absolute(caplog, cratedb, mongodb):
     """
-    Verify MongoDB -> CrateDB data transfer for all files in a folder.
+    Verify MongoDB -> CrateDB data transfer for all files in a folder, with relative addressing.
+    """
+
+    # Reset two database tables.
+    cratedb.database.run_sql('DROP TABLE IF EXISTS testdrive."books-canonical";')
+    cratedb.database.run_sql('DROP TABLE IF EXISTS testdrive."books-relaxed";')
+
+    # Define source and target URLs.
+    path = Path("./tests/io/mongodb/*.ndjson").absolute()
+    fs_resource = f"file+bson://{path}"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive"
+
+    # Run transfer command.
+    mongodb_copy(
+        fs_resource,
+        cratedb_url,
+    )
+
+    # Verify data in target database.
+    cratedb.database.refresh_table("testdrive.books-canonical")
+    cratedb.database.refresh_table("testdrive.books-relaxed")
+
+    assert cratedb.database.count_records("testdrive.books-canonical") == 4
+    assert cratedb.database.count_records("testdrive.books-relaxed") == 4
+
+
+def test_mongodb_copy_filesystem_folder_relative(caplog, cratedb, mongodb):
+    """
+    Verify MongoDB -> CrateDB data transfer for all files in a folder, with relative addressing.
     """
 
     # Reset two database tables.
