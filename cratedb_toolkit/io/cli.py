@@ -1,4 +1,5 @@
 import logging
+import sys
 from pathlib import Path
 
 import click
@@ -85,4 +86,5 @@ def load_table(
         cluster = StandaloneCluster(address=address)
     else:
         raise NotImplementedError("Unable to select backend")
-    return cluster.load_table(resource=resource, target=target, transformation=transformation)
+    if not cluster.load_table(resource=resource, target=target, transformation=transformation):
+        sys.exit(2)

@@ -119,14 +119,15 @@ class StandaloneCluster(ClusterBase):
         if source_url_obj.scheme.startswith("dynamodb"):
             from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
 
-            if not dynamodb_copy(str(source_url_obj), target_url, progress=True):
-                msg = "Data loading failed"
-                logger.error(msg)
-                raise OperationFailed(msg)
+            if dynamodb_copy(str(source_url_obj), target_url, progress=True):
+                return True
+            else:
+                logger.error("Data loading failed or incomplete")
+                return False
 
         elif source_url_obj.scheme.startswith("file"):
             if "+bson" in source_url_obj.scheme or "+mongodb" in source_url_obj.scheme:
-                mongodb_copy_generic(
+                return mongodb_copy_generic(
                     str(source_url_obj),
                     target_url,
                     transformation=transformation,
@@ -135,7 +136,7 @@ class StandaloneCluster(ClusterBase):
 
         elif source_url_obj.scheme.startswith("http"):
             if "+bson" in source_url_obj.scheme or "+mongodb" in source_url_obj.scheme:
-                mongodb_copy_generic(
+                return mongodb_copy_generic(
                     str(source_url_obj),
                     target_url,
                     transformation=transformation,
@@ -149,19 +150,20 @@ class StandaloneCluster(ClusterBase):
             if asbool(source_url_obj.query_params.get("ssl")):
                 http_scheme = "https"
             source_url_obj.scheme = source_url_obj.scheme.replace("influxdb2", http_scheme)
-            if not influxdb_copy(str(source_url_obj), target_url, progress=True):
-                msg = "Data loading failed"
-                logger.error(msg)
-                raise OperationFailed(msg)
+            if influxdb_copy(str(source_url_obj), target_url, progress=True):
+                return True
+            else:
+                logger.error("Data loading failed or incomplete")
+                return False
 
         elif source_url_obj.scheme.startswith("mongodb"):
             if "+cdc" in source_url_obj.scheme:
                 source_url_obj.scheme = source_url_obj.scheme.replace("+cdc", "")
                 from cratedb_toolkit.io.mongodb.api import mongodb_relay_cdc
 
-                mongodb_relay_cdc(str(source_url_obj), target_url, progress=True)
+                return mongodb_relay_cdc(str(source_url_obj), target_url, progress=True)
             else:
-                mongodb_copy_generic(
+                return mongodb_copy_generic(
                     str(source_url_obj),
                     target_url,
                     transformation=transformation,
@@ -170,18 +172,21 @@ class StandaloneCluster(ClusterBase):
         else:
             raise NotImplementedError("Importing resource not implemented yet")
 
+        return False
+
 
 def mongodb_copy_generic(
     source_url: str, target_url: str, transformation: t.Union[Path, None] = None, progress: bool = False
 ):
     from cratedb_toolkit.io.mongodb.api import mongodb_copy
 
-    if not mongodb_copy(
+    if mongodb_copy(
         source_url,
         target_url,
         transformation=transformation,
         progress=progress,
     ):
-        msg = "Data loading failed"
-        logger.error(msg)
-        raise OperationFailed(msg)
+        return True
+    else:
+        logger.error("Data loading failed or incomplete")
+        return False

@@ -4,6 +4,7 @@ import typing as t
 from pathlib import Path
 
 from boltons.urlutils import URL
+from polars.exceptions import PanicException
 
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
@@ -130,7 +131,12 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
         logger.info(f"Inquiring collections at {source_url}")
         mongodb_uri = URL(source_url)
         cratedb_uri = URL(target_url)
-        if Path(mongodb_uri.path).is_absolute() and mongodb_uri.path[-1] != "/":
+        # What the hack?
+        if (
+            mongodb_uri.scheme.startswith("mongodb")
+            and Path(mongodb_uri.path).is_absolute()
+            and mongodb_uri.path[-1] != "/"
+        ):
             mongodb_uri.path += "/"
         if cratedb_uri.path[-1] != "/":
             cratedb_uri.path += "/"
@@ -156,7 +162,7 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
     for task in tasks:
         try:
             outcome_task = task.start()
-        except Exception:
+        except (Exception, PanicException):
             logger.exception("Task failed")
             outcome_task = False
         outcome = outcome and outcome_task

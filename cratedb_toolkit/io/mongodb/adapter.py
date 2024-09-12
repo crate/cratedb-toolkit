@@ -92,7 +92,7 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
         self._path = Path(self.address.uri.path)
 
     def get_collections(self) -> t.List[str]:
-        return list(glob.glob(str(self._path)))
+        return sorted(glob.glob(str(self._path)))
 
     def record_count(self, filter_=None) -> int:
         """
@@ -167,7 +167,7 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
 
     def get_collections(self) -> t.List[str]:
         database = self._mongodb_client.get_database(self.database_name)
-        return database.list_collection_names()
+        return sorted(database.list_collection_names())
 
     def record_count(self, filter_=None) -> int:
         filter_ = filter_ or {}

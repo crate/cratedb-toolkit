@@ -144,11 +144,14 @@ class MongoDBFullLoad:
                     result = connection.execute(sa.text(operation.statement), operation.parameters)
                     result_size = result.rowcount
                     if result_size < 0:
-                        raise ValueError("Unable to insert one or more records")
+                        raise IOError("Unable to insert one or more records")
                     records_out += result_size
                     progress_bar.update(n=result_size)
                 except Exception as ex:
-                    logger_on_error(f"Executing operation failed: {ex}\nOperation:\n{operation}")
+                    logger_on_error(
+                        f"Executing operation failed: {ex}\n"
+                        f"Statement: {operation.statement}\nParameters: {str(operation.parameters)[:500]} [...]"
+                    )
                     if self.on_error == "raise":
                         raise
                     continue
