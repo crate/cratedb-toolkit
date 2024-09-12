@@ -1,7 +1,10 @@
 import dataclasses
 import typing as t
 from copy import deepcopy
+from pathlib import Path
 
+from attr import Factory
+from attrs import define
 from boltons.urlutils import URL
 
 
@@ -120,3 +123,44 @@ class InputOutputResource:
     url: str
     format: t.Optional[str] = None  # noqa: A003
     compression: t.Optional[str] = None
+
+
+@define
+class AddressPair:
+    """
+    Manage two URL instances, specifically a pair of source/target URLs,
+    where target is mostly a CrateDB Server, while source is any.
+    """
+
+    source_url: URL
+    target_url: URL
+
+    _source_url_query_parameters: t.Dict[str, t.Any] = Factory(dict)
+    _target_url_query_parameters: t.Dict[str, t.Any] = Factory(dict)
+
+    __SERVER_SCHEMES__ = ["http", "https", "mongodb", "mongodb+srv"]
+
+    def navigate(self, source_path: str, target_path: str) -> "AddressPair":
+        source_url_query_parameters = self.source_url.query_params
+        target_url_query_parameters = self.target_url.query_params
+
+        source_url = URL(str(self.source_url))
+        target_url = URL(str(self.target_url))
+
+        # Q: What the hack?
+        # A: It makes subsequent `.navigate()` operations work.
+        if (
+            source_url.scheme in self.__SERVER_SCHEMES__
+            and Path(source_url.path).is_absolute()
+            and source_url.path[-1] != "/"
+        ):
+            source_url.path += "/"
+        if target_url.path[-1] != "/":
+            target_url.path += "/"
+
+        source_url = source_url.navigate(f"./{source_path}")
+        source_url.query_params = source_url_query_parameters
+        target_url = target_url.navigate(f"./{target_path}")
+        target_url.query_params = target_url_query_parameters
+
+        return AddressPair(source_url, target_url)
