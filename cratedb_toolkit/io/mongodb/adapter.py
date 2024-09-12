@@ -53,7 +53,7 @@ class MongoDBAdapterBase:
 
     @cached_property
     def batch_size(self) -> int:
-        return int(self.address.uri.query_params.get("batch-size", 500))
+        return int(self.address.uri.query_params.get("batch-size", 100))
 
     @cached_property
     def filter(self) -> t.Union[str, None]:

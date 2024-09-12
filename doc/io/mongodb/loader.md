@@ -87,8 +87,9 @@ see [](#file-import-tutorial).
 ## Options
 
 ### Batch Size
-The default batch size is 500. You can adjust the value by appending the HTTP
-URL query parameter `batch-size` to the source URL, like
+The default batch size is 100, but for many datasets a much larger batch size
+is applicable for most efficient data transfers. You can adjust the value by
+appending the HTTP URL query parameter `batch-size` to the source URL, like
 `mongodb+srv://managed.mongodb.net/ticker/stocks?batch-size=5000`.
 
 ### Filter
