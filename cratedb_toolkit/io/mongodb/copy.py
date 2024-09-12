@@ -69,8 +69,8 @@ class MongoDBFullLoad:
 
     def __init__(
         self,
-        mongodb_url: str,
-        cratedb_url: str,
+        mongodb_url: t.Union[str, URL],
+        cratedb_url: t.Union[str, URL],
         tm: t.Union[TransformationManager, None],
         on_error: t.Literal["ignore", "raise"] = "raise",
         progress: bool = False,
@@ -83,7 +83,7 @@ class MongoDBFullLoad:
         self.mongodb_adapter = mongodb_adapter_factory(self.mongodb_uri)
 
         # Decode database URL: CrateDB.
-        self.cratedb_address = DatabaseAddress.from_string(cratedb_url)
+        self.cratedb_address = DatabaseAddress(self.cratedb_uri)
         self.cratedb_sqlalchemy_url, self.cratedb_table_address = self.cratedb_address.decode()
         cratedb_table = self.cratedb_table_address.fullname
 

@@ -90,7 +90,12 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
     return True
 
 
-def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = None, progress: bool = False):
+def mongodb_copy(
+    source_url: t.Union[str, URL],
+    target_url: t.Union[str, URL],
+    transformation: t.Union[Path, None] = None,
+    progress: bool = False,
+):
     """
     Transfer MongoDB collection using translator component.
 
@@ -102,6 +107,9 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
 
     logger.info(f"mongodb_copy. source={source_url}, target={target_url}")
 
+    source_url = URL(source_url)
+    target_url = URL(target_url)
+
     # Optionally configure transformations.
     tm = None
     if transformation:
@@ -110,9 +118,9 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
     tasks = []
 
     has_table = True
-    if "*" in source_url:
+    if "*" in source_url.path:
         has_table = False
-    mongodb_address = DatabaseAddress.from_string(source_url)
+    mongodb_address = DatabaseAddress(source_url)
     mongodb_uri, mongodb_collection_address = mongodb_address.decode()
     if mongodb_collection_address.table is None:
         has_table = False
@@ -129,8 +137,8 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
         )
     else:
         logger.info(f"Inquiring collections at {source_url}")
-        mongodb_uri = URL(source_url)
-        cratedb_uri = URL(target_url)
+        mongodb_uri = source_url
+        cratedb_uri = target_url
         # What the hack?
         if (
             mongodb_uri.scheme.startswith("mongodb")
@@ -151,8 +159,8 @@ def mongodb_copy(source_url, target_url, transformation: t.Union[Path, None] = N
             cratedb_uri_effective = cratedb_uri.navigate(Path(collection_path).stem)
             tasks.append(
                 MongoDBFullLoad(
-                    mongodb_url=str(mongodb_uri_effective),
-                    cratedb_url=str(cratedb_uri_effective),
+                    mongodb_url=mongodb_uri_effective,
+                    cratedb_url=cratedb_uri_effective,
                     tm=tm,
                     progress=progress,
                 )
