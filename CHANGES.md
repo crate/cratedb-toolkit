@@ -6,6 +6,7 @@
   or from filesystem directory
 - MongoDB: Unlock processing JSON files from HTTP resource, using `https+bson://`
 - MongoDB: Optionally filter server collection using MongoDB query expression
+- MongoDB: Improve error handling wrt. bulk operations vs. usability
 
 ## 2024/09/10 v0.0.22
 - MongoDB: Rename columns with leading underscores to use double leading underscores
