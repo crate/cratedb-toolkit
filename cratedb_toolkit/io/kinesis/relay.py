@@ -62,6 +62,10 @@ class KinesisRelay:
             else:
                 self.kinesis_adapter.consume_forever(self.process_event)
 
+    def stop(self):
+        self.progress_bar.close()
+        self.kinesis_adapter.stop()
+
     def process_event(self, event):
         try:
             record = json.loads(base64.b64decode(event["kinesis"]["data"]).decode("utf-8"))
@@ -80,3 +84,6 @@ class KinesisRelay:
         except sa.exc.ProgrammingError as ex:
             logger.warning(f"Running query failed: {ex}")
         self.progress_bar.update()
+
+    def __del__(self):
+        self.stop()
