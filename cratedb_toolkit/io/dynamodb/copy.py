@@ -40,7 +40,7 @@ class DynamoDBFullLoad:
         self.progress = progress
         self.debug = debug
 
-        self.page_size: int = int(self.dynamodb_url.query.get("page-size", 1000))
+        self.batch_size: int = int(self.dynamodb_url.query.get("batch-size", 100))
         self.consistent_read: bool = asbool(self.dynamodb_url.query.get("consistent-read", False))
 
     def start(self):
@@ -63,7 +63,7 @@ class DynamoDBFullLoad:
             for result in self.dynamodb_adapter.scan(
                 table_name=self.dynamodb_table,
                 consistent_read=self.consistent_read,
-                page_size=self.page_size,
+                batch_size=self.batch_size,
             ):
                 result_size = len(result["Items"])
                 try:
