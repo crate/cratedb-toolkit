@@ -144,8 +144,8 @@ class AddressPair:
         source_url_query_parameters = self.source_url.query_params
         target_url_query_parameters = self.target_url.query_params
 
-        source_url = URL(str(self.source_url))
-        target_url = URL(str(self.target_url))
+        source_url = deepcopy(self.source_url)
+        target_url = deepcopy(self.target_url)
 
         # Q: What the hack?
         # A: It makes subsequent `.navigate()` operations work.
