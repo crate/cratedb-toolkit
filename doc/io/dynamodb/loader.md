@@ -27,18 +27,25 @@ ctk show table "testdrive.demo"
 
 ## Options
 
-### `page-size`
-The source URL accepts the `page-size` option to configure DynamoDB
-[pagination]. The default value is `1000`.
+### Batch Size
+The source URL accepts the `batch-size` option to configure DynamoDB
+[pagination]. The default value is `100`.
 ```shell
-ctk load table .../ProductCatalog?region=us-east-1&page-size=5000
+ctk load table .../ProductCatalog?batch-size=5000
 ```
 
-### `consistent-read`
+### Consistent Read
 The source URL accepts the `consistent-read` option to configure DynamoDB
 [read consistency]. The default value is `false`.
 ```shell
-ctk load table .../ProductCatalog?region=us-east-1&consistent-read=true
+ctk load table .../ProductCatalog?consistent-read=true
+```
+
+### Region
+The source URL accepts the `region` option to configure the AWS region
+label. The default value is `us-east-1`.
+```shell
+ctk load table .../ProductCatalog?region=eu-central-1
 ```
 
 

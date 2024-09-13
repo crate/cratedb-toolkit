@@ -38,5 +38,5 @@ def test_adapter_scan_failure_page_size(dynamodb):
     adapter = DynamoDBAdapter(URL(dynamodb_url))
 
     with pytest.raises(ParamValidationError) as ex:
-        next(adapter.scan("demo", page_size=-1, on_error="raise"))
+        next(adapter.scan("demo", batch_size=-1, on_error="raise"))
     assert ex.match("Parameter validation failed:\nInvalid value for parameter Limit, value: -1, valid min value: 1")

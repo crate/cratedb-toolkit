@@ -23,7 +23,7 @@ class DynamoDBAdapter:
     def scan(
         self,
         table_name: str,
-        page_size: int = 1000,
+        batch_size: int = 100,
         consistent_read: bool = False,
         on_error: t.Literal["log", "raise"] = "log",
     ) -> t.Generator[t.Dict, None, None]:
@@ -35,7 +35,7 @@ class DynamoDBAdapter:
         key = None
         while True:
             try:
-                scan_kwargs = {"TableName": table_name, "ConsistentRead": consistent_read, "Limit": page_size}
+                scan_kwargs = {"TableName": table_name, "ConsistentRead": consistent_read, "Limit": batch_size}
                 if key is not None:
                     scan_kwargs.update({"ExclusiveStartKey": key})
                 response = self.dynamodb_client.scan(**scan_kwargs)
