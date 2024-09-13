@@ -11,11 +11,13 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from zyp.model.collection import CollectionAddress
 
+from cratedb_toolkit.io.core import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.export import CrateDBConverter
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.sqlalchemy.patch import monkeypatch_executemany
 from cratedb_toolkit.util import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
@@ -44,9 +46,7 @@ class MongoDBFullLoadTranslator(MongoDBCDCTranslatorCrateDB):
         """
         Produce CrateDB SQL INSERT batch operation from multiple MongoDB documents.
         """
-        if isinstance(data, Cursor):
-            data = list(data)
-        if not isinstance(data, list):
+        if not isinstance(data, Cursor) and not isinstance(data, list):
             data = [data]
 
         # Define SQL INSERT statement.
@@ -72,10 +72,12 @@ class MongoDBFullLoad:
         mongodb_url: t.Union[str, URL],
         cratedb_url: t.Union[str, URL],
         tm: t.Union[TransformationManager, None],
-        on_error: t.Literal["ignore", "raise"] = "raise",
+        on_error: t.Literal["ignore", "raise"] = "ignore",
         progress: bool = False,
         debug: bool = True,
     ):
+        monkeypatch_executemany()
+
         self.mongodb_uri = URL(mongodb_url)
         self.cratedb_uri = URL(cratedb_url)
 
@@ -114,9 +116,6 @@ class MongoDBFullLoad:
         logger.info(f"Starting MongoDBFullLoad. source={self.mongodb_uri}, target={self.cratedb_uri}")
         records_in = self.mongodb_adapter.record_count()
         logger.info(f"Source: MongoDB {self.mongodb_adapter.address} count={records_in}")
-        logger_on_error = logger.warning
-        if self.debug:
-            logger_on_error = logger.exception
         with self.cratedb_adapter.engine.connect() as connection, logging_redirect_tqdm():
             if not self.cratedb_adapter.table_exists(self.cratedb_table):
                 connection.execute(sa.text(self.translator.sql_ddl))
@@ -124,41 +123,23 @@ class MongoDBFullLoad:
             records_target = self.cratedb_adapter.count_records(self.cratedb_table)
             logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
             progress_bar = tqdm(total=records_in)
-            records_out: int = 0
 
-            # Acquire batches of documents, convert to SQL operations, and submit to CrateDB.
-            for documents in self.mongodb_adapter.query():
-                progress_bar.set_description("ACQUIRE")
+            processor = BulkProcessor(
+                connection=connection,
+                data=self.mongodb_adapter.query(),
+                batch_to_operation=self.translator.to_sql,
+                progress_bar=progress_bar,
+                on_error=self.on_error,
+                debug=self.debug,
+            )
+            metrics = processor.start()
+            logger.info(f"Bulk processor metrics: {metrics}")
 
-                try:
-                    operation = self.translator.to_sql(documents)
-                except Exception as ex:
-                    logger_on_error(f"Computing query failed: {ex}")
-                    if self.on_error == "raise":
-                        raise
-                    continue
-
-                # Submit operation to CrateDB.
-                progress_bar.set_description("SUBMIT ")
-                try:
-                    result = connection.execute(sa.text(operation.statement), operation.parameters)
-                    result_size = result.rowcount
-                    if result_size < 0:
-                        raise IOError("Unable to insert one or more records")
-                    records_out += result_size
-                    progress_bar.update(n=result_size)
-                except Exception as ex:
-                    logger_on_error(
-                        f"Executing operation failed: {ex}\n"
-                        f"Statement: {operation.statement}\nParameters: {str(operation.parameters)[:500]} [...]"
-                    )
-                    if self.on_error == "raise":
-                        raise
-                    continue
-
-            progress_bar.close()
-            connection.commit()
-            logger.info(f"Number of records written: {records_out}")
-            if records_out == 0:
+            logger.info(
+                "Number of records written: "
+                f"success={metrics.count_success_total}, error={metrics.count_error_total}"
+            )
+            if metrics.count_success_total == 0:
                 logger.warning("No data has been copied")
+
         return True

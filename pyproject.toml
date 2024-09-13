@@ -95,6 +95,7 @@ dependencies = [
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
   "polars<1.7",
+  "pympler<1.2",
   "python-dateutil<3",
   "python-dotenv<2",
   "python-slugify<9",

@@ -1,0 +1,3 @@
+{"_id":1,"name":"Foo","date":{"$date":"2011-01-14T08:00:00Z"}}
+{"_id":2,"name":"Bar","date":{"$date":"2011-01-15T08:00:00Z"},"nested_array":[[1,2]]}
+{"_id":3,"name":"Baz","date":{"$date":"2011-01-16T08:00:00Z"}}
