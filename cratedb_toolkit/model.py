@@ -1,7 +1,7 @@
 import dataclasses
 import typing as t
 from copy import deepcopy
-from pathlib import Path
+from urllib.parse import urljoin
 
 from attr import Factory
 from attrs import define
@@ -141,26 +141,21 @@ class AddressPair:
     __SERVER_SCHEMES__ = ["http", "https", "mongodb", "mongodb+srv"]
 
     def navigate(self, source_path: str, target_path: str) -> "AddressPair":
-        source_url_query_parameters = self.source_url.query_params
-        target_url_query_parameters = self.target_url.query_params
-
         source_url = deepcopy(self.source_url)
         target_url = deepcopy(self.target_url)
 
         # Q: What the hack?
-        # A: It makes subsequent `.navigate()` operations work.
-        if (
-            source_url.scheme in self.__SERVER_SCHEMES__
-            and Path(source_url.path).is_absolute()
-            and source_url.path[-1] != "/"
-        ):
+        # A: Adjustments about missing trailing slashes, business as usual.
+        #    It makes subsequent `.navigate()` operations work.
+        # Remark: It is not applicable for filesystem paths including wildcards,
+        #         like `./datasets/*.ndjson`. In this case, `.navigate()` should
+        #         strip the `*.ndjson` part, and replace it by the designated label.
+        if source_url.scheme in self.__SERVER_SCHEMES__ and source_url.path[-1] != "/":
             source_url.path += "/"
         if target_url.path[-1] != "/":
             target_url.path += "/"
 
-        source_url = source_url.navigate(f"./{source_path}")
-        source_url.query_params = source_url_query_parameters
-        target_url = target_url.navigate(f"./{target_path}")
-        target_url.query_params = target_url_query_parameters
+        source_url.path = urljoin(source_url.path, source_path)
+        target_url.path = urljoin(target_url.path, target_path)
 
         return AddressPair(source_url, target_url)
