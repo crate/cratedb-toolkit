@@ -10,6 +10,7 @@
 - DynamoDB CDC: Add `ctk load table` interface for processing CDC events
 - DynamoDB CDC: Accept a few more options for the Kinesis Stream:
   batch-size, create, create-shards, start, seqno, idle-sleep, buffer-time
+- DynamoDB Full: Improve error handling wrt. bulk operations vs. usability
 
 ## 2024/09/10 v0.0.22
 - MongoDB: Rename columns with leading underscores to use double leading underscores
