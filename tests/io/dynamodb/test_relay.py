@@ -1,7 +1,6 @@
 import threading
 import time
 
-import botocore
 import pytest
 
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
@@ -45,17 +44,6 @@ def test_kinesis_earliest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     # Initialize table loader.
     table_loader = KinesisRelay(kinesis_url=kinesis_url, cratedb_url=cratedb_url)
 
-    # Delete stream for blank canvas.
-    try:
-        table_loader.kinesis_adapter.kinesis_client.delete_stream(StreamName="demo", EnforceConsumerDeletion=True)
-    except botocore.exceptions.ClientError as error:
-        if error.response["Error"]["Code"] != "ResourceNotFoundException":
-            raise
-
-    # LocalStack needs a while when deleting the Stream.
-    # FIXME: Can this be made more efficient?
-    time.sleep(0.5)
-
     # Populate source database with data.
     for event in events:
         table_loader.kinesis_adapter.produce(event)
@@ -97,17 +85,6 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
 
     # Initialize table loader.
     table_loader = KinesisRelay(kinesis_url=kinesis_url, cratedb_url=cratedb_url)
-
-    # Delete stream for blank canvas.
-    try:
-        table_loader.kinesis_adapter.kinesis_client.delete_stream(StreamName="demo")
-    except botocore.exceptions.ClientError as error:
-        if error.response["Error"]["Code"] != "ResourceNotFoundException":
-            raise
-
-    # LocalStack needs a while when deleting the Stream.
-    # FIXME: Can this be made more efficient instead of waiting multiple times to orchestrate this sequence?
-    time.sleep(0.5)
 
     # Start event processor / stream consumer in separate thread, consuming forever.
     thread = threading.Thread(target=table_loader.start)
