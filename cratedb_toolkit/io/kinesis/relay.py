@@ -63,8 +63,10 @@ class KinesisRelay:
                 self.kinesis_adapter.consume_forever(self.process_event)
 
     def stop(self):
-        self.progress_bar.close()
-        self.kinesis_adapter.stop()
+        if hasattr(self, "progress_bar"):
+            self.progress_bar.close()
+        if hasattr(self, "kinesis_adapter"):
+            self.kinesis_adapter.stop()
 
     def process_event(self, event):
         try:
