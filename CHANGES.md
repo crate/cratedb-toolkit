@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/09/16 v0.0.23
 - MongoDB: Unlock processing multiple collections, either from server database,
   or from filesystem directory
 - MongoDB: Unlock processing JSON files from HTTP resource, using `https+bson://`
