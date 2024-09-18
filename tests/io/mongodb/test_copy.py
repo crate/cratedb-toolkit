@@ -237,9 +237,7 @@ def test_mongodb_copy_filesystem_json_canonical(caplog, cratedb):
         "SELECT pg_typeof(data['publishedDate']) AS type FROM testdrive.demo;", records=True
     )
     timestamp_type = type_result[0]["type"]
-
-    # FIXME: Why does the "canonical format" yield worse results?
-    assert timestamp_type == "text"
+    assert timestamp_type == "bigint"
 
 
 def test_mongodb_copy_filesystem_bson(caplog, cratedb):
