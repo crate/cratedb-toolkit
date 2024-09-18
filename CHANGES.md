@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- MongoDB Full: Refactor transformation subsystem to `commons-codec`
 
 ## 2024/09/16 v0.0.23
 - MongoDB: Unlock processing multiple collections, either from server database,

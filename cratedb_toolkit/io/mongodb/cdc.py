@@ -11,7 +11,7 @@ import logging
 
 import pymongo
 import sqlalchemy as sa
-from commons_codec.transform.mongodb import MongoDBCDCTranslatorCrateDB
+from commons_codec.transform.mongodb import MongoDBCDCTranslator
 
 from cratedb_toolkit.util import DatabaseAdapter
 
@@ -35,7 +35,7 @@ class MongoDBCDCRelayCrateDB:
         self.mongodb_client: pymongo.MongoClient = pymongo.MongoClient(mongodb_url)
         self.mongodb_collection = self.mongodb_client[mongodb_database][mongodb_collection]
         self.table_name = self.cratedb_adapter.quote_relation_name(cratedb_table)
-        self.cdc = MongoDBCDCTranslatorCrateDB(table_name=self.table_name)
+        self.cdc = MongoDBCDCTranslator(table_name=self.table_name)
 
     def start(self):
         """

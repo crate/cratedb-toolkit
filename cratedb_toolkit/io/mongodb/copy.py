@@ -4,62 +4,19 @@ import typing as t
 
 import sqlalchemy as sa
 from boltons.urlutils import URL
-from commons_codec.model import SQLOperation
-from commons_codec.transform.mongodb import MongoDBCDCTranslatorCrateDB
-from pymongo.cursor import Cursor
+from commons_codec.transform.mongodb import MongoDBCrateDBConverter, MongoDBFullLoadTranslator
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from zyp.model.collection import CollectionAddress
 
 from cratedb_toolkit.io.core import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
-from cratedb_toolkit.io.mongodb.export import CrateDBConverter
-from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.sqlalchemy.patch import monkeypatch_executemany
 from cratedb_toolkit.util import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
-
-
-class MongoDBFullLoadTranslator(MongoDBCDCTranslatorCrateDB):
-    """
-    Translate a MongoDB document into a CrateDB document.
-    """
-
-    def __init__(self, table_name: str, converter: CrateDBConverter, tm: TransformationManager = None):
-        super().__init__(table_name=table_name)
-        self.converter = converter
-        self.tm = tm
-
-    @staticmethod
-    def get_document_key(record: t.Dict[str, t.Any]) -> str:
-        """
-        Return value of document key (MongoDB document OID) from CDC record.
-
-        "documentKey": {"_id": ObjectId("669683c2b0750b2c84893f3e")}
-        """
-        return record["_id"]
-
-    def to_sql(self, data: t.Union[DocumentDict, t.List[DocumentDict]]) -> SQLOperation:
-        """
-        Produce CrateDB SQL INSERT batch operation from multiple MongoDB documents.
-        """
-        if not isinstance(data, Cursor) and not isinstance(data, list):
-            data = [data]
-
-        # Define SQL INSERT statement.
-        sql = f"INSERT INTO {self.table_name} ({self.ID_COLUMN}, {self.DATA_COLUMN}) VALUES (:oid, :record);"
-
-        # Converge multiple MongoDB documents into SQL parameters for `executemany` operation.
-        parameters: t.List[DocumentDict] = []
-        for document in data:
-            record = self.converter.convert(self.decode_bson(document))
-            oid: str = self.get_document_key(record)
-            parameters.append({"oid": oid, "record": record})
-
-        return SQLOperation(sql, parameters)
 
 
 class MongoDBFullLoad:
@@ -102,8 +59,8 @@ class MongoDBFullLoad:
                 transformation = tm.project.get(address=address)
             except KeyError:
                 pass
-        self.converter = CrateDBConverter(transformation=transformation)
-        self.translator = MongoDBFullLoadTranslator(table_name=self.cratedb_table, converter=self.converter, tm=tm)
+        self.converter = MongoDBCrateDBConverter(transformation=transformation)
+        self.translator = MongoDBFullLoadTranslator(table_name=self.cratedb_table, converter=self.converter)
 
         self.on_error = on_error
         self.progress = progress
