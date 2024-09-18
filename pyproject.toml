@@ -164,7 +164,7 @@ kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 mongodb = [
-  "commons-codec[mongodb,zyp]>=0.0.15",
+  "commons-codec[mongodb,zyp]>=0.0.16",
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<5,>=3.10.1",
