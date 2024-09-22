@@ -171,8 +171,12 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
         return sorted(database.list_collection_names())
 
     def record_count(self, filter_=None) -> int:
+        """
+        # Exact. Takes too long on large collections.
         filter_ = filter_ or {}
         return self._mongodb_collection.count_documents(filter=filter_)
+        """
+        return self._mongodb_collection.estimated_document_count()
 
     def query(self):
         data = (

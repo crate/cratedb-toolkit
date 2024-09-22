@@ -8,6 +8,8 @@
 - MongoDB Full: Polars' `read_ndjson` doesn't load MongoDB JSON data well,
   use `fsspec` and `orjson` instead
 - MongoDB Full: Improved initialization of transformation subsystem
+- MongoDB Adapter: Improved performance of when computing collection cardinality
+  by using `collection.estimated_document_count()`
 
 ## 2024/09/19 v0.0.24
 - MongoDB Full: Refactor transformation subsystem to `commons-codec`
