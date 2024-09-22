@@ -92,7 +92,7 @@ def extract(args) -> t.Dict[str, t.Any]:
 
         rich.print(f"\nExecuting a [red bold]{'partial' if partial else 'full'}[/red bold] scan")
 
-    tm = TransformationManager(path=args.transformation)
+    tm = TransformationManager.from_path(path=args.transformation)
     schemas = OrderedDict()
     for collection_name in filtered_collections:
         collection_schema = extract_schema_from_collection(db[collection_name], partial, limit=args.limit)
@@ -121,7 +121,7 @@ def export(args) -> t.IO[bytes]:
 
     TODO: Run on multiple collections, like `extract`.
     """
-    tm = TransformationManager(path=args.transformation)
+    tm = TransformationManager.from_path(path=args.transformation)
     buffer = io.BytesIO()
     client, db = get_mongodb_client_database(args, document_class=RawBSONDocument)
     collection_to_json(db[args.collection], fp=buffer, tm=tm, limit=args.limit)
