@@ -109,8 +109,9 @@ appending the HTTP URL query parameter `batch-size` to the source URL, like
 
 ### Filter
 Use the HTTP URL query parameter `filter` on the source URL, like
-`&filter={"exchange": {"$eq": "NASDAQ"}}`, in order to provide a MongoDB
-query filter as a JSON string.
+`&filter={"exchange":{"$eq":"NASDAQ"}}`, or
+`&filter={"_id":"66f0002e98c00fb8261d87c8"}`,
+in order to provide a MongoDB query filter as a JSON string.
 It works in the same way like `mongoexport`'s `--query` option.
 On more complex query expressions, make sure to properly encode the right
 value using URL/Percent Encoding.

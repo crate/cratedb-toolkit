@@ -11,6 +11,9 @@
 - MongoDB Adapter: Improved performance of when computing collection cardinality
   by using `collection.estimated_document_count()`
 - MongoDB Full: Optionally use `limit` parameter as number of total records
+- MongoDB Adapter: Evaluate `_id` filter field by upcasting to `bson.ObjectId`,
+  to convey a filter that makes `ctk load table` process a single document,
+  identified by its OID
 
 ## 2024/09/19 v0.0.24
 - MongoDB Full: Refactor transformation subsystem to `commons-codec`
