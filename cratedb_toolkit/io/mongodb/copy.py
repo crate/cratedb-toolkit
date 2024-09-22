@@ -71,7 +71,11 @@ class MongoDBFullLoad:
         Read items from MongoDB table, convert to SQL INSERT statements, and submit to CrateDB.
         """
         logger.info(f"Starting MongoDBFullLoad. source={self.mongodb_uri}, target={self.cratedb_uri}")
-        records_in = self.mongodb_adapter.record_count()
+        limit = self.mongodb_adapter.limit
+        if limit > 0:
+            records_in = limit
+        else:
+            records_in = self.mongodb_adapter.record_count()
         logger.info(f"Source: MongoDB {self.mongodb_adapter.address} count={records_in}")
         with self.cratedb_adapter.engine.connect() as connection, logging_redirect_tqdm():
             if not self.cratedb_adapter.table_exists(self.cratedb_table):
