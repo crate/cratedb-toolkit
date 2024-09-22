@@ -4,6 +4,7 @@ import json
 import logging
 import typing as t
 from abc import abstractmethod
+from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 
@@ -57,7 +58,7 @@ class MongoDBAdapterBase:
         return int(self.address.uri.query_params.get("batch-size", 100))
 
     @cached_property
-    def filter(self) -> t.Union[str, None]:
+    def filter(self) -> t.Union[t.Dict[str, t.Any], None]:
         return json.loads(self.address.uri.query_params.get("filter", "null"))
 
     @cached_property
@@ -179,8 +180,12 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
         return self._mongodb_collection.estimated_document_count()
 
     def query(self):
+        _filter = deepcopy(self.filter)
+        # Evaluate `_id` filter field specially, by upcasting to `bson.ObjectId`.
+        if _filter and "_id" in _filter:
+            _filter["_id"] = bson.ObjectId(_filter["_id"])
         data = (
-            self._mongodb_collection.find(filter=self.filter)
+            self._mongodb_collection.find(filter=_filter)
             .batch_size(self.batch_size)
             .skip(self.offset)
             .limit(self.limit)
