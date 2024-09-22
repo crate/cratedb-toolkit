@@ -1,5 +1,25 @@
 # Backlog
 
+## Iteration +1
+- Table Loader: Refactor URL dispatcher, use fsspec
+- Table Loader/Docs: Advertise using OCI image
+- MongoDB: Load table with querying by single object id
+- MongoDB: Multi-phase BulkProcessor batch size adjustments
+- MongoDB: Report byte sizes (cur/avg/total) in progress bar
+- Documentation:
+  > The procedure employed by CTK uses the catch-all `data OBJECT(DYNAMIC)`
+  > storage strategy, which is sinking the source record/document into a
+  > single column in CrateDB.
+  >
+  > The transformation recipe attempts to outline a few features provided by
+  > Zyp Transformations, in this case exclusively applying transformations
+  > described by expressions written in jqlang.
+- MongoDB/Docs: Describe usage of `mongoimport` and `mongoexport`.
+  ```shell
+  mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
+  ```
+- MongoDB: Convert dates like `"date": "Sep 18 2015"`, see `testdrive.city_inspections`.
+
 ## Iteration +2
 - Address `fix_job_info_table_name`
 - Add more items about `ctk load table` to `examples/` folder
