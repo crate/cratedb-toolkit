@@ -3,6 +3,7 @@
 
 ## Unreleased
 - Table Loader: Improved conditional handling of "transformation" parameter
+- Table Loader: Improved status reporting and error logging in `BulkProcessor`
 
 ## 2024/09/19 v0.0.24
 - MongoDB Full: Refactor transformation subsystem to `commons-codec`

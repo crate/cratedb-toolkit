@@ -1,4 +1,5 @@
 # TODO: Maybe refactor to `sqlalchemy-cratedb` or `commons-codec` on another iteration?
+import json
 import typing as t
 from functools import cached_property
 
@@ -120,14 +121,15 @@ class BulkProcessor:
 
     def start(self) -> BulkMetrics:
         # Acquire batches of documents, convert to SQL operations, and submit to CrateDB.
+        batch_count = 0
         for batch in self.data:
+            batch_count += 1
+            self.progress_bar and self.progress_bar.set_description("READ ")
             current_batch_size = len(batch)
-
-            self.progress_bar and self.progress_bar.set_description("ACQUIRE")
-
             try:
                 operation = self.batch_to_operation(batch)
             except Exception as ex:
+                self._metrics.count_error_total += current_batch_size
                 self.log_level(f"Computing query failed: {ex}")
                 if self.on_error == "raise":
                     raise
@@ -137,7 +139,7 @@ class BulkProcessor:
             statement = sa.text(operation.statement)
 
             # Submit operation to CrateDB, using `bulk_args`.
-            self.progress_bar and self.progress_bar.set_description("SUBMIT ")
+            self.progress_bar and self.progress_bar.set_description("WRITE")
             try:
                 cursor = self.connection.execute(statement=statement, parameters=operation.parameters)
                 self.connection.commit()
@@ -158,7 +160,7 @@ class BulkProcessor:
             # in order to relay proper error messages to the user.
             if failed_records:
                 logger.warning(
-                    f"Incomplete batch. Records processed: {count_success_local}/{current_batch_size}. "
+                    f"Incomplete batch #{batch_count}. Records processed: {count_success_local}/{current_batch_size}. "
                     f"Falling back to per-record operations."
                 )
                 for record in failed_records:
@@ -167,8 +169,8 @@ class BulkProcessor:
                         self.connection.commit()
                         self._metrics.count_success_total += 1
                     except Exception as ex:
-                        logger.warning(f"Operation failed: {ex}")
-                        logger.debug(f"Failing record: {record}")
+                        logger.error(f"Operation failed: {ex}")
+                        logger.debug(f"Invalid record:\n{json.dumps(record, indent=2)}")
                         self._metrics.count_error_total += 1
                         self._metrics.bytes_error_total += asizeof(record)
                         if self.on_error == "raise":

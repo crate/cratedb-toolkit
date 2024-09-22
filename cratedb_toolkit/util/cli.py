@@ -24,7 +24,7 @@ def boot_click(ctx: click.Context, verbose: bool = False, debug: bool = False):
         log_level = logging.DEBUG
 
     # Setup logging, according to `verbose` / `debug` flags.
-    setup_logging(level=log_level, verbose=verbose)
+    setup_logging(level=log_level, verbose=verbose, debug=debug)
 
 
 def split_list(value: str, delimiter: str = ",") -> t.List[str]:
