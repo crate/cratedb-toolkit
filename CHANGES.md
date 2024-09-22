@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/09/22 v0.0.25
 - Table Loader: Improved conditional handling of "transformation" parameter
 - Table Loader: Improved status reporting and error logging in `BulkProcessor`
 - MongoDB: Improve error reporting
