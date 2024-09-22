@@ -169,7 +169,7 @@ def mongodb_copy(
         try:
             outcome_task = task.start()
         except (Exception, PanicException) as ex:
-            logger.error(f"Task failed: {ex}")
+            logger.exception(f"Task failed: {ex}")
             outcome_task = False
         outcome = outcome and outcome_task
 
