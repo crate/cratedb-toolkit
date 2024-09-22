@@ -8,7 +8,7 @@ from functools import cached_property
 from pathlib import Path
 
 import boltons.urlutils
-import polars as pl
+import bson
 import pymongo
 import yarl
 from attrs import define, field
@@ -18,6 +18,7 @@ from undatum.common.iterable import IterableData
 
 from cratedb_toolkit.io.mongodb.util import batches
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util.io import read_json
 
 logger = logging.getLogger(__name__)
 
@@ -106,13 +107,13 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
         if not self._path.exists():
             raise FileNotFoundError(f"Resource not found: {self._path}")
         if self.filter:
-            raise NotImplementedError("Using MongoDB filter expressions is not supported by Polars' NDJSON reader")
+            raise NotImplementedError("Using filter expressions is not supported by filesystem adapter")
+        if self.limit:
+            raise NotImplementedError("Using limit parameter is not supported by filesystem adapter")
         if self.offset:
-            raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
+            raise NotImplementedError("Using offset parameter is not supported by filesystem adapter")
         if self._path.suffix in [".json", ".jsonl", ".ndjson"]:
-            data = pl.read_ndjson(
-                self._path, batch_size=self.batch_size, n_rows=self.limit or None, ignore_errors=True
-            ).to_dicts()
+            data = read_json(str(self._path))
         elif ".bson" in str(self._path):
             data = IterableData(str(self._path), options={"format_in": "bson"}).iter()
         else:
@@ -137,15 +138,15 @@ class MongoDBResourceAdapter(MongoDBAdapterBase):
 
     def query(self):
         if self.filter:
-            raise NotImplementedError("Using MongoDB filter expressions is not supported by Polars' NDJSON reader")
+            raise NotImplementedError("Using filter expressions is not supported by remote resource adapter")
+        if self.limit:
+            raise NotImplementedError("Using limit parameter is not supported by remote resource adapter")
         if self.offset:
-            raise NotImplementedError("Using offsets is not supported by Polars' NDJSON reader")
+            raise NotImplementedError("Using offset parameter is not supported by remote resource adapter")
         if self._url.path.endswith(".json") or self._url.path.endswith(".jsonl") or self._url.path.endswith(".ndjson"):
-            data = pl.read_ndjson(
-                str(self._url), batch_size=self.batch_size, n_rows=self.limit or None, ignore_errors=True
-            ).to_dicts()
+            data = read_json(str(self._url))
         elif self._url.path.endswith(".bson"):
-            raise NotImplementedError("HTTP+BSON loader does not support .bson files yet. SIC")
+            raise NotImplementedError("HTTP+BSON loader does not support .bson files yet.")
         else:
             raise ValueError(f"Unsupported file type: {self._url}")
         return batches(data, self.batch_size)

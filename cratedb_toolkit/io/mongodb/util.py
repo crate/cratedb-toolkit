@@ -1,6 +1,7 @@
 import re
 import typing as t
 
+from commons_codec.transform.mongodb import Document
 from pymongo.cursor import Cursor
 
 from cratedb_toolkit.io.mongodb.model import DocumentDict, Documents
@@ -44,7 +45,9 @@ def sanitize_field_names(data: DocumentDict) -> DocumentDict:
     return d
 
 
-def batches(data: t.Union[Cursor, Documents], batch_size: int = 100) -> t.Generator[Documents, None, None]:
+def batches(
+    data: t.Union[Cursor, Documents, t.Generator[Document, None, None]], batch_size: int = 100
+) -> t.Generator[Documents, None, None]:
     """
     Generate batches of documents.
     """
