@@ -10,16 +10,32 @@ logger = logging.getLogger(__name__)
 
 
 class TransformationManager:
-    def __init__(self, path: Path):
-        self.path = path
-        self.active = False
-        if not self.path:
-            return
-        if not self.path.exists():
-            raise FileNotFoundError(f"File does not exist: {self.path}")
-        self.project = TransformationProject.from_yaml(self.path.read_text())
-        logger.info("Transformation manager initialized. File: %s", self.path)
+    def __init__(self, project: TransformationProject):
+        self.project = project
         self.active = True
+
+    @classmethod
+    def from_any(cls, transformation=None):
+        if transformation is None:
+            return None
+        elif isinstance(transformation, TransformationManager):
+            return transformation
+        elif isinstance(transformation, TransformationProject):
+            return cls(project=transformation)
+        elif isinstance(transformation, Path):
+            return cls.from_path(path=transformation)
+        else:
+            raise ValueError(f"Unable to initialize transformation manager from {type(transformation)}")
+
+    @classmethod
+    def from_path(cls, path: Path):
+        if not path:
+            return None
+        if not path.exists():
+            raise FileNotFoundError(f"File does not exist: {path}")
+        logger.info("Loading Zyp transformation file: %s", path)
+        project = TransformationProject.from_yaml(path.read_text())
+        return cls(project=project)
 
     def apply_type_overrides(self, database_name: str, collection_name: str, collection_schema: t.Dict[str, t.Any]):
         if not self.active:

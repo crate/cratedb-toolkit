@@ -5,6 +5,9 @@ from unittest import mock
 
 import pymongo
 import pytest
+from zyp import CollectionTransformation, MokshaTransformation
+from zyp.model.collection import CollectionAddress
+from zyp.model.project import TransformationProject
 
 from cratedb_toolkit.io.mongodb.api import mongodb_copy
 from tests.conftest import check_sqlalchemy2
@@ -283,7 +286,13 @@ def test_mongodb_copy_http_json_relaxed(caplog, cratedb):
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Run transfer command.
-    mongodb_copy(json_resource, cratedb_url)
+    transformation = TransformationProject().add(
+        CollectionTransformation(
+            address=CollectionAddress(container="datasets", name="books"),
+            pre=MokshaTransformation().jq(".[] |= (._id |= tostring)"),
+        )
+    )
+    mongodb_copy(json_resource, cratedb_url, transformation=transformation)
 
     # Verify metadata in target database.
     assert cratedb.database.table_exists("testdrive.demo") is True

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from boltons.urlutils import URL
 from polars.exceptions import PanicException
+from zyp.model.project import TransformationProject
 
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
@@ -93,7 +94,7 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
 def mongodb_copy(
     source_url: t.Union[str, URL],
     target_url: t.Union[str, URL],
-    transformation: t.Union[Path, None] = None,
+    transformation: t.Union[Path, TransformationManager, TransformationProject, None] = None,
     progress: bool = False,
 ):
     """
@@ -111,9 +112,7 @@ def mongodb_copy(
     target_url = URL(target_url)
 
     # Optionally configure transformations.
-    tm = None
-    if transformation:
-        tm = TransformationManager(path=transformation)
+    tm = TransformationManager.from_any(transformation)
 
     # Check if source address URL includes a table name or not.
     has_table = True
