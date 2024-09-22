@@ -94,6 +94,7 @@ dependencies = [
   "cratedb-sqlparse==0.0.6",
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
+  "orjsonl<2",
   "polars<1.7",
   "pympler<1.2",
   "python-dateutil<3",
@@ -154,8 +155,10 @@ influxdb = [
 io = [
   "cr8",
   "dask[dataframe]>=2020",
+  "fsspec[s3,http]",
   "pandas<3,>=1",
   "sqlalchemy>=2",
+  "universal-pathlib<0.3",
 ]
 kinesis = [
   "aiobotocore<2.16",

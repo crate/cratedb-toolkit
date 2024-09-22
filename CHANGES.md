@@ -5,6 +5,8 @@
 - Table Loader: Improved conditional handling of "transformation" parameter
 - Table Loader: Improved status reporting and error logging in `BulkProcessor`
 - MongoDB: Improve error reporting
+- MongoDB Full: Polars' `read_ndjson` doesn't load MongoDB JSON data well,
+  use `fsspec` and `orjson` instead
 
 ## 2024/09/19 v0.0.24
 - MongoDB Full: Refactor transformation subsystem to `commons-codec`
