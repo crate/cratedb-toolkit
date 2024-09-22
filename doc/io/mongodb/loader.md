@@ -48,6 +48,12 @@ Transfer all collections in database from MongoDB Atlas.
 export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/ticker
 ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker?batch-size=5000"
 ```
+:::{important}
+When transferring **multiple collections**, make sure to use a CrateDB database
+address which DOES NOT reference an individual table.
+It MUST stop at the **schema** label, here, `ticker`. Likewise, the MongoDB
+database address also MUST reference a **database**, NOT a specific collection.
+:::
 
 ### MongoDB Community and Enterprise
 Transfer data from MongoDB database/collection into CrateDB schema/table.
@@ -73,12 +79,21 @@ ctk load table "file+bson:///path/to/mongodb-json-files/datasets/books.json"
 # Extended JSON, HTTP resource.
 ctk load table "https+bson://github.com/ozlerhakan/mongodb-json-files/raw/master/datasets/books.json"
 
-# Extended JSON, filesystem, multiple files.
-ctk load table "file+bson:///path/to/mongodb-json-files/datasets/*.json"
-
 # BSON, filesystem, relative path, compressed.
 ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
+
+# Extended JSON, filesystem, multiple files.
+ctk load table \
+  "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
+  --cratedb-sqlalchemy-url="crate://crate@localhost:4200/datasets"
 ```
+:::{important}
+When transferring **multiple collections**, make sure to use a CrateDB database
+address which DOES NOT reference an individual table.
+It MUST stop at the **schema** label, here, `datasets`. Likewise, the path to
+the MongoDB JSON files also MUST reference the **parent folder**, NOT a specific
+JSON or BSON file.
+:::
 
 To exercise a full example importing multiple MongoDB Extended JSON files,
 see [](#file-import-tutorial).
@@ -208,15 +223,19 @@ Alternatively, have a look at the canonical
 MongoDB C driver's [libbson test files].
 :::
 
+## Troubleshooting
+When importing from a BSON file, and observing a traceback like this,
+```python
+Traceback (most recent call last):
+  File "/path/to/site-packages/bson/__init__.py", line 1356, in decode_file_iter
+    yield _bson_to_dict(elements, opts)  # type:ignore[type-var, arg-type, misc]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+bson.errors.InvalidBSON: not enough data for a BSON document
+```
+please try to import the file into a MongoDB Server using `mongorestore`,
+and export it again using `mongodump` or `mongoexport`, preferably using
+recent versions like MongoDB 7 and tools version 100.9.5 or higher.
 
-### Backlog
-:::{todo}
-- Describe usage of `mongoimport` and `mongoexport`.
-  ```shell
-  mongoimport --uri 'mongodb+srv://MYUSERNAME:SECRETPASSWORD@mycluster-ABCDE.azure.mongodb.net/test?retryWrites=true&w=majority'
-  ```
-- Convert dates like `"date": "Sep 18 2015"`, see `testdrive.city_inspections`.
-:::
 
 
 [BSON]: https://en.wikipedia.org/wiki/BSON
