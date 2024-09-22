@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 
 class ClusterBase(abc.ABC):
     @abstractmethod
-    def load_table(self, resource: InputOutputResource, target: TableAddress, transformation: Path):
+    def load_table(
+        self, resource: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
+    ):
         raise NotImplementedError("Child class needs to implement this method")
 
 
@@ -40,7 +42,7 @@ class ManagedCluster(ClusterBase):
         self,
         resource: InputOutputResource,
         target: t.Optional[TableAddress] = None,
-        transformation: Path = None,
+        transformation: t.Union[Path, None] = None,
     ):
         """
         Load data into a database table on CrateDB Cloud.
@@ -102,7 +104,9 @@ class StandaloneCluster(ClusterBase):
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
 
-    def load_table(self, resource: InputOutputResource, target: TableAddress, transformation: Path = None):
+    def load_table(
+        self, resource: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
+    ):
         """
         Load data into a database table on a standalone CrateDB Server.
 
@@ -168,4 +172,4 @@ class StandaloneCluster(ClusterBase):
                     return False
 
         else:
-            raise NotImplementedError("Importing resource not implemented yet")
+            raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")

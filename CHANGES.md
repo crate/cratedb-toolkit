@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- Table Loader: Improved conditional handling of "transformation" parameter
 
 ## 2024/09/19 v0.0.24
 - MongoDB Full: Refactor transformation subsystem to `commons-codec`

@@ -1,5 +1,6 @@
 import logging
 import sys
+import typing as t
 from pathlib import Path
 
 import click
@@ -49,7 +50,7 @@ def load_table(
     table: str,
     format_: str,
     compression: str,
-    transformation: Path,
+    transformation: t.Union[Path, None],
 ):
     """
     Import data into CrateDB and CrateDB Cloud clusters.
@@ -63,6 +64,10 @@ def load_table(
 
     if not cluster_id and not cratedb_sqlalchemy_url and not cratedb_http_url:
         raise KeyError(error_message)
+
+    # When `--transformation` is given, but empty, fix it.
+    if transformation is not None and transformation.name == "":
+        transformation = None
 
     # When SQLAlchemy URL is not given, but HTTP URL is, compute the former on demand.
     if cluster_id:
