@@ -57,9 +57,14 @@ class MongoDBFullLoad:
             )
             try:
                 transformation = tm.project.get(address=address)
+                logger.info(f"Applying transformation to: {address}")
             except KeyError:
-                pass
-        self.converter = MongoDBCrateDBConverter(transformation=transformation)
+                logger.warning(f"No transformation found for: {address}")
+        self.converter = MongoDBCrateDBConverter(
+            timestamp_to_epoch=True,
+            timestamp_use_milliseconds=True,
+            transformation=transformation,
+        )
         self.translator = MongoDBFullLoadTranslator(table_name=self.cratedb_table, converter=self.converter)
 
         self.on_error = on_error
