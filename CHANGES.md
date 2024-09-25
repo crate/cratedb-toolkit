@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/09/26 v0.0.26
 - MongoDB: Configure `MongoDBCrateDBConverter` after updating to commons-codec 0.0.18
 - DynamoDB CDC: Fix `MODIFY` operation to also propagate deleted attributes
 
