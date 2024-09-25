@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- MongoDB: Configure `MongoDBCrateDBConverter` after updating to commons-codec 0.0.18
 
 ## 2024/09/22 v0.0.25
 - Table Loader: Improved conditional handling of "transformation" parameter
