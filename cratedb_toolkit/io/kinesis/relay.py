@@ -84,7 +84,7 @@ class KinesisRelay:
 
             self.connection.commit()
         except sa.exc.ProgrammingError as ex:
-            logger.warning(f"Running query failed: {ex}")
+            logger.exception(f"Executing query failed: {ex}")
         self.progress_bar.update()
 
     def __del__(self):
