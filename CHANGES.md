@@ -3,6 +3,7 @@
 
 ## Unreleased
 - MongoDB: Configure `MongoDBCrateDBConverter` after updating to commons-codec 0.0.18
+- DynamoDB CDC: Fix `MODIFY` operation to also propagate deleted attributes
 
 ## 2024/09/22 v0.0.25
 - Table Loader: Improved conditional handling of "transformation" parameter

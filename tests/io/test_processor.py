@@ -34,6 +34,8 @@ DYNAMODB_CDC_INSERT_NESTED = {
                     "test2": {"N": 2},
                 }
             },
+            # An item that should be removed by the subsequent MODIFY operation.
+            "tombstone": {"S": "foo"},
         },
         "SizeBytes": 156,
         "ApproximateCreationDateTimePrecision": "MICROSECOND",
