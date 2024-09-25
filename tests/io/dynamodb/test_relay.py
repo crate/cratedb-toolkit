@@ -55,6 +55,7 @@ def test_kinesis_earliest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     assert cratedb.database.count_records(table_name) == 1
     results = cratedb.database.run_sql(f"SELECT * FROM {table_name}", records=True)  # noqa: S608
     assert results[0]["data"]["list_of_objects"] == [{"foo": "bar"}, {"baz": "qux"}]
+    assert "tombstone" not in results[0]["data"]
 
 
 def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
@@ -104,3 +105,4 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     assert cratedb.database.count_records(table_name) == 1
     results = cratedb.database.run_sql(f"SELECT * FROM {table_name}", records=True)  # noqa: S608
     assert results[0]["data"]["list_of_objects"] == [{"foo": "bar"}, {"baz": "qux"}]
+    assert "tombstone" not in results[0]["data"]
