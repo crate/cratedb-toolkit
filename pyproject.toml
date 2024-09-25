@@ -171,7 +171,7 @@ mongodb = [
   "cratedb-toolkit[io]",
   "orjson<4,>=3.3.1",
   "pymongo<4.9,>=3.10.1",
-  "python-bsonjs<0.5",
+  "python-bsonjs<0.6",
   "rich<14,>=3.3.2",
   "undatum<1.1",
 ]
