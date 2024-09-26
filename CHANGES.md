@@ -2,6 +2,7 @@
 
 
 ## Unreleased
+- MongoDB: Updated to pymongo 4.9
 
 ## 2024/09/26 v0.0.26
 - MongoDB: Configure `MongoDBCrateDBConverter` after updating to commons-codec 0.0.18
