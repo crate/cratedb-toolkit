@@ -11,6 +11,7 @@ from pathlib import Path
 import boltons.urlutils
 import bson
 import pymongo
+import pymongo.collection
 import yarl
 from attrs import define, field
 from boltons.urlutils import URL
