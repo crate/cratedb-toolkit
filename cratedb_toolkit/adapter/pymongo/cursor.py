@@ -9,12 +9,13 @@ from typing import Any, Iterable, Mapping, Optional, Union
 
 import sqlalchemy as sa
 from bson import SON
-from pymongo import CursorType, helpers
+from pymongo import CursorType, helpers_shared
 from pymongo.client_session import ClientSession
 from pymongo.collation import validate_collation_or_none
 from pymongo.collection import Collection
 from pymongo.common import validate_is_document_type, validate_is_mapping
-from pymongo.cursor import _QUERY_OPTIONS, Cursor, _Hint, _Sort
+from pymongo.cursor import Cursor
+from pymongo.cursor_shared import _QUERY_OPTIONS, _Hint, _Sort
 from pymongo.errors import InvalidOperation
 from pymongo.message import _GetMore, _Query
 from pymongo.read_preferences import _ServerMode
@@ -119,7 +120,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
                 allow_disk_use = validate_boolean("allow_disk_use", allow_disk_use)
 
             if projection is not None:
-                projection = helpers._fields_list_to_dict(projection, "projection")
+                projection = helpers_shared._fields_list_to_dict(projection, "projection")
 
             if let is not None:
                 validate_is_document_type("let", let)
@@ -131,7 +132,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
             self.__skip = skip
             self.__limit = limit
             self.__batch_size = batch_size
-            self.__ordering = sort and helpers._index_document(sort) or None
+            self.__ordering = sort and helpers_shared._index_document(sort) or None
             self.__max_scan = max_scan
             self.__explain = False
             self.__comment = comment
@@ -287,8 +288,8 @@ def cursor_factory(cratedb: DatabaseAdapter):
 
         def sort(self, key_or_list: _Hint, direction: Optional[Union[int, str]] = None) -> Cursor[_DocumentType]:
             """ """
-            keys = helpers._index_list(key_or_list, direction)
-            self.__ordering = helpers._index_document(keys)
+            keys = helpers_shared._index_list(key_or_list, direction)
+            self.__ordering = helpers_shared._index_document(keys)
             return self
 
         def __send_message(self, operation: Union[_Query, _GetMore]) -> None:
@@ -385,6 +386,6 @@ def cursor_factory(cratedb: DatabaseAdapter):
             if isinstance(index, str):
                 self.__hint = index
             else:
-                self.__hint = SON(helpers._index_document(index))
+                self.__hint = SON(helpers_shared._index_document(index))
 
     return AmendedCursor
