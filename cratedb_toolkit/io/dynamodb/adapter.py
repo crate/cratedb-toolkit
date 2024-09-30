@@ -2,6 +2,7 @@ import logging
 import typing as t
 
 import boto3
+from commons_codec.transform.dynamodb_model import PrimaryKeySchema
 from yarl import URL
 
 logger = logging.getLogger(__name__)
@@ -55,3 +56,18 @@ class DynamoDBAdapter:
     def count_records(self, table_name: str):
         table = self.dynamodb_resource.Table(table_name)
         return table.item_count
+
+    def primary_key_schema(self, table_name: str) -> PrimaryKeySchema:
+        """
+        Return primary key information for given table, derived from `KeySchema` [1] and `AttributeDefinition` [2].
+
+        AttributeType:
+        - S - the attribute is of type String
+        - N - the attribute is of type Number
+        - B - the attribute is of type Binary
+
+        [1] https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html#DDB-CreateTable-request-KeySchema
+        [2] https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeDefinition.html
+        """
+        table = self.dynamodb_resource.Table(table_name)
+        return PrimaryKeySchema.from_table(table)

@@ -41,7 +41,6 @@ class DynamoDBFullLoad:
         self.dynamodb_table = self.dynamodb_url.path.lstrip("/")
         self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
         self.cratedb_table = self.cratedb_adapter.quote_relation_name(cratedb_table)
-        self.translator = DynamoDBFullLoadTranslator(table_name=self.cratedb_table)
 
         self.on_error = on_error
         self.progress = progress
@@ -54,12 +53,15 @@ class DynamoDBFullLoad:
         """
         Read items from DynamoDB table, convert to SQL INSERT statements, and submit to CrateDB.
         """
-        records_in = self.dynamodb_adapter.count_records(self.dynamodb_table)
+        records_in = self.dynamodb_adapter.count_records(table_name=self.dynamodb_table)
         logger.info(f"Source: DynamoDB table={self.dynamodb_table} count={records_in}")
+
+        primary_key_schema = self.dynamodb_adapter.primary_key_schema(table_name=self.dynamodb_table)
+        translator = DynamoDBFullLoadTranslator(table_name=self.cratedb_table, primary_key_schema=primary_key_schema)
 
         with self.cratedb_adapter.engine.connect() as connection:
             if not self.cratedb_adapter.table_exists(self.cratedb_table):
-                connection.execute(sa.text(self.translator.sql_ddl))
+                connection.execute(sa.text(translator.sql_ddl))
                 connection.commit()
             records_target = self.cratedb_adapter.count_records(self.cratedb_table)
             logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
@@ -68,7 +70,7 @@ class DynamoDBFullLoad:
             processor = BulkProcessor(
                 connection=connection,
                 data=self.fetch(),
-                batch_to_operation=self.translator.to_sql,
+                batch_to_operation=translator.to_sql,
                 progress_bar=progress_bar,
                 on_error=self.on_error,
                 debug=self.debug,

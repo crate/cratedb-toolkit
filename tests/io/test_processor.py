@@ -10,6 +10,7 @@ pytestmark = pytest.mark.kinesis
 pytest.importorskip("commons_codec", reason="Only works with commons-codec installed")
 
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator  # noqa: E402
+from commons_codec.transform.dynamodb_model import PrimaryKeySchema  # noqa: E402
 
 DYNAMODB_CDC_INSERT_NESTED = {
     "awsRegion": "us-east-1",
@@ -122,7 +123,8 @@ def test_processor_kinesis_dynamodb_insert_update(cratedb, reset_handler, mocker
     table_name = '"testdrive"."demo"'
 
     # Create target table.
-    cratedb.database.run_sql(DynamoDBCDCTranslator(table_name=table_name).sql_ddl)
+    translator = DynamoDBCDCTranslator(table_name=table_name, primary_key_schema=PrimaryKeySchema().add("id", "S"))
+    cratedb.database.run_sql(translator.sql_ddl)
 
     # Configure Lambda processor per environment variables.
     handler_environment = {
