@@ -2,6 +2,7 @@ import threading
 import time
 
 import pytest
+from commons_codec.transform.dynamodb_model import PrimaryKeySchema
 
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
 from tests.io.test_processor import DYNAMODB_CDC_INSERT_NESTED, DYNAMODB_CDC_MODIFY_NESTED, wrap_kinesis
@@ -33,7 +34,8 @@ def test_kinesis_earliest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     table_name = '"testdrive"."demo"'
 
     # Create target table.
-    cratedb.database.run_sql(DynamoDBCDCTranslator(table_name=table_name).sql_ddl)
+    translator = DynamoDBCDCTranslator(table_name=table_name, primary_key_schema=PrimaryKeySchema().add("id", "S"))
+    cratedb.database.run_sql(translator.sql_ddl)
 
     # Define two CDC events: INSERT and UPDATE.
     events = [
@@ -76,7 +78,8 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     table_name = '"testdrive"."demo"'
 
     # Create target table.
-    cratedb.database.run_sql(DynamoDBCDCTranslator(table_name=table_name).sql_ddl)
+    translator = DynamoDBCDCTranslator(table_name=table_name, primary_key_schema=PrimaryKeySchema().add("id", "S"))
+    cratedb.database.run_sql(translator.sql_ddl)
 
     # Define two CDC events: INSERT and UPDATE.
     events = [

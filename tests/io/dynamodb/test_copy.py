@@ -12,9 +12,16 @@ def test_dynamodb_copy_basic_success(caplog, cratedb, dynamodb, dynamodb_test_ma
 
     data_in = {
         "Id": {"N": "101"},
+        "Name": {"S": "Hotzenplotz"},
     }
-    data_out = {
-        "Id": 101.0,
+    record_out = {
+        "pk": {
+            "Id": 101.0,
+        },
+        "data": {
+            "Name": "Hotzenplotz",
+        },
+        "aux": {},
     }
 
     # Define source and target URLs.
@@ -34,7 +41,7 @@ def test_dynamodb_copy_basic_success(caplog, cratedb, dynamodb, dynamodb_test_ma
     assert cratedb.database.count_records("testdrive.demo") == 1
 
     results = cratedb.database.run_sql("SELECT * FROM testdrive.demo;", records=True)  # noqa: S608
-    assert results[0]["data"] == data_out
+    assert results[0] == record_out
 
 
 def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_manager):
@@ -48,8 +55,8 @@ def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_ma
         {"Id": {"N": "3"}, "name": {"S": "Baz"}},
     ]
     data_out = [
-        {"data": {"Id": 1, "name": "Foo"}, "aux": {}},
-        {"data": {"Id": 3, "name": "Baz"}, "aux": {}},
+        {"pk": {"Id": 1}, "data": {"name": "Foo"}, "aux": {}},
+        {"pk": {"Id": 3}, "data": {"name": "Baz"}, "aux": {}},
     ]
 
     # Define source and target URLs.
@@ -68,7 +75,7 @@ def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_ma
     assert cratedb.database.refresh_table("testdrive.demo") is True
     assert cratedb.database.count_records("testdrive.demo") == 2
 
-    results = cratedb.database.run_sql("SELECT * FROM testdrive.demo ORDER BY data['Id'];", records=True)  # noqa: S608
+    results = cratedb.database.run_sql("SELECT * FROM testdrive.demo ORDER BY pk['Id'];", records=True)  # noqa: S608
     assert results == data_out
 
     assert "Dynamic nested arrays are not supported" in caplog.text
