@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+
+## 2024/10/01 v0.0.27
 - MongoDB: Updated to pymongo 4.9
 - DynamoDB: Change CrateDB data model to use (`pk`, `data`, `aux`) columns
   Attention: This is a breaking change.
