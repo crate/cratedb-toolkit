@@ -126,7 +126,7 @@ Use the HTTP URL query parameter `offset` on the source URL, like
 `&offset=42`, in order to start processing at this record from the
 beginning.
 
-## Zyp Transformations
+## Transformations
 You can use [Zyp Transformations] to change the shape of the data while being
 transferred. In order to add it to the pipeline, use the `--transformation`
 command line option.
