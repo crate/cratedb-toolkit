@@ -10,7 +10,6 @@ from yarl import URL
 from cratedb_toolkit.io.core import BulkProcessor
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.sqlalchemy.patch import monkeypatch_executemany
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.data import asbool
 
@@ -30,8 +29,6 @@ class DynamoDBFullLoad:
         progress: bool = False,
         debug: bool = True,
     ):
-        monkeypatch_executemany()
-
         cratedb_address = DatabaseAddress.from_string(cratedb_url)
         cratedb_sqlalchemy_url, cratedb_table_address = cratedb_address.decode()
         cratedb_table = cratedb_table_address.fullname

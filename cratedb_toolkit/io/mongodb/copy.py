@@ -13,7 +13,6 @@ from cratedb_toolkit.io.core import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.sqlalchemy.patch import monkeypatch_executemany
 from cratedb_toolkit.util import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
@@ -33,8 +32,6 @@ class MongoDBFullLoad:
         progress: bool = False,
         debug: bool = True,
     ):
-        monkeypatch_executemany()
-
         self.mongodb_uri = URL(mongodb_url)
         self.cratedb_uri = URL(cratedb_url)
 

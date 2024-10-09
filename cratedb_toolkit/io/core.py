@@ -49,7 +49,7 @@ class BulkResponse:
             return []
         errors: t.List[t.Dict[str, t.Any]] = []
         for record, status in zip(self.parameters, self.cratedb_bulk_result):
-            if status["rowcount"] == -2:
+            if status["rowcount"] != 1:
                 errors.append(record)
         return errors
 
@@ -143,12 +143,17 @@ class BulkProcessor:
             try:
                 cursor = self.connection.execute(statement=statement, parameters=operation.parameters)
                 self.connection.commit()
-                cratedb_bulk_result = getattr(cursor.context, "last_executemany_result", None)
-                bulk_response = BulkResponse(operation.parameters, cratedb_bulk_result)
-                failed_records = bulk_response.failed_records
-                count_success_local = bulk_response.success_count
-                self._metrics.count_success_total += bulk_response.success_count
-                self.progress_bar and self.progress_bar.update(n=bulk_response.success_count)
+                if cursor.rowcount > 0:
+                    cratedb_bulk_result = getattr(cursor.context, "last_result", None)
+                    bulk_response = BulkResponse(operation.parameters, cratedb_bulk_result)
+                    failed_records = bulk_response.failed_records
+                    count_success_local = bulk_response.success_count
+                    self._metrics.count_success_total += bulk_response.success_count
+                    self.progress_bar and self.progress_bar.update(n=bulk_response.success_count)
+                else:
+                    failed_records = operation.parameters
+                    count_success_local = 0
+                    self.progress_bar and self.progress_bar.update(n=1)
 
             # When a batch is of size one, an exception is raised.
             # Just signal the same condition as if a batch would have failed.
@@ -165,8 +170,10 @@ class BulkProcessor:
                 )
                 for record in failed_records:
                     try:
-                        self.connection.execute(statement=statement, parameters=record)
+                        cursor = self.connection.execute(statement=statement, parameters=record)
                         self.connection.commit()
+                        if cursor.rowcount != 1:
+                            raise IOError("Record has not been processed")
                         self._metrics.count_success_total += 1
                     except Exception as ex:
                         logger.error(f"Operation failed: {ex}")

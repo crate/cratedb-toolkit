@@ -101,7 +101,7 @@ dependencies = [
   "python-dotenv<2",
   "python-slugify<9",
   "pyyaml<7",
-  "sqlalchemy-cratedb>=0.37,<1",
+  "sqlalchemy-cratedb>=0.40,<1",
   "sqlparse<0.6",
   "tqdm<5",
   'typing-extensions<5; python_version <= "3.7"',
