@@ -156,7 +156,11 @@ class StandaloneCluster(ClusterBase):
 
                 from cratedb_toolkit.io.mongodb.api import mongodb_relay_cdc
 
-                return mongodb_relay_cdc(str(source_url_obj), target_url, progress=True)
+                return mongodb_relay_cdc(
+                    source_url_obj,
+                    target_url,
+                    transformation=transformation,
+                )
             else:
                 from cratedb_toolkit.io.mongodb.api import mongodb_copy
 

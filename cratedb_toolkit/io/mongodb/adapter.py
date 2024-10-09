@@ -86,6 +86,10 @@ class MongoDBAdapterBase:
     def query(self):
         raise NotImplementedError()
 
+    @abstractmethod
+    def subscribe(self):
+        raise NotImplementedError()
+
 
 @define
 class MongoDBFilesystemAdapter(MongoDBAdapterBase):
@@ -122,6 +126,9 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
             raise ValueError(f"Unsupported file type: {self._path.suffix}")
         return batches(data, self.batch_size)
 
+    def subscribe(self):
+        raise NotImplementedError("Subscribing to a change stream is not supported by filesystem adapter")
+
 
 @define
 class MongoDBResourceAdapter(MongoDBAdapterBase):
@@ -152,6 +159,9 @@ class MongoDBResourceAdapter(MongoDBAdapterBase):
         else:
             raise ValueError(f"Unsupported file type: {self._url}")
         return batches(data, self.batch_size)
+
+    def subscribe(self):
+        raise NotImplementedError("HTTP+BSON loader does not support subscribing to a change stream")
 
 
 @define
@@ -192,6 +202,9 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
             .limit(self.limit)
         )
         return batches(data, self.batch_size)
+
+    def subscribe(self):
+        return self._mongodb_collection.watch(full_document="updateLookup")
 
 
 def mongodb_adapter_factory(mongodb_uri: URL) -> MongoDBAdapterBase:
