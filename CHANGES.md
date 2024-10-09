@@ -4,6 +4,8 @@
 ## Unreleased
 - IO: Improved `BulkProcessor` when running per-record operations by
   also checking `rowcount` for handling `INSERT OK, 0 rows` responses
+- MongoDB: Fixed BSON decoding of `{"$date": 1180690093000}` timestamps
+  by updating to commons-codec 0.0.21.
 
 ## 2024/10/01 v0.0.27
 - MongoDB: Updated to pymongo 4.9
