@@ -6,6 +6,8 @@
   also checking `rowcount` for handling `INSERT OK, 0 rows` responses
 - MongoDB: Fixed BSON decoding of `{"$date": 1180690093000}` timestamps
   by updating to commons-codec 0.0.21.
+- Testcontainers: Don't always pull the OCI image before starting.
+  It is unfortunate in disconnected situations.
 
 ## 2024/10/01 v0.0.27
 - MongoDB: Updated to pymongo 4.9

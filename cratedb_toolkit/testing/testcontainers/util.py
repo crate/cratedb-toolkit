@@ -87,8 +87,9 @@ class KeepaliveContainer(DockerContainer):
         containers = docker_client.client.api.containers(all=True, filters={"name": self._name})
 
         if not containers:
-            logger.info(f"Pulling image: {self.image}")
-            docker_client.client.images.pull(self.image)
+            if asbool(self._kwargs.get("pull", False)):
+                logger.info(f"Pulling image: {self.image}")
+                docker_client.client.images.pull(self.image)
             logger.info(f"Creating container from image: {self.image}")
             self._container = docker_client.run(
                 self.image,
