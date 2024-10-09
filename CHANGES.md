@@ -1,7 +1,8 @@
 # Changelog
 
-
 ## Unreleased
+
+## 2024/10/09 v0.0.28
 - IO: Improved `BulkProcessor` when running per-record operations by
   also checking `rowcount` for handling `INSERT OK, 0 rows` responses
 - MongoDB: Fixed BSON decoding of `{"$date": 1180690093000}` timestamps
