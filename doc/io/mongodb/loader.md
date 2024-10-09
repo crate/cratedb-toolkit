@@ -126,7 +126,7 @@ Use the HTTP URL query parameter `offset` on the source URL, like
 `&offset=42`, in order to start processing at this record from the
 beginning.
 
-## Zyp Transformations
+## Transformations
 You can use [Zyp Transformations] to change the shape of the data while being
 transferred. In order to add it to the pipeline, use the `--transformation`
 command line option.
@@ -244,5 +244,5 @@ recent versions like MongoDB 7 and tools version 100.9.5 or higher.
 [libbson test files]: https://github.com/mongodb/mongo-c-driver/tree/master/src/libbson/tests/json
 [MongoDB Extended JSON]: https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
 [mongodb-json-files]: https://github.com/ozlerhakan/mongodb-json-files
-[Zyp Transformations]: https://commons-codec.readthedocs.io/zyp/index.html
+[Zyp Transformations]: https://commons-codec.readthedocs.io/zyp/
 [zyp-mongodb-json-files.yaml]: https://github.com/crate/cratedb-toolkit/blob/v0.0.22/examples/zyp/zyp-mongodb-json-files.yaml

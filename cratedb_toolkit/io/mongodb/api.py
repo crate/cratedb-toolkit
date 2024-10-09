@@ -175,7 +175,11 @@ def mongodb_copy(
     return outcome
 
 
-def mongodb_relay_cdc(source_url, target_url, progress: bool = False):
+def mongodb_relay_cdc(
+    source_url,
+    target_url,
+    transformation: t.Union[Path, TransformationManager, TransformationProject, None] = None,
+):
     """
     Synopsis
     --------
@@ -191,22 +195,14 @@ def mongodb_relay_cdc(source_url, target_url, progress: bool = False):
     """
     logger.info("Running MongoDB CDC relay")
 
-    # Decode database URL.
-    mongodb_address = DatabaseAddress.from_string(source_url)
-    mongodb_uri, mongodb_collection_address = mongodb_address.decode()
-    mongodb_database = mongodb_collection_address.schema
-    mongodb_collection = mongodb_collection_address.table
-
-    cratedb_address = DatabaseAddress.from_string(target_url)
-    cratedb_uri, cratedb_table_address = cratedb_address.decode()
+    # Optionally configure transformations.
+    tm = TransformationManager.from_any(transformation)
 
     # Configure machinery.
     relay = MongoDBCDCRelayCrateDB(
-        mongodb_url=str(mongodb_uri),
-        mongodb_database=mongodb_database,
-        mongodb_collection=mongodb_collection,
-        cratedb_sqlalchemy_url=str(cratedb_uri),
-        cratedb_table=cratedb_table_address.fullname,
+        mongodb_url=source_url,
+        cratedb_url=target_url,
+        tm=tm,
     )
 
     # Invoke machinery.
