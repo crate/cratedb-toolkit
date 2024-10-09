@@ -2,6 +2,8 @@
 
 
 ## Unreleased
+- IO: Improved `BulkProcessor` when running per-record operations by
+  also checking `rowcount` for handling `INSERT OK, 0 rows` responses
 
 ## 2024/10/01 v0.0.27
 - MongoDB: Updated to pymongo 4.9
