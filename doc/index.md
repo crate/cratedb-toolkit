@@ -25,6 +25,7 @@ install
 datasets
 adapter/index
 io/index
+query/index
 retention
 Cluster Flight Recorder (CFR) <cfr/index>
 Ad Hoc Diagnosis (WTF) <wtf/index>

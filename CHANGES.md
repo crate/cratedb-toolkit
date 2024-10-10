@@ -3,6 +3,11 @@
 ## Unreleased
 - MongoDB: Added Zyp transformations to the CDC subsystem,
   making it more symmetric to the full-load procedure.
+- Query Converter: Added very basic expression converter utility with
+  CLI interface
+- DynamoDB: Added query expression converter for relocating object
+  references, to support query migrations after the breaking change
+  with the SQL DDL schema, by v0.0.27.
 
 ## 2024/10/09 v0.0.28
 - IO: Improved `BulkProcessor` when running per-record operations by
