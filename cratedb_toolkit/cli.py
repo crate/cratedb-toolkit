@@ -8,6 +8,7 @@ from .cfr.cli import cli as cfr_cli
 from .cluster.cli import cli as cloud_cli
 from .io.cli import cli as io_cli
 from .job.cli import cli_list_jobs
+from .query.cli import cli as query_cli
 from .shell.cli import cli as shell_cli
 from .wtf.cli import cli as wtf_cli
 
@@ -24,6 +25,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 cli.add_command(cfr_cli, name="cfr")
 cli.add_command(cloud_cli, name="cluster")
 cli.add_command(io_cli, name="load")
+cli.add_command(query_cli, name="query")
 cli.add_command(rockset_cli, name="rockset")
 cli.add_command(shell_cli, name="shell")
 cli.add_command(wtf_cli, name="wtf")
