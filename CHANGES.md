@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2024/10/13 v0.0.29
 - MongoDB: Added Zyp transformations to the CDC subsystem,
   making it more symmetric to the full-load procedure.
 - Query Converter: Added very basic expression converter utility with
