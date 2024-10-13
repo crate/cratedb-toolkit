@@ -12,14 +12,17 @@ import boltons.urlutils
 import bson
 import pymongo
 import pymongo.collection
+import pymongo.database
 import yarl
 from attrs import define, field
 from boltons.urlutils import URL
 from bson.raw_bson import RawBSONDocument
 from undatum.common.iterable import IterableData
 
+from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.util import batches
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.io import read_json
 
 logger = logging.getLogger(__name__)
@@ -32,7 +35,11 @@ class MongoDBAdapterBase:
     database_name: str
     collection_name: str
 
-    _custom_query_parameters = ["batch-size", "filter", "limit", "offset"]
+    _custom_query_parameters = ["batch-size", "direct", "filter", "limit", "offset", "timeout"]
+    _default_timeout = 5000
+
+    direct: bool = False
+    timeout: int = _default_timeout
 
     @classmethod
     def from_url(cls, url: t.Union[str, boltons.urlutils.URL, yarl.URL]):
@@ -42,6 +49,8 @@ class MongoDBAdapterBase:
         mongodb_uri, mongodb_collection_address = mongodb_address.decode()
         mongodb_database = mongodb_collection_address.schema
         mongodb_collection = mongodb_collection_address.table
+        direct = asbool(mongodb_uri.query_params.pop("direct", False))
+        timeout = mongodb_uri.query_params.pop("timeout", cls._default_timeout)
         for custom_query_parameter in cls._custom_query_parameters:
             mongodb_uri.query_params.pop(custom_query_parameter, None)
         return cls(
@@ -49,6 +58,8 @@ class MongoDBAdapterBase:
             effective_url=mongodb_uri,
             database_name=mongodb_database,
             collection_name=mongodb_collection,
+            direct=direct,
+            timeout=timeout,
         )
 
     def __attrs_post_init__(self):
@@ -75,7 +86,7 @@ class MongoDBAdapterBase:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collections(self) -> t.List[str]:
+    def get_collection_names(self) -> t.List[str]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -87,7 +98,7 @@ class MongoDBAdapterBase:
         raise NotImplementedError()
 
     @abstractmethod
-    def subscribe(self):
+    def subscribe_cdc(self, resume_after: t.Optional[DocumentDict] = None):
         raise NotImplementedError()
 
 
@@ -98,7 +109,7 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
     def setup(self):
         self._path = Path(self.address.uri.path)
 
-    def get_collections(self) -> t.List[str]:
+    def get_collection_names(self) -> t.List[str]:
         return sorted(glob.glob(str(self._path)))
 
     def record_count(self, filter_=None) -> int:
@@ -126,7 +137,7 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
             raise ValueError(f"Unsupported file type: {self._path.suffix}")
         return batches(data, self.batch_size)
 
-    def subscribe(self):
+    def subscribe_cdc(self, resume_after: t.Optional[DocumentDict] = None):
         raise NotImplementedError("Subscribing to a change stream is not supported by filesystem adapter")
 
 
@@ -139,7 +150,7 @@ class MongoDBResourceAdapter(MongoDBAdapterBase):
         if "+bson" in self._url.scheme:
             self._url.scheme = self._url.scheme.replace("+bson", "")
 
-    def get_collections(self) -> t.List[str]:
+    def get_collection_names(self) -> t.List[str]:
         raise NotImplementedError("HTTP+BSON loader does not support directory inquiry yet")
 
     def record_count(self, filter_=None) -> int:
@@ -160,13 +171,14 @@ class MongoDBResourceAdapter(MongoDBAdapterBase):
             raise ValueError(f"Unsupported file type: {self._url}")
         return batches(data, self.batch_size)
 
-    def subscribe(self):
+    def subscribe_cdc(self, resume_after: t.Optional[DocumentDict] = None):
         raise NotImplementedError("HTTP+BSON loader does not support subscribing to a change stream")
 
 
 @define
 class MongoDBServerAdapter(MongoDBAdapterBase):
     _mongodb_client: pymongo.MongoClient = field(init=False)
+    _mongodb_database: pymongo.database.Database = field(init=False)
     _mongodb_collection: pymongo.collection.Collection = field(init=False)
 
     def setup(self):
@@ -174,11 +186,21 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
             str(self.effective_url),
             document_class=RawBSONDocument,
             datetime_conversion="DATETIME_AUTO",
+            directConnection=self.direct,
+            socketTimeoutMS=self.timeout,
+            connectTimeoutMS=self.timeout,
+            serverSelectionTimeoutMS=self.timeout,
         )
+        if self.database_name:
+            self._mongodb_database = self._mongodb_client.get_database(self.database_name)
         if self.collection_name:
-            self._mongodb_collection = self._mongodb_client[self.database_name][self.collection_name]
+            self._mongodb_collection = self._mongodb_database.get_collection(self.collection_name)
 
-    def get_collections(self) -> t.List[str]:
+    @property
+    def collection(self):
+        return self._mongodb_collection
+
+    def get_collection_names(self) -> t.List[str]:
         database = self._mongodb_client.get_database(self.database_name)
         return sorted(database.list_collection_names())
 
@@ -203,8 +225,15 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
         )
         return batches(data, self.batch_size)
 
-    def subscribe(self):
-        return self._mongodb_collection.watch(full_document="updateLookup")
+    def subscribe_cdc(self, resume_after: t.Optional[DocumentDict] = None):
+        return self._mongodb_collection.watch(
+            full_document="updateLookup", batch_size=self.batch_size, resume_after=resume_after
+        )
+
+    def create_collection(self):
+        self._mongodb_database.create_collection(self.collection_name)
+        self._mongodb_collection = self._mongodb_database.get_collection(self.collection_name)
+        return self._mongodb_collection
 
 
 def mongodb_adapter_factory(mongodb_uri: URL) -> MongoDBAdapterBase:

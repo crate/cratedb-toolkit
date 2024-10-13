@@ -145,7 +145,7 @@ def mongodb_copy(
         address_pair_root = AddressPair(source_url=source_url, target_url=target_url)
 
         mongodb_adapter = mongodb_adapter_factory(address_pair_root.source_url)
-        collections = mongodb_adapter.get_collections()
+        collections = mongodb_adapter.get_collection_names()
         logger.info(f"Discovered collections: {len(collections)}")
         logger.debug(f"Processing collections: {collections}")
 
