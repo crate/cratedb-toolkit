@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pytest
 
@@ -25,18 +26,23 @@ class MongoDBFixture:
     A little helper wrapping Testcontainer's `MongoDbContainer`.
     """
 
-    def __init__(self):
+    def __init__(self, container_class):
         from pymongo import MongoClient
 
+        self.container_class = container_class
         self.container = None
         self.client: MongoClient = None
         self.setup()
 
     def setup(self):
         # TODO: Make image name configurable.
-        from cratedb_toolkit.testing.testcontainers.mongodb import MongoDbContainerWithKeepalive
 
-        self.container = MongoDbContainerWithKeepalive()
+        mongodb_version = os.environ.get("MONGODB_VERSION", "7")
+        mongodb_image = f"mongo:{mongodb_version}"
+
+        self.container = self.container_class(
+            image=mongodb_image,
+        )
         self.container.start()
         self.client = self.container.get_connection_client()
 
@@ -56,6 +62,21 @@ class MongoDBFixture:
     def get_connection_client(self):
         return self.container.get_connection_client()
 
+    def get_connection_client_replicaset(self):
+        return self.container.get_connection_client_replicaset()
+
+
+class MongoDBFixtureFactory:
+    def __init__(self, container):
+        self.db = MongoDBFixture(container)
+
+    def __enter__(self):
+        self.db.reset()
+        return self.db
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.finalize()
+
 
 @pytest.fixture(scope="session")
 def mongodb_service():
@@ -63,10 +84,10 @@ def mongodb_service():
     Provide an MongoDB service instance to the test suite.
     """
     check_sqlalchemy2()
-    db = MongoDBFixture()
-    db.reset()
-    yield db
-    db.finalize()
+    from cratedb_toolkit.testing.testcontainers.mongodb import MongoDbContainerWithKeepalive
+
+    with MongoDBFixtureFactory(container=MongoDbContainerWithKeepalive) as mongo:
+        yield mongo
 
 
 @pytest.fixture(scope="function")
@@ -76,3 +97,24 @@ def mongodb(mongodb_service):
     """
     mongodb_service.reset()
     yield mongodb_service
+
+
+@pytest.fixture(scope="session")
+def mongodb_replicaset_service():
+    """
+    Provide an MongoDB service instance to the test suite.
+    """
+    check_sqlalchemy2()
+    from cratedb_toolkit.testing.testcontainers.mongodb import MongoDbReplicasetContainer
+
+    with MongoDBFixtureFactory(container=MongoDbReplicasetContainer) as mongo:
+        yield mongo
+
+
+@pytest.fixture(scope="function")
+def mongodb_replicaset(mongodb_replicaset_service):
+    """
+    Provide a fresh canvas to each test case invocation, by resetting database content.
+    """
+    mongodb_replicaset_service.reset()
+    yield mongodb_replicaset_service
