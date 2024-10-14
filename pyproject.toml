@@ -190,7 +190,7 @@ release-cfr = [
   "pyinstaller<7",
 ]
 service = [
-  "fastapi<0.115",
+  "fastapi<0.116",
   "uvicorn<0.31",
 ]
 test = [
