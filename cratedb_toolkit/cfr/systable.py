@@ -130,7 +130,7 @@ class SystemTableExporter(PathProvider):
         logger.debug(f"Running SQL: {sql}")
         return pl.read_database(
             query=sql,  # noqa: S608
-            connection=self.adapter.engine,
+            connection=self.adapter.connection,
             infer_schema_length=1000,
         )
 

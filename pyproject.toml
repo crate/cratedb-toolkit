@@ -114,7 +114,7 @@ all = [
   "cratedb-toolkit[full,influxdb,mongodb]",
 ]
 cfr = [
-  "pandas<2.2",
+  "pandas<2.3",
   "pyarrow<17.1",
 ]
 cloud = [
@@ -156,7 +156,7 @@ io = [
   "cr8",
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
-  "pandas<3,>=1",
+  "pandas<2.3,>=1",
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
@@ -177,7 +177,7 @@ mongodb = [
 ]
 pymongo = [
   "jessiql==1.0.0rc1",
-  "pandas==2.1.*",
+  "pandas<2.2",
   "pymongo<4.9",
   "sqlalchemy<2",
 ]
