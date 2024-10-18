@@ -23,8 +23,8 @@ class PyMongoCrateDBAdapter:
             patch("pymongo.collection.Collection", collection_patched),
             patch("pymongo.database.Collection", collection_patched),
             # Converge a few low-level functions of PyMongo to no-ops.
-            patch("pymongo.mongo_client.MongoClient._ensure_session"),
-            patch("pymongo.mongo_client._ClientConnectionRetryable._get_server"),
+            patch("pymongo.synchronous.mongo_client.MongoClient._ensure_session"),
+            patch("pymongo.synchronous.mongo_client._ClientConnectionRetryable._get_server"),
         ]
 
     def start(self):
