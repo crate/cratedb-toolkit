@@ -95,7 +95,7 @@ dependencies = [
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
   "orjsonl<2",
-  "polars<1.10",
+  "polars<1.11",
   "pympler<1.2",
   "python-dateutil<3",
   "python-dotenv<2",
