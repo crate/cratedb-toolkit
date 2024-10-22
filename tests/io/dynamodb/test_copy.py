@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from cratedb_toolkit.io.dynamodb.copy import DynamoDBFullLoad
@@ -79,3 +81,31 @@ def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_ma
     assert results == data_out
 
     assert "Dynamic nested arrays are not supported" in caplog.text
+
+
+def test_dynamodb_copy_verify_batch_size(caplog, cratedb, dynamodb, dynamodb_test_manager):
+    """
+    Verify that the `batch-size` parameter on the DynamoDB URL works as expected.
+    """
+
+    ddb_document = {
+        "Id": {"N": "101"},
+        "Name": {"S": "Hotzenplotz"},
+    }
+
+    # Define source and target URLs.
+    dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/demo?region=us-east-1&batch-size=1234"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
+
+    # Define transfer.
+    table_loader = DynamoDBFullLoad(dynamodb_url=dynamodb_url, cratedb_url=cratedb_url)
+
+    # Define a mock for the `.scan()` method.
+    mock_scan = Mock(return_value={"Items": [ddb_document], "Count": 1})
+    table_loader.dynamodb_adapter.dynamodb_client.scan = mock_scan
+
+    # Invoke transfer.
+    table_loader.start()
+
+    # Verify invocation of `.scan()` command.
+    mock_scan.assert_called_with(TableName="demo", ConsistentRead=False, Limit=1234)
