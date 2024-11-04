@@ -198,7 +198,7 @@ test = [
   "httpx<0.28",
   "pueblo[dataframe]",
   "pytest<9",
-  "pytest-cov<6",
+  "pytest-cov<7",
   "pytest-mock<4",
   "responses<0.26",
   "testcontainers-azurite==0.0.1rc1",
