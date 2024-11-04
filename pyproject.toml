@@ -126,7 +126,7 @@ datasets = [
 ]
 develop = [
   "black[jupyter]<25",
-  "mypy<1.12",
+  "mypy<1.14",
   "poethepoet<0.30",
   "pyproject-fmt<2.5",
   "ruff<0.7",
