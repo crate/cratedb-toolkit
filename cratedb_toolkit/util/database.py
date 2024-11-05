@@ -352,6 +352,7 @@ class DatabaseAdapter:
             if_exists=if_exists,
             method=insert_bulk,
             parallel=True,
+            engine_kwargs={"echo": False},
         )
 
     def describe_table_columns(self, table_name: str):

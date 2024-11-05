@@ -173,7 +173,7 @@ class CrateDBTestAdapter:
         """
         self.cratedb = CrateDBContainer(image=self.image, **kwargs)
         self.cratedb.start()
-        self.database = DatabaseAdapter(dburi=self.get_connection_url())
+        self.database = DatabaseAdapter(dburi=self.get_connection_url(), echo=False)
 
     def stop(self):
         """
