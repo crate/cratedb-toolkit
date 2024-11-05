@@ -1,9 +1,14 @@
+# ruff: noqa: E402
 import json
 import os.path
 import re
 import shutil
 import sys
 import tarfile
+
+import pytest
+
+pymongo = pytest.importorskip("polars", reason="Skipping tests because polars is not installed")
 
 import tests
 
@@ -16,6 +21,8 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from cratedb_toolkit.cfr.cli import cli
+
+pytestmark = pytest.mark.cfr
 
 
 def filenames(path: Path):

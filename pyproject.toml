@@ -95,7 +95,6 @@ dependencies = [
   'importlib-metadata; python_version < "3.8"',
   'importlib-resources; python_version < "3.9"',
   "orjsonl<2",
-  "polars<1.11",
   "pympler<1.2",
   "python-dateutil<3",
   "python-dotenv<2",
@@ -115,6 +114,7 @@ all = [
 ]
 cfr = [
   "pandas<2.3",
+  "polars<1.11",
   "pyarrow<18.1",
 ]
 cloud = [
@@ -157,6 +157,7 @@ io = [
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
   "pandas<2.3,>=1",
+  "polars<1.11",
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
@@ -268,6 +269,7 @@ testpaths = [
 ]
 xfail_strict = true
 markers = [
+  "cfr",
   "examples",
   "dynamodb",
   "influxdb",

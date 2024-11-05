@@ -23,7 +23,9 @@ import tempfile
 import typing as t
 from pathlib import Path
 
-import polars as pl
+if t.TYPE_CHECKING:
+    import polars as pl
+
 import sqlalchemy as sa
 from tqdm import tqdm
 
@@ -125,7 +127,9 @@ class SystemTableExporter(PathProvider):
         self.info = InfoContainer(adapter=self.adapter)
         self.inspector = SystemTableInspector(dburi=self.dburi)
 
-    def read_table(self, tablename: str) -> pl.DataFrame:
+    def read_table(self, tablename: str) -> "pl.DataFrame":
+        import polars as pl
+
         sql = f'SELECT * FROM "{SystemTableKnowledge.SYS_SCHEMA}"."{tablename}"'  # noqa: S608
         logger.debug(f"Running SQL: {sql}")
         return pl.read_database(
@@ -134,7 +138,7 @@ class SystemTableExporter(PathProvider):
             infer_schema_length=1000,
         )
 
-    def dump_table(self, frame: pl.DataFrame, file: t.Union[t.TextIO, None] = None):
+    def dump_table(self, frame: "pl.DataFrame", file: t.Union[t.TextIO, None] = None):
         if self.data_format == "csv":
             # polars.exceptions.ComputeError: CSV format does not support nested data
             # return df.write_csv()  # noqa: ERA001
@@ -235,7 +239,7 @@ class SystemTableImporter:
 
             # Load data.
             try:
-                df: pl.DataFrame = self.load_table(path_table_data)
+                df: "pl.DataFrame" = self.load_table(path_table_data)
                 df.write_database(table_name=tablename_restored, connection=self.dburi, if_table_exists="append")
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
@@ -243,7 +247,9 @@ class SystemTableImporter:
         logger.info(f"Successfully imported {table_count} system tables")
         # df.to_pandas().to_sql(name=tablename, con=self.adapter.engine, if_exists="append", index=False)  # noqa: ERA001, E501
 
-    def load_table(self, path: Path) -> pl.DataFrame:
+    def load_table(self, path: Path) -> "pl.DataFrame":
+        import polars as pl
+
         if path.suffix in [".jsonl"]:
             return pl.read_ndjson(path)
         elif path.suffix in [".parquet", ".pq"]:
