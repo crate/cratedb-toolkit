@@ -184,7 +184,7 @@ pymongo = [
 ]
 release = [
   "build<2",
-  "twine<6",
+  "twine<7",
 ]
 release-cfr = [
   "poethepoet<0.32",
