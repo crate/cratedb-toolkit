@@ -196,7 +196,7 @@ service = [
 ]
 test = [
   "cratedb-toolkit[testing]",
-  "httpx<0.28",
+  "httpx<0.29",
   "pueblo[dataframe]",
   "pytest<9",
   "pytest-cov<7",
