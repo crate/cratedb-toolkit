@@ -114,7 +114,7 @@ all = [
 ]
 cfr = [
   "pandas<2.3",
-  "polars<1.17",
+  "polars<1.18",
   "pyarrow<18.2",
 ]
 cloud = [
@@ -157,7 +157,7 @@ io = [
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
   "pandas<2.3,>=1",
-  "polars<1.17",
+  "polars<1.18",
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
