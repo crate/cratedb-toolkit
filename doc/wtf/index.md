@@ -42,6 +42,9 @@ Record complete outcomes of `info` and `job-info`.
 ```shell
 cratedb-wtf record
 ```
+:::{tip}
+See also [](#cfr).
+:::
 
 
 ## HTTP API
