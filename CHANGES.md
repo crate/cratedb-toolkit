@@ -3,6 +3,7 @@
 ## Unreleased
 - Dependencies: Minimize dependencies of core installation,
   defer `polars` to `cratedb-toolkit[io]`.
+- Fixed `cratedb-wtf record` about too large values of `ulimit_hard`
 
 ## 2024/10/13 v0.0.29
 - MongoDB: Added Zyp transformations to the CDC subsystem,

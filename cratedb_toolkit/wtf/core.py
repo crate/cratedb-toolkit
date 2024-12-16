@@ -51,6 +51,9 @@ class InfoContainer(InfoContainerBase):
         data["eco"] = boltons.ecoutils.get_profile(scrub=self.scrub)
         # `version_info` is a list of mixed data types: [3, 11, 6, "final", 0].
         data["eco"]["python"]["version_info"] = str(data["eco"]["python"]["version_info"])
+        # SQLParseException[Value 9223372036854775807 exceeds allowed range for column of type bigint]
+        # "ulimit_hard": 9223372036854775807
+        data["eco"]["ulimit_hard"] = str(data["eco"]["ulimit_hard"])
         # data["libraries"] = PlatformInfo.libraries()  # noqa: ERA001
         return data
 
