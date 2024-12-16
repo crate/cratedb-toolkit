@@ -5,6 +5,8 @@
   defer `polars` to `cratedb-toolkit[io]`.
 - Fixed `cratedb-wtf record` about too large values of `ulimit_hard`
 - Improved `ctk shell` to also talk to CrateDB standalone databases
+- Added basic utility command `ctk tail`, for tailing a database
+  table, and optionally following the tail
 
 ## 2024/10/13 v0.0.29
 - MongoDB: Added Zyp transformations to the CDC subsystem,
