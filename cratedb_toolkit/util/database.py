@@ -38,8 +38,11 @@ class DatabaseAdapter:
     Wrap SQLAlchemy connection to database.
     """
 
-    def __init__(self, dburi: str, echo: bool = False):
+    internal_tag = "  -- ctk"
+
+    def __init__(self, dburi: str, echo: bool = False, internal: bool = False):
         self.dburi = dburi
+        self.internal = internal
         self.engine = sa.create_engine(self.dburi, echo=echo)
         # TODO: Make that go away.
         logger.debug(f"Connecting to CrateDB: {dburi}")
@@ -119,6 +122,8 @@ class DatabaseAdapter:
         results = []
         with self.engine.connect() as connection:
             for statement in sqlparse.split(sql):
+                if self.internal:
+                    statement += self.internal_tag
                 result = connection.execute(sa.text(statement), parameters)
                 data: t.Any
                 if records:
@@ -134,11 +139,13 @@ class DatabaseAdapter:
         else:
             return results
 
-    def count_records(self, name: str, errors: Literal["raise", "ignore"] = "raise"):
+    def count_records(self, name: str, errors: Literal["raise", "ignore"] = "raise", where: str = ""):
         """
         Return number of records in table.
         """
-        sql = f"SELECT COUNT(*) AS count FROM {self.quote_relation_name(name)};"  # noqa: S608
+        sql = f"SELECT COUNT(*) AS count FROM {self.quote_relation_name(name)}"  # noqa: S608
+        if where:
+            sql += f" WHERE {where}"
         try:
             results = self.run_sql(sql=sql)
         except ProgrammingError as ex:

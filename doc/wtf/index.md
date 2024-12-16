@@ -17,6 +17,8 @@ Define CrateDB database cluster address.
 export CRATEDB_SQLALCHEMY_URL=crate://localhost/
 ```
 
+
+### One shot commands
 Display system and database cluster information.
 ```shell
 cratedb-wtf info
@@ -31,6 +33,16 @@ Display database cluster log messages.
 ```shell
 cratedb-wtf logs
 ```
+
+Display the most recent entries of the `sys.jobs_log` table,
+optionally polling it for updates by adding `--follow`.
+For more information, see [](#tail).
+```shell
+ctk tail -n 3 sys.jobs_log
+```
+
+
+### Data collectors
 
 Collect and display job statistics.
 ```shell

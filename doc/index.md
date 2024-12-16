@@ -23,6 +23,7 @@
 
 install
 datasets
+cmd/index
 adapter/index
 io/index
 query/index
