@@ -192,7 +192,7 @@ release-cfr = [
 ]
 service = [
   "fastapi<0.116",
-  "uvicorn<0.33",
+  "uvicorn<0.35",
 ]
 test = [
   "cratedb-toolkit[testing]",
