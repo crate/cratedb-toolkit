@@ -22,6 +22,7 @@ cratedb_sqlalchemy_option = click.option(
 )
 @click.option("--format", "format_", type=str, required=False, help="Select output format. Default: log / jsonl")
 @click.option("--follow", "-f", is_flag=True, required=False, help="Follow new records added, by polling the table")
+@click.option("--interval", "-i", type=float, required=False, help="When following the tail, poll each N seconds. Default: 0.1")
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.argument("resource", nargs=-1, type=click.UNPROCESSED)
@@ -34,6 +35,7 @@ def cli(
     lines: int,
     format_: str,
     follow: bool,
+    interval: float,
     verbose: bool,
     debug: bool,
 ):
@@ -48,5 +50,5 @@ def cli(
     # TODO: Tail multiple tables.
     if len(resource) > 1:
         raise NotImplementedError("`ctk tail` currently implements tailing a single table only")
-    tt = TableTailer(db=adapter, resource=TableAddress.from_string(resource[0]), format=format_)
+    tt = TableTailer(db=adapter, resource=TableAddress.from_string(resource[0]), interval=interval, format=format_)
     tt.start(lines=lines, follow=follow)

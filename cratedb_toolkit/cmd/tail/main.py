@@ -91,6 +91,8 @@ class TableTailer:
 
     def __attrs_post_init__(self):
         self.db.internal = True
+        if self.interval is None:
+            self.interval = 0.1
         if not self.format:
             if self.resource.fullname == "sys.jobs_log":
                 self.format = "log"
@@ -131,4 +133,4 @@ class TableTailer:
             if not follow:
                 return result
             offset += len(result)
-            time.sleep(self.interval)
+            time.sleep(t.cast(float, self.interval))
