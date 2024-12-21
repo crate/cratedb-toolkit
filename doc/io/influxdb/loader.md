@@ -2,9 +2,13 @@
 # InfluxDB Table Loader
 
 ## About
-Load data from InfluxDB into CrateDB using a one-stop command
-`ctk load table influxdb2://...`, in order to facilitate convenient
+Load data from InfluxDB into CrateDB using one-stop commands
+`ctk load table ...`, in order to facilitate convenient
 data transfers to be used within data pipelines or ad hoc operations.
+
+## Synopsis
+- Load from InfluxDB server: `ctk load table influxdb2://...`
+- Load from InfluxDB line protocol: `ctk load table file://observations.lp`
 
 ## Details
 The InfluxDB table loader is based on the [influxio] package. Please also check
@@ -18,7 +22,13 @@ pip install --upgrade 'cratedb-toolkit[influxdb]'
 
 ## Usage
 
-### Workstation
+Prepare subsequent commands by defining the database address of your
+CrateDB database cluster.
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+```
+
+### InfluxDB 2 API
 
 An exemplary walkthrough, copying data from InfluxDB to CrateDB, both services
 expected to be listening on `localhost`.
@@ -37,13 +47,11 @@ influx query "from(bucket:\"${INFLUX_BUCKET_NAME}\") |> range(start:-100y)"
 
 Transfer data from InfluxDB bucket/measurement into CrateDB schema/table.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
 ```
 
 Query data in CrateDB.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
 ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
@@ -52,6 +60,18 @@ ctk show table "testdrive.demo"
 - More convenient table querying.
 :::
 
+### InfluxDB Line protocol file (ILP)
+
+Import ILP file from local filesystem.
+```shell
+ctk load table "file://influxdb-export.lp"
+```
+
+Import ILP file from a remote resource.
+```shell
+ctk load table \
+    "https://github.com/influxdata/influxdb2-sample-data/raw/master/air-sensor-data/air-sensor-data.lp"
+```
 
 ### Cloud
 
