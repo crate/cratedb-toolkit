@@ -129,7 +129,11 @@ class StandaloneCluster(ClusterBase):
                 logger.error("Data loading failed or incomplete")
                 return False
 
-        elif source_url_obj.scheme.startswith("influxdb"):
+        elif (
+            source_url_obj.scheme.startswith("influxdb")
+            or resource.url.endswith(".lp")
+            or resource.url.endswith(".lp.gz")
+        ):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
             http_scheme = "http"
