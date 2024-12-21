@@ -7,6 +7,7 @@
 - Improved `ctk shell` to also talk to CrateDB standalone databases
 - Added basic utility command `ctk tail`, for tailing a database
   table, and optionally following the tail
+- Table Loader: Added capability to load InfluxDB Line Protocol (ILP) files
 
 ## 2024/10/13 v0.0.29
 - MongoDB: Added Zyp transformations to the CDC subsystem,
