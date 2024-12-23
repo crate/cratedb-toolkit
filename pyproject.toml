@@ -162,7 +162,7 @@ io = [
   "universal-pathlib<0.3",
 ]
 kinesis = [
-  "aiobotocore<2.16",
+  "aiobotocore<2.17",
   "async-kinesis<1.2",
   "commons-codec>=0.0.20",
   "lorrystream[carabas]>=0.0.6",
