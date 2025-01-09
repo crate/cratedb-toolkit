@@ -66,9 +66,9 @@ export CRATEDB_PASSWORD='3$MJ5fALP8bNOYCYBMLOrzd&'
 ### Usage
 Load data into database table.
 ```shell
-ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz'
+ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz'
 ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_marketing.json.gz'
-ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/timeseries/yc.2019.07-tiny.parquet.gz'
+ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz'
 ```
 
 Query and aggregate data using SQL.
