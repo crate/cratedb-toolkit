@@ -57,7 +57,7 @@ def import_csv(cluster_id: str):
     cluster = ManagedCluster(cloud_id=cluster_id)
 
     # Encapsulate source parameter.
-    url = "https://github.com/crate/cratedb-datasets/raw/main/machine-learning/timeseries/nab-machine-failure.csv"
+    url = "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
     resource = InputOutputResource(url=url)
 
     # Invoke import job. Without `target` argument, the destination
@@ -78,7 +78,7 @@ def import_parquet(cluster_id: str):
     cluster = ManagedCluster(cloud_id=cluster_id)
 
     # Encapsulate source and target parameters.
-    url = "https://github.com/crate/cratedb-datasets/raw/main/timeseries/yc.2019.07-tiny.parquet.gz"
+    url = "https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz"
     resource = InputOutputResource(url=url)
     target = TableAddress(schema="testdrive", table="yc-201907")
 
