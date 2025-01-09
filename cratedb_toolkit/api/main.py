@@ -50,7 +50,7 @@ class ManagedCluster(ClusterBase):
         Synopsis
         --------
         export CRATEDB_CLOUD_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
-        ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz
+        ctk load table https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz
 
         https://console.cratedb.cloud
         """
