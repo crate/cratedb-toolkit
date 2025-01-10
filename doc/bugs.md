@@ -36,7 +36,7 @@ KeyError: 'url'
 
 
 ```
-$ ctk load table https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_weather.csv.gz --schema foo
+$ ctk load table https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz --schema foo
 ==> Info: Status: REGISTERED (Your import job was received and is pending processing.)
 ==> Info: Status: SENT (Your creation request was sent to the region.)
 ==> Info: Done importing 70.00K records
