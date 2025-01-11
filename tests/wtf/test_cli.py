@@ -2,7 +2,6 @@ import json
 
 from boltons.iterutils import get_path
 from click.testing import CliRunner
-from yarl import URL
 
 from cratedb_toolkit.wtf.cli import cli
 
@@ -94,14 +93,11 @@ def test_wtf_cli_statistics_collect(cratedb, caplog):
     Verify `cratedb-wtf job-statistics collect`.
     """
 
-    uri = URL(cratedb.database.dburi)
-
     # Invoke command.
     runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
     result = runner.invoke(
         cli,
         args="job-statistics collect --once",
-        env={"HOSTNAME": f"{uri.host}:{uri.port}"},
         catch_exceptions=False,
     )
     assert result.exit_code == 0
