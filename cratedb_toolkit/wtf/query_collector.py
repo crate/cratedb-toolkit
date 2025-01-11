@@ -16,13 +16,16 @@ from cratedb_toolkit.model import DatabaseAddress
 logger = logging.getLogger(__name__)
 
 cratedb_sqlalchemy_url = os.getenv("CRATEDB_SQLALCHEMY_URL", "crate://crate@localhost:4200")
-uri = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
-host = f"{uri.uri.host}:{uri.uri.port}"
-username = uri.uri.username
-password = uri.uri.password
+address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
+host = f"{address.uri.host}:{address.uri.port}"
+username = address.uri.username
+password = address.uri.password
+_, table_address = address.decode()
+schema = table_address.schema or "stats"
+
 interval = float(os.getenv("INTERVAL", 10))
-stmt_log_table = os.getenv("STMT_TABLE", "stats.statement_log")
-last_exec_table = os.getenv("LAST_EXEC_TABLE", "stats.last_execution")
+stmt_log_table = os.getenv("STMT_TABLE", f"{schema}.statement_log")
+last_exec_table = os.getenv("LAST_EXEC_TABLE", f"{schema}.last_execution")
 last_execution_ts = 0
 sys_jobs_log = {}
 bucket_list = [10, 50, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000]
