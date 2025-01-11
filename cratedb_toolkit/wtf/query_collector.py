@@ -11,11 +11,15 @@ from uuid import uuid4
 import urllib3
 from crate import client
 
+from cratedb_toolkit.model import DatabaseAddress
+
 logger = logging.getLogger(__name__)
 
-host = os.getenv("HOSTNAME", "localhost:4200")
-username = os.getenv("USERNAME", "crate")
-password = os.getenv("PASSWORD", "")
+cratedb_sqlalchemy_url = os.getenv("CRATEDB_SQLALCHEMY_URL", "crate://crate@localhost:4200")
+uri = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
+host = f"{uri.uri.host}:{uri.uri.port}"
+username = uri.uri.username
+password = uri.uri.password
 interval = float(os.getenv("INTERVAL", 10))
 stmt_log_table = os.getenv("STMT_TABLE", "stats.statement_log")
 last_exec_table = os.getenv("LAST_EXEC_TABLE", "stats.last_execution")
