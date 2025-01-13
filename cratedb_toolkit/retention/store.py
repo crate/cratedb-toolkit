@@ -107,7 +107,7 @@ class RetentionPolicyStore(SQLAlchemyTagHelperMixin):
         self.settings = settings
 
         logger.info(
-            f"Connecting to database {self.settings.database.safe}, " f"table {self.settings.policy_table.fullname}"
+            f"Connecting to database {self.settings.database.safe}, table {self.settings.policy_table.fullname}"
         )
 
         if self.settings.policy_table.table is None:

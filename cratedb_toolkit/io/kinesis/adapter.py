@@ -56,7 +56,7 @@ class KinesisAdapter:
         """
         if self.start.startswith("seqno"):
             raise NotImplementedError(
-                "Consuming Kinesis Stream from sequence number " "not implemented yet, please file an issue."
+                "Consuming Kinesis Stream from sequence number not implemented yet, please file an issue."
             )
         try:
             return self.start_iterator_type_map[self.start]

@@ -43,7 +43,7 @@ class RetentionJob:
         Resolve retention policies to tasks, and invoke them.
         """
         logger.info(
-            f"Connecting to database {self.settings.database.safe}, " f"table {self.settings.policy_table.fullname}"
+            f"Connecting to database {self.settings.database.safe}, table {self.settings.policy_table.fullname}"
         )
 
         msg = f"Starting data retention using '{self.settings.strategy}', cutoff day '{self.settings.cutoff_day}'"

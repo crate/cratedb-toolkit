@@ -116,9 +116,7 @@ def write_stats_to_db():
         f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
     update_query_stmt = (
-        f"UPDATE {stmt_log_table} "
-        f"SET calls = ?, avg_duration = ?, nodes = ?, bucket = ?, last_used = ? "
-        f"WHERE id = ?"
+        f"UPDATE {stmt_log_table} SET calls = ?, avg_duration = ?, nodes = ?, bucket = ?, last_used = ? WHERE id = ?"
     )
     write_params = []
     for key in sys_jobs_log.keys():

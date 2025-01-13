@@ -76,8 +76,7 @@ class DynamoDBFullLoad:
             logger.info(f"Bulk processor metrics: {metrics}")
 
             logger.info(
-                "Number of records written: "
-                f"success={metrics.count_success_total}, error={metrics.count_error_total}"
+                f"Number of records written: success={metrics.count_success_total}, error={metrics.count_error_total}"
             )
             if metrics.count_success_total == 0:
                 logger.warning("No data has been copied")
