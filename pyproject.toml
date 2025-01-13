@@ -311,6 +311,8 @@ lint.select = [
 ]
 
 lint.extend-ignore = [
+  # Module `xxx` shadows a Python standard-library module
+  "A005",
   # zip() without an explicit strict= parameter
   "B905",
   # df is a bad variable name. Be kinder to your future self.

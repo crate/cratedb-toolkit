@@ -34,7 +34,7 @@ def test_dataset_replace(database: DatabaseAdapter, dataset: Dataset):
         "KAGGLE_USERNAME" in os.environ and "KAGGLE_KEY" in os.environ
     )
     if dataset.title and "Weather" in dataset.title and not kaggle_auth_exists:
-        raise pytest.skip(f"Kaggle dataset can not be tested " f"without authentication: {dataset.reference}")
+        raise pytest.skip(f"Kaggle dataset can not be tested without authentication: {dataset.reference}")
 
     dataset = load_dataset(dataset.reference)
     tablename = slugify(dataset.reference, separator="_")

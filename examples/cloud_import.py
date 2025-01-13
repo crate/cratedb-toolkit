@@ -104,8 +104,7 @@ def obtain_cluster_id() -> str:
 
     if not cluster_id:
         raise ValueError(
-            "Unable to obtain cluster identifier from command line or "
-            "`CRATEDB_CLOUD_CLUSTER_ID` environment variable"
+            "Unable to obtain cluster identifier from command line or `CRATEDB_CLOUD_CLUSTER_ID` environment variable"
         )
 
     return cluster_id

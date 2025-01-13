@@ -143,7 +143,7 @@ def proportion_string(types: dict) -> str:
     summary = "-- ⬇️ Types: "
     proportions = []
     for type_ in types:
-        proportions.append(f"{type_}: {round((types[type_]['count']/total)*100, 2)}%")
+        proportions.append(f"{type_}: {round((types[type_]['count'] / total) * 100, 2)}%")
     return " " + (summary + ", ".join(proportions))
 
 
