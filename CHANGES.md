@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/01/13 v0.0.30
 - Dependencies: Minimize dependencies of core installation,
   defer `polars` to `cratedb-toolkit[io]`.
 - Fixed `cratedb-wtf record` about too large values of `ulimit_hard`
