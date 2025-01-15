@@ -8,13 +8,16 @@ It is still a work-in-progress, but it is usable already.
 ```shell
 pip install --upgrade 'cratedb-toolkit'
 ```
-Alternatively, use the Docker image at `ghcr.io/crate/cratedb-toolkit`.
+Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`.
 
 ## Synopsis
 
 Define CrateDB database cluster address.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+export CRATEDB_SQLALCHEMY_URL=crate://username:password@localhost:4200/?schema=ext&ssl=true
+```
+```shell
+export CRATEDB_HTTP_URL=https://username:password@localhost:4200/?schema=ext
 ```
 
 

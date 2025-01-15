@@ -4,6 +4,7 @@ from boltons.iterutils import get_path
 from click.testing import CliRunner
 
 from cratedb_toolkit.wtf.cli import cli
+from tests.conftest import TESTDRIVE_EXT_SCHEMA
 
 
 def test_wtf_cli_info(cratedb):
@@ -93,8 +94,11 @@ def test_wtf_cli_statistics_collect(cratedb, caplog):
     Verify `cratedb-wtf job-statistics collect`.
     """
 
+    # Configure database URI.
+    dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
+
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
     result = runner.invoke(
         cli,
         args="job-statistics collect --once",
@@ -111,12 +115,11 @@ def test_wtf_cli_statistics_collect(cratedb, caplog):
     assert {"table_name": "last_execution"} in results
     assert {"table_name": "statement_log"} in results
 
-    # FIXME: Table is empty. Why?
-    cratedb.database.run_sql('REFRESH TABLE "stats"."statement_log"')
-    assert cratedb.database.count_records("stats.statement_log") == 0
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.statement_log")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.statement_log") >= 19
 
-    cratedb.database.run_sql('REFRESH TABLE "stats"."last_execution"')
-    assert cratedb.database.count_records("stats.last_execution") == 1
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.last_execution")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.last_execution") == 1
 
 
 def test_wtf_cli_statistics_view(cratedb):
@@ -124,8 +127,11 @@ def test_wtf_cli_statistics_view(cratedb):
     Verify `cratedb-wtf job-statistics view`.
     """
 
+    # Configure database URI.
+    dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
+
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
     result = runner.invoke(
         cli,
         args="job-statistics view",
