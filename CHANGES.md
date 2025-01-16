@@ -1,12 +1,13 @@
 # Changelog
 
 ## Unreleased
-- Fixed connectivity for `job-statistics collect`
+- Fixed connectivity for `jobstats collect`
+- Refactored code and improved CLI interface of `ctk info` vs. `ctk cfr`
 
 ## 2025/01/13 v0.0.30
 - Dependencies: Minimize dependencies of core installation,
   defer `polars` to `cratedb-toolkit[io]`.
-- Fixed `cratedb-wtf record` about too large values of `ulimit_hard`
+- Fixed `ctk cfr info record` about too large values of `ulimit_hard`
 - Improved `ctk shell` to also talk to CrateDB standalone databases
 - Added basic utility command `ctk tail`, for tailing a database
   table, and optionally following the tail
@@ -138,7 +139,7 @@
 - CFR: Publish self-contained application bundle to GitHub Workflow Artifacts
 
 ## 2024/06/18 v0.0.14
-- Add `ctk cfr` and `ctk wtf` diagnostics programs
+- Add `ctk info` and `ctk cfr` diagnostics programs
 - Remove support for Python 3.7
 - SQLAlchemy dialect: Use `sqlalchemy-cratedb>=0.37.0`
   This includes the fix to the `get_table_names()` reflection method.

@@ -29,7 +29,7 @@ def filenames(path: Path):
     return sorted([item.name for item in path.iterdir()])
 
 
-def test_cfr_cli_export_success(cratedb, tmp_path, caplog):
+def test_cfr_sys_export_success(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-export` works.
     """
@@ -58,7 +58,7 @@ def test_cfr_cli_export_success(cratedb, tmp_path, caplog):
     assert len(data_files) >= 10
 
 
-def test_cfr_cli_export_to_archive_file(cratedb, tmp_path, caplog):
+def test_cfr_sys_export_to_archive_file(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-export some-file.tgz` works.
     """
@@ -96,7 +96,7 @@ def test_cfr_cli_export_to_archive_file(cratedb, tmp_path, caplog):
     assert len(data_files) >= 10
 
 
-def test_cfr_cli_export_failure(cratedb, tmp_path, caplog):
+def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-export` failure.
     """
@@ -115,7 +115,7 @@ def test_cfr_cli_export_failure(cratedb, tmp_path, caplog):
     assert result.output == ""
 
 
-def test_cfr_cli_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
+def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
     runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
     result = runner.invoke(
         cli,
@@ -131,7 +131,7 @@ def test_cfr_cli_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
         assert '"sys-cluster"' in content, "Table name missing or not quoted"
 
 
-def test_cfr_cli_import_success(cratedb, tmp_path, caplog):
+def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-import` works.
     """
@@ -192,7 +192,7 @@ def test_cfr_cli_import_success(cratedb, tmp_path, caplog):
     assert cratedb.database.count_records("sys-operations") == 1
 
 
-def test_cfr_cli_import_failure(cratedb, tmp_path, caplog):
+def test_cfr_sys_import_failure(cratedb, tmp_path, caplog):
     """
     Verify `ctk cfr sys-import` failure.
     """

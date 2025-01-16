@@ -3,48 +3,31 @@
 import logging
 import multiprocessing
 import sys
+import typing as t
 
 import click
 from click_aliases import ClickAliasedGroup
 
+from cratedb_toolkit.api.cli import make_cli
+from cratedb_toolkit.cfr.info import InfoRecorder
 from cratedb_toolkit.cfr.systable import Archive, SystemTableExporter, SystemTableImporter
-from cratedb_toolkit.util.cli import (
-    boot_click,
-    error_logger,
-    make_command,
-)
+from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.cli import docstring_format_verbatim, error_logger, make_command
 from cratedb_toolkit.util.data import jd, path_from_url
 
 logger = logging.getLogger(__name__)
 
-
-cratedb_sqlalchemy_option = click.option(
-    "--cratedb-sqlalchemy-url", envvar="CRATEDB_SQLALCHEMY_URL", type=str, required=False, help="CrateDB SQLAlchemy URL"
-)
-
-
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
-@cratedb_sqlalchemy_option
-@click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
-@click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
-@click.option("--scrub", envvar="SCRUB", is_flag=True, required=False, help="Blank out identifiable information")
-@click.version_option()
-@click.pass_context
-def cli(ctx: click.Context, cratedb_sqlalchemy_url: str, verbose: bool, debug: bool, scrub: bool):
-    """
-    Diagnostics and informational utilities.
-    """
-    if not cratedb_sqlalchemy_url:
-        logger.error("Unable to operate without database address")
-        sys.exit(1)
-    ctx.meta.update({"cratedb_sqlalchemy_url": cratedb_sqlalchemy_url, "scrub": scrub})
-    return boot_click(ctx, verbose, debug)
+cli = make_cli()
 
 
 @make_command(cli, "sys-export")
 @click.argument("target", envvar="CFR_TARGET", type=str, required=False, default="file://./cfr")
 @click.pass_context
 def sys_export(ctx: click.Context, target: str):
+    """
+    Export CrateDB system tables.
+    """
     cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
     try:
         target_path = path_from_url(target)
@@ -71,6 +54,9 @@ def sys_export(ctx: click.Context, target: str):
 @click.argument("source", envvar="CFR_SOURCE", type=str, required=True)
 @click.pass_context
 def sys_import(ctx: click.Context, source: str):
+    """
+    Import CrateDB system tables.
+    """
     cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
     try:
         stc = SystemTableImporter(dburi=cratedb_sqlalchemy_url, source=path_from_url(source))
@@ -78,6 +64,93 @@ def sys_import(ctx: click.Context, source: str):
     except Exception as ex:
         error_logger(ctx)(ex)
         sys.exit(1)
+
+
+def help_statistics():
+    """
+    Database cluster job / query statistics.
+
+    Synopsis
+    ========
+
+    export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+    ctk cfr jobstats collect
+    ctk cfr jobstats view
+
+    """  # noqa: E501
+
+
+@click.group(cls=ClickAliasedGroup, help=docstring_format_verbatim(help_statistics.__doc__))  # type: ignore[arg-type]
+@click.pass_context
+def job_statistics(ctx: click.Context):
+    """
+    Collect and display statistics about jobs / queries.
+    """
+    pass
+
+
+cli.add_command(job_statistics, name="jobstats")
+
+
+@make_command(job_statistics, "collect", "Collect statistics about queries from sys.jobs_log.")
+@click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
+@click.pass_context
+def job_statistics_collect(ctx: click.Context, once: bool):
+    """
+    Run jobs_log collector.
+    """
+    import cratedb_toolkit.cfr.jobstats
+
+    address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+
+    cratedb_toolkit.cfr.jobstats.boot(address=address)
+    if once:
+        cratedb_toolkit.cfr.jobstats.record_once()
+    else:
+        cratedb_toolkit.cfr.jobstats.record_forever()
+
+
+@make_command(job_statistics, "view", "View job statistics about collected queries.")
+@click.pass_context
+def job_statistics_view(ctx: click.Context):
+    """
+    View job statistics about collected queries.
+    """
+    import cratedb_toolkit.cfr.jobstats
+
+    address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+    cratedb_toolkit.cfr.jobstats.boot(address=address)
+
+    response: t.Dict = {"meta": {}, "data": {}}
+    response["meta"]["remark"] = "WIP! This is a work in progress. The output format will change."
+    response["data"]["stats"] = cratedb_toolkit.cfr.jobstats.read_stats()
+    jd(response)
+
+
+@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+@click.pass_context
+def info(ctx: click.Context):
+    """
+    Collect and display cluster information.
+    """
+    pass
+
+
+cli.add_command(info, name="info")
+
+
+@make_command(info, "record", "Record outcomes of `ctk info cluster` and `ctk info jobs`.")
+@click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
+@click.pass_context
+def record(ctx: click.Context, once: bool):
+    scrub = ctx.meta.get("scrub", False)
+    address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+    adapter = DatabaseAdapter(dburi=address.dburi, echo=False)
+    recorder = InfoRecorder(adapter=adapter, scrub=scrub)
+    if once:
+        recorder.record_once()
+    else:
+        recorder.record_forever()
 
 
 if getattr(sys, "frozen", False):

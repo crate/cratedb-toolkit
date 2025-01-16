@@ -5,8 +5,8 @@ import typing as t
 
 from fastapi import FastAPI
 
+from cratedb_toolkit.info.util import get_baseinfo
 from cratedb_toolkit.util.service import start_service
-from cratedb_toolkit.wtf.util import get_baseinfo
 
 from .api import document, query
 

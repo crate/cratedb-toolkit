@@ -29,10 +29,10 @@ if t.TYPE_CHECKING:
 import sqlalchemy as sa
 from tqdm import tqdm
 
+from cratedb_toolkit.info.core import InfoContainer
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import error_logger
 from cratedb_toolkit.util.sqlalchemy import patch_encoder
-from cratedb_toolkit.wtf.core import InfoContainer
 
 logger = logging.getLogger(__name__)
 

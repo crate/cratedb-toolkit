@@ -223,7 +223,6 @@ Repository = "https://github.com/crate/cratedb-toolkit"
 cratedb-cfr = "cratedb_toolkit.cfr.cli:cli"
 cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 cratedb-toolkit = "cratedb_toolkit.cli:cli"
-cratedb-wtf = "cratedb_toolkit.wtf.cli:cli"
 ctk = "cratedb_toolkit.cli:cli"
 migr8 = "cratedb_toolkit.io.mongodb.cli:main"
 [project.entry-points.pytest11]
@@ -334,8 +333,8 @@ extend-exclude = [
 "doc/conf.py" = ["A001", "ERA001"]
 "tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
 "tests/adapter/test_rockset.py" = ["E402"]
-"tests/wtf/test_http.py" = ["E402"]
-"examples/*" = ["T201", "T203"]  # Allow `print` and `pprint`
+"tests/info/test_http.py" = ["E402"]
+"examples/*" = ["T201", "T203", "F401", "ERA001"]  # Allow `print` and `pprint`
 "cratedb_toolkit/retention/cli.py" = ["T201"]  # Allow `print`
 "cratedb_toolkit/sqlalchemy/__init__.py" = ["F401"]  # Allow `module´ imported but unused
 

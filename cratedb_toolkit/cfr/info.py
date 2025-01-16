@@ -6,15 +6,15 @@ import time
 
 import sqlalchemy as sa
 
+from cratedb_toolkit.info.core import InfoContainer, JobInfoContainer
 from cratedb_toolkit.util import DatabaseAdapter
-from cratedb_toolkit.wtf.core import InfoContainer, JobInfoContainer
 
 logger = logging.getLogger(__name__)
 
 
 class InfoRecorder:
     """
-    Record complete outcomes of `info` and `job-info`.
+    Record complete outcomes of `ctk info cluster` and `ctk info jobs`.
     """
 
     clusterinfo_table = "ext.clusterinfo"

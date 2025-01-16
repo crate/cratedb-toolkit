@@ -4,8 +4,8 @@ import dataclasses
 import typing as t
 from abc import abstractmethod
 
+from cratedb_toolkit.info.util import get_baseinfo
 from cratedb_toolkit.util import DatabaseAdapter
-from cratedb_toolkit.wtf.util import get_baseinfo
 
 
 @dataclasses.dataclass

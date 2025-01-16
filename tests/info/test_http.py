@@ -9,7 +9,7 @@ pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient
 
 from cratedb_toolkit import __appname__, __version__
-from cratedb_toolkit.wtf.http import app
+from cratedb_toolkit.info.http import app
 
 client = TestClient(app)
 

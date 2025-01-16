@@ -49,8 +49,8 @@ def boot(address: DatabaseAddress):
     schema = address.schema or "stats"
 
     interval = float(os.getenv("INTERVAL", 10))
-    stmt_log_table = os.getenv("STMT_TABLE", f'"{schema}".qc_statement_log')
-    last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{schema}".qc_last_execution')
+    stmt_log_table = os.getenv("STMT_TABLE", f'"{schema}".jobstats_statements')
+    last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{schema}".jobstats_last')
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logger.info(f"Connecting to {address.httpuri}")

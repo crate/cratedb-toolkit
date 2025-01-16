@@ -5,9 +5,9 @@ from functools import cached_property
 
 import boltons.ecoutils
 
+from cratedb_toolkit.info.library import Library
+from cratedb_toolkit.info.model import InfoContainerBase
 from cratedb_toolkit.util.platform import PlatformInfo
-from cratedb_toolkit.wtf.library import Library
-from cratedb_toolkit.wtf.model import InfoContainerBase
 
 
 class InfoContainer(InfoContainerBase):

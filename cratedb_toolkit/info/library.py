@@ -1,7 +1,7 @@
 # Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-from cratedb_toolkit.wtf.model import InfoElement, LogElement
-from cratedb_toolkit.wtf.util import get_single_value
+from cratedb_toolkit.info.model import InfoElement, LogElement
+from cratedb_toolkit.info.util import get_single_value
 
 
 class Library:
