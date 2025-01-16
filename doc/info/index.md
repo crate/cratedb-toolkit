@@ -20,7 +20,7 @@ ctk cfr --cratedb-http-url "https://username:password@localhost:4200/?schema=ext
 ctk cfr --cratedb-sqlalchemy-url "crate://username:password@localhost:4200/?schema=ext&ssl=true" jobstats collect
 ```
 
-Define CrateDB database cluster address per aa. Choose one of both alternatives.
+Define CrateDB database cluster address per environment variable. Choose one of both alternatives.
 ```shell
 export CRATEDB_HTTP_URL=https://username:password@localhost:4200/?schema=ext
 ```

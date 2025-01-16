@@ -2,7 +2,7 @@ import click
 from click import ClickException
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_sqlalchemy_url, option_http_url
+from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click
 
 
@@ -18,7 +18,14 @@ def make_cli():
     @click.version_option()
     @click.pass_context
     def cli(
-        ctx: click.Context, cratedb_sqlalchemy_url: str, cratedb_http_url: str, verbose: bool, debug: bool, scrub: bool
+        ctx: click.Context,
+        cluster_id: str,
+        cluster_name: str,
+        cratedb_sqlalchemy_url: str,
+        cratedb_http_url: str,
+        verbose: bool,
+        debug: bool,
+        scrub: bool,
     ):
         """
         Diagnostics and informational utilities.

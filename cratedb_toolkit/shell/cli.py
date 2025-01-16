@@ -1,8 +1,8 @@
 import click
 
+from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_sqlalchemy_url
-from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.util.cli import boot_click
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
 

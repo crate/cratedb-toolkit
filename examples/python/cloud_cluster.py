@@ -62,6 +62,7 @@ Command line arguments take precedence. When omitted, the program will
 fall back to probe the environment variables.
 
 """
+
 import json
 import logging
 import sys
