@@ -112,14 +112,14 @@ def test_wtf_cli_statistics_collect(cratedb, caplog):
     # Verify outcome: Database content.
     # stats.statement_log, stats.last_execution
     results = cratedb.database.run_sql("SHOW TABLES", records=True)
-    assert {"table_name": "last_execution"} in results
-    assert {"table_name": "statement_log"} in results
+    assert {"table_name": "qc_last_execution"} in results
+    assert {"table_name": "qc_statement_log"} in results
 
-    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.statement_log")
-    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.statement_log") >= 19
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.qc_statement_log")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.qc_statement_log") >= 19
 
-    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.last_execution")
-    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.last_execution") == 1
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.qc_last_execution")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.qc_last_execution") == 1
 
 
 def test_wtf_cli_statistics_view(cratedb):
