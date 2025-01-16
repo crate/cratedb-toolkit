@@ -4,12 +4,11 @@ import logging
 import sys
 import time
 import typing as t
+from functools import lru_cache
 from pathlib import Path
 
-from boltons.urlutils import URL
-from functools import lru_cache
-
 import click
+from boltons.urlutils import URL
 
 from cratedb_toolkit.api.guide import GuidingTexts
 from cratedb_toolkit.api.model import ClientBundle, ClusterBase
@@ -333,9 +332,7 @@ class StandaloneCluster(ClusterBase):
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
 
-    def load_table(
-        self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
-    ):
+    def load_table(self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None):
         """
         Load data into a database table on a standalone CrateDB Server.
 
@@ -360,9 +357,7 @@ class StandaloneCluster(ClusterBase):
                 return False
 
         elif (
-            source_url_obj.scheme.startswith("influxdb")
-            or source_url.endswith(".lp")
-            or source_url.endswith(".lp.gz")
+            source_url_obj.scheme.startswith("influxdb") or source_url.endswith(".lp") or source_url.endswith(".lp.gz")
         ):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 

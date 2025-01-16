@@ -3,8 +3,8 @@ import os
 
 import pytest
 
-from tests.conftest import check_sqlalchemy2
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
+from tests.conftest import check_sqlalchemy2
 
 logger = logging.getLogger(__name__)
 
