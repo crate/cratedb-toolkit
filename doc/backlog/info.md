@@ -1,4 +1,4 @@
-# CrateDB WTF Backlog
+# Backlog for `ctk info`
 
 ## Iteration +1
 - Display differences to the standard configuration
@@ -10,8 +10,8 @@
 - Inform about [shard imbalances](https://community.cratedb.com/t/cratedb-database-logs-showing-shard-is-now-inactive-and-threads-are-getting-blocked/1617/16).
 
 ## Iteration +2
-- Make `cratedb-wtf logs` also optionally consider `sys.` tables. 
-- cratedb-wtf explore table|shard|partition|node
+- Make `ctk info logs` also optionally consider `sys.` tables. 
+- Make `ctk info ...` explore table|shard|partition|node
 - High-level analysis, evaluating a set of threshold rules 
 - High-level summary reports with heuristics support
 - Network diagnostics?
@@ -35,7 +35,7 @@
 - Proper marshalling of timestamp values (ISO 8601)
 - Expose collected data via HTTP API
   ```
-  cratedb-wtf serve
+  ctk info serve
   ```
 - Provide `scrub` option also via HTTP
 - Complete collected queries and code snippets

@@ -1,40 +1,51 @@
-(wtf)=
-# CrateDB WTF
+(cluster-info)=
+# CrateDB Cluster Information
 
-A diagnostics utility in the spirit of [git-wtf], [grafana-wtf], and [pip.wtf].
-It is still a work-in-progress, but it is usable already.
+A bundle of information inquiry utilities, for diagnostics and more.
 
 ## Install
 ```shell
 pip install --upgrade 'cratedb-toolkit'
 ```
+:::{tip}
 Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`.
+For more information about installing CrateDB Toolkit, see {ref}`install`.
+:::
 
 ## Synopsis
 
-Define CrateDB database cluster address.
+Define CrateDB database cluster address per command-line option. Choose one of both alternatives.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://username:password@localhost:4200/?schema=ext&ssl=true
+ctk cfr --cratedb-http-url "https://username:password@localhost:4200/?schema=ext" jobstats collect
+ctk cfr --cratedb-sqlalchemy-url "crate://username:password@localhost:4200/?schema=ext&ssl=true" jobstats collect
 ```
+
+Define CrateDB database cluster address per aa. Choose one of both alternatives.
 ```shell
 export CRATEDB_HTTP_URL=https://username:password@localhost:4200/?schema=ext
 ```
+```shell
+export CRATEDB_SQLALCHEMY_URL=crate://username:password@localhost:4200/?schema=ext&ssl=true
+```
+:::{note}
+For some commands, both options might not be available yet, just one of them.
+:::
 
 
 ### One shot commands
 Display system and database cluster information.
 ```shell
-cratedb-wtf info
+ctk info cluster
 ```
 
 Display database cluster job information.
 ```shell
-cratedb-wtf job-info
+ctk info jobs
 ```
 
 Display database cluster log messages.
 ```shell
-cratedb-wtf logs
+ctk info logs
 ```
 
 Display the most recent entries of the `sys.jobs_log` table,
@@ -43,23 +54,6 @@ For more information, see [](#tail).
 ```shell
 ctk tail -n 3 sys.jobs_log
 ```
-
-
-### Data collectors
-
-Collect and display job statistics.
-```shell
-cratedb-wtf job-statistics collect
-cratedb-wtf job-statistics view
-```
-
-Record complete outcomes of `info` and `job-info`.
-```shell
-cratedb-wtf record
-```
-:::{tip}
-See also [](#cfr).
-:::
 
 
 ## HTTP API
@@ -71,34 +65,23 @@ pip install --upgrade 'cratedb-toolkit[service]'
 
 Expose collected status information.
 ```shell
-cratedb-wtf --debug serve --reload
+ctk info serve
 ```
-Consume collected status information via HTTP.
+Consume cluster information via HTTP.
 ```shell
 http http://127.0.0.1:4242/info/all
 ```
 
 Make the service listen on a specific address.
 ```shell
-ctk wtf serve --listen 0.0.0.0:8042
+ctk info serve --listen 0.0.0.0:8042
 ```
 
 :::{note}
 The `--reload` option is suitable for development scenarios where you intend
 to have the changes to the code become available while editing, in near
 real-time.
-:::
-
-
-```{toctree}
-:maxdepth: 1
-:hidden:
-
-backlog
+```shell
+ctk info --debug serve --reload
 ```
-
-
-
-[git-wtf]: http://thrawn01.org/posts/2014/03/03/git-wtf/ 
-[grafana-wtf]: https://github.com/panodata/grafana-wtf
-[pip.wtf]: https://github.com/sabslikesobs/pip.wtf
+:::

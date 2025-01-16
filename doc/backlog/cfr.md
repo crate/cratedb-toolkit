@@ -1,9 +1,9 @@
-# CrateDB CFR Backlog
+# Backlog for `ctk cfr`
 
 ## Iteration +1
 - Software tests
 - Converge output into tar archive
-- Combine with `ctk wtf info`
+- Combine with `ctk info cluster`
   - On sys-export, add it to the CFR package
   - After sys-import, use it to access the imported data
 

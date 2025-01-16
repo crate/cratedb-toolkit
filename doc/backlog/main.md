@@ -1,4 +1,4 @@
-# Backlog
+# Main Backlog
 
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec
@@ -61,7 +61,7 @@
 - Kafka:
   - https://github.com/bakdata/streams-bootstrap
   - https://pypi.org/project/kashpy/
-- CFR/WTF
+- CTK INFO/CFR
   - https://github.com/peekjef72/sql_exporter
 - Migrate / I/O adapter
   - https://community.cratedb.com/t/migrating-from-postgresql-or-timescale-to-cratedb/620

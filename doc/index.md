@@ -18,18 +18,33 @@
 
 ```{toctree}
 :maxdepth: 3
-:caption: Documentation
+:caption: Project
 :hidden:
 
 install
-datasets
+changes
+```
+
+```{toctree}
+:maxdepth: 3
+:caption: Diagnostics
+:hidden:
+
+Cluster Information <info/index>
+Cluster Flight Recorder (CFR) <cfr/index>
 cmd/index
+```
+
+```{toctree}
+:maxdepth: 3
+:caption: Utilities
+:hidden:
+
 adapter/index
+datasets
 io/index
 query/index
 retention
-Cluster Flight Recorder (CFR) <cfr/index>
-Ad Hoc Diagnosis (WTF) <wtf/index>
 ```
 
 ```{toctree}
@@ -37,8 +52,7 @@ Ad Hoc Diagnosis (WTF) <wtf/index>
 :caption: Workbench
 :hidden:
 
-changes
-backlog
+backlog/index
 sandbox
 release
 ```
