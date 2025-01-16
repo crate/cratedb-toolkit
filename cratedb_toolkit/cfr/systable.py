@@ -32,7 +32,6 @@ from tqdm import tqdm
 from cratedb_toolkit.info.core import InfoContainer
 from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import error_logger
-from cratedb_toolkit.util.sqlalchemy import patch_encoder
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +255,3 @@ class SystemTableImporter:
             return pl.read_parquet(path)
         else:
             raise NotImplementedError(f"Input format not implemented: {path.suffix}")
-
-
-patch_encoder()
