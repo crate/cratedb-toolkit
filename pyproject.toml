@@ -5,10 +5,6 @@ requires = [
   "versioningit",
 ]
 
-[tool.versioningit.vcs]
-method = "git"
-default-tag = "0.0.0"
-
 [project]
 name = "cratedb-toolkit"
 description = "CrateDB Toolkit"
@@ -87,13 +83,13 @@ dependencies = [
   "boltons<25",
   "cattrs<25",
   "click<9",
-  "click-aliases<2,>=1.0.4",
+  "click-aliases>=1.0.4,<2",
   "colorama<1",
   "colorlog",
   "crash",
   "cratedb-sqlparse==0.0.10",
-  'importlib-metadata; python_version < "3.8"',
-  'importlib-resources; python_version < "3.9"',
+  "importlib-metadata; python_version<'3.8'",
+  "importlib-resources; python_version<'3.9'",
   "orjsonl<2",
   "pympler<1.2",
   "python-dateutil<3",
@@ -103,28 +99,27 @@ dependencies = [
   "sqlalchemy-cratedb>=0.41.0.dev2",
   "sqlparse<0.6",
   "tqdm<5",
-  'typing-extensions<5; python_version <= "3.7"',
+  "typing-extensions<5; python_version<='3.7'",
   "vasuki==0.7.0",
   "verlib2==0.2",
   "yarl<1.19",
 ]
-[project.optional-dependencies]
-all = [
+optional-dependencies.all = [
   "cratedb-toolkit[full,influxdb,mongodb]",
 ]
-cfr = [
+optional-dependencies.cfr = [
   "pandas<2.3",
   "polars<1.20",
   "pyarrow<18.2",
 ]
-cloud = [
+optional-dependencies.cloud = [
   "croud==1.13.0",
 ]
-datasets = [
+optional-dependencies.datasets = [
   "datasets<4",
   "kaggle<1.7",
 ]
-develop = [
+optional-dependencies.develop = [
   "black[jupyter]<25",
   "mypy<1.15",
   "poethepoet<0.33",
@@ -132,69 +127,69 @@ develop = [
   "ruff<0.10",
   "validate-pyproject<0.24",
 ]
-docs = [
+optional-dependencies.docs = [
   "furo",
   "myst-parser[linkify]>=0.18,<5",
-  "sphinx-autobuild==2021.3.14", # Newer versions stopped "watching" appropriately?
+  "sphinx-autobuild==2021.3.14",   # Newer versions stopped "watching" appropriately?
   "sphinx-copybutton",
   "sphinx-design-elements<1",
   "sphinxcontrib-mermaid<2",
   "sphinxext-opengraph<1",
 ]
-dynamodb = [
+optional-dependencies.dynamodb = [
   "boto3",
   "commons-codec>=0.0.20",
 ]
-full = [
+optional-dependencies.full = [
   "cratedb-toolkit[cfr,cloud,datasets,io,service]",
 ]
-influxdb = [
+optional-dependencies.influxdb = [
   "cratedb-toolkit[io]",
   "influxio>=0.5,<1",
 ]
-io = [
+optional-dependencies.io = [
   "cr8",
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
-  "pandas<2.3,>=1",
+  "pandas>=1,<2.3",
   "polars<1.20",
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
-kinesis = [
+optional-dependencies.kinesis = [
   "aiobotocore<2.18",
   "async-kinesis<1.2",
   "commons-codec>=0.0.20",
   "lorrystream[carabas]>=0.0.6",
 ]
-mongodb = [
+optional-dependencies.mongodb = [
   "commons-codec[mongodb,zyp]>=0.0.21",
   "cratedb-toolkit[io]",
-  "orjson<4,>=3.3.1",
-  "pymongo<4.10,>=3.10.1",
+  "orjson>=3.3.1,<4",
+  "pymongo>=3.10.1,<4.10",
   "python-bsonjs<0.6",
-  "rich<14,>=3.3.2",
+  "rich>=3.3.2,<14",
   "undatum<1.1",
 ]
-pymongo = [
+optional-dependencies.pymongo = [
   "jessiql==1.0.0rc1",
   "pandas<2.2",
   "pymongo<4.9",
   "sqlalchemy<2",
 ]
-release = [
+optional-dependencies.release = [
   "build<2",
   "twine<7",
 ]
-release-cfr = [
+optional-dependencies.release-cfr = [
   "poethepoet<0.33",
   "pyinstaller<7",
 ]
-service = [
+optional-dependencies.service = [
   "fastapi<0.116",
   "uvicorn<0.35",
 ]
-test = [
+optional-dependencies.test = [
   "cratedb-toolkit[testing]",
   "httpx<0.29",
   "pueblo[dataframe]",
@@ -206,51 +201,89 @@ test = [
   "testcontainers-localstack==0.0.1rc1",
   "testcontainers-minio==0.0.1rc1",
 ]
-test-mongodb = [
+optional-dependencies.test-mongodb = [
   "cratedb-toolkit[test]",
   "testcontainers-mongodb==0.0.1rc1",
 ]
-testing = [
+optional-dependencies.testing = [
   "testcontainers<5",
 ]
-[project.urls]
-Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
-Documentation = "https://cratedb-toolkit.readthedocs.io/"
-Homepage = "https://cratedb-toolkit.readthedocs.io/"
-Issues = "https://github.com/crate/cratedb-toolkit/issues"
-Repository = "https://github.com/crate/cratedb-toolkit"
-[project.scripts]
-cratedb-cfr = "cratedb_toolkit.cfr.cli:cli"
-cratedb-retention = "cratedb_toolkit.retention.cli:cli"
-cratedb-toolkit = "cratedb_toolkit.cli:cli"
-ctk = "cratedb_toolkit.cli:cli"
-migr8 = "cratedb_toolkit.io.mongodb.cli:main"
-[project.entry-points.pytest11]
-cratedb_service = "cratedb_toolkit.testing.pytest"
+urls.Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
+urls.Documentation = "https://cratedb-toolkit.readthedocs.io/"
+urls.Homepage = "https://cratedb-toolkit.readthedocs.io/"
+urls.Issues = "https://github.com/crate/cratedb-toolkit/issues"
+urls.Repository = "https://github.com/crate/cratedb-toolkit"
+scripts.cratedb-cfr = "cratedb_toolkit.cfr.cli:cli"
+scripts.cratedb-retention = "cratedb_toolkit.retention.cli:cli"
+scripts.cratedb-toolkit = "cratedb_toolkit.cli:cli"
+scripts.ctk = "cratedb_toolkit.cli:cli"
+scripts.migr8 = "cratedb_toolkit.io.mongodb.cli:main"
+entry-points.pytest11.cratedb_service = "cratedb_toolkit.testing.pytest"
+
+[tool.setuptools.packages.find]
+namespaces = false
 
 [tool.black]
 line-length = 120
 
-[tool.coverage.run]
-branch = false
-omit = [
-  "tests/*",
-]
-source = ["cratedb_toolkit"]
+[tool.ruff]
+line-length = 120
 
-[tool.coverage.report]
-fail_under = 0
-show_missing = true
-
-[tool.mypy]
-packages = ["cratedb_toolkit"]
-exclude = [
+extend-exclude = [
+  "amqp-to-mqtt.py",
+  "workbench.py",
 ]
-check_untyped_defs = true
-ignore_missing_imports = true
-implicit_optional = true
-install_types = true
-non_interactive = true
+
+lint.select = [
+  # Builtins
+  "A",
+  # Bugbear
+  "B",
+  # comprehensions
+  "C4",
+  # Pycodestyle
+  "E",
+  # eradicate
+  "ERA",
+  # Pyflakes
+  "F",
+  # isort
+  "I",
+  # pandas-vet
+  "PD",
+  # return
+  "RET",
+  # Bandit
+  "S",
+  # print
+  "T20",
+  "W",
+  # flake8-2020
+  "YTT",
+]
+
+lint.extend-ignore = [
+  # Module `xxx` shadows a Python standard-library module
+  "A005",
+  # zip() without an explicit strict= parameter
+  "B905",
+  # df is a bad variable name. Be kinder to your future self.
+  "PD901",
+  # Unnecessary variable assignment before `return` statement
+  "RET504",
+  # Unnecessary `elif` after `return` statement
+  "RET505",
+  # Probable insecure usage of temporary file or directory
+  "S108",
+]
+
+lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]       # Allow `print`
+lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ] # Allow `module´ imported but unused
+lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
+lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]   # Allow `print` and `pprint`
+lint.per-file-ignores."tests/*" = [ "S101" ]                                # Allow use of `assert`, and `print`.
+lint.per-file-ignores."tests/adapter/test_rockset.py" = [ "E402" ]
+lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 
 [tool.pytest.ini_options]
 addopts = """
@@ -278,69 +311,30 @@ markers = [
   "slow",
 ]
 
-[tool.ruff]
-line-length = 120
-
-lint.select = [
-  # Bandit
-  "S",
-  # Bugbear
-  "B",
-  # Builtins
-  "A",
-  # comprehensions
-  "C4",
-  # eradicate
-  "ERA",
-  # flake8-2020
-  "YTT",
-  # isort
-  "I",
-  # pandas-vet
-  "PD",
-  # print
-  "T20",
-  # Pycodestyle
-  "E",
-  "W",
-  # Pyflakes
-  "F",
-  # return
-  "RET",
+[tool.coverage.run]
+branch = false
+omit = [
+  "tests/*",
 ]
+source = [ "cratedb_toolkit" ]
 
-lint.extend-ignore = [
-  # Module `xxx` shadows a Python standard-library module
-  "A005",
-  # zip() without an explicit strict= parameter
-  "B905",
-  # df is a bad variable name. Be kinder to your future self.
-  "PD901",
-  # Unnecessary variable assignment before `return` statement
-  "RET504",
-  # Unnecessary `elif` after `return` statement
-  "RET505",
-  # Probable insecure usage of temporary file or directory
-  "S108",
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+
+[tool.mypy]
+packages = [ "cratedb_toolkit" ]
+exclude = [
 ]
+check_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = true
+install_types = true
+non_interactive = true
 
-extend-exclude = [
-  "amqp-to-mqtt.py",
-  "workbench.py",
-]
-
-[tool.ruff.lint.per-file-ignores]
-"doc/conf.py" = ["A001", "ERA001"]
-"tests/*" = ["S101"]  # Allow use of `assert`, and `print`.
-"tests/adapter/test_rockset.py" = ["E402"]
-"tests/info/test_http.py" = ["E402"]
-"examples/*" = ["T201", "T203", "F401", "ERA001"]  # Allow `print` and `pprint`
-"cratedb_toolkit/retention/cli.py" = ["T201"]  # Allow `print`
-"cratedb_toolkit/sqlalchemy/__init__.py" = ["F401"]  # Allow `module´ imported but unused
-
-[tool.setuptools.packages.find]
-namespaces = false
-
+[tool.versioningit.vcs]
+method = "git"
+default-tag = "0.0.0"
 
 # ===================
 # Tasks configuration
@@ -354,13 +348,13 @@ check = [
 ]
 
 docs-autobuild = [
-  { cmd = "sphinx-autobuild --open-browser --watch influxio doc doc/_build" }
+  { cmd = "sphinx-autobuild --open-browser --watch influxio doc doc/_build" },
 ]
 docs-html = [
-  { cmd = "sphinx-build -W --keep-going doc doc/_build" }
+  { cmd = "sphinx-build -W --keep-going doc doc/_build" },
 ]
 docs-linkcheck = [
-  { cmd = "sphinx-build -W --keep-going -b linkcheck doc doc/_build" }
+  { cmd = "sphinx-build -W --keep-going -b linkcheck doc doc/_build" },
 ]
 
 format = [
@@ -375,7 +369,7 @@ format = [
 
   # Format examples.
   # Use `black` for the files in `examples/*`, because it knows how to treat Jupyter files well.
-  { cmd = "black examples"},
+  { cmd = "black examples" },
 ]
 
 lint = [
@@ -392,4 +386,4 @@ release = [
 
 test = { cmd = "pytest" }
 
-build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr"}
+build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }
