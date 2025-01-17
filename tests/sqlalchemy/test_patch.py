@@ -53,7 +53,7 @@ def test_json_encoder_date():
     """
     data = {"date": datetime.date(2024, 6, 4)}
     encoded = json_dumps(data)
-    assert encoded == b'{"date":"2024-06-04"}'
+    assert encoded == b'{"date":1717459200000}'
 
 
 def test_json_encoder_numpy():
