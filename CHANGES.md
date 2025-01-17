@@ -4,6 +4,7 @@
 - Fixed connectivity for `jobstats collect`
 - Refactored code and improved CLI interface of `ctk info` vs. `ctk cfr`
 - Dependencies: Updated to `crate-2.0.0`, which uses `orjson` for JSON marshalling
+- CFR: Job statistics and slow-query exploration per Marimo notebook. Thanks, @WalBeh.
 
 ## 2025/01/13 v0.0.30
 - Dependencies: Minimize dependencies of core installation,

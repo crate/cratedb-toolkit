@@ -2,6 +2,7 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
 import multiprocessing
+import os
 import sys
 import typing as t
 
@@ -110,7 +111,7 @@ def job_statistics_collect(ctx: click.Context, once: bool):
         cratedb_toolkit.cfr.jobstats.record_forever()
 
 
-@make_command(job_statistics, "view", "View job statistics about collected queries.")
+@make_command(job_statistics, "view", "View job statistics per JSON output.")
 @click.pass_context
 def job_statistics_view(ctx: click.Context):
     """
@@ -125,6 +126,40 @@ def job_statistics_view(ctx: click.Context):
     response["meta"]["remark"] = "WIP! This is a work in progress. The output format will change."
     response["data"]["stats"] = cratedb_toolkit.cfr.jobstats.read_stats()
     jd(response)
+
+
+@make_command(job_statistics, "report", "View job statistics per report.")
+@click.pass_context
+def job_statistics_report(ctx: click.Context):
+    """
+    View job statistics about collected queries per report.
+    """
+    import cratedb_toolkit.cfr.marimo
+
+    address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+    os.environ["CRATEDB_SQLALCHEMY_URL"] = address.dburi
+    cratedb_toolkit.cfr.marimo.app.run()
+
+
+@make_command(job_statistics, "ui", "View job statistics per web UI.")
+@click.pass_context
+def job_statistics_ui(ctx: click.Context):
+    """
+    View job statistics about collected queries per web UI.
+    """
+    import marimo
+    import uvicorn
+    from fastapi import FastAPI
+
+    import cratedb_toolkit.cfr.marimo
+
+    address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+    os.environ["CRATEDB_SQLALCHEMY_URL"] = address.dburi
+    server = marimo.create_asgi_app()
+    server = server.with_app(path="/", root=cratedb_toolkit.cfr.marimo.__file__)
+    app = FastAPI()
+    app.mount("/", server.build())
+    uvicorn.run(app, host="localhost", port=7777, log_level="info")
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
