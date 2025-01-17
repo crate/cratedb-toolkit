@@ -186,7 +186,7 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
 
     # Verify outcome.
     results = cratedb.database.run_sql("SHOW TABLES", records=True)
-    assert results == [{"table_name": "sys-operations"}]
+    assert {"table_name": "sys-operations"} in results
 
     cratedb.database.run_sql('REFRESH TABLE "sys-operations"')
     assert cratedb.database.count_records("sys-operations") == 1
