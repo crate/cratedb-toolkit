@@ -47,6 +47,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Adaptive Technologies",
   "Topic :: Communications",
   "Topic :: Database",
@@ -108,6 +109,10 @@ optional-dependencies.all = [
   "cratedb-toolkit[full,influxdb,mongodb]",
 ]
 optional-dependencies.cfr = [
+  "duckdb<1.2",
+  "marimo<0.11",
+  "matplotlib<3.11",
+  "numpy<2.3",
   "pandas<2.3",
   "polars<1.22",
   "pyarrow<19.1",
