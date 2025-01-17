@@ -33,7 +33,7 @@ class MongoDBAdapterBase:
     address: DatabaseAddress
     effective_url: URL
     database_name: str
-    collection_name: str
+    collection_name: t.Optional[str]
 
     _custom_query_parameters = ["batch-size", "direct", "filter", "limit", "offset", "timeout"]
     _default_timeout = 5000
@@ -53,6 +53,8 @@ class MongoDBAdapterBase:
         timeout = mongodb_uri.query_params.pop("timeout", cls._default_timeout)
         for custom_query_parameter in cls._custom_query_parameters:
             mongodb_uri.query_params.pop(custom_query_parameter, None)
+        if not mongodb_database:
+            raise ValueError("MongoDB database not specified")
         return cls(
             address=mongodb_address,
             effective_url=mongodb_uri,
@@ -231,6 +233,8 @@ class MongoDBServerAdapter(MongoDBAdapterBase):
         )
 
     def create_collection(self):
+        if not self.collection_name:
+            raise ValueError("MongoDB collection not specified")
         self._mongodb_database.create_collection(self.collection_name)
         self._mongodb_collection = self._mongodb_database.get_collection(self.collection_name)
         return self._mongodb_collection
