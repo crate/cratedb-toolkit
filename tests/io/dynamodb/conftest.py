@@ -1,9 +1,13 @@
+# ruff: noqa: E402
 import logging
 import time
 import typing
 
-import botocore
 import pytest
+
+pytest.importorskip("boto3", reason="Skipping DynamoDB tests because 'boto3' package is not installed")
+
+import botocore
 from yarl import URL
 
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter

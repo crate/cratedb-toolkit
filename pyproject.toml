@@ -178,7 +178,7 @@ optional-dependencies.mcp = [
   "mcp<1.5; python_version>='3.10'",
 ]
 optional-dependencies.mongodb = [
-  "commons-codec[mongodb,zyp]>=0.0.21",
+  "commons-codec[mongodb,zyp]>=0.0.22",
   "cratedb-toolkit[io]",
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.10",
@@ -213,11 +213,8 @@ optional-dependencies.test = [
   "ipywidgets<9",
   "markdown-it-py<4",
   "notebook<8",
-  "pueblo[dataframe,notebook,testing]",
+  "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
-  "pytest<9",
-  "pytest-cov<7",
-  "pytest-mock<4",
   "responses<0.26",
   "testcontainers-azurite==0.0.1rc1",
   "testcontainers-localstack==0.0.1rc1",
@@ -349,6 +346,7 @@ show_missing = true
 [tool.mypy]
 packages = [ "cratedb_toolkit" ]
 exclude = [
+  "cratedb_toolkit/adapter/pymongo/",
 ]
 check_untyped_defs = true
 ignore_missing_imports = true

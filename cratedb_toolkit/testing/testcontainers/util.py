@@ -44,7 +44,10 @@ class ExtendedDockerContainer(DockerContainer):
         Provide Docker-internal full endpoint address `<host>:<port>` of the service.
         For example, `172.17.0.4:9000`.
         """
-        return f"{self.get_real_host_ip()}:{self.port_to_expose}"
+        port = getattr(self, "port", getattr(self, "port_to_expose", None))
+        if port is None:
+            raise ValueError("Unable to discover port number")
+        return f"{self.get_real_host_ip()}:{port}"
 
 
 class KeepaliveContainer(DockerContainer):

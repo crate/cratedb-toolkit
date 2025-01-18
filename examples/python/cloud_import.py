@@ -61,7 +61,7 @@ from pprint import pprint  # noqa: F401
 
 import cratedb_toolkit
 from cratedb_toolkit import InputOutputResource, ManagedCluster, TableAddress
-from cratedb_toolkit.util import setup_logging
+from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
 

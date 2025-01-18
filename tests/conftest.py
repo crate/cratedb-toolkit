@@ -11,8 +11,8 @@ from verlib2 import Version
 from cratedb_toolkit.api.main import ManagedClusterSettings
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
-from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.common import setup_logging
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 # Use different schemas for storing the subsystem database tables, and the
 # test/example data, so that they do not accidentally touch the default `doc`

@@ -37,7 +37,6 @@ class ExtendedMinioContainer(DockerSkippingContainer, ExtendedDockerContainer, M
         image = "quay.io/minio/minio:latest"
         kwargs.setdefault("image", image)
         super().__init__(*args, **kwargs)
-        self.port_to_expose = self.port
 
     @wait_container_is_ready()
     def list_object_names(self, bucket_name: str) -> t.List[str]:
