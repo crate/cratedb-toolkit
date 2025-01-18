@@ -26,7 +26,7 @@ from collections import defaultdict
 
 import click
 
-from cratedb_toolkit.options import cratedb_sqlalchemy_option
+from cratedb_toolkit.options import option_sqlalchemy_url
 from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
@@ -307,7 +307,7 @@ def report_comparison(color: Color, default_settings, non_default_settings):
 
 
 @click.command()
-@cratedb_sqlalchemy_option
+@option_sqlalchemy_url
 @click.option(
     "--large-tolerance",
     type=float,

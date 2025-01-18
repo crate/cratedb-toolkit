@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import responses
-from pytest_notebook.nb_regression import NBRegressionFixture
 
 import cratedb_toolkit
 
@@ -92,6 +91,7 @@ def test_example_cloud_import_notebook(mocker, mock_cloud_cluster_exists):
     """
     Verify the Jupyter Notebook example works.
     """
+    from pytest_notebook.nb_regression import NBRegressionFixture
 
     # Synthesize a valid environment.
     mocker.patch.dict(

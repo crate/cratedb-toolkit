@@ -18,8 +18,8 @@ from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import CroudException, OperationFailed
 from cratedb_toolkit.io.croud import CloudJob
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
-from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.data import asbool
+from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.runtime import flexfun
 from cratedb_toolkit.util.setting import (
     Setting,

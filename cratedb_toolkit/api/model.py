@@ -7,7 +7,7 @@ import crate.client
 import sqlalchemy as sa
 
 from cratedb_toolkit.model import InputOutputResource, TableAddress
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 
 @dataclasses.dataclass
@@ -18,7 +18,7 @@ class ClientBundle:
 
     adapter: DatabaseAdapter
     dbapi: crate.client.connection.Connection
-    sqlalchemy: sa.Engine
+    sqlalchemy: sa.engine.Engine
 
 
 class ClusterBase(abc.ABC):
