@@ -79,7 +79,7 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "attrs<25",
+  "attrs<26",
   "boltons<25",
   "cattrs<25",
   "click<9",
