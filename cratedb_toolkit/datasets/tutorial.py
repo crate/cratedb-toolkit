@@ -36,8 +36,24 @@ weather = Dataset(
     init_includes_loading=True,
 )
 
+windfarm_uk_info = Dataset(
+    reference="tutorial/windfarm-uk-info",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/devrel/uk-offshore-wind-farm-data/wind_farms.json",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/devrel/uk-offshore-wind-farm-data/wind_farms_load.sql",
+    init_includes_loading=True,
+)
+
+windfarm_uk_data = Dataset(
+    reference="tutorial/windfarm-uk-data",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/devrel/uk-offshore-wind-farm-data/wind_farm_output.json.gz",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/devrel/uk-offshore-wind-farm-data/wind_farm_output_load.sql",
+    init_includes_loading=True,
+)
+
 registry.add(devices_info)
 registry.add(devices_readings)
 registry.add(marketing)
 registry.add(netflix)
 registry.add(weather)
+registry.add(windfarm_uk_info)
+registry.add(windfarm_uk_data)
