@@ -58,6 +58,7 @@ def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_ma
     ]
     data_out = [
         {"pk": {"Id": 1}, "data": {"name": "Foo"}, "aux": {}},
+        {"pk": {"Id": 2}, "data": {"name": "Bar", "nested_array": [[1.0, 2.0]]}, "aux": {}},
         {"pk": {"Id": 3}, "data": {"name": "Baz"}, "aux": {}},
     ]
 
@@ -75,12 +76,10 @@ def test_dynamodb_copy_basic_warning(caplog, cratedb, dynamodb, dynamodb_test_ma
     # Verify data in target database.
     assert cratedb.database.table_exists("testdrive.demo") is True
     assert cratedb.database.refresh_table("testdrive.demo") is True
-    assert cratedb.database.count_records("testdrive.demo") == 2
+    assert cratedb.database.count_records("testdrive.demo") == 3
 
     results = cratedb.database.run_sql("SELECT * FROM testdrive.demo ORDER BY pk['Id'];", records=True)  # noqa: S608
     assert results == data_out
-
-    assert "Dynamic nested arrays are not supported" in caplog.text
 
 
 def test_dynamodb_copy_verify_batch_size(caplog, cratedb, dynamodb, dynamodb_test_manager):
