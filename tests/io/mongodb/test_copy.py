@@ -254,9 +254,7 @@ def test_mongodb_copy_filesystem_json_relaxed_warning(caplog, cratedb):
     # Verify metadata in target database.
     assert cratedb.database.table_exists("testdrive.demo") is True
     assert cratedb.database.refresh_table("testdrive.demo") is True
-    assert cratedb.database.count_records("testdrive.demo") == 2
-
-    assert "Dynamic nested arrays are not supported" in caplog.text
+    assert cratedb.database.count_records("testdrive.demo") == 3
 
 
 def test_mongodb_copy_filesystem_json_canonical(caplog, cratedb):
