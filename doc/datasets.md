@@ -20,12 +20,23 @@ print(dataset.ddl)
 ## Usage
 
 ### Built-in datasets
-Load an example dataset into a CrateDB database table.
+Load example datasets into CrateDB database tables.
 ```python
 from cratedb_toolkit.datasets import load_dataset
 
+# Weather data example.
 dataset = load_dataset("tutorial/weather-basic")
 dataset.dbtable(dburi="crate://crate@localhost/", table="weather_data").load()
+```
+```python
+from cratedb_toolkit.datasets import load_dataset
+
+# UK wind farm data example.
+dataset = load_dataset("tutorial/windfarm-uk-info")
+dataset.dbtable(dburi="crate://crate@localhost/", table="windfarms").load()
+
+dataset = load_dataset("tutorial/windfarm-uk-data")
+dataset.dbtable(dburi="crate://crate@localhost/", table="windfarm_output").load()
 ```
 
 ### Kaggle
