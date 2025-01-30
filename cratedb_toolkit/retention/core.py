@@ -185,7 +185,7 @@ class TaskSqlRenderer:
                 '{self.settings.cutoff_day}'::TIMESTAMP - '{policy.retention_period} days'::INTERVAL
         ORDER BY
             partition_value ASC
-        """
+        """  # noqa: S608
         )
         return self.specialize(selectable)
 

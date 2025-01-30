@@ -107,7 +107,7 @@ def raw_metrics(cratedb, settings, store):
             RANDOM()*100 AS value,
             0 AS quality
         FROM generate_series('2023-06-01', '2023-06-30', '5 days'::INTERVAL);
-    """
+    """  # noqa: S608
 
     run_sql(database_url, ddl)
     run_sql(database_url, dml)
@@ -151,7 +151,7 @@ def sensor_readings(cratedb, settings, store):
             '2023-06-30'::TIMESTAMPTZ,
             '7 days'::INTERVAL
         );
-    """
+    """  # noqa: S608
 
     run_sql(database_url, ddl)
     run_sql(database_url, dml)
