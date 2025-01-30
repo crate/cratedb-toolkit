@@ -1,6 +1,55 @@
 from cratedb_toolkit.datasets.model import Dataset
 from cratedb_toolkit.datasets.store import registry
 
+chicago_311_records = Dataset(
+    reference="tutorial/chicago-311-records",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/311_records_apr_2024.json.gz",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/311_records_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_community_areas = Dataset(
+    reference="tutorial/chicago-community-areas",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/chicago_community_areas_with_vectors.json",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/chicago_community_areas_with_vectors_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_libraries = Dataset(
+    reference="tutorial/chicago-libraries",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/chicago_libraries.json",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/chicago_libraries_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_taxi_vehicles = Dataset(
+    reference="tutorial/chicago-taxi-vehicles",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/taxi_details.csv",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/taxi_details_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_taxi_rides = Dataset(
+    reference="tutorial/chicago-taxi-rides",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/taxi_rides_apr_2024.json.gz",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/taxi_rides_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_weather_stations = Dataset(
+    reference="tutorial/chicago-weather-stations",
+    data_url=None,
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/beach_weather_stations_load.sql",
+    init_includes_loading=True,
+)
+
+chicago_weather_data = Dataset(
+    reference="tutorial/chicago-weather-data",
+    data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/beach_weather_station_data.csv",
+    init_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-data/beach_weather_station_data_load.sql",
+    init_includes_loading=True,
+)
+
 devices_info = Dataset(
     reference="tutorial/devices-info",
     data_url="https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/devices_info.json.gz",
@@ -50,6 +99,13 @@ windfarm_uk_data = Dataset(
     init_includes_loading=True,
 )
 
+registry.add(chicago_community_areas)
+registry.add(chicago_311_records)
+registry.add(chicago_libraries)
+registry.add(chicago_taxi_vehicles)
+registry.add(chicago_taxi_rides)
+registry.add(chicago_weather_stations)
+registry.add(chicago_weather_data)
 registry.add(devices_info)
 registry.add(devices_readings)
 registry.add(marketing)
