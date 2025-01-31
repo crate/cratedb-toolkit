@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/01/31 v0.0.31
 - Fixed connectivity for `jobstats collect`
 - Refactored code and improved CLI interface of `ctk info` vs. `ctk cfr`
 - Dependencies: Updated to `crate-2.0.0`, which uses `orjson` for JSON marshalling
