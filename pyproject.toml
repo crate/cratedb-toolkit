@@ -102,7 +102,7 @@ dependencies = [
   "tqdm<5",
   "typing-extensions<5; python_version<='3.7'",
   "vasuki==0.7.0",
-  "verlib2==0.2",
+  "verlib2<0.3",
   "yarl<1.19",
 ]
 optional-dependencies.all = [
