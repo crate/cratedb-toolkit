@@ -125,7 +125,7 @@ optional-dependencies.datasets = [
   "kaggle<1.7",
 ]
 optional-dependencies.develop = [
-  "black[jupyter]<25",
+  "black[jupyter]<26",
   "mypy<1.15",
   "poethepoet<0.33",
   "pyproject-fmt<2.6",
