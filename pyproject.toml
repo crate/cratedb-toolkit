@@ -109,7 +109,7 @@ optional-dependencies.all = [
   "cratedb-toolkit[full,influxdb,mongodb]",
 ]
 optional-dependencies.cfr = [
-  "duckdb<1.2",
+  "duckdb<1.3",
   "marimo<0.11",
   "matplotlib<3.11",
   "numpy<2.3",
