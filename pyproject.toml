@@ -81,7 +81,7 @@ dynamic = [
 ]
 dependencies = [
   "attrs<26",
-  "boltons<25",
+  "boltons<26",
   "cattrs<25",
   "click<9",
   "click-aliases>=1.0.4,<2",
