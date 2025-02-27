@@ -1,4 +1,6 @@
 # ruff: noqa: B018, ERA001, S608, T201
+# mypy: disable-error-code="arg-type"
+
 # Source:
 # https://docs.marimo.io/guides/working_with_data/dataframes.html
 # https://github.com/marimo-team/marimo/blob/main/examples/sql/querying_dataframes.py
