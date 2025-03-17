@@ -130,7 +130,7 @@ optional-dependencies.develop = [
   "poethepoet<1",
   "pyproject-fmt<3",
   "ruff<0.12",
-  "validate-pyproject<0.24",
+  "validate-pyproject<1",
 ]
 optional-dependencies.docs = [
   "furo",
@@ -187,7 +187,7 @@ optional-dependencies.release = [
   "twine<7",
 ]
 optional-dependencies.release-cfr = [
-  "poethepoet<0.33",
+  "poethepoet<1",
   "pyinstaller<7",
 ]
 optional-dependencies.service = [
