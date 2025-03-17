@@ -187,7 +187,7 @@ optional-dependencies.release = [
   "twine<7",
 ]
 optional-dependencies.release-cfr = [
-  "poethepoet<0.33",
+  "poethepoet<0.34",
   "pyinstaller<7",
 ]
 optional-dependencies.service = [
