@@ -122,7 +122,7 @@ optional-dependencies.cloud = [
 ]
 optional-dependencies.datasets = [
   "datasets<4",
-  "kaggle<1.7",
+  "kaggle<1.8",
 ]
 optional-dependencies.develop = [
   "black[jupyter]<26",
