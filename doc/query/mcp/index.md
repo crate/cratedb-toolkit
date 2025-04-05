@@ -71,9 +71,19 @@ Popular MCP servers that can talk to CrateDB, alphabetically sorted.
 - [PostgreSQL basic]
 - [Quarkus JDBC]
 
-Detailed MCP API capabilities about prompts, resources, and tools.
+Detailed MCP API capabilities about prompts, resources, and tools can be
+explored on the {doc}`landscape` page, generated using this command:
 ```shell
 uvx 'cratedb-toolkit[mcp]' query mcp inquire --format=markdown | sponge mcp-cratedb-landscape.md
+```
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+landscape
+notes
+backlog
 ```
 
 
