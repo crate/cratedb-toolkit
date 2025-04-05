@@ -45,8 +45,9 @@ class McpServerInquiry:
 
     seealso = (
         ":::{seealso}\n"
-        "Ready-to-run example programs about all the adapters are available at\n"
-        "https://github.com/crate/cratedb-examples/tree/main/framework/mcp.\n"
+        "Ready-to-run example programs about all the adapters are available per\n"
+        "example collection about [exploring MCP with CrateDB].\n"
+        "[exploring MCP with CrateDB]: https://github.com/crate/cratedb-examples/tree/main/framework/mcp.\n"
         ":::\n"
     )
 
