@@ -8,4 +8,5 @@ converters and migration support tasks, still in its infancy.
 :maxdepth: 2
 
 convert
+mcp/index
 ```
