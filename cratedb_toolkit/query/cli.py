@@ -5,6 +5,7 @@ from click_aliases import ClickAliasedGroup
 
 from ..util.cli import boot_click
 from .convert.cli import convert_query
+from .mcp.cli import cli as mcp_cli
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +17,10 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool, debug: bool):
     """
-    Query expression utilities.
+    Query utilities.
     """
     return boot_click(ctx, verbose, debug)
 
 
 cli.add_command(convert_query, name="convert")
+cli.add_command(mcp_cli, name="mcp")
