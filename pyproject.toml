@@ -173,7 +173,7 @@ optional-dependencies.mongodb = [
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.10",
   "python-bsonjs<0.7",
-  "rich>=3.3.2,<14",
+  "rich>=3.3.2,<15",
   "undatum<1.1",
 ]
 optional-dependencies.pymongo = [
