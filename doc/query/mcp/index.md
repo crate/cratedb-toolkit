@@ -63,6 +63,10 @@ ctk query mcp --server-name=postgres-basic launch
 ## References
 
 Popular MCP servers that can talk to CrateDB, alphabetically sorted.
+Detailed MCP API capabilities about all of them, regarding available prompts,
+resources, and tools, can be explored on the {doc}`landscape` page.
+Ready-to-run example programs are available per example collection
+about [exploring MCP with CrateDB].
 
 - [CrateDB MCP]
 - [DBHub]
@@ -71,9 +75,21 @@ Popular MCP servers that can talk to CrateDB, alphabetically sorted.
 - [PostgreSQL basic]
 - [Quarkus JDBC]
 
-Detailed MCP API capabilities about prompts, resources, and tools.
+:::{note}
+The {doc}`landscape` page can be generated using this command:
 ```shell
 uvx 'cratedb-toolkit[mcp]' query mcp inquire --format=markdown | sponge mcp-cratedb-landscape.md
+```
+:::
+
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+landscape
+notes
+backlog
 ```
 
 
@@ -81,6 +97,7 @@ uvx 'cratedb-toolkit[mcp]' query mcp inquire --format=markdown | sponge mcp-crat
 [CrateDB MCP]: https://github.com/crate/cratedb-mcp
 [CrateDB SQLAlchemy dialect]: https://cratedb.com/docs/sqlalchemy-cratedb/
 [DBHub]: https://github.com/bytebase/dbhub
+[exploring MCP with CrateDB]: https://github.com/crate/cratedb-examples/tree/main/framework/mcp
 [inquiry]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/query/mcp/inquiry.py
 [Introduction to MCP]: https://modelcontextprotocol.io/introduction
 [JBang]: https://www.jbang.dev/
