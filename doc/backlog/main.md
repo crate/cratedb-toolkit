@@ -162,7 +162,7 @@ Add two non-partition-based strategies. Category: `timerange`.
   - https://gitlab.com/DigonIO/scheduler
 - Document complete "Docker Compose" setup variant, using both CrateDB and `cratedb-retention`
 - Generalize from `cutoff_day` to `cutoff_date`?
-  For example, use `ms`. See https://iotdb.apache.org/UserGuide/V1.1.x/Delete-Data/TTL.html.
+  For example, use `ms`. See https://iotdb.apache.org/UserGuide/latest/Basic-Concept/TTL-Delete.html#ttl-delete-data.
 - More battle testing, in sandboxes and on production systems.
 - Use storage classes
   - https://github.com/crate/crate/issues/14298
