@@ -30,3 +30,5 @@
 - https://github.com/github/github-mcp-server
 - https://github.com/varunneal/spotify-mcp
 - https://github.com/BrowserMCP/mcp
+- https://github.com/TuanKiri/weather-mcp-server
+- https://github.com/mkummer225/google-sheets-mcp
