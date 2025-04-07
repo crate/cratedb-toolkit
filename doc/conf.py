@@ -115,3 +115,7 @@ myst_enable_extensions = [
     "tasklist",
 ]
 myst_substitutions = {}
+myst_html_meta = {
+    "google-site-verification": "kDH2Ws762oLwf5V3l-fGrYR9-lgLF6S_Bpd4Dairh7A",
+    "msvalidate.01": "E9B1983DD903904FDB7F4E5612962EE7",
+}
