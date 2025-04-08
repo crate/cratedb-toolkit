@@ -44,7 +44,7 @@ It is written in TypeScript, to be invoked with `npx`.
         command="mcp-alchemy",
         env={"DB_URL": "crate://crate@localhost:4200/?schema=testdrive"},
         requirements=[
-            "mcp-alchemy @ git+https://github.com/runekaagaard/mcp-alchemy.git@b85aae6",
+            "mcp-alchemy>=2025.4.8",
             "sqlalchemy-cratedb>=0.42.0.dev1",
         ],
         homepage="https://github.com/runekaagaard/mcp-alchemy",
