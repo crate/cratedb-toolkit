@@ -170,7 +170,7 @@ The MCP Alchemy MCP server package uses SQLAlchemy to talk to databases and prov
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
 :Homepage: https://github.com/runekaagaard/mcp-alchemy
-:Install: `uv pip install 'mcp-alchemy @ git+https://github.com/runekaagaard/mcp-alchemy.git@b85aae6' 'sqlalchemy-cratedb>=0.42.0.dev1'`
+:Install: `uv pip install 'mcp-alchemy>=2025.4.8' 'sqlalchemy-cratedb>=0.42.0.dev1'`
 :Run: `mcp-alchemy`
 
 
