@@ -27,8 +27,10 @@ def test_list():
         "cratedb-mcp",
         "dbhub",
         "mcp-alchemy",
+        "mcp-dbutils",
         "pg-mcp",
         "postgres-basic",
+        "postgres-mcp (Postgres Pro)",
         "quarkus",
     ]
 
