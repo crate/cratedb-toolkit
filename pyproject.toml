@@ -344,8 +344,9 @@ install_types = true
 non_interactive = true
 
 [tool.versioningit.vcs]
-method = "git"
+method = "git-archive"
 default-tag = "0.0.0"
+describe-subst = "$Format:%(describe:match=v*)$"
 
 # ===================
 # Tasks configuration
