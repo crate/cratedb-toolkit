@@ -11,7 +11,8 @@ The CrateDB MCP server specialises on advanced CrateDB SQL operations by blendin
 knowledge base resources from CrateDB's documentation about query optimizations.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: https://github.com/crate/cratedb-mcp
+:Homepage: <https://github.com/crate/cratedb-mcp>
+:Validated with CrateDB: True
 :Install: `uv pip install 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments'`
 :Run: `cratedb-mcp`
 
@@ -71,7 +72,8 @@ DBHub is a universal database gateway implementing the Model Context Protocol (M
 gateway allows MCP-compatible clients to connect to and explore different databases.
 It is written in TypeScript, to be invoked with `npx`.
 
-:Homepage: https://github.com/bytebase/dbhub
+:Homepage: <https://github.com/bytebase/dbhub>
+:Validated with CrateDB: True
 :Run: `npx -y @bytebase/dbhub@0.2.3 --transport=stdio --dsn=postgres://crate@localhost:5432/testdrive`
 
 
@@ -169,7 +171,8 @@ It is written in TypeScript, to be invoked with `npx`.
 The MCP Alchemy MCP server package uses SQLAlchemy to talk to databases and provides quite a range of tools.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: https://github.com/runekaagaard/mcp-alchemy
+:Homepage: <https://github.com/runekaagaard/mcp-alchemy>
+:Validated with CrateDB: True
 :Install: `uv pip install 'mcp-alchemy>=2025.4.8' 'sqlalchemy-cratedb>=0.42.0.dev1'`
 :Run: `mcp-alchemy`
 
@@ -231,6 +234,157 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 ```
 
 
+## mcp-dbutils
+
+DButils is an all-in-one MCP service that enables your AI to do data analysis by harnessing versatile
+types of database (sqlite, mysql, postgres, and more) within a unified configuration of connections
+in a secured way (like SSL).
+It is written in Python, optionally to be invoked with `uv` or `uvx`.
+
+:Homepage: <https://github.com/donghao1393/mcp-dbutils>
+:Validated with CrateDB: False
+:Install: `uv pip install 'mcp-dbutils'`
+:Run: `mcp-dbutils --config=config.yaml`
+
+
+### Tools
+
+```yaml
+- name: dbutils-run-query
+  description: Execute read-only SQL query on database connection
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      sql:
+        type: string
+        description: SQL query (SELECT only)
+    required:
+    - connection
+    - sql
+- name: dbutils-list-tables
+  description: List all available tables in the specified database connection
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+    required:
+    - connection
+- name: dbutils-describe-table
+  description: Get detailed information about a table's structure
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      table:
+        type: string
+        description: Table name to describe
+    required:
+    - connection
+    - table
+- name: dbutils-get-ddl
+  description: Get DDL statement for creating the table
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      table:
+        type: string
+        description: Table name to get DDL for
+    required:
+    - connection
+    - table
+- name: dbutils-list-indexes
+  description: List all indexes on the specified table
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      table:
+        type: string
+        description: Table name to list indexes for
+    required:
+    - connection
+    - table
+- name: dbutils-get-stats
+  description: Get table statistics like row count and size
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      table:
+        type: string
+        description: Table name to get statistics for
+    required:
+    - connection
+    - table
+- name: dbutils-list-constraints
+  description: List all constraints (primary key, foreign keys, etc) on the table
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      table:
+        type: string
+        description: Table name to list constraints for
+    required:
+    - connection
+    - table
+- name: dbutils-explain-query
+  description: Get execution plan for a SQL query
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      sql:
+        type: string
+        description: SQL query to explain
+    required:
+    - connection
+    - sql
+- name: dbutils-get-performance
+  description: Get database performance statistics
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+    required:
+    - connection
+- name: dbutils-analyze-query
+  description: Analyze a SQL query for performance
+  inputSchema:
+    type: object
+    properties:
+      connection:
+        type: string
+        description: Database connection name
+      sql:
+        type: string
+        description: SQL query to analyze
+    required:
+    - connection
+    - sql
+```
+
+
 ## pg-mcp
 
 The PG-MCP server is specialised to talk to PostgreSQL servers. With a few adjustments,
@@ -238,7 +392,8 @@ the adapter can also talk to CrateDB. The project offers rich MCP server capabil
 and includes advanced client programs for Claude and Gemini that work out of the box.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: https://github.com/crate-workbench/pg-mcp-server
+:Homepage: <https://github.com/crate-workbench/pg-mcp-server>
+:Validated with CrateDB: True
 :Run: `python -m cratedb_toolkit.query.mcp.pg_mcp`
 :Acquire:
 ```shell
@@ -398,7 +553,8 @@ A basic Model Context Protocol server that provides read-only access to
 PostgreSQL databases per `query` tool.
 It is written in TypeScript, to be invoked with `npx`.
 
-:Homepage: https://www.npmjs.com/package/@modelcontextprotocol/server-postgres
+:Homepage: <https://www.npmjs.com/package/@modelcontextprotocol/server-postgres>
+:Validated with CrateDB: True
 :Run: `npx -y @modelcontextprotocol/server-postgres@0.6 postgresql://crate@localhost:5432/testdrive`
 
 
@@ -415,12 +571,198 @@ It is written in TypeScript, to be invoked with `npx`.
 ```
 
 
+## postgres-mcp (Postgres Pro)
+
+Postgres Pro is an open-source Model Context Protocol (MCP) server
+with index tuning, explain plans, health checks, and safe SQL execution.
+It is written in Python, optionally to be invoked with `uv` or `uvx`.
+
+:Homepage: <https://github.com/crystaldba/postgres-mcp>
+:Validated with CrateDB: False
+:Install: `uv pip install 'postgres-mcp'`
+:Run: `postgres-mcp postgresql://crate@localhost:5432/testdrive --access-mode=unrestricted`
+
+
+### Tools
+
+```yaml
+- name: list_schemas
+  description: List all schemas in the database
+  inputSchema:
+    properties: {}
+    title: list_schemasArguments
+    type: object
+- name: list_objects
+  description: List objects in a schema
+  inputSchema:
+    properties:
+      schema_name:
+        description: Schema name
+        title: Schema Name
+        type: string
+      object_type:
+        default: table
+        description: 'Object type: ''table'', ''view'', ''sequence'', or ''extension'''
+        title: Object Type
+        type: string
+    required:
+    - schema_name
+    title: list_objectsArguments
+    type: object
+- name: get_object_details
+  description: Show detailed information about a database object
+  inputSchema:
+    properties:
+      schema_name:
+        description: Schema name
+        title: Schema Name
+        type: string
+      object_name:
+        description: Object name
+        title: Object Name
+        type: string
+      object_type:
+        default: table
+        description: 'Object type: ''table'', ''view'', ''sequence'', or ''extension'''
+        title: Object Type
+        type: string
+    required:
+    - schema_name
+    - object_name
+    title: get_object_detailsArguments
+    type: object
+- name: explain_query
+  description: Explains the execution plan for a SQL query, showing how the database will execute it and
+    provides detailed cost estimates.
+  inputSchema:
+    properties:
+      sql:
+        description: SQL query to explain
+        title: Sql
+        type: string
+      analyze:
+        default: false
+        description: When True, actually runs the query to show real execution statistics instead of estimates.
+          Takes longer but provides more accurate information.
+        title: Analyze
+        type: boolean
+      hypothetical_indexes:
+        default: []
+        description: "A list of hypothetical indexes to simulate. Each index must be a dictionary with\
+          \ these keys:\n    - 'table': The table name to add the index to (e.g., 'users')\n    - 'columns':\
+          \ List of column names to include in the index (e.g., ['email'] or ['last_name', 'first_name'])\n\
+          \    - 'using': Optional index method (default: 'btree', other options include 'hash', 'gist',\
+          \ etc.)\n\nExamples: [\n    {\"table\": \"users\", \"columns\": [\"email\"], \"using\": \"btree\"\
+          },\n    {\"table\": \"orders\", \"columns\": [\"user_id\", \"created_at\"]}\n]\nIf there is\
+          \ no hypothetical index, you can pass an empty list."
+        items:
+          type: object
+        title: Hypothetical Indexes
+        type: array
+    required:
+    - sql
+    title: explain_queryArguments
+    type: object
+- name: analyze_workload_indexes
+  description: Analyze frequently executed queries in the database and recommend optimal indexes
+  inputSchema:
+    properties:
+      max_index_size_mb:
+        default: 10000
+        description: Max index size in MB
+        title: Max Index Size Mb
+        type: integer
+    title: analyze_workload_indexesArguments
+    type: object
+- name: analyze_query_indexes
+  description: Analyze a list of (up to 10) SQL queries and recommend optimal indexes
+  inputSchema:
+    properties:
+      queries:
+        description: List of Query strings to analyze
+        items:
+          type: string
+        title: Queries
+        type: array
+      max_index_size_mb:
+        default: 10000
+        description: Max index size in MB
+        title: Max Index Size Mb
+        type: integer
+    required:
+    - queries
+    title: analyze_query_indexesArguments
+    type: object
+- name: analyze_db_health
+  description: 'Analyzes database health. Here are the available health checks:
+
+    - index - checks for invalid, duplicate, and bloated indexes
+
+    - connection - checks the number of connection and their utilization
+
+    - vacuum - checks vacuum health for transaction id wraparound
+
+    - sequence - checks sequences at risk of exceeding their maximum value
+
+    - replication - checks replication health including lag and slots
+
+    - buffer - checks for buffer cache hit rates for indexes and tables
+
+    - constraint - checks for invalid constraints
+
+    - all - runs all checks
+
+    You can optionally specify a single health check or a comma-separated list of health checks. The default
+    is ''all'' checks.'
+  inputSchema:
+    properties:
+      health_type:
+        default: all
+        description: 'Optional. Valid values are: all, buffer, connection, constraint, index, replication,
+          sequence, vacuum.'
+        title: Health Type
+        type: string
+    title: analyze_db_healthArguments
+    type: object
+- name: get_top_queries
+  description: Reports the slowest SQL queries based on execution time, using data from the 'pg_stat_statements'
+    extension.
+  inputSchema:
+    properties:
+      limit:
+        default: 10
+        description: Number of slow queries to return
+        title: Limit
+        type: integer
+      sort_by:
+        default: mean
+        description: 'Sort criteria: ''total'' for total execution time or ''mean'' for mean execution
+          time per call'
+        title: Sort By
+        type: string
+    title: get_top_queriesArguments
+    type: object
+- name: execute_sql
+  description: Execute any SQL query
+  inputSchema:
+    properties:
+      sql:
+        default: all
+        description: SQL to run
+        title: Sql
+        type: string
+    title: execute_sqlArguments
+    type: object
+```
+
+
 ## quarkus
 
 The Quarkus MCP server communicates with databases using JDBC, providing quite a range of tools.
 It is written in Java, to be invoked with `jbang`.
 
-:Homepage: https://github.com/quarkiverse/quarkus-mcp-servers
+:Homepage: <https://github.com/quarkiverse/quarkus-mcp-servers>
+:Validated with CrateDB: True
 :Run: `jbang run --java=21 jdbc@quarkiverse/quarkus-mcp-servers jdbc:postgresql://localhost:5432/testdrive -u crate`
 
 

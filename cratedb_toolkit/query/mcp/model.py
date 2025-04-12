@@ -30,6 +30,7 @@ class McpServer:
     preinstall: t.Optional[str] = None
     homepage: t.Optional[str] = None
     description: t.Optional[str] = None
+    cratedb_validated: t.Optional[bool] = False
 
     def __post_init__(self):
         """
@@ -118,7 +119,8 @@ class McpServer:
             print()
             print(self.description)
             print()
-            print(f":Homepage: {self.homepage}")
+            print(f":Homepage: <{self.homepage}>")
+            print(f":Validated with CrateDB: {self.cratedb_validated}")
             if self.install_command:
                 print(f":Install: `{self.install_command}`")
             print(f":Run: `{self.command}`")

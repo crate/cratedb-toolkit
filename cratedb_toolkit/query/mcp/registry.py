@@ -25,7 +25,8 @@ class McpServerRegistry:
 The CrateDB MCP server specialises on advanced CrateDB SQL operations by blending in
 knowledge base resources from CrateDB's documentation about query optimizations.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
-            """,
+        """,
+        cratedb_validated=True,
     )
 
     dbhub = McpServer(
@@ -37,6 +38,7 @@ DBHub is a universal database gateway implementing the Model Context Protocol (M
 gateway allows MCP-compatible clients to connect to and explore different databases.
 It is written in TypeScript, to be invoked with `npx`.
         """,
+        cratedb_validated=True,
     )
 
     mcp_alchemy = McpServer(
@@ -51,7 +53,35 @@ It is written in TypeScript, to be invoked with `npx`.
         description="""
 The MCP Alchemy MCP server package uses SQLAlchemy to talk to databases and provides quite a range of tools.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
-            """,
+        """,
+        cratedb_validated=True,
+    )
+
+    mcp_db = McpServer(
+        name="mcp-db",
+        command="npx --yes github:dwarvesf/mcp-db --transport stdio",
+        homepage="https://github.com/dwarvesf/mcp-db",
+        requirements=["mcp-db"],
+        description="""
+A Model Context Protocol (MCP) server built with mcp-framework that provides tools and resources for
+interacting with databases (PostgreSQL via DuckDB) and Google Cloud Storage (GCS).
+It is written in TypeScript, to be invoked with `npx`.
+        """,
+        cratedb_validated=False,
+    )
+
+    mcp_dbutils = McpServer(
+        name="mcp-dbutils",
+        command="mcp-dbutils --config=config.yaml",
+        homepage="https://github.com/donghao1393/mcp-dbutils",
+        requirements=["mcp-dbutils"],
+        description="""
+DButils is an all-in-one MCP service that enables your AI to do data analysis by harnessing versatile
+types of database (sqlite, mysql, postgres, and more) within a unified configuration of connections
+in a secured way (like SSL).
+It is written in Python, optionally to be invoked with `uv` or `uvx`.
+        """,
+        cratedb_validated=False,
     )
 
     pg_mcp = McpServer(
@@ -74,7 +104,8 @@ The PG-MCP server is specialised to talk to PostgreSQL servers. With a few adjus
 the adapter can also talk to CrateDB. The project offers rich MCP server capabilities,
 and includes advanced client programs for Claude and Gemini that work out of the box.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
-            """,
+        """,
+        cratedb_validated=True,
     )
 
     postgres_basic = McpServer(
@@ -85,7 +116,21 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 A basic Model Context Protocol server that provides read-only access to
 PostgreSQL databases per `query` tool.
 It is written in TypeScript, to be invoked with `npx`.
-            """,
+        """,
+        cratedb_validated=True,
+    )
+
+    postgres_mcp = McpServer(
+        name="postgres-mcp (Postgres Pro)",
+        command="postgres-mcp postgresql://crate@localhost:5432/testdrive --access-mode=unrestricted",
+        homepage="https://github.com/crystaldba/postgres-mcp",
+        requirements=["postgres-mcp"],
+        description="""
+Postgres Pro is an open-source Model Context Protocol (MCP) server
+with index tuning, explain plans, health checks, and safe SQL execution.
+It is written in Python, optionally to be invoked with `uv` or `uvx`.
+        """,
+        cratedb_validated=False,
     )
 
     quarkus = McpServer(
@@ -96,6 +141,7 @@ It is written in TypeScript, to be invoked with `npx`.
 The Quarkus MCP server communicates with databases using JDBC, providing quite a range of tools.
 It is written in Java, to be invoked with `jbang`.
         """,
+        cratedb_validated=True,
     )
 
     # Define the list of built-in servers, which are those enumerated above.
@@ -103,8 +149,11 @@ It is written in Java, to be invoked with `jbang`.
         cratedb_mcp,
         dbhub,
         mcp_alchemy,
+        # mcp_db,
+        mcp_dbutils,
         pg_mcp,
         postgres_basic,
+        postgres_mcp,
         quarkus,
     ]
 
