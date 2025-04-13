@@ -46,9 +46,9 @@ def help_settings():
     "--format",
     "-f",
     "format_",
-    type=click.Choice(["json", "markdown", "sql"]),
+    type=click.Choice(["json", "yaml", "markdown", "sql"]),
     default="json",
-    help="Output format (json, markdown or sql)",
+    help="Output format (json, yaml, markdown or sql)",
 )
 @click.option("--output", "-o", default=None, help="Output file name")
 def settings(format_: str, output: str):
@@ -57,6 +57,7 @@ def settings(format_: str, output: str):
 
     Output in JSON, Markdown, or SQL format.
     """
-    from .settings import extract
+    from .settings import SettingsExtractor
 
-    extract(format_, output)
+    extractor = SettingsExtractor()
+    extractor.acquire().render(format_).write(output)
