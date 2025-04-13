@@ -2,7 +2,21 @@
 
 CrateDB Toolkit's Docs API provides programmatic access to CrateDB's documentation.
 
-## CrateDB settings
+## Install
+```shell
+uv pip install 'cratedb-toolkit[docs-api]'
+```
+
+## Usage
+
+### CrateDB settings
+
+This tool extracts settings from CrateDB's documentation and outputs them
+in either JSON, YAML or Markdown formats, or SQL statements to set the default value.
+
+It parses the HTML structure of the documentation to identify settings, their
+descriptions, default values, and whether they are runtime configurable or not.
+
 ```shell
 ctk docs settings --help
 ```
