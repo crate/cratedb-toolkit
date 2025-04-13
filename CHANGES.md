@@ -3,7 +3,7 @@
 ## Unreleased
 - MCP: Add subsystem providing a few server and client utilities through
   the `ctk query mcp {list,inquire,launch}` subcommands.
-- Docs API: Added CrateDB settings extractor
+- Docs API: Added extractors for CrateDB functions and settings
 
 ## 2025/01/31 v0.0.31
 - Fixed connectivity for `jobstats collect`
