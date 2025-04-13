@@ -9,6 +9,47 @@ uv pip install 'cratedb-toolkit[docs-api]'
 
 ## Usage
 
+### CrateDB functions
+
+This tool extracts functions from CrateDB's documentation and outputs them
+in either JSON, YAML or Markdown formats.
+
+```shell
+ctk docs functions --help
+```
+
+:::{rubric} Example
+:::
+```shell
+ctk docs functions --format=json
+```
+```json
+{
+  "meta": {
+    "created": "2025-04-13T22:57:02.258806",
+    "generator": "CrateDB Toolkit"
+  },
+  "functions": {
+    "concat('first_arg', second_arg, [ parameter , ... ])": {
+      "name": "concat",
+      "signature": "concat('first_arg', second_arg, [ parameter , ... ])",
+      "category": "String functions",
+      "description": "Concatenates a variable number of arguments into a single string. It ignores\nNULL values.",
+      "returns": null,
+      "example": null
+    },
+    "concat_ws('separator', second_arg, [ parameter , ... ])": {
+      "name": "concat_ws",
+      "signature": "concat_ws('separator', second_arg, [ parameter , ... ])",
+      "category": "String functions",
+      "description": "Concatenates a variable number of arguments into a single string using a\nseparator defined by the first argument. If first argument is NULL the\nreturn value is NULL. Remaining NULL arguments are ignored.",
+      "returns": null,
+      "example": null
+    }
+  }
+}
+```
+
 ### CrateDB settings
 
 This tool extracts settings from CrateDB's documentation and outputs them
