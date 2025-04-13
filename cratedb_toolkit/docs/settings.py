@@ -12,43 +12,28 @@ Date: April 2025
 Source: https://gist.github.com/WalBeh/c863eb5cc35ee987d577851f38b64261
 """
 
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "beautifulsoup4",
-#     "requests",
-#     "click",
-#     "rich",
-#     "tqdm",
-# ]
-# ///
-
+import dataclasses
+import io
 import json
 import logging
 import re
 import sys
-from typing import Any, Dict, List, Optional
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-import click
 import requests
+import yaml
 from bs4 import BeautifulSoup
 from rich.console import Console
-from rich.logging import RichHandler
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",
-    handlers=[RichHandler(rich_tracebacks=True, markup=True)],
-)
-logger = logging.getLogger("cratedb_settings")
-console = Console()
+# Configure logging.
+logger = logging.getLogger(__name__)
+console = Console(stderr=True)
 
 # Constants
 DOCS_URL = "https://cratedb.com/docs/crate/reference/en/latest/config/cluster.html"
-DEFAULT_JSON_OUTPUT = "cratedb_settings.json"
-DEFAULT_MD_OUTPUT = "cratedb_settings.md"
 SET_CLUSTER = "SET GLOBAL PERSISTENT"
 
 
@@ -61,20 +46,21 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     """
     settings = {}
 
-    with console.status("[bold green]Fetching documentation...", spinner="dots"):
-        response = requests.get(DOCS_URL, timeout=5)
-
-    if response.status_code != 200:
-        logger.error(f"Failed to fetch documentation: HTTP {response.status_code}")
-        return {}
-
-    logger.info("Successfully retrieved documentation page")
-
-    # Parse HTML
-    soup = BeautifulSoup(response.text, "html.parser")
+    logger.info(f"Extracting CrateDB settings from {DOCS_URL}")
 
     # Process content
     with Progress(SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console) as progress:
+        # Download resource.
+        task0 = progress.add_task("[yellow]Fetching documentation", total=None)
+        response = requests.get(DOCS_URL, timeout=5)
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch documentation: HTTP {response.status_code}")
+            return {}
+        progress.update(task0, completed=True)
+
+        # Parse HTML
+        soup = BeautifulSoup(response.text, "html.parser")
+
         # Find all section divs that contain settings
         sections = soup.find_all(["div", "section"], class_=["section", "doc-content"])
         logger.debug(f"Found {len(sections)} potential sections")
@@ -439,54 +425,52 @@ def parse_description(setting_info: Dict[str, Any]) -> Dict[str, Any]:
     return setting_info
 
 
-def write_markdown_table(settings: Dict[str, Dict[str, Any]], output_file: str) -> None:
+def write_markdown_table(settings: Dict[str, Dict[str, Any]]) -> str:
     """
-    Write settings to a markdown table file.
+    Write settings to a Markdown table file.
 
     Args:
         settings: Dictionary of settings
-        output_file: Path to output file
     """
-    with console.status(f"[bold green]Writing Markdown to {output_file}..."):
-        with open(output_file, "w", encoding="utf-8") as f:
-            # Write header with metadata
-            f.write("# CrateDB Settings Reference\n\n")
-            f.write(f"*Generated on {click.format_filename(output_file)}*\n\n")
-            f.write("This document contains all CrateDB settings, their default values, and descriptions.\n\n")
+    f = io.StringIO()
+    with console.status("[bold green]Generating Markdown"):
+        # Write header with metadata
+        f.write("# CrateDB Settings Reference\n\n")
+        f.write("This document contains all CrateDB settings, their default values, and descriptions.\n\n")
 
-            # Write runtime configurable settings table
-            runtime_settings = {k: v for k, v in settings.items() if v["runtime_configurable"]}
-            f.write(f"## Runtime Configurable Settings ({len(runtime_settings)})\n\n")
-            f.write("These settings can be changed while the cluster is running.\n\n")
-            f.write("| Setting | Default Value | Description | SQL Statement |\n")
-            f.write("|---------|---------------|-------------|--------------|\n")
+        # Write runtime configurable settings table
+        runtime_settings = {k: v for k, v in settings.items() if v["runtime_configurable"]}
+        f.write(f"## Runtime Configurable Settings ({len(runtime_settings)})\n\n")
+        f.write("These settings can be changed while the cluster is running.\n\n")
+        f.write("| Setting | Default Value | Description | SQL Statement |\n")
+        f.write("|---------|---------------|-------------|--------------|\n")
 
-            # Sort settings for better readability
-            for key, info in sorted(runtime_settings.items()):
-                # Escape pipe symbols in all fields
-                setting = key.replace("|", "\\|")
-                default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
-                desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
-                stmt = info.get("stmt", "").replace("|", "\\|") if info.get("stmt") else "-"
+        # Sort settings for better readability
+        for key, info in sorted(runtime_settings.items()):
+            # Escape pipe symbols in all fields
+            setting = key.replace("|", "\\|")
+            default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
+            desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
+            stmt = info.get("stmt", "").replace("|", "\\|") if info.get("stmt") else "-"
 
-                f.write(f"| {setting} | {default} | {desc} | {stmt} |\n")
+            f.write(f"| {setting} | {default} | {desc} | {stmt} |\n")
 
-            # Write non-runtime configurable settings table
-            non_runtime_settings = {k: v for k, v in settings.items() if not v["runtime_configurable"]}
-            f.write(f"\n\n## Non-Runtime Configurable Settings ({len(non_runtime_settings)})\n\n")
-            f.write("These settings can only be changed by restarting the cluster.\n\n")
-            f.write("| Setting | Default Value | Description |\n")
-            f.write("|---------|---------------|-------------|\n")
+        # Write non-runtime configurable settings table
+        non_runtime_settings = {k: v for k, v in settings.items() if not v["runtime_configurable"]}
+        f.write(f"\n\n## Non-Runtime Configurable Settings ({len(non_runtime_settings)})\n\n")
+        f.write("These settings can only be changed by restarting the cluster.\n\n")
+        f.write("| Setting | Default Value | Description |\n")
+        f.write("|---------|---------------|-------------|\n")
 
-            for key, info in sorted(non_runtime_settings.items()):
-                # Escape pipe symbols in all fields
-                setting = key.replace("|", "\\|")
-                default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
-                desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
+        for key, info in sorted(non_runtime_settings.items()):
+            # Escape pipe symbols in all fields
+            setting = key.replace("|", "\\|")
+            default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
+            desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
 
-                f.write(f"| {setting} | {default} | {desc} |\n")
+            f.write(f"| {setting} | {default} | {desc} |\n")
 
-    logger.info(f"Successfully wrote Markdown table to {output_file}")
+    return f.getvalue()
 
 
 def generate_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
@@ -605,85 +589,89 @@ def print_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
     print(f"\nTotal statements: {statement_count}")  # noqa: T201
 
 
-def extract(format_: str, output: str):
+def write_sql_statements(settings) -> str:
+    f = io.StringIO()
+    f.write("-- CrateDB Runtime Configurable Settings\n")
+    f.write("-- Generated by settings extractor\n\n")
+
+    count = 0
+    for _, setting_info in sorted(settings.items()):
+        if setting_info["runtime_configurable"] and "stmt" in setting_info:
+            stmt = setting_info["stmt"]
+
+            # Ensure statement ends with semicolon
+            if not stmt.endswith(";"):
+                stmt += ";"
+
+            f.write(f"{stmt}\n")
+            count += 1
+
+    f.write(f"\n-- Total statements: {count}\n")
+    return f.getvalue()
+
+
+class OutputFormat(str, Enum):
+    """Output formats supported by the SettingsExtractor."""
+
+    JSON = "json"
+    YAML = "yaml"
+    MARKDOWN = "markdown"
+    SQL = "sql"
+
+
+@dataclasses.dataclass
+class SettingsExtractor:
     """
     Extract CrateDB settings from documentation.
-
     Output in JSON, Markdown, or SQL format.
-
-    This tool scrapes the CrateDB documentation to extract configuration settings,
-    their default values, descriptions, and runtime configurability status.
-
-    Examples:
-
-        # Extract settings to JSON (default)
-        python soup2.py
-
-        # Extract settings to Markdown
-        python soup2.py --format markdown
-
-        # Extract SQL statements for runtime configurable settings
-        python soup2.py --format sql
-
-        # Specify custom output file
-        python soup2.py --format markdown --output cratedb_reference.md
     """
 
-    try:
-        # Extract settings
-        settings = extract_cratedb_settings()
+    settings: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
+    payload: Optional[str] = None
 
-        if not settings:
+    def acquire(self):
+        # Extract settings
+        self.settings = extract_cratedb_settings()
+
+        if not self.settings:
             logger.error("No settings were extracted. Please check the script or documentation structure.")
             sys.exit(1)
 
-        # Generate SQL statements for runtime configurable settings
-        generate_sql_statements(settings)
+        # Generate SQL statements for runtime configurable settings.
+        generate_sql_statements(self.settings)
+        return self
 
-        # Determine output file name
-        if output is None:
-            if format_ == "markdown":
-                output = DEFAULT_MD_OUTPUT
-            elif format_ == "sql":
-                output = "cratedb_settings.sql"
-            else:
-                output = DEFAULT_JSON_OUTPUT
+    def render(self, format_: Union[str, OutputFormat]):
+        # Convert the string format to enum if needed.
+        if isinstance(format_, str):
+            try:
+                format_ = OutputFormat(format_.lower())
+            except ValueError as e:
+                raise ValueError(
+                    f"Unsupported format: {format_}. Choose from: {', '.join(f.value for f in OutputFormat)}"
+                ) from e
 
-        # Save to file in selected format
+        # Render settings to selected format.
         if format_ == "json":
-            with open(output, "w", encoding="utf-8") as f:
-                json.dump(settings, f, indent=2, ensure_ascii=False)
-            logger.info(f"Saved {len(settings)} settings to {output}")
+            self.payload = json.dumps(self.settings, indent=2, ensure_ascii=False)
+        elif format_ == "yaml":
+            self.payload = yaml.dump(self.settings)
         elif format_ == "markdown":
-            write_markdown_table(settings, output)
+            self.payload = write_markdown_table(self.settings)
         elif format_ == "sql":
-            with console.status(f"[bold green]Writing SQL statements to {output}..."):
-                with open(output, "w", encoding="utf-8") as f:
-                    f.write("-- CrateDB Runtime Configurable Settings\n")
-                    f.write("-- Generated by settings extractor\n\n")
+            self.payload = write_sql_statements(self.settings)
 
-                    count = 0
-                    for _, setting_info in sorted(settings.items()):
-                        if setting_info["runtime_configurable"] and "stmt" in setting_info:
-                            stmt = setting_info["stmt"]
+        # Count runtime configurable settings.
+        runtime_count = sum(1 for info in self.settings.values() if info["runtime_configurable"])
+        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(self.settings)} total")
+        return self
 
-                            # Ensure statement ends with semicolon
-                            if not stmt.endswith(";"):
-                                stmt += ";"
-
-                            f.write(f"{stmt}\n")
-                            count += 1
-
-                    f.write(f"\n-- Total statements: {count}\n")
-            logger.info(f"Saved {count} SQL statements to {output}")
-
-        # Count runtime configurable settings
-        runtime_count = sum(1 for info in settings.values() if info["runtime_configurable"])
-        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(settings)} total")
-
-    except KeyboardInterrupt:
-        logger.warning("Operation cancelled by user")
-        sys.exit(130)
-    except Exception as e:
-        logger.exception(f"An error occurred: {e}")
-        sys.exit(1)
+    def write(self, path: Optional[Path] = None):
+        if self.payload is None:
+            raise ValueError("No content to write. Please `render()` first.")
+        if path is None:
+            print(self.payload)  # noqa: T201
+        else:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(self.payload)
+        return self
