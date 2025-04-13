@@ -141,12 +141,16 @@ optional-dependencies.docs = [
   "sphinxcontrib-mermaid<2",
   "sphinxext-opengraph<1",
 ]
+optional-dependencies.docs-api = [
+  "beautifulsoup4",
+  "rich>=3.3.2,<15",
+]
 optional-dependencies.dynamodb = [
   "boto3",
   "commons-codec>=0.0.20",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,cloud,datasets,io,mcp,service]",
+  "cratedb-toolkit[cfr,cloud,datasets,docs-api,io,mcp,service]",
 ]
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io]",

@@ -605,21 +605,11 @@ def print_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
     print(f"\nTotal statements: {statement_count}")  # noqa: T201
 
 
-@click.command(context_settings={"help_option_names": ["-h", "--help"]})
-@click.option(
-    "--format",
-    "-f",
-    "format_",
-    type=click.Choice(["json", "markdown", "sql"]),
-    default="json",
-    help="Output format (json, markdown or sql)",
-)
-@click.option("--output", "-o", default=None, help="Output file name")
-@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
-@click.version_option(version="1.0.0")
-def main(format_: str, output: str, verbose: bool):
+def extract(format_: str, output: str):
     """
-    Extract CrateDB settings from documentation and save them in JSON, Markdown, or SQL format.
+    Extract CrateDB settings from documentation.
+
+    Output in JSON, Markdown, or SQL format.
 
     This tool scrapes the CrateDB documentation to extract configuration settings,
     their default values, descriptions, and runtime configurability status.
@@ -638,9 +628,6 @@ def main(format_: str, output: str, verbose: bool):
         # Specify custom output file
         python soup2.py --format markdown --output cratedb_reference.md
     """
-    # Configure logging level
-    if verbose:
-        logger.setLevel(logging.DEBUG)
 
     try:
         # Extract settings
@@ -700,7 +687,3 @@ def main(format_: str, output: str, verbose: bool):
     except Exception as e:
         logger.exception(f"An error occurred: {e}")
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

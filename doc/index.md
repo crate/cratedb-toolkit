@@ -42,6 +42,7 @@ cmd/index
 
 adapter/index
 datasets
+docs-api
 io/index
 query/index
 retention
