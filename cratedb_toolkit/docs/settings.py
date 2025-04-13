@@ -14,19 +14,18 @@ Source: https://gist.github.com/WalBeh/c863eb5cc35ee987d577851f38b64261
 
 import dataclasses
 import io
-import json
 import logging
 import re
 import sys
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 import requests
-import yaml
 from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
+
+from cratedb_toolkit.docs.util import GenericProcessor
+from cratedb_toolkit.util.format import FlexibleFormatter, OutputFormat
 
 # Configure logging.
 logger = logging.getLogger(__name__)
@@ -610,68 +609,45 @@ def write_sql_statements(settings) -> str:
     return f.getvalue()
 
 
-class OutputFormat(str, Enum):
-    """Output formats supported by the SettingsExtractor."""
+class OutputFormatter(FlexibleFormatter):
+    """
+    Define implementations how to render domain data to Markdown or SQL.
+    """
 
-    JSON = "json"
-    YAML = "yaml"
-    MARKDOWN = "markdown"
-    SQL = "sql"
+    def to_markdown(self):
+        return write_markdown_table(self.thing)
+
+    def to_sql(self):
+        return write_sql_statements(self.thing)
 
 
 @dataclasses.dataclass
-class SettingsExtractor:
+class SettingsExtractor(GenericProcessor):
     """
     Extract CrateDB settings from documentation.
     Output in JSON, YAML, Markdown, or SQL format.
     """
 
-    settings: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
+    thing: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
+    formatter: Type[FlexibleFormatter] = dataclasses.field(default=OutputFormatter)
     payload: Optional[str] = None
 
     def acquire(self):
         # Extract settings
-        self.settings = extract_cratedb_settings()
+        self.thing = extract_cratedb_settings()
 
-        if not self.settings:
+        if not self.thing:
             logger.error("No settings were extracted. Please check the script or documentation structure.")
             sys.exit(1)
 
         # Generate SQL statements for runtime configurable settings.
-        generate_sql_statements(self.settings)
+        generate_sql_statements(self.thing)
         return self
 
     def render(self, format_: Union[str, OutputFormat]):
-        # Convert the string format to enum if needed.
-        if isinstance(format_, str):
-            try:
-                format_ = OutputFormat(format_.lower())
-            except ValueError as e:
-                raise ValueError(
-                    f"Unsupported format: {format_}. Choose from: {', '.join(f.value for f in OutputFormat)}"
-                ) from e
-
-        # Render settings to selected format.
-        if format_ == "json":
-            self.payload = json.dumps(self.settings, indent=2, ensure_ascii=False)
-        elif format_ == "yaml":
-            self.payload = yaml.dump(self.settings)
-        elif format_ == "markdown":
-            self.payload = write_markdown_table(self.settings)
-        elif format_ == "sql":
-            self.payload = write_sql_statements(self.settings)
+        super().render(format_)
 
         # Count runtime configurable settings.
-        runtime_count = sum(1 for info in self.settings.values() if info["runtime_configurable"])
-        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(self.settings)} total")
-        return self
-
-    def write(self, path: Optional[Path] = None):
-        if self.payload is None:
-            raise ValueError("No content to write. Please `render()` first.")
-        if path is None:
-            print(self.payload)  # noqa: T201
-        else:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(self.payload)
+        runtime_count = sum(1 for info in self.thing.values() if info["runtime_configurable"])
+        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(self.thing)} total")
         return self
