@@ -19,10 +19,27 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
     return boot_click(ctx, verbose, debug)
 
 
+def help_functions():
+    """
+    Extract CrateDB SQL function definitions by scraping relevant documentation pages.
+
+    Examples
+    ========
+
+    # Extract functions to JSON (default)
+    ctk docs functions
+
+    # Extract functions to Markdown
+    ctk docs functions --format markdown
+
+    # Specify custom output file
+    ctk docs functions --format markdown --output cratedb-functions.md
+    """  # noqa: E501
+
+
 def help_settings():
     """
-    This tool scrapes the CrateDB documentation to extract configuration settings,
-    their default values, descriptions, and runtime configurability status.
+    Extract CrateDB configuration settings by scraping relevant documentation pages.
 
     Examples
     ========
@@ -37,8 +54,35 @@ def help_settings():
     ctk docs settings --format sql
 
     # Specify custom output file
-    ctk docs settings --format markdown --output cratedb_reference.md
+    ctk docs settings --format markdown --output cratedb-settings.md
     """  # noqa: E501
+
+
+@make_command(cli, "functions", help_functions)
+@click.option(
+    "--format",
+    "-f",
+    "format_",
+    type=click.Choice(["json", "yaml", "markdown", "sql"]),
+    default="json",
+    help="Output format (json, yaml, markdown or sql)",
+)
+@click.option("--output", "-o", default=None, help="Output file name")
+def functions(format_: str, output: str):
+    """
+    Extract CrateDB functions from documentation.
+
+    Output in JSON, Markdown, or SQL format.
+    """
+    from .functions import FunctionsExtractor
+
+    try:
+        extractor = FunctionsExtractor()
+        extractor.acquire().render(format_).write(output)
+    except Exception as e:
+        msg = f"Failed to extract functions: {e}"
+        logger.error(msg)
+        raise click.ClickException(msg) from e
 
 
 @make_command(cli, "settings", help_settings)

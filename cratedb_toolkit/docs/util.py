@@ -8,7 +8,7 @@ from cratedb_toolkit.util.format import FlexibleFormatter, OutputFormat
 @dataclasses.dataclass
 class GenericProcessor:
     """
-    Extract CrateDB settings from documentation.
+    Extract CrateDB knowledge bites (e.g., settings, functions) from documentation.
     Output in JSON, YAML, Markdown, or SQL format.
     """
 
