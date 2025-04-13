@@ -24,9 +24,10 @@ Source: https://gist.github.com/WalBeh/c863eb5cc35ee987d577851f38b64261
 # ///
 
 import json
+import logging
 import re
 import sys
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import click
 import requests
@@ -34,7 +35,6 @@ from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress, SpinnerColumn, TextColumn
-import logging
 
 # Configure logging
 logging.basicConfig(
@@ -62,7 +62,7 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     settings = {}
 
     with console.status("[bold green]Fetching documentation...", spinner="dots"):
-        response = requests.get(DOCS_URL)
+        response = requests.get(DOCS_URL, timeout=5)
 
     if response.status_code != 200:
         logger.error(f"Failed to fetch documentation: HTTP {response.status_code}")
@@ -74,9 +74,7 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Process content
-    with Progress(
-        SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console
-    ) as progress:
+    with Progress(SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console) as progress:
         # Find all section divs that contain settings
         sections = soup.find_all(["div", "section"], class_=["section", "doc-content"])
         logger.debug(f"Found {len(sections)} potential sections")
@@ -99,9 +97,7 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
         progress.update(task3, completed=True)
 
         # Find runtime configurable settings
-        task4 = progress.add_task(
-            "[yellow]Identifying runtime configurable settings...", total=None
-        )
+        task4 = progress.add_task("[yellow]Identifying runtime configurable settings...", total=None)
         _identify_runtime_settings(settings)
         progress.update(task4, completed=True)
 
@@ -125,35 +121,21 @@ def _process_tables(tables: List) -> Dict[str, Dict[str, Any]]:
             continue
 
         # Extract header information
-        headers = [
-            th.get_text().strip().lower() for th in headers_row.find_all(["th", "td"])
-        ]
+        headers = [th.get_text().strip().lower() for th in headers_row.find_all(["th", "td"])]
 
         # Check if this looks like a settings table
-        if not any(
-            keyword in " ".join(headers) for keyword in ["setting", "name", "property"]
-        ):
+        if not any(keyword in " ".join(headers) for keyword in ["setting", "name", "property"]):
             continue
 
         # Find column indices
         indices = {
             "setting": next(
-                (
-                    i
-                    for i, h in enumerate(headers)
-                    if any(kw in h for kw in ["setting", "name", "property"])
-                ),
+                (i for i, h in enumerate(headers) if any(kw in h for kw in ["setting", "name", "property"])),
                 None,
             ),
-            "desc": next(
-                (i for i, h in enumerate(headers) if "description" in h), None
-            ),
+            "desc": next((i for i, h in enumerate(headers) if "description" in h), None),
             "runtime": next(
-                (
-                    i
-                    for i, h in enumerate(headers)
-                    if any(kw in h for kw in ["runtime", "dynamic"])
-                ),
+                (i for i, h in enumerate(headers) if any(kw in h for kw in ["runtime", "dynamic"])),
                 None,
             ),
             "default": next((i for i, h in enumerate(headers) if "default" in h), None),
@@ -256,9 +238,7 @@ def _process_definition_lists(dl_elements: List) -> Dict[str, Dict[str, Any]]:
 
             # Clean up setting key
             setting_name = re.sub(r"\s+", " ", setting_name)
-            setting_key = (
-                setting_name.split(":", 1)[0] if ":" in setting_name else setting_name
-            )
+            setting_key = setting_name.split(":", 1)[0] if ":" in setting_name else setting_name
 
             # Skip if doesn't look like a valid setting
             if not setting_key or len(setting_key) > 100:
@@ -300,10 +280,7 @@ def _process_section_headers(sections: List) -> Dict[str, Dict[str, Any]]:
             header_text = header.get_text().strip()
 
             # Look for typical setting patterns
-            if (
-                re.search(r"^[a-z0-9_.]+$", header_text, re.IGNORECASE)
-                and header_text not in settings
-            ):
+            if re.search(r"^[a-z0-9_.]+$", header_text, re.IGNORECASE) and header_text not in settings:
                 setting_key = header_text
 
                 # Initialize structured fields
@@ -324,10 +301,8 @@ def _process_section_headers(sections: List) -> Dict[str, Dict[str, Any]]:
                     setting_info["raw_description"] = next_elem.get_text().strip()
 
                 # Check runtime configurability
-                desc_lower = setting_info["raw_description"].lower()
-                setting_info["runtime_configurable"] = _is_runtime_configurable(
-                    desc_lower
-                )
+                desc_lower = str(setting_info["raw_description"]).lower()
+                setting_info["runtime_configurable"] = _is_runtime_configurable(desc_lower)
 
                 # Parse description into structured fields
                 parse_description(setting_info)
@@ -340,7 +315,7 @@ def _process_section_headers(sections: List) -> Dict[str, Dict[str, Any]]:
 
 def _identify_runtime_settings(settings: Dict[str, Dict[str, Any]]) -> None:
     """Identify runtime configurable settings based on documentation patterns."""
-    for key, info in settings.items():
+    for _, info in settings.items():
         if not info["runtime_configurable"]:
             desc_lower = info["raw_description"].lower()
             runtime_patterns = [
@@ -351,10 +326,7 @@ def _identify_runtime_settings(settings: Dict[str, Dict[str, Any]]) -> None:
             ]
 
             for pattern in runtime_patterns:
-                if (
-                    re.search(pattern, desc_lower)
-                    and "not runtime configurable" not in desc_lower
-                ):
+                if re.search(pattern, desc_lower) and "not runtime configurable" not in desc_lower:
                     info["runtime_configurable"] = True
                     break
 
@@ -373,8 +345,7 @@ def _is_runtime_configurable(text: str) -> bool:
         text == "y",
         "runtime: yes" in text.lower(),
         "dynamic: true" in text.lower(),
-        "runtime configurable" in text.lower()
-        and "not runtime configurable" not in text.lower(),
+        "runtime configurable" in text.lower() and "not runtime configurable" not in text.lower(),
     ]
 
     return any(indicators)
@@ -440,9 +411,7 @@ def parse_description(setting_info: Dict[str, Any]) -> Dict[str, Any]:
     # Extract related settings
     related_settings = re.findall(r"([a-z][a-z0-9_\-.]+\.[a-z0-9_\-.]+)", desc)
     if related_settings:
-        setting_info["related_settings"] = list(
-            set(related_settings)
-        )  # Remove duplicates
+        setting_info["related_settings"] = list(set(related_settings))  # Remove duplicates
 
     # Extract purpose (the first sentence or two that's not about defaults, types, or constraints)
     purpose_text = desc
@@ -483,14 +452,10 @@ def write_markdown_table(settings: Dict[str, Dict[str, Any]], output_file: str) 
             # Write header with metadata
             f.write("# CrateDB Settings Reference\n\n")
             f.write(f"*Generated on {click.format_filename(output_file)}*\n\n")
-            f.write(
-                "This document contains all CrateDB settings, their default values, and descriptions.\n\n"
-            )
+            f.write("This document contains all CrateDB settings, their default values, and descriptions.\n\n")
 
             # Write runtime configurable settings table
-            runtime_settings = {
-                k: v for k, v in settings.items() if v["runtime_configurable"]
-            }
+            runtime_settings = {k: v for k, v in settings.items() if v["runtime_configurable"]}
             f.write(f"## Runtime Configurable Settings ({len(runtime_settings)})\n\n")
             f.write("These settings can be changed while the cluster is running.\n\n")
             f.write("| Setting | Default Value | Description | SQL Statement |\n")
@@ -500,27 +465,15 @@ def write_markdown_table(settings: Dict[str, Dict[str, Any]], output_file: str) 
             for key, info in sorted(runtime_settings.items()):
                 # Escape pipe symbols in all fields
                 setting = key.replace("|", "\\|")
-                default = (
-                    info["default_value"].replace("|", "\\|")
-                    if info["default_value"]
-                    else "-"
-                )
+                default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
                 desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
-                stmt = (
-                    info.get("stmt", "").replace("|", "\\|")
-                    if info.get("stmt")
-                    else "-"
-                )
+                stmt = info.get("stmt", "").replace("|", "\\|") if info.get("stmt") else "-"
 
                 f.write(f"| {setting} | {default} | {desc} | {stmt} |\n")
 
             # Write non-runtime configurable settings table
-            non_runtime_settings = {
-                k: v for k, v in settings.items() if not v["runtime_configurable"]
-            }
-            f.write(
-                f"\n\n## Non-Runtime Configurable Settings ({len(non_runtime_settings)})\n\n"
-            )
+            non_runtime_settings = {k: v for k, v in settings.items() if not v["runtime_configurable"]}
+            f.write(f"\n\n## Non-Runtime Configurable Settings ({len(non_runtime_settings)})\n\n")
             f.write("These settings can only be changed by restarting the cluster.\n\n")
             f.write("| Setting | Default Value | Description |\n")
             f.write("|---------|---------------|-------------|\n")
@@ -528,11 +481,7 @@ def write_markdown_table(settings: Dict[str, Dict[str, Any]], output_file: str) 
             for key, info in sorted(non_runtime_settings.items()):
                 # Escape pipe symbols in all fields
                 setting = key.replace("|", "\\|")
-                default = (
-                    info["default_value"].replace("|", "\\|")
-                    if info["default_value"]
-                    else "-"
-                )
+                default = info["default_value"].replace("|", "\\|") if info["default_value"] else "-"
                 desc = info["purpose"].replace("\n", " ").replace("|", "\\|")
 
                 f.write(f"| {setting} | {default} | {desc} |\n")
@@ -562,9 +511,7 @@ def generate_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
             # Handle wildcard settings
             if "*" in setting_key:
                 # For wildcard settings, generate a template statement
-                setting_info["stmt"] = (
-                    f"{SET_CLUSTER} \"{setting_key}\" = '<VALUE>'; -- Requires specific value"
-                )
+                setting_info["stmt"] = f"{SET_CLUSTER} \"{setting_key}\" = '<VALUE>'; -- Requires specific value"
                 count += 1
                 continue
 
@@ -598,15 +545,9 @@ def generate_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
     logger.info(f"Generated {count} SQL statements for runtime configurable settings")
 
     # Verify no non-runtime settings have statements
-    bad_stmts = sum(
-        1
-        for info in settings.values()
-        if not info["runtime_configurable"] and "stmt" in info
-    )
+    bad_stmts = sum(1 for info in settings.values() if not info["runtime_configurable"] and "stmt" in info)
     if bad_stmts > 0:
-        logger.warning(
-            f"Found {bad_stmts} SQL statements for non-runtime settings - removing them"
-        )
+        logger.warning(f"Found {bad_stmts} SQL statements for non-runtime settings - removing them")
         for info in settings.values():
             if not info["runtime_configurable"] and "stmt" in info:
                 del info["stmt"]
@@ -620,14 +561,14 @@ def print_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
         settings: Dictionary of settings
     """
     # Print header
-    print(f"SQL Statements for Runtime Configurable CrateDB Settings")
-    print("=" * 60)
+    print("SQL Statements for Runtime Configurable CrateDB Settings")  # noqa: T201
+    print("=" * 60)  # noqa: T201
 
     # Count statements
     statement_count = 0
 
     # Print all statements with comments and semicolons
-    for setting_key, setting_info in sorted(settings.items()):
+    for _, setting_info in sorted(settings.items()):
         if setting_info["runtime_configurable"] and "stmt" in setting_info:
             stmt = setting_info["stmt"]
 
@@ -658,16 +599,17 @@ def print_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
             if config_options:
                 stmt = f"{stmt} -- {config_options}"
 
-            print(stmt)
+            print(stmt)  # noqa: T201
             statement_count += 1
 
-    print(f"\nTotal statements: {statement_count}")
+    print(f"\nTotal statements: {statement_count}")  # noqa: T201
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--format",
     "-f",
+    "format_",
     type=click.Choice(["json", "markdown", "sql"]),
     default="json",
     help="Output format (json, markdown or sql)",
@@ -675,7 +617,7 @@ def print_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
 @click.option("--output", "-o", default=None, help="Output file name")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.version_option(version="1.0.0")
-def main(format: str, output: str, verbose: bool):
+def main(format_: str, output: str, verbose: bool):
     """
     Extract CrateDB settings from documentation and save them in JSON, Markdown, or SQL format.
 
@@ -705,9 +647,7 @@ def main(format: str, output: str, verbose: bool):
         settings = extract_cratedb_settings()
 
         if not settings:
-            logger.error(
-                "No settings were extracted. Please check the script or documentation structure."
-            )
+            logger.error("No settings were extracted. Please check the script or documentation structure.")
             sys.exit(1)
 
         # Generate SQL statements for runtime configurable settings
@@ -715,32 +655,29 @@ def main(format: str, output: str, verbose: bool):
 
         # Determine output file name
         if output is None:
-            if format == "markdown":
+            if format_ == "markdown":
                 output = DEFAULT_MD_OUTPUT
-            elif format == "sql":
+            elif format_ == "sql":
                 output = "cratedb_settings.sql"
             else:
                 output = DEFAULT_JSON_OUTPUT
 
         # Save to file in selected format
-        if format == "json":
+        if format_ == "json":
             with open(output, "w", encoding="utf-8") as f:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(settings)} settings to {output}")
-        elif format == "markdown":
+        elif format_ == "markdown":
             write_markdown_table(settings, output)
-        elif format == "sql":
+        elif format_ == "sql":
             with console.status(f"[bold green]Writing SQL statements to {output}..."):
                 with open(output, "w", encoding="utf-8") as f:
-                    f.write(f"-- CrateDB Runtime Configurable Settings\n")
-                    f.write(f"-- Generated by settings extractor\n\n")
+                    f.write("-- CrateDB Runtime Configurable Settings\n")
+                    f.write("-- Generated by settings extractor\n\n")
 
                     count = 0
-                    for setting_key, setting_info in sorted(settings.items()):
-                        if (
-                            setting_info["runtime_configurable"]
-                            and "stmt" in setting_info
-                        ):
+                    for _, setting_info in sorted(settings.items()):
+                        if setting_info["runtime_configurable"] and "stmt" in setting_info:
                             stmt = setting_info["stmt"]
 
                             # Ensure statement ends with semicolon
@@ -754,12 +691,8 @@ def main(format: str, output: str, verbose: bool):
             logger.info(f"Saved {count} SQL statements to {output}")
 
         # Count runtime configurable settings
-        runtime_count = sum(
-            1 for info in settings.values() if info["runtime_configurable"]
-        )
-        logger.info(
-            f"Found {runtime_count} runtime configurable settings out of {len(settings)} total"
-        )
+        runtime_count = sum(1 for info in settings.values() if info["runtime_configurable"])
+        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(settings)} total")
 
     except KeyboardInterrupt:
         logger.warning("Operation cancelled by user")
