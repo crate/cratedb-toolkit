@@ -59,5 +59,10 @@ def settings(format_: str, output: str):
     """
     from .settings import SettingsExtractor
 
-    extractor = SettingsExtractor()
-    extractor.acquire().render(format_).write(output)
+    try:
+        extractor = SettingsExtractor()
+        extractor.acquire().render(format_).write(output)
+    except Exception as e:
+        msg = f"Failed to extract settings: {e}"
+        logger.error(msg)
+        raise click.ClickException(msg) from e
