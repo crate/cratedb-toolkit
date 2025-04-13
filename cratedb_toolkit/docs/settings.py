@@ -3,9 +3,9 @@
 CrateDB Settings Extractor
 
 This tool extracts settings from CrateDB's documentation and outputs them
-in either JSON or Markdown format, or the SQL statements to set the default value.
+in either JSON, YAML, or Markdown format, or the SQL statements to set the default value.
 It parses the HTML structure of the documentation to identify settings, their
-descriptions, default values, and whether they're runtime configurable.
+descriptions, default values, and whether they are runtime configurable or not.
 
 Author: wolta
 Date: April 2025
@@ -623,7 +623,7 @@ class OutputFormat(str, Enum):
 class SettingsExtractor:
     """
     Extract CrateDB settings from documentation.
-    Output in JSON, Markdown, or SQL format.
+    Output in JSON, YAML, Markdown, or SQL format.
     """
 
     settings: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
