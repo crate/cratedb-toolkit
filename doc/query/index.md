@@ -1,12 +1,11 @@
 # Query Utilities
 
-A collection of utilities for working with query expressions, mostly
-converters and migration support tasks, still in its infancy.
+A collection of utilities for querying the database and working with query
+expressions: Adapters, converters, migration support tasks, etc.
 
-## Converters
 ```{toctree}
 :maxdepth: 2
 
-convert
 mcp/index
+convert
 ```

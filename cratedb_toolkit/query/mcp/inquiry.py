@@ -21,17 +21,15 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class McpServerInquiry:
     """
-    Inquire capabilities of MCP server, and format as JSON, Markdown, or YAML.
+    Inquire the capabilities of MCP server, and format as JSON, Markdown, or YAML.
     """
 
     servers: t.List[McpServer]
 
-    title = "Database MCP servers for PostgreSQL and CrateDB"
+    title = "MCP server landscape for PostgreSQL and CrateDB"
     text = (
-        "This page provides an overview about a fragment of the MCP server landscape,\n"
-        "focusing on those that are talking to PostgreSQL and CrateDB databases.\n"
-        "\n"
-        "It enumerates the most popular adapters, and includes their detailed API capabilities.\n"
+        "An overview about a fragment of the MCP server landscape,\n"
+        "focusing on the most popular ones that can connect to both PostgreSQL and CrateDB databases.\n"
     )
 
     notes = (

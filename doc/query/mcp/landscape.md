@@ -1,7 +1,7 @@
 # MCP server landscape for PostgreSQL and CrateDB
 
 An overview about a fragment of the MCP server landscape,
-focusing on the most popular ones that can talk to both PostgreSQL and CrateDB databases.
+focusing on the most popular ones that can connect to both PostgreSQL and CrateDB databases.
 
 ## cratedb-mcp
 
@@ -179,7 +179,7 @@ It is written in TypeScript, to be invoked with `npx`.
 
 ## mcp-alchemy
 
-The MCP Alchemy MCP server package uses SQLAlchemy to talk to databases and provides quite a range of tools.
+The MCP Alchemy MCP server package uses SQLAlchemy to connect to databases and provides quite a range of tools.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
 :Homepage: <https://github.com/runekaagaard/mcp-alchemy>
@@ -404,8 +404,8 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
 ## pg-mcp
 
-The PG-MCP server is specialised to talk to PostgreSQL servers. With a few adjustments,
-the adapter can also talk to CrateDB. The project offers rich MCP server capabilities,
+The PG-MCP server is specialised to connect to PostgreSQL servers. With a few adjustments,
+the adapter can also connect to CrateDB. The project offers rich MCP server capabilities,
 and includes advanced client programs for Claude and Gemini that work out of the box.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
