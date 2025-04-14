@@ -1,9 +1,7 @@
-# Database MCP servers for PostgreSQL and CrateDB
+# MCP server landscape for PostgreSQL and CrateDB
 
-This page provides an overview about a fragment of the MCP server landscape,
-focusing on those that are talking to PostgreSQL and CrateDB databases.
-
-It enumerates the most popular adapters, and includes their detailed API capabilities.
+An overview about a fragment of the MCP server landscape,
+focusing on the most popular ones that can talk to both PostgreSQL and CrateDB databases.
 
 ## cratedb-mcp
 
@@ -15,6 +13,13 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 :Validated with CrateDB: True
 :Install: `uv pip install 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments'`
 :Run: `cratedb-mcp`
+:Example:
+  ```shell
+  export CRATEDB_MCP_HTTP_URL=http://localhost:4200
+  mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
+    uvx 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments' \
+    | jq
+  ```
 
 
 ### Tools
@@ -74,7 +79,13 @@ It is written in TypeScript, to be invoked with `npx`.
 
 :Homepage: <https://github.com/bytebase/dbhub>
 :Validated with CrateDB: True
-:Run: `npx -y @bytebase/dbhub@0.2.3 --transport=stdio --dsn=postgres://crate@localhost:5432/testdrive`
+:Run: `npx -y @bytebase/dbhub --transport=stdio --dsn=postgres://crate@localhost:5432/testdrive`
+:Example:
+  ```shell
+  mcpt call run_query --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
+    npx -y @bytebase/dbhub --transport=stdio --dsn=postgres://crate@localhost:5432/testdrive \
+    | jq
+  ```
 
 
 ### Prompts
@@ -145,7 +156,7 @@ It is written in TypeScript, to be invoked with `npx`.
 
 ```yaml
 - name: run_query
-  description: null
+  description: Run a SQL query on the current database
   inputSchema:
     type: object
     properties:
@@ -157,7 +168,7 @@ It is written in TypeScript, to be invoked with `npx`.
     additionalProperties: false
     $schema: http://json-schema.org/draft-07/schema#
 - name: list_connectors
-  description: null
+  description: List all available database connectors
   inputSchema:
     type: object
     properties: {}
@@ -175,13 +186,19 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 :Validated with CrateDB: True
 :Install: `uv pip install 'mcp-alchemy>=2025.4.8' 'sqlalchemy-cratedb>=0.42.0.dev1'`
 :Run: `mcp-alchemy`
+:Example:
+  ```shell
+  export DB_URL=crate://crate@localhost:4200/?schema=testdrive
+  mcpt call execute_query --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
+    uvx --with='sqlalchemy-cratedb>=0.42.0.dev2' mcp-alchemy
+  ```
 
 
 ### Tools
 
 ```yaml
 - name: all_table_names
-  description: Return all table names in the database separated by comma. Connected to crate version 6.0.0
+  description: Return all table names in the database separated by comma. Connected to crate version 5.10.4
     database '' on localhost as user 'crate'
   inputSchema:
     properties: {}
@@ -189,7 +206,7 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
     type: object
 - name: filter_table_names
   description: Return all table names in the database containing the substring 'q' separated by comma.
-    Connected to crate version 6.0.0 database '' on localhost as user 'crate'
+    Connected to crate version 5.10.4 database '' on localhost as user 'crate'
   inputSchema:
     properties:
       q:
@@ -201,7 +218,7 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
     type: object
 - name: schema_definitions
   description: Returns schema and relation information for the given tables. Connected to crate version
-    6.0.0 database '' on localhost as user 'crate'
+    5.10.4 database '' on localhost as user 'crate'
   inputSchema:
     properties:
       table_names:
@@ -215,7 +232,7 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
     type: object
 - name: execute_query
   description: Execute a SQL query and return results in a readable format. Results will be truncated
-    after 4000 characters. Connected to crate version 6.0.0 database '' on localhost as user 'crate'
+    after 4000 characters. Connected to crate version 5.10.4 database '' on localhost as user 'crate'
   inputSchema:
     properties:
       query:
@@ -394,23 +411,47 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
 :Homepage: <https://github.com/crate-workbench/pg-mcp-server>
 :Validated with CrateDB: True
+:Preinstall:
+  ```shell
+  set -e
+  TARGET="/tmp/pg-mcp-server"
+  rm -rf ${TARGET}
+  git clone --depth 1 --no-checkout --filter=blob:none   https://github.com/crate-workbench/pg-mcp.git ${TARGET}
+  cd ${TARGET}
+  git checkout 8031f7c23472d19ea57fec90ebf25f63ab273f3c -- pyproject.toml uv.lock server test.py
+  cat pyproject.toml | grep -v requires-python | sponge pyproject.toml
+  uv pip install .
+  ```
 :Run: `python -m cratedb_toolkit.query.mcp.pg_mcp`
-:Acquire:
-```shell
-set -e
-TARGET="/tmp/pg-mcp-server"
-rm -rf ${TARGET}
-git clone --depth 1 --no-checkout --filter=blob:none   https://github.com/crate-workbench/pg-mcp.git ${TARGET}
-cd ${TARGET}
-git checkout 16d7f61d5b3197777293ebae33b519f14a9d6e55 -- pyproject.toml uv.lock server test.py
-cat pyproject.toml | grep -v requires-python | sponge pyproject.toml
-uv pip install .
-```
 
+
+### Prompts
+
+```yaml
+- name: nl_to_sql_prompt
+  description: "\n        Prompt to guide AI agents in converting natural language queries to SQL with\
+    \ PostgreSQL.\n\n        Args:\n            query: The natural language query to convert to SQL\n\
+    \            schema_json: JSON representation of the database schema (optional, can be fetched by\
+    \ server)\n        "
+  arguments:
+  - name: query
+    description: null
+    required: true
+  - name: schema_json
+    description: null
+    required: false
+```
 
 ### Resource Templates
 
 ```yaml
+- uriTemplate: pgmcp://{conn_id}/
+  name: db_info
+  description: "\n        Get the complete database information including all schemas, tables, columns,\
+    \ and constraints.\n        Returns a comprehensive JSON structure with the entire database structure.\n\
+    \        "
+  mimeType: null
+  annotations: null
 - uriTemplate: pgmcp://{conn_id}/schemas
   name: list_schemas
   description: List all non-system schemas in the database.
@@ -581,6 +622,11 @@ It is written in Python, optionally to be invoked with `uv` or `uvx`.
 :Validated with CrateDB: False
 :Install: `uv pip install 'postgres-mcp'`
 :Run: `postgres-mcp postgresql://crate@localhost:5432/testdrive --access-mode=unrestricted`
+:Example:
+  ```shell
+  mcpt call execute_sql --params '{"sql":"SELECT * FROM sys.summits LIMIT 3"}' \
+    uvx postgres-mcp postgresql://crate@localhost:5432/testdrive --access-mode=unrestricted
+  ```
 
 
 ### Tools
@@ -764,6 +810,12 @@ It is written in Java, to be invoked with `jbang`.
 :Homepage: <https://github.com/quarkiverse/quarkus-mcp-servers>
 :Validated with CrateDB: True
 :Run: `jbang run --java=21 jdbc@quarkiverse/quarkus-mcp-servers jdbc:postgresql://localhost:5432/testdrive -u crate`
+:Example:
+  ```shell
+  mcpt call read_query --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
+    jbang run --java=21 jdbc@quarkiverse/quarkus-mcp-servers jdbc:postgresql://localhost:5432/testdrive -u crate \
+    | jq
+  ```
 
 
 ### Prompts
