@@ -25,7 +25,7 @@ def test_settings_json(tmp_path: Path):
 
     # Verify the outcome.
     data = json.loads(output_path.read_text())
-    assert "whether or not to collect statistical information" in data["stats.enabled"]["purpose"]
+    assert "whether or not to collect statistical information" in data["settings"]["stats.enabled"]["purpose"]
 
 
 def test_settings_markdown(tmp_path: Path):
@@ -90,7 +90,7 @@ def test_settings_yaml(tmp_path: Path):
 
     # Verify the outcome.
     data = yaml.safe_load(output_path.read_text())
-    assert "whether or not to collect statistical information" in data["stats.enabled"]["purpose"]
+    assert "whether or not to collect statistical information" in data["settings"]["stats.enabled"]["purpose"]
 
 
 def test_functions_json(tmp_path: Path):

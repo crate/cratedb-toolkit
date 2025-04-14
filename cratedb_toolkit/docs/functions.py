@@ -4,19 +4,23 @@ import logging
 from typing import Any, Dict, Optional
 
 import docutils.nodes
-import requests
 from docutils import nodes
 from docutils.examples import internals
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.admonitions import Note
 from docutils.parsers.rst.roles import normalized_role_options, register_canonical_role  # type: ignore[attr-defined]
 
+from cratedb_toolkit.docs.model import DocsItem
 from cratedb_toolkit.docs.util import GenericProcessor
 
 logger = logging.getLogger(__name__)
 
 
-DOCS_URL = "https://github.com/crate/crate/raw/refs/heads/5.10/docs/general/builtins/scalar-functions.rst"
+DOCS_ITEM = DocsItem(
+    created=dt.datetime.now().isoformat(),
+    generator="CrateDB Toolkit",
+    source_url="https://github.com/crate/crate/raw/refs/heads/5.10/docs/general/builtins/scalar-functions.rst",
+)
 
 
 @dataclasses.dataclass
@@ -41,7 +45,7 @@ class Function:
 
 @dataclasses.dataclass
 class FunctionRegistry:
-    meta: Dict[str, str] = dataclasses.field(default_factory=dict)
+    meta: DocsItem = dataclasses.field(default_factory=lambda: DOCS_ITEM)
     functions: Dict[str, Function] = dataclasses.field(default_factory=dict)
 
     def register(self, function: Function):
@@ -103,10 +107,7 @@ class FunctionsExtractor(GenericProcessor):
         """
         register_canonical_role("ref", sphinx_ref_role)
         register_directive("seealso", Note)
-        document, pub = internals(requests.get(DOCS_URL, timeout=10).text)
-
-        self.registry.meta["created"] = dt.datetime.now().isoformat()
-        self.registry.meta["generator"] = "CrateDB Toolkit"
+        document, pub = internals(DOCS_ITEM.fetch())
 
         item: docutils.nodes.Element
         function: docutils.nodes.Element

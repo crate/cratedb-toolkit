@@ -81,7 +81,7 @@ def functions(format_: str, output: str):
         extractor.acquire().render(format_).write(output)
     except Exception as e:
         msg = f"Failed to extract functions: {e}"
-        logger.error(msg)
+        logger.exception(msg)
         raise click.ClickException(msg) from e
 
 
@@ -108,5 +108,5 @@ def settings(format_: str, output: str):
         extractor.acquire().render(format_).write(output)
     except Exception as e:
         msg = f"Failed to extract settings: {e}"
-        logger.error(msg)
+        logger.exception(msg)
         raise click.ClickException(msg) from e
