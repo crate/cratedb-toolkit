@@ -8,6 +8,8 @@
   - `mcp-db`: <https://github.com/dwarvesf/mcp-db/issues/19>
   - `cratedb-mcp`: <https://github.com/crate/cratedb-mcp/pull/3>
 - New servers: Validate `mcp-dbutils` and `postgres-mcp`
+- Interoperability with LangChain tools
+  https://github.com/crate/langchain-cratedb/issues/43
 
 ## Done
 - Provide registry information per MCP resource, launch server per MCP tool.
