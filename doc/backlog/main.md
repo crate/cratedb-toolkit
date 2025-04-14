@@ -20,6 +20,8 @@
   ```
 - MongoDB: Convert dates like `"date": "Sep 18 2015"`, see `testdrive.city_inspections`.
 - Table Loader: Propagate offset/limit to progress bar
+- Multi-file import from Tar files?
+  https://github.com/crate/crate/issues/17770
 
 ## Iteration +2
 - Address `fix_job_info_table_name`

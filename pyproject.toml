@@ -166,9 +166,9 @@ optional-dependencies.io = [
   "universal-pathlib<0.3",
 ]
 optional-dependencies.kinesis = [
-  "botocore<1.38",
   "aiobotocore<2.22",
   "async-kinesis<1.2",
+  "botocore<1.38",
   "commons-codec>=0.0.20",
   "lorrystream[carabas]>=0.0.6",
 ]
