@@ -1,12 +1,12 @@
-# MCP notes
+# MCP research notes
 
-## MCP package registries
+## Package registries
 
-- https://mcp.so/
-- https://mcphub.tools/
-- https://smithery.ai/
+- <https://mcp.so/>
+- <https://mcphub.tools/>
+- <https://smithery.ai/>
 
-## MCP servers
+## Server collection
 
 - https://github.com/jjsantos01/qgis_mcp
 - https://github.com/ahujasid/blender-mcp

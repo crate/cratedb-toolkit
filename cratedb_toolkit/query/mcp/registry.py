@@ -7,7 +7,7 @@ from cratedb_toolkit.query.mcp.model import McpServer
 @dataclasses.dataclass
 class McpServerRegistry:
     """
-    An enumeration of MCP servers that can talk to CrateDB in one way or another.
+    An enumeration of MCP servers that can connect to CrateDB in one way or another.
     """
 
     servers: t.List[McpServer] = dataclasses.field(default_factory=list)
@@ -59,11 +59,11 @@ mcpt call run_query --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
         env={"DB_URL": "crate://crate@localhost:4200/?schema=testdrive"},
         requirements=[
             "mcp-alchemy>=2025.4.8",
-            "sqlalchemy-cratedb>=0.42.0.dev1",
+            "sqlalchemy-cratedb>=0.42.0.dev2",
         ],
         homepage="https://github.com/runekaagaard/mcp-alchemy",
         description="""
-The MCP Alchemy MCP server package uses SQLAlchemy to talk to databases and provides quite a range of tools.
+The MCP Alchemy MCP server package uses SQLAlchemy to connect to databases and provides quite a range of tools.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
         """,
         cratedb_validated=True,
@@ -118,8 +118,8 @@ uv pip install .
             """,
         homepage="https://github.com/crate-workbench/pg-mcp-server",
         description="""
-The PG-MCP server is specialised to talk to PostgreSQL servers. With a few adjustments,
-the adapter can also talk to CrateDB. The project offers rich MCP server capabilities,
+The PG-MCP server is specialised to connect to PostgreSQL servers. With a few adjustments,
+the adapter can also connect to CrateDB. The project offers rich MCP server capabilities,
 and includes advanced client programs for Claude and Gemini that work out of the box.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
         """,

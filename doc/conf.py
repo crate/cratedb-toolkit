@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "cratedb-toolkit"
-copyright = "2023-2024, The CrateDB Developers"
+copyright = "2022-2025, The CrateDB Developers"
 author = "The CrateDB Developers"
 
 # -- General configuration ---------------------------------------------------
