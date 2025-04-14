@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import shlex
+import textwrap
 import typing as t
 from contextlib import redirect_stdout
 
@@ -31,6 +32,8 @@ class McpServer:
     homepage: t.Optional[str] = None
     description: t.Optional[str] = None
     cratedb_validated: t.Optional[bool] = False
+    example: t.Optional[str] = None
+    issues: t.List[str] = dataclasses.field(default_factory=list)
 
     def __post_init__(self):
         """
@@ -110,6 +113,7 @@ class McpServer:
             "install_command": self.install_command,
             "run": self.command,
             "preinstall": self.preinstall,
+            "example": self.example and self.example.strip() or "",
         }
 
     def to_markdown(self):
@@ -121,14 +125,15 @@ class McpServer:
             print()
             print(f":Homepage: <{self.homepage}>")
             print(f":Validated with CrateDB: {self.cratedb_validated}")
+            if self.preinstall:
+                print(":Preinstall:")
+                print(textwrap.indent(f"```shell\n{self.preinstall.strip()}\n```", "  "))
             if self.install_command:
                 print(f":Install: `{self.install_command}`")
             print(f":Run: `{self.command}`")
-            if self.preinstall:
-                print(":Acquire:")
-                print("```shell")
-                print(f"{self.preinstall}")
-                print("```")
+            if self.example:
+                print(":Example:")
+                print(textwrap.indent(f"```shell\n{self.example.strip()}\n```", "  "))
             print()
         return buffer.getvalue()
 
