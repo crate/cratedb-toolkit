@@ -13,16 +13,17 @@ Source: https://gist.github.com/WalBeh/c863eb5cc35ee987d577851f38b64261
 """
 
 import dataclasses
+import datetime as dt
 import io
 import logging
 import re
 from typing import Any, Dict, List, Optional, Type, Union
 
-import requests
 from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from cratedb_toolkit.docs.model import DocsItem
 from cratedb_toolkit.docs.util import GenericProcessor
 from cratedb_toolkit.util.format import FlexibleFormatter, OutputFormat
 
@@ -31,7 +32,12 @@ logger = logging.getLogger(__name__)
 console = Console(stderr=True)
 
 # Constants
-DOCS_URL = "https://cratedb.com/docs/crate/reference/en/latest/config/cluster.html"
+DOCS_ITEM = DocsItem(
+    created=dt.datetime.now().isoformat(),
+    generator="CrateDB Toolkit",
+    source_url="https://cratedb.com/docs/crate/reference/en/latest/config/cluster.html",
+)
+
 SET_CLUSTER = "SET GLOBAL PERSISTENT"
 
 
@@ -44,20 +50,17 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     """
     settings = {}
 
-    logger.info(f"Extracting CrateDB settings from {DOCS_URL}")
+    logger.info(f"Extracting CrateDB settings from {DOCS_ITEM.source_url}")
 
     # Process content
     with Progress(SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console) as progress:
         # Download resource.
         task0 = progress.add_task("[yellow]Fetching documentation", total=None)
-        response = requests.get(DOCS_URL, timeout=5)
-        if response.status_code != 200:
-            logger.error(f"Failed to fetch documentation: HTTP {response.status_code}")
-            return {}
+        payload = DOCS_ITEM.fetch()
         progress.update(task0, completed=True)
 
         # Parse HTML
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(payload, "html.parser")
 
         # Find all section divs that contain settings
         sections = soup.find_all(["div", "section"], class_=["section", "doc-content"])
@@ -635,7 +638,8 @@ class OutputFormatter(FlexibleFormatter):
         Returns:
             str: A Markdown-formatted table generated from the stored settings.
         """
-        return write_markdown_table(self.thing)
+        settings_data = self.thing.get("settings", {})
+        return write_markdown_table(settings_data)
 
     def to_sql(self):
         """
@@ -644,7 +648,25 @@ class OutputFormatter(FlexibleFormatter):
         Returns:
             A string with SQL statements generated from runtime-configurable settings.
         """
-        return write_sql_statements(self.thing)
+        settings_data = self.thing.get("settings", {})
+        return write_sql_statements(settings_data)
+
+
+@dataclasses.dataclass
+class SettingsResponse:
+    meta: DocsItem = dataclasses.field(default_factory=lambda: DOCS_ITEM)
+    settings: Dict[str, Dict[str, Any]] = dataclasses.field(
+        default_factory=dict, metadata={"description": "Dictionary of CrateDB settings"}
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the instance to a dictionary.
+
+        Returns:
+            dict: A dictionary containing the instance's fields and their values.
+        """
+        return dataclasses.asdict(self)
 
 
 @dataclasses.dataclass
@@ -659,6 +681,7 @@ class SettingsExtractor(GenericProcessor):
     )
     formatter: Type[FlexibleFormatter] = dataclasses.field(default=OutputFormatter)
     payload: Optional[str] = None
+    response: SettingsResponse = dataclasses.field(default_factory=SettingsResponse)
 
     def acquire(self):
         """
@@ -669,12 +692,13 @@ class SettingsExtractor(GenericProcessor):
         generate SQL statements for runtime configurable settings and return the
         `SettingsExtractor` instance.
         """
-        # Extract settings
-        self.thing = extract_cratedb_settings()
+        # Extract settings.
+        self.response.settings = extract_cratedb_settings()
 
-        if self.thing:
+        if self.response.settings:
             # Generate SQL statements for runtime configurable settings.
-            generate_sql_statements(self.thing)
+            generate_sql_statements(self.response.settings)
+            self.thing = self.response.to_dict()
         else:
             logger.error("No settings were extracted. Please check the script or documentation structure.")
 
@@ -696,6 +720,9 @@ class SettingsExtractor(GenericProcessor):
         super().render(format_)
 
         # Count runtime configurable settings.
-        runtime_count = sum(1 for info in self.thing.values() if info["runtime_configurable"])
-        logger.info(f"Found {runtime_count} runtime configurable settings out of {len(self.thing)} total")
+        if self.response.settings:
+            runtime_count = sum(1 for info in self.response.settings.values() if info["runtime_configurable"])
+            logger.info(
+                f"Found {runtime_count} runtime configurable settings out of {len(self.response.settings)} total"
+            )
         return self
