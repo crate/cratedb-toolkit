@@ -7,6 +7,8 @@ from attr import Factory
 from attrs import define
 from boltons.urlutils import URL
 
+from cratedb_toolkit.util.data import asbool
+
 
 @dataclasses.dataclass
 class DatabaseAddress:
@@ -49,11 +51,24 @@ class DatabaseAddress:
         """
         uri = deepcopy(self.uri)
         uri.scheme = "http"
-        if "ssl" in uri.query_params:
-            if uri.query_params["ssl"]:
-                uri.scheme = "https"
-            del uri.query_params["ssl"]
+        if not uri.port:
+            uri.port = 4200
+
+        sslmode = uri.query_params.pop("sslmode", "disable")
+        use_ssl = asbool(uri.query_params.pop("ssl", "false")) or sslmode in [
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full",
+        ]
+        if use_ssl:
+            uri.scheme = "https"
         return str(uri)
+
+    @property
+    def verify_ssl(self) -> bool:
+        return self.uri.query_params.get("sslmode", "disable") not in ["disable", "require"]
 
     @property
     def safe(self):

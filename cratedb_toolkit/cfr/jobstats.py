@@ -54,7 +54,13 @@ def boot(address: DatabaseAddress):
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logger.info(f"Connecting to {address.httpuri}")
-    conn = client.connect(address.httpuri, username=address.username, password=address.password, schema=schema)
+    conn = client.connect(
+        address.httpuri,
+        username=address.username,
+        password=address.password,
+        schema=schema,
+        verify_ssl_cert=address.verify_ssl,
+    )
     cursor = conn.cursor()
     last_scrape = int(time.time() * 1000) - int(interval * 60000)
 
