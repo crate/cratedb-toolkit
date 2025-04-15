@@ -2,6 +2,8 @@
 
 ## Specification
 
+The [MCP specification](https://spec.modelcontextprotocol.io).
+
 ### Evolution
 
 > The spec for the MCP transport is changing from SSE to
@@ -28,10 +30,17 @@
 
 - [Using an MCP client](https://github.com/modelcontextprotocol/servers/tree/main#using-an-mcp-client)
 - [Example Clients](https://modelcontextprotocol.io/clients)
+- https://github.com/crate/crate-clients-tools/issues/247
 
 ## Servers
 
 - [MCP example servers](https://modelcontextprotocol.io/examples)
+
+### Frameworks
+
+- https://github.com/modelcontextprotocol/python-sdk
+- https://github.com/tadata-org/fastapi_mcp
+- https://github.com/logiscape/mcp-sdk-php
 
 ### Databases
 
@@ -64,7 +73,6 @@
 - https://github.com/ahujasid/blender-mcp
 - https://github.com/Simon-Kansara/ableton-live-mcp-server
 - https://github.com/ihrpr/mcp-server-jupyter
-- https://github.com/logiscape/mcp-sdk-php
 - https://github.com/fusedio/fused-mcp
 - https://pypi.org/project/mcp-atlassian/
 - https://pypi.org/project/mcp-server-fetch/
