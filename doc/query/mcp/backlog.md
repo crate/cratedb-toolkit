@@ -1,6 +1,8 @@
 # MCP backlog
 
 ## Iteration +1
+- Documentation: Configure Claude
+  https://github.com/mahawi1992/mcp-documentation-server/blob/main/docs/CLAUDE_DESKTOP_SETUP.md
 - Documentation: How to use [MCP Inspector]
 - Documentation: How to use `mcptools`
 - Issues:

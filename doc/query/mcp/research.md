@@ -20,6 +20,9 @@
 - <https://mcp.so/>
 - <https://mcphub.tools/>
 - <https://smithery.ai/>
+- <https://glama.ai/mcp/servers>
+- <https://www.mcpserverfinder.com/>
+- All: [MCP Registry Registry MCP Server](https://github.com/mastra-ai/mastra/blob/4af513ca1a8e94354c788e40e900d49fbf1c9f86/packages/mcp-registry-registry/src/registry/registry.ts)
 
 ## Clients
 
@@ -38,6 +41,22 @@
 - https://github.com/stuzero/pg-mcp ([discuss](https://news.ycombinator.com/item?id=43520953))
 - https://github.com/runekaagaard/mcp-alchemy
 - https://github.com/OpenLinkSoftware/mcp-sqlalchemy-server
+
+### Docs and Knowledge
+
+- https://mcp.so/server/mcp-documentation-server/mahawi1992
+- https://mcp.so/server/mcp-documentation-server/DotNaos
+- Mastra MCP Documentation Server
+  - https://mastra.ai/blog/introducing-mastra-mcp
+  - https://github.com/mastra-ai/mastra/tree/main/packages/mcp-docs-server
+- https://github.com/sammcj/mcp-package-docs
+- https://github.com/SubaashNair/documentation-mcp-server
+- https://mintlify.com/blog/generate-mcp-servers-for-your-docs
+- https://mintlify.com/blog/simplifying-docs-with-llms-txt
+- https://llmstxt.org/
+- https://github.com/mrjoshuak/godoc-mcp
+- https://github.com/jonathanfischer97/juliadoc-mcp
+- https://github.com/dazeb/markdown-downloader
 
 ### Others
 
@@ -73,3 +92,4 @@
 - https://openai.github.io/openai-agents-python/mcp/ ([discuss](https://news.ycombinator.com/item?id=43485566))
 - https://github.com/janwilmake/openapi-mcp-server
 - https://gitmcp.io/
+- https://github.com/heltonteixeira/ragdocs
