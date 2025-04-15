@@ -4,14 +4,16 @@
 It is recommended to use [uv] to install Python packages,
 which is an extremely fast Python package and project manager.
 
+## GA packages
+
 Install package with only [fundamental dependencies].
 ```shell
-uv pip install --upgrade 'cratedb-toolkit'
+uv tool install --upgrade 'cratedb-toolkit'
 ```
 
-Install package including [full dependencies] and [all subsystems].
+Install package including [all subsystems] / [full dependencies].
 ```shell
-uv pip install --upgrade 'cratedb-toolkit[all]'
+uv tool install --upgrade 'cratedb-toolkit[all]'
 ```
 
 Verify installation.
@@ -42,6 +44,21 @@ Run on Kubernetes.
 :::{todo}
 Add a quick description how to whip CTK into a K8s service unit.
 :::
+
+## Git
+
+You can easily install the latest development version from the Git repository.
+This example command selects the `cfr` extra for demonstration purposes.
+```shell
+uv tool install 'cratedb-toolkit[cfr] @ git+https://github.com/crate/cratedb-toolkit'
+```
+
+## Dependency / subsystem selection
+
+To install subsets of dependencies selectively, please choose amongst the possible
+Python package "extras" that relate to corresponding subsystems:
+`cfr`, `cloud`, `datasets`, `docs-api`, `dynamodb`, `influxdb`, `io`,
+`kinesis`, `mcp`, `mongodb`, `pymongo`, `service`, `testing`.
 
 
 [fundamental dependencies]: https://github.com/crate/cratedb-toolkit/blob/v0.0.30/pyproject.toml#L85-L110
