@@ -18,7 +18,7 @@ from sqlalchemy_cratedb.support import insert_bulk
 
 from cratedb_toolkit.adapter.pymongo.cursor import cursor_factory
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId as ObjectId
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

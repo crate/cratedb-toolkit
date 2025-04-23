@@ -5,8 +5,8 @@ from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.cluster.util import get_cluster_info
 from cratedb_toolkit.exception import CroudException
-from cratedb_toolkit.util import jd
 from cratedb_toolkit.util.cli import boot_click, make_command
+from cratedb_toolkit.util.data import jd
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]

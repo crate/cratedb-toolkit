@@ -7,7 +7,7 @@ import time
 import sqlalchemy as sa
 
 from cratedb_toolkit.info.core import InfoContainer, JobInfoContainer
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

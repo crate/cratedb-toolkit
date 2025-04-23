@@ -1,6 +1,6 @@
 import pytest
 
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 
 def test_quote_relation_name_single():

@@ -23,7 +23,7 @@ from testcontainers.core.generic import DbContainer
 from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer, asbool
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

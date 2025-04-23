@@ -10,7 +10,7 @@ from yarl import URL
 
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapter
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

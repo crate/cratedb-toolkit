@@ -30,8 +30,8 @@ import sqlalchemy as sa
 from tqdm import tqdm
 
 from cratedb_toolkit.info.core import InfoContainer
-from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import error_logger
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

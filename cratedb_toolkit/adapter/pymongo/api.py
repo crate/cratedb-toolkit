@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pymongo.collection
 
 from cratedb_toolkit.adapter.pymongo.collection import collection_factory
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.pandas import patch_pandas_sqltable_with_extended_mapping
 from cratedb_toolkit.util.sqlalchemy import patch_types_map
 

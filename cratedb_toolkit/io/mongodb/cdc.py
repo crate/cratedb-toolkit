@@ -22,7 +22,7 @@ from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.process import FixedBackoff
 
 logger = logging.getLogger(__name__)

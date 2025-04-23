@@ -17,8 +17,7 @@ from fastapi import APIRouter, Depends, Request
 from vasuki import generate_nagamani19_hash
 
 from cratedb_toolkit.adapter.rockset.server.dependencies import database_adapter
-from cratedb_toolkit.util import DatabaseAdapter
-from cratedb_toolkit.util.database import get_table_names
+from cratedb_toolkit.util.database import DatabaseAdapter, get_table_names
 
 logger = logging.getLogger(__name__)
 

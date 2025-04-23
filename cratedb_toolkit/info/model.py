@@ -5,7 +5,7 @@ import typing as t
 from abc import abstractmethod
 
 from cratedb_toolkit.info.util import get_baseinfo
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 
 @dataclasses.dataclass

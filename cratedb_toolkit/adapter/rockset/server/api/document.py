@@ -17,7 +17,7 @@ from sqlalchemy_cratedb.support import table_kwargs
 from vasuki import generate_nagamani19_hash
 
 from cratedb_toolkit.adapter.rockset.server.dependencies import database_adapter
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger()
 

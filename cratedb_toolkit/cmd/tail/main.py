@@ -11,7 +11,7 @@ import sqlparse
 import yaml
 
 from cratedb_toolkit.model import TableAddress
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

@@ -128,7 +128,7 @@ class TableAddress:
         """
         Return a full-qualified quoted table identifier.
         """
-        from cratedb_toolkit.util import DatabaseAdapter
+        from cratedb_toolkit.util.database import DatabaseAdapter
 
         return DatabaseAdapter.quote_relation_name(f"{self.schema}.{self.table}")
 

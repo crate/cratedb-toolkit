@@ -5,8 +5,8 @@ import click
 
 from cratedb_toolkit.cmd.tail.main import TableTailer
 from cratedb_toolkit.model import TableAddress
-from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import boot_click
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 
