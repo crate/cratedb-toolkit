@@ -95,16 +95,22 @@ cli.add_command(job_statistics, name="jobstats")
 
 @make_command(job_statistics, "collect", "Collect statistics about queries from sys.jobs_log.")
 @click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
+@click.option("--reportdb", "-r", type=str, required=False, help="Database URL to store report data (crate://crate@localhost:4200/?sslmode=require)")
 @click.pass_context
-def job_statistics_collect(ctx: click.Context, once: bool):
+def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[str]):
     """
     Run jobs_log collector.
     """
     import cratedb_toolkit.cfr.jobstats
 
     address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
+    report_address = None
 
-    cratedb_toolkit.cfr.jobstats.boot(address=address)
+    if reportdb:
+        report_address = DatabaseAddress.from_string(reportdb)
+        logger.info(f"Using separate database for reporting: {reportdb}")
+
+    cratedb_toolkit.cfr.jobstats.boot(address=address, report_address=report_address)
     if once:
         cratedb_toolkit.cfr.jobstats.record_once()
     else:
@@ -112,15 +118,22 @@ def job_statistics_collect(ctx: click.Context, once: bool):
 
 
 @make_command(job_statistics, "view", "View job statistics per JSON output.")
+@click.option("--reportdb", "-r", type=str, required=False, help="Database URL to read report data from (crate://crate@localhost:4200/?sslmode=require)")
 @click.pass_context
-def job_statistics_view(ctx: click.Context):
+def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str]):
     """
     View job statistics about collected queries.
     """
     import cratedb_toolkit.cfr.jobstats
 
     address = DatabaseAddress.from_string(ctx.meta["cratedb_http_url"] or ctx.meta["cratedb_sqlalchemy_url"])
-    cratedb_toolkit.cfr.jobstats.boot(address=address)
+    report_address = None
+
+    if reportdb:
+        report_address = DatabaseAddress.from_string(reportdb)
+        logger.info(f"Reading from report database: {reportdb}")
+
+    cratedb_toolkit.cfr.jobstats.boot(address=address, report_address=report_address)
 
     response: t.Dict = {"meta": {}, "data": {}}
     response["meta"]["remark"] = "WIP! This is a work in progress. The output format will change."
