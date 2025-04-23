@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through
   the `ctk query mcp {list,inquire,launch}` subcommands.
 - Docs API: Added extractors for CrateDB functions and settings
