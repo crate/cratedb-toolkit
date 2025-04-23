@@ -7,7 +7,7 @@ from slugify import slugify
 from cratedb_toolkit.datasets import load_dataset
 from cratedb_toolkit.datasets.model import Dataset
 from cratedb_toolkit.datasets.store import registry
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 
 class Enumerator:

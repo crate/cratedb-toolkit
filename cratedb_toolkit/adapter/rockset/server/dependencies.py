@@ -3,7 +3,7 @@
 import os
 from functools import lru_cache
 
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 
 @lru_cache

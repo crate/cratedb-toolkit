@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException
 
 from cratedb_toolkit.info.core import InfoContainer
 from cratedb_toolkit.info.util import get_baseinfo
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.service import start_service
 
 logger = logging.getLogger(__name__)

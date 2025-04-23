@@ -1,6 +1,6 @@
 import pytest
 
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 

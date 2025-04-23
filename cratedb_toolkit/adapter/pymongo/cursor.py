@@ -23,7 +23,7 @@ from pymongo.write_concern import validate_boolean
 
 from cratedb_toolkit.adapter.pymongo.reactor import mongodb_query, table_to_model
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

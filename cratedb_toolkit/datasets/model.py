@@ -4,7 +4,7 @@ import typing as t
 import requests
 import sqlparse
 
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 try:
     from typing import Literal

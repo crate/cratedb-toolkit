@@ -13,9 +13,9 @@ from cratedb_toolkit.api.cli import make_cli
 from cratedb_toolkit.cfr.info import InfoRecorder
 from cratedb_toolkit.cfr.systable import Archive, SystemTableExporter, SystemTableImporter
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util import DatabaseAdapter
 from cratedb_toolkit.util.cli import docstring_format_verbatim, error_logger, make_command
 from cratedb_toolkit.util.data import jd, path_from_url
+from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 
