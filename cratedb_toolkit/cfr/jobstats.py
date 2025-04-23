@@ -39,13 +39,14 @@ bucket_dict = {
 stmt_log_table: str
 last_exec_table: str
 cursor: t.Any
+report_cursor: t.Any
 last_scrape: int
 interval: float
 
 
-def boot(address: DatabaseAddress):
+def boot(address: DatabaseAddress, report_address: t.Optional[DatabaseAddress] = None):
     # TODO: Refactor to non-global variables.
-    global stmt_log_table, last_exec_table, cursor, last_scrape, interval
+    global stmt_log_table, last_exec_table, cursor, report_cursor, last_scrape, interval
     schema = address.schema or "stats"
 
     interval = float(os.getenv("INTERVAL", 10))
@@ -62,6 +63,26 @@ def boot(address: DatabaseAddress):
         verify_ssl_cert=address.verify_ssl,
     )
     cursor = conn.cursor()
+
+    if report_address:
+        report_schema = report_address.schema or "stats"
+        # Override the table names to use the report schema
+        stmt_log_table = os.getenv("STMT_TABLE", f'"{report_schema}".jobstats_statements')
+        last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{report_schema}".jobstats_last')
+
+        logger.info(f"Using separate report database at {report_address.httpuri}")
+        report_conn = client.connect(
+            report_address.httpuri,
+            username=report_address.username,
+            password=report_address.password,
+            schema=report_schema,
+            verify_ssl_cert=report_address.verify_ssl,
+        )
+        report_cursor = report_conn.cursor()
+    else:
+        # If no separate reporting DB, use the same cursor for both
+        report_cursor = cursor
+
     last_scrape = int(time.time() * 1000) - int(interval * 60000)
 
     dbinit()
@@ -73,15 +94,15 @@ def dbinit():
         f"(id TEXT, stmt TEXT, calls INT, bucket OBJECT, last_used TIMESTAMP, "
         f"username TEXT, query_type TEXT, avg_duration FLOAT, nodes ARRAY(TEXT))"
     )
-    cursor.execute(stmt)
+    report_cursor.execute(stmt)
     stmt = f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used FROM {stmt_log_table}"
-    cursor.execute(stmt)
-    init_stmts(cursor.fetchall())
+    report_cursor.execute(stmt)
+    init_stmts(report_cursor.fetchall())
     stmt = f"CREATE TABLE IF NOT EXISTS {last_exec_table} (last_execution TIMESTAMP)"
-    cursor.execute(stmt)
+    report_cursor.execute(stmt)
     stmt = f"SELECT last_execution FROM {last_exec_table}"
-    cursor.execute(stmt)
-    init_last_execution(cursor.fetchall())
+    report_cursor.execute(stmt)
+    init_last_execution(report_cursor.fetchall())
 
 
 def init_last_execution(last_execution):
@@ -89,7 +110,7 @@ def init_last_execution(last_execution):
     if len(last_execution) == 0:
         last_execution_ts = 0
         stmt = f"INSERT INTO {last_exec_table} (last_execution) VALUES (?)"
-        cursor.execute(stmt, (0,))
+        report_cursor.execute(stmt, (0,))
     else:
         last_execution_ts = last_execution[0][0]
 
@@ -152,7 +173,7 @@ def write_stats_to_db():
             sys_jobs_log[key]["in_db"] = True
             sys_jobs_log[key]["changed"] = False
         elif sys_jobs_log[key]["changed"]:
-            cursor.execute(
+            report_cursor.execute(
                 update_query_stmt,
                 (
                     sys_jobs_log[key]["calls"],
@@ -165,10 +186,10 @@ def write_stats_to_db():
             )
             sys_jobs_log[key]["changed"] = False
     if len(write_params) > 0:
-        cursor.executemany(write_query_stmt, write_params)
+        report_cursor.executemany(write_query_stmt, write_params)
 
     stmt = f"UPDATE {last_exec_table} SET last_execution = ?"
-    cursor.execute(stmt, (last_scrape,))
+    report_cursor.execute(stmt, (last_scrape,))
 
 
 def read_stats():
@@ -176,8 +197,8 @@ def read_stats():
         f"SELECT id, stmt, calls, avg_duration, bucket, username, query_type, nodes, last_used "
         f"FROM {stmt_log_table} ORDER BY calls DESC, avg_duration DESC;"
     )
-    cursor.execute(stmt)
-    init_stmts(cursor.fetchall())
+    report_cursor.execute(stmt)
+    init_stmts(report_cursor.fetchall())
     return sys_jobs_log
 
 
