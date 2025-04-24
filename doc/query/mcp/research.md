@@ -24,6 +24,7 @@ The [MCP specification](https://spec.modelcontextprotocol.io).
 - <https://smithery.ai/>
 - <https://glama.ai/mcp/servers>
 - <https://www.mcpserverfinder.com/>
+- <https://www.pulsemcp.com/>
 - All: [MCP Registry Registry MCP Server](https://github.com/mastra-ai/mastra/blob/4af513ca1a8e94354c788e40e900d49fbf1c9f86/packages/mcp-registry-registry/src/registry/registry.ts)
 
 ## Clients
@@ -101,3 +102,4 @@ The [MCP specification](https://spec.modelcontextprotocol.io).
 - https://github.com/janwilmake/openapi-mcp-server
 - https://gitmcp.io/
 - https://github.com/heltonteixeira/ragdocs
+- https://github.com/microsoft/semanticworkbench/tree/main/mcp-servers
