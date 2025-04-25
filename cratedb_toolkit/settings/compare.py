@@ -51,7 +51,7 @@ def to_bytes(value_str, heap_size_bytes=None):
 
     value_str = value_str.lower().strip()
 
-    # Handle percentage value
+    # Handle percentage value.
     if "%" in value_str:
         if not heap_size_bytes:
             return None
@@ -59,8 +59,8 @@ def to_bytes(value_str, heap_size_bytes=None):
         try:
             percent = float(value_str.replace("%", ""))
             return int(heap_size_bytes * percent / 100)
-        except (ValueError, TypeError):
-            return None
+        except (ValueError, TypeError) as ex:
+            raise ValueError("Percentage memory values require a heap size reference") from ex
 
     # Handle absolute values (kb, mb, gb)
     multipliers = {
@@ -206,7 +206,7 @@ def compare_memory_settings(
     default_percent = (default_bytes / heap_size_bytes) * 100
 
     # Choose tolerance based on the size of default value
-    tolerance = tolerance_percent_large if default_percent > threshold_percent else tolerance_percent_small
+    tolerance = tolerance_percent_large if default_percent >= threshold_percent else tolerance_percent_small
 
     # Check if values differ by more than tolerance
     if abs(current_percent - default_percent) <= tolerance:
@@ -235,17 +235,26 @@ def compare_memory_settings(
     return f"{setting_key}: {formatted_current} (default: {formatted_default})"
 
 
-HEADER = "\033[95m"
-BOLD = "\033[1m"
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-RED = "\033[91m"
-BLUE = "\033[94m"
-RESET = "\033[0m"
-PURPLE = "\033[95m"  # Define purple color
+class Color:
+    HEADER = "\033[95m"
+    BOLD = "\033[1m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    BLUE = "\033[94m"
+    RESET = "\033[0m"
+    PURPLE = "\033[95m"  # Define purple color
 
 
-def report_comparison(default_settings, non_default_settings):
+def report_comparison(color: Color, default_settings, non_default_settings):
+    BOLD, GREEN, YELLOW, RESET, PURPLE = (
+        color.BOLD,
+        color.GREEN,
+        color.YELLOW,
+        color.RESET,
+        color.PURPLE,
+    )
+
     # Group settings by category
     categorized_settings = defaultdict(list)
 
@@ -330,19 +339,24 @@ def compare_cluster_settings(
     no_color=False,
 ):
     """Compare cluster settings against defaults and print differences."""
-    global HEADER, BOLD, GREEN, YELLOW, RED, BLUE, RESET, PURPLE
-
     from cratedb_toolkit.docs.settings import SettingsExtractor
 
-    # ANSI color codes
+    # ANSI color palette – use *local* variables to avoid shadowing globals.
+    color = Color()
     if no_color:
-        HEADER = ""
-        BOLD = ""
-        GREEN = ""
-        YELLOW = ""
-        RED = ""
-        BLUE = ""
-        RESET = ""
+        color.HEADER = color.BOLD = color.GREEN = color.YELLOW = color.RED = color.BLUE = color.RESET = color.PURPLE = (
+            ""
+        )
+
+    HEADER, BOLD, GREEN, YELLOW, RED, BLUE, RESET = (
+        color.HEADER,
+        color.BOLD,
+        color.GREEN,
+        color.YELLOW,
+        color.RED,
+        color.BLUE,
+        color.RESET,
+    )
 
     print(f"{BOLD}Comparing settings in {BLUE}{cratedb_sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
     adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
@@ -398,21 +412,21 @@ def compare_cluster_settings(
         # Check if this is a time-related setting
         is_time_setting = any(
             time_term in setting_key.lower()
-            for time_term in [
+            for time_term in {
                 "timeout",
                 "interval",
                 "delay",
                 "expiration",
                 "time",
                 "duration",
-            ]
+            }
         )
         if is_time_setting and isinstance(current_value, str) and isinstance(default_value, str):
             result = compare_time_settings(setting_key, current_value, default_value)
 
         # Check if this is a memory-related setting
         elif heap_size_bytes and any(
-            mem_term in setting_key for mem_term in ["memory", "heap", "breaker", "limit", "size"]
+            mem_term in setting_key for mem_term in {"memory", "heap", "breaker", "limit", "size"}
         ):
             result = compare_memory_settings(
                 setting_key,
@@ -435,4 +449,4 @@ def compare_cluster_settings(
         if result:
             non_default_settings.add(result)  # Using add() for a set instead of append()
 
-    report_comparison(default_settings, non_default_settings)
+    report_comparison(color, default_settings, non_default_settings)
