@@ -2,17 +2,21 @@
 """
 Compare CrateDB cluster settings against default values.
 
-Acquires default settings from CrateDB's documentation, and runtime settings
+Acquire default settings from CrateDB's documentation, and runtime settings
 from a CrateDB cluster, and compare them against each other.
 
 Also handles memory and time-based settings with appropriate tolerances.
 
-Usage: python compare_settings.py [OPTIONS] CLUSTER_FILE [HEAP_SIZE_BYTES]
+## Install
+```
+uv pip install 'cratedb-toolkit[settings]'
+```
 
-Generate the cluster settings JSON file using:
-crash --hosts https://localhost:4200 --verify-ssl false --user crate --format json -c "select * from sys.cluster"  > blush.json
-crash -v --hosts https://localhost:4200 --verify-ssl false --user crate --format json -c "select heap['max'] from sys.nodes limit 1"
-
+## Usage
+```
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200
+ctk settings compare [OPTIONS]
+```
 """  # noqa: E501
 
 import logging
