@@ -46,6 +46,7 @@ docs-api
 io/index
 query/index
 retention
+settings/index
 ```
 
 ```{toctree}

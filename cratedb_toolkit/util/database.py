@@ -209,9 +209,15 @@ class DatabaseAdapter:
                 raise
 
     def get_settings(self) -> t.Dict[str, t.Any]:
+        """
+        Get cluster runtime settings.
+        """
         return self.run_sql("SELECT * FROM sys.cluster", records=True)[0]["settings"]
 
     def get_heap_size(self) -> int:
+        """
+        Get configured JVM maximum heap size.
+        """
         return int(self.run_sql("SELECT heap['max'] AS heap_size FROM sys.nodes LIMIT 1", records=True)[0]["heap_size"])
 
     def ensure_repository_fs(

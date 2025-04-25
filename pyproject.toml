@@ -202,6 +202,9 @@ optional-dependencies.service = [
   "fastapi<0.116",
   "uvicorn<0.35",
 ]
+optional-dependencies.settings = [
+  "cratedb-toolkit[docs-api]",
+]
 optional-dependencies.test = [
   "cratedb-toolkit[testing]",
   "httpx<0.29",
