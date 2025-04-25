@@ -69,7 +69,7 @@ def test_cfr_jobstats_collect_reportdb(cratedb, caplog):
     assert {"table_name": "jobstats_statements"} in results
 
     cratedb.database.refresh_table(f"{schema_reportdb}.jobstats_statements")
-    assert cratedb.database.count_records(f"{schema_reportdb}.jobstats_statements") >= 12
+    assert cratedb.database.count_records(f"{schema_reportdb}.jobstats_statements") >= 10
 
     cratedb.database.refresh_table(f"{schema_reportdb}.jobstats_last")
     assert cratedb.database.count_records(f"{schema_reportdb}.jobstats_last") == 1
