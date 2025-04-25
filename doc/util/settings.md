@@ -1,7 +1,7 @@
 (setting)=
 (settings)=
 
-# Settings Utilities
+# ctk settings
 
 CrateDB Toolkit's "Settings" subsystem provides tools to list and compare default
 vs. runtime settings.
@@ -35,8 +35,13 @@ from a CrateDB cluster and compare them against each other.
 Also handles memory and time-based settings with appropriate tolerances.
 
 ```shell
+export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/
 ctk settings compare
 ```
+
+:::{rubric} Example output
+:::
+![image](https://github.com/user-attachments/assets/82d1f99f-70bc-4401-9c03-43731a73418c)
 
 
 :::{tip}
