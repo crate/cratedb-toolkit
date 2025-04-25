@@ -32,7 +32,7 @@ changes
 
 Cluster Information <info/index>
 Cluster Flight Recorder (CFR) <cfr/index>
-cmd/index
+util/index
 ```
 
 ```{toctree}
@@ -46,7 +46,6 @@ docs-api
 io/index
 query/index
 retention
-settings/index
 ```
 
 ```{toctree}
