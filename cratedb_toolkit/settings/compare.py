@@ -1,9 +1,11 @@
 # ruff: noqa: T201
 """
-This script compares CrateDB cluster settings against default values.
-It parses a JSON file containing cluster settings and checks for differences
-against a predefined set of default values.
-It also handles memory and time-based settings with appropriate tolerances.
+Compare CrateDB cluster settings against default values.
+
+Acquires default settings from CrateDB's documentation, and runtime settings
+from a CrateDB cluster, and compare them against each other.
+
+Also handles memory and time-based settings with appropriate tolerances.
 
 Usage: python compare_settings.py [OPTIONS] CLUSTER_FILE [HEAP_SIZE_BYTES]
 
@@ -13,7 +15,6 @@ crash -v --hosts https://localhost:4200 --verify-ssl false --user crate --format
 
 """  # noqa: E501
 
-import json
 import logging
 import re
 import textwrap
@@ -21,33 +22,10 @@ from collections import defaultdict
 
 import click
 
+from cratedb_toolkit.options import cratedb_sqlalchemy_option
+from cratedb_toolkit.util.database import DatabaseAdapter
+
 logger = logging.getLogger(__name__)
-
-
-def parse_multiple_json_objects(file_path):
-    """Parse a file with multiple JSON objects/arrays."""
-    with open(file_path, "r") as f:
-        content = f.read()
-
-    json_objects = []
-    depth = 0
-    start = 0
-
-    for i, char in enumerate(content):
-        if char == "[":
-            if depth == 0:
-                start = i
-            depth += 1
-        elif char == "]":
-            depth -= 1
-            if depth == 0:
-                try:
-                    json_obj = json.loads(content[start : i + 1])
-                    json_objects.append(json_obj)
-                except json.JSONDecodeError as e:
-                    print(f"Warning: Failed to parse JSON object at position {start}-{i}: {e}")
-
-    return json_objects
 
 
 def flatten_dict(d, parent_key="", sep="."):
@@ -253,14 +231,6 @@ def compare_memory_settings(
     return f"{setting_key}: {formatted_current} (default: {formatted_default})"
 
 
-def find_cluster_settings(json_objects):
-    """Extract cluster settings from parsed JSON objects."""
-    for obj in json_objects:
-        if isinstance(obj, list) and len(obj) > 0 and "settings" in obj[0]:
-            return obj[0].get("settings", {})
-    return None
-
-
 HEADER = "\033[95m"
 BOLD = "\033[1m"
 GREEN = "\033[92m"
@@ -324,8 +294,7 @@ def report_comparison(default_settings, non_default_settings):
 
 
 @click.command()
-@click.argument("cluster_file", type=click.Path(exists=True))
-@click.argument("heap_size_bytes", type=int, required=False)
+@cratedb_sqlalchemy_option
 @click.option(
     "--large-tolerance",
     type=float,
@@ -350,8 +319,7 @@ def report_comparison(default_settings, non_default_settings):
     help="Disable colored output",
 )
 def compare_cluster_settings(
-    cluster_file,
-    heap_size_bytes=None,
+    cratedb_sqlalchemy_url: str,
     large_tolerance=2.9,
     small_tolerance=1.0,
     threshold=20.0,
@@ -372,37 +340,34 @@ def compare_cluster_settings(
         BLUE = ""
         RESET = ""
 
-    print(f"{BOLD}Comparing settings in {BLUE}{cluster_file}{RESET}{BOLD} against defaults...{RESET}")
+    print(f"{BOLD}Comparing settings in {BLUE}{cratedb_sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
+    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
+
+    # Acquire heap size.
+    heap_size_bytes = adapter.get_heap_size()
     if heap_size_bytes:
         formatted_heap = f"{heap_size_bytes:,}".replace(",", "_")
         print(f"{BOLD}Heap Size: {GREEN}{formatted_heap} bytes{RESET}")
     else:
         print(f"{YELLOW}No heap size provided{RESET}")
 
-    # Parse multiple JSON objects from the file
-    json_objects = parse_multiple_json_objects(cluster_file)
-
-    if not json_objects:
-        print(f"{RED}Error: Could not parse any valid JSON objects from {cluster_file}{RESET}")
-        return
-
-    # Find and extract cluster settings
-    cluster_settings = find_cluster_settings(json_objects)
-    if not cluster_settings:
-        print(f"{RED}Error: Could not find cluster settings in {cluster_file}{RESET}")
-        return
-
-    # Load default settings.
+    # Acquire default settings.
     try:
         extractor = SettingsExtractor()
-        extractor.acquire()  # .render("json").write(output)
+        extractor.acquire()
         default_settings = extractor.thing["settings"]
     except Exception as e:
         msg = f"{RED}Failed to extract settings: {e}{RESET}"
         logger.exception(msg)
         raise click.ClickException(msg) from e
 
-    # Flatten settings for easier comparison
+    # Acquire cluster settings.
+    cluster_settings = adapter.get_settings()
+    if not cluster_settings:
+        print(f"{RED}Error: Could not extract cluster settings{RESET}")
+        return
+
+    # Flatten settings for easier comparison.
     flat_settings = flatten_dict(cluster_settings)
 
     # Find and print non-default settings
@@ -424,7 +389,7 @@ def compare_cluster_settings(
         if not default_value:
             continue
 
-        result = None  # Initialize result to None for each setting
+        result = None  # Initialize the result to None for each setting
 
         # Check if this is a time-related setting
         is_time_setting = any(

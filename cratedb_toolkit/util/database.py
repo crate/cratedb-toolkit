@@ -208,6 +208,12 @@ class DatabaseAdapter:
             if not str_contains(ex, "RepositoryUnknownException", "RepositoryMissingException"):
                 raise
 
+    def get_settings(self) -> t.Dict[str, t.Any]:
+        return self.run_sql("SELECT * FROM sys.cluster", records=True)[0]["settings"]
+
+    def get_heap_size(self) -> int:
+        return int(self.run_sql("SELECT heap['max'] AS heap_size FROM sys.nodes LIMIT 1", records=True)[0]["heap_size"])
+
     def ensure_repository_fs(
         self,
         name: str,
