@@ -101,7 +101,7 @@ def settings(format_: str, output: str):
 
     Output in JSON, Markdown, or SQL format.
     """
-    from cratedb_toolkit.docs.settings.extract import SettingsExtractor
+    from cratedb_toolkit.docs.settings import SettingsExtractor
 
     try:
         extractor = SettingsExtractor()
