@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Settings: Added settings comparison utility. Thanks, @WalBeh.
 
 ## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through
