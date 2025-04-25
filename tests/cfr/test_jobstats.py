@@ -6,9 +6,9 @@ from cratedb_toolkit.cfr.cli import cli
 from tests.conftest import TESTDRIVE_EXT_SCHEMA
 
 
-def test_cfr_jobstats_collect(cratedb, caplog):
+def test_cfr_jobstats_collect_self(cratedb, caplog):
     """
-    Verify `ctk cfr jobstats collect`.
+    Verify `ctk cfr jobstats collect` into the same database.
     """
 
     # Configure database URI.
@@ -37,6 +37,42 @@ def test_cfr_jobstats_collect(cratedb, caplog):
 
     cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last")
     assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last") == 1
+
+
+def test_cfr_jobstats_collect_reportdb(cratedb, caplog):
+    """
+    Verify `ctk cfr jobstats collect` into a different database.
+    """
+
+    schema_reportdb = "testdrive-ext-report"
+
+    # Configure database URI.
+    dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
+    dburi_report = cratedb.database.dburi + f"?schema={schema_reportdb}"
+
+    # Invoke command.
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    result = runner.invoke(
+        cli,
+        args=f"jobstats collect --once --reportdb={dburi_report}",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify outcome: Log output.
+    assert "Recording information snapshot" in caplog.messages
+
+    # Verify outcome: Database content.
+    # stats.statement_log, stats.last_execution
+    results = cratedb.database.run_sql("SHOW TABLES", records=True)
+    assert {"table_name": "jobstats_last"} in results
+    assert {"table_name": "jobstats_statements"} in results
+
+    cratedb.database.refresh_table(f"{schema_reportdb}.jobstats_statements")
+    assert cratedb.database.count_records(f"{schema_reportdb}.jobstats_statements") >= 12
+
+    cratedb.database.refresh_table(f"{schema_reportdb}.jobstats_last")
+    assert cratedb.database.count_records(f"{schema_reportdb}.jobstats_last") == 1
 
 
 def test_cfr_jobstats_view(cratedb):
