@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- CFR: Enhanced job statistics with optional reporting database support. Thanks, @WalBeh.
 - Settings: Added settings comparison utility. Thanks, @WalBeh.
 
 ## 2025/04/23 v0.0.32
