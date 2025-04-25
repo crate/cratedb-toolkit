@@ -1,12 +1,4 @@
-#!/usr/bin/env python3
 # ruff: noqa: T201
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#     "click",
-# ]
-# ///
-
 """
 This script compares CrateDB cluster settings against default values.
 It parses a JSON file containing cluster settings and checks for differences
@@ -218,8 +210,11 @@ def compare_memory_settings(
     current_bytes = to_bytes(str(current_value), heap_size_bytes)
     default_bytes = to_bytes(default_value, heap_size_bytes)
 
-    if not current_bytes or not default_bytes:
+    if current_bytes is None or default_bytes is None:
         return None
+
+    if not heap_size_bytes:
+        raise ValueError("Heap size must be provided to compare memory settings.")
 
     # Calculate percentage of heap
     current_percent = (current_bytes / heap_size_bytes) * 100
@@ -261,6 +256,68 @@ def find_cluster_settings(json_objects):
         if isinstance(obj, list) and len(obj) > 0 and "settings" in obj[0]:
             return obj[0].get("settings", {})
     return None
+
+
+HEADER = "\033[95m"
+BOLD = "\033[1m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+PURPLE = "\033[95m"  # Define purple color
+
+
+def report_comparison(default_settings, non_default_settings):
+    # Group settings by category
+    categorized_settings = defaultdict(list)
+
+    for setting in sorted(non_default_settings):
+        # Extract the top-level category from the setting key
+        category = setting.split(":", 1)[0].split(".")[0]
+        categorized_settings[category].append(setting)
+
+    # Print settings by category
+    if categorized_settings:
+        for category, settings in sorted(categorized_settings.items()):
+            print(f"{BOLD}{GREEN}{category.upper()}{RESET}")
+            print(f"{GREEN}{'=' * len(category)}{RESET}")
+
+            # Print each setting in the category without blank lines between them
+            for setting in settings:
+                # Split into parts for colored output
+                key_part, value_parts = setting.split(":", 1)
+
+                # Format in a single line with appropriate wrapping
+                full_line = f"{BOLD}{key_part}:{RESET} {value_parts.strip()}"
+
+                # Add yellow color to the default value part
+                full_line = full_line.replace(" (default: ", f" (default: {YELLOW}").replace(")", f"{RESET})")
+
+                # Wrap long lines, preserving the setting name at the start of the first line
+                wrapped_text = textwrap.fill(
+                    full_line,
+                    width=120,  # Increased width
+                    subsequent_indent="  ",
+                    break_on_hyphens=False,
+                    break_long_words=False,  # Prevent breaking words like large byte counts
+                )
+
+                # Print the wrapped text for the setting
+                print(wrapped_text)
+
+                # Add the statement in purple as a separate line if available
+                setting_key_clean = key_part.strip()
+                if setting_key_clean in default_settings and "stmt" in default_settings[setting_key_clean]:
+                    stmt = default_settings[setting_key_clean]["stmt"]
+                    print(f"  {PURPLE}{stmt}{RESET}")
+
+            # Add blank line after each category
+            print()
+    else:
+        print(f"{GREEN}No non-default settings found.{RESET}")
+
+    print(f"\n{BOLD}Total non-default settings: {len(non_default_settings)}{RESET}")
 
 
 @click.command()
@@ -306,6 +363,8 @@ def compare_cluster_settings(
     threshold=20.0,
     no_color=False,
 ):
+    global HEADER, BOLD, GREEN, YELLOW, RED, BLUE, RESET, PURPLE
+
     """Compare cluster settings against defaults and print differences."""
     # ANSI color codes
     if no_color:
@@ -316,14 +375,6 @@ def compare_cluster_settings(
         RED = ""
         BLUE = ""
         RESET = ""
-    else:
-        HEADER = "\033[95m"
-        BOLD = "\033[1m"
-        GREEN = "\033[92m"
-        YELLOW = "\033[93m"
-        RED = "\033[91m"
-        BLUE = "\033[94m"
-        RESET = "\033[0m"
 
     print(f"{BOLD}Comparing settings in {BLUE}{cluster_file}{RESET}{BOLD} against defaults...{RESET}")
     if heap_size_bytes:
@@ -417,57 +468,4 @@ def compare_cluster_settings(
         if result:
             non_default_settings.add(result)  # Using add() for a set instead of append()
 
-    # Group settings by category
-    categorized_settings = defaultdict(list)
-
-    for setting in sorted(non_default_settings):
-        # Extract the top-level category from the setting key
-        category = setting.split(":", 1)[0].split(".")[0]
-        categorized_settings[category].append(setting)
-
-    # Print settings by category
-    if categorized_settings:
-        for category, settings in sorted(categorized_settings.items()):
-            print(f"{BOLD}{GREEN}{category.upper()}{RESET}")
-            print(f"{GREEN}{'=' * len(category)}{RESET}")
-
-            # Print each setting in the category without blank lines between them
-            for setting in settings:
-                # Split into parts for colored output
-                key_part, value_parts = setting.split(":", 1)
-
-                # Format in a single line with appropriate wrapping
-                full_line = f"{BOLD}{key_part}:{RESET} {value_parts.strip()}"
-
-                # Add yellow color to the default value part
-                full_line = full_line.replace(" (default: ", f" (default: {YELLOW}").replace(")", f"{RESET})")
-
-                # Wrap long lines, preserving the setting name at the start of the first line
-                wrapped_text = textwrap.fill(
-                    full_line,
-                    width=120,  # Increased width
-                    subsequent_indent="  ",
-                    break_on_hyphens=False,
-                    break_long_words=False,  # Prevent breaking words like large byte counts
-                )
-
-                # Print the wrapped text for the setting
-                print(wrapped_text)
-
-                # Add the statement in purple as a separate line if available
-                setting_key_clean = key_part.strip()
-                if setting_key_clean in default_settings and "stmt" in default_settings[setting_key_clean]:
-                    stmt = default_settings[setting_key_clean]["stmt"]
-                    PURPLE = "\033[95m"  # Define purple color
-                    print(f"  {PURPLE}{stmt}{RESET}")
-
-            # Add blank line after each category
-            print()
-    else:
-        print(f"{GREEN}No non-default settings found.{RESET}")
-
-    print(f"\n{BOLD}Total non-default settings: {len(non_default_settings)}{RESET}")
-
-
-if __name__ == "__main__":
-    compare_cluster_settings()  # Invoke Click command
+    report_comparison(default_settings, non_default_settings)
