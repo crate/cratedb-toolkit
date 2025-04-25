@@ -95,7 +95,13 @@ cli.add_command(job_statistics, name="jobstats")
 
 @make_command(job_statistics, "collect", "Collect statistics about queries from sys.jobs_log.")
 @click.option("--once", is_flag=True, default=False, required=False, help="Whether to record only one sample")
-@click.option("--reportdb", "-r", type=str, required=False, help="Database URL to store report data (crate://crate@localhost:4200/?sslmode=require)")
+@click.option(
+    "--reportdb",
+    "-r",
+    type=str,
+    required=False,
+    help="Database URL to store report data (crate://crate@localhost:4200/?sslmode=require)",
+)
 @click.pass_context
 def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[str]):
     """
@@ -118,7 +124,13 @@ def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[
 
 
 @make_command(job_statistics, "view", "View job statistics per JSON output.")
-@click.option("--reportdb", "-r", type=str, required=False, help="Database URL to read report data from (crate://crate@localhost:4200/?sslmode=require)")
+@click.option(
+    "--reportdb",
+    "-r",
+    type=str,
+    required=False,
+    help="Database URL to read report data from (crate://crate@localhost:4200/?sslmode=require)",
+)
 @click.pass_context
 def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str]):
     """
