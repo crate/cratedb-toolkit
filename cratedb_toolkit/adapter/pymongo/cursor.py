@@ -1,3 +1,5 @@
+# Compansate pymongo<>4.9 woes.
+# mypy: disable-error-code="arg-type,attr-defined,call-arg,misc"
 # Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
 from __future__ import annotations
 
