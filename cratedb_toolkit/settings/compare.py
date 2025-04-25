@@ -14,11 +14,14 @@ crash -v --hosts https://localhost:4200 --verify-ssl false --user crate --format
 """  # noqa: E501
 
 import json
+import logging
 import re
 import textwrap
 from collections import defaultdict
 
 import click
+
+logger = logging.getLogger(__name__)
 
 
 def parse_multiple_json_objects(file_path):
@@ -324,14 +327,6 @@ def report_comparison(default_settings, non_default_settings):
 @click.argument("cluster_file", type=click.Path(exists=True))
 @click.argument("heap_size_bytes", type=int, required=False)
 @click.option(
-    "--defaults",
-    "-d",
-    "default_settings_file",
-    type=click.Path(exists=True),
-    default="cratedb_settings.json",
-    help="Path to the JSON file containing default settings",
-)
-@click.option(
     "--large-tolerance",
     type=float,
     default=2.9,
@@ -357,13 +352,14 @@ def report_comparison(default_settings, non_default_settings):
 def compare_cluster_settings(
     cluster_file,
     heap_size_bytes=None,
-    default_settings_file="cratedb_settings.json",
     large_tolerance=2.9,
     small_tolerance=1.0,
     threshold=20.0,
     no_color=False,
 ):
     global HEADER, BOLD, GREEN, YELLOW, RED, BLUE, RESET, PURPLE
+
+    from cratedb_toolkit.docs.settings import SettingsExtractor
 
     """Compare cluster settings against defaults and print differences."""
     # ANSI color codes
@@ -396,13 +392,15 @@ def compare_cluster_settings(
         print(f"{RED}Error: Could not find cluster settings in {cluster_file}{RESET}")
         return
 
-    # Load default settings
+    # Load default settings.
     try:
-        with open(default_settings_file, "r") as f:
-            default_settings = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"{RED}Error loading default settings from {default_settings_file}: {e}{RESET}")
-        return
+        extractor = SettingsExtractor()
+        extractor.acquire()  # .render("json").write(output)
+        default_settings = extractor.thing["settings"]
+    except Exception as e:
+        msg = f"{RED}Failed to extract settings: {e}{RESET}"
+        logger.exception(msg)
+        raise click.ClickException(msg) from e
 
     # Flatten settings for easier comparison
     flat_settings = flatten_dict(cluster_settings)
@@ -413,7 +411,7 @@ def compare_cluster_settings(
         f"{BLUE}(Using {large_tolerance}% tolerance for settings > {threshold}% of heap, "
         f"{small_tolerance}% for smaller settings){RESET}"
     )
-    print(f"{BLUE}Default settings loaded from: {default_settings_file}{RESET}\n")
+    print(f"{BLUE}Default settings loaded{RESET}\n")
 
     non_default_settings = set()  # Changed from list to set to prevent duplicates
 
