@@ -325,11 +325,11 @@ def compare_cluster_settings(
     threshold=20.0,
     no_color=False,
 ):
+    """Compare cluster settings against defaults and print differences."""
     global HEADER, BOLD, GREEN, YELLOW, RED, BLUE, RESET, PURPLE
 
     from cratedb_toolkit.docs.settings import SettingsExtractor
 
-    """Compare cluster settings against defaults and print differences."""
     # ANSI color codes
     if no_color:
         HEADER = ""

@@ -3,6 +3,7 @@ import logging
 import click
 from click_aliases import ClickAliasedGroup
 
+from cratedb_toolkit.docs.cli import settings as docs_settings_cli
 from cratedb_toolkit.util.cli import boot_click
 
 from .compare import compare_cluster_settings
@@ -22,3 +23,4 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 
 
 cli.add_command(compare_cluster_settings, name="compare")
+cli.add_command(docs_settings_cli, name="list")
