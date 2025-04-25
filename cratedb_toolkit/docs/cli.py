@@ -39,7 +39,7 @@ def help_functions():
 
 def help_settings():
     """
-    Extract CrateDB configuration settings by scraping relevant documentation pages.
+    Scrape CrateDB configuration settings from documentation.
 
     Examples
     ========
