@@ -361,15 +361,7 @@ def compare_cluster_settings(
     print(f"{BOLD}Comparing settings in {BLUE}{cratedb_sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
     adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
 
-    # Acquire heap size.
-    heap_size_bytes = adapter.get_heap_size()
-    if heap_size_bytes:
-        formatted_heap = f"{heap_size_bytes:,}".replace(",", "_")
-        print(f"{BOLD}Heap Size: {GREEN}{formatted_heap} bytes{RESET}")
-    else:
-        print(f"{YELLOW}No heap size provided{RESET}")
-
-    # Acquire default settings.
+    # Acquire default settings from documentation.
     try:
         extractor = SettingsExtractor()
         extractor.acquire()
@@ -379,7 +371,15 @@ def compare_cluster_settings(
         logger.exception(msg)
         raise click.ClickException(msg) from e
 
-    # Acquire cluster settings.
+    # Acquire cluster heap size.
+    heap_size_bytes = adapter.get_heap_size()
+    if heap_size_bytes:
+        formatted_heap = f"{heap_size_bytes:,}".replace(",", "_")
+        print(f"{BOLD}Heap Size: {GREEN}{formatted_heap} bytes{RESET}")
+    else:
+        print(f"{YELLOW}No heap size provided{RESET}")
+
+    # Acquire cluster runtime settings.
     cluster_settings = adapter.get_settings()
     if not cluster_settings:
         print(f"{RED}Error: Could not extract cluster settings{RESET}")
