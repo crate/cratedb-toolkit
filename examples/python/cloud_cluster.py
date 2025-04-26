@@ -13,7 +13,7 @@ Synopsis
 ::
 
     # Install utility package.
-    pip install 'cratedb-toolkit'
+    uv tool install --upgrade 'cratedb-toolkit'
 
     # Log in to CrateDB Cloud.
     croud login --idp azuread
@@ -22,17 +22,24 @@ Synopsis
     # to select a specific one for invoking the cluster deployment operation.
     export CRATEDB_CLOUD_SUBSCRIPTION_ID=f33a2f55-17d1-4f21-8130-b6595d7c52db
 
+    # A quick usage example for fully unattended operation,
+    # please adjust individual settings accordingly::
+
+    export CRATEDB_CLOUD_API_KEY=crate_cloud_key
+    export CRATEDB_CLOUD_API_SECRET=crate_cloud_secret
+    export CRATEDB_CLOUD_ORGANIZATION_ID=f807b302-f819-4621-8450-397fc02efe71
+    export CRATEDB_USERNAME=admin
+    export CRATEDB_PASSWORD=mypassword
+
+    # TODO: Store per-cluster username and password in configuration file / system keyring.
+
     # Initialize a cluster instance.
-    python examples/cloud_cluster.py --cluster-name Hotzenplotz
+    python examples/python/cloud_cluster.py --cluster-name Hotzenplotz
 
     # Inquire list of available clusters.
     croud clusters list
 
     # Run an example SQL command.
-    # TODO: Store per-cluster username and password in configuration file / system keyring.
-    export CRATEDB_CLOUD_CLUSTER_ID='e1e38d92-a650-48f1-8a70-8133f2d5c400'
-    export CRATEDB_USERNAME='admin'
-    export CRATEDB_PASSWORD='H3IgNXNvQBJM3CiElOiVHuSp6CjXMCiQYhB4I9dLccVHGvvvitPSYr1vTpt4'
     ctk shell --command "SELECT * from sys.summits LIMIT 2;"
 
 Usage
@@ -96,8 +103,8 @@ def workload():
     results = cratedb.adapter.run_sql("SELECT * from sys.summits LIMIT 2;", records=True)
     print(json.dumps(results, indent=2))  # noqa: T201
 
-    # Stop cluster again.
-    cluster.stop()
+    # TODO: Stop cluster again.
+    # cluster.stop()
 
 
 def main():

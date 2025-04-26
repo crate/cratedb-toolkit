@@ -62,7 +62,7 @@ def cli(
         cratedb_http_url = cluster_info.cloud["url"]
     else:
         raise ValueError(
-            "Unknown database address, please specify either cluster id or database URI in SQLAlchemy format"
+            "Unknown database address, please specify cluster id, cluster name, or database URI in SQLAlchemy format"
         )
 
     run_crash(

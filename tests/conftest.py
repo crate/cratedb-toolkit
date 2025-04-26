@@ -1,6 +1,5 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
-import json
 import os
 
 import pytest
@@ -131,64 +130,14 @@ def mock_cloud_cluster_exists(cratedb):
                 "url": cratedb.get_connection_url(),
                 "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
                 "name": "testcluster",
+                "suspended": False,
             }
         ],
     )
 
 
 @pytest.fixture
-def mock_cloud_cluster_deploy(cratedb):
-    """
-    Mock a CrateDB Cloud API conversation, for exercising a full deployment process.
-    """
-    responses.add_passthru("http+docker://localhost/")
-
-    callcount = 0
-
-    def cluster_list_callback(request):
-        nonlocal callcount
-        callcount += 1
-        headers = {}
-        if callcount == 1:
-            data = []
-        else:
-            data = [
-                {
-                    "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
-                    "url": cratedb.get_connection_url(),
-                    "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
-                    "name": "testcluster",
-                }
-            ]
-        return 200, headers, json.dumps(data)
-
-    responses.add_callback(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/clusters/",
-        callback=cluster_list_callback,
-    )
-
-    responses.add(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/projects/",
-        json=[],
-    )
-
-    responses.add(
-        method="POST",
-        url="https://console.cratedb.cloud/api/v2/projects/",
-        json={"id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee"},
-    )
-
-    responses.add(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/projects/3b6b7c82-d0ab-458c-ae6f-88f8346765ee/",
-        json={},
-    )
-
-
-@pytest.fixture
-def mock_cloud_import():
+def mock_cloud_import(cratedb):
     """
     Mock a CrateDB Cloud API conversation, pretending to run a successful data import.
     """
@@ -198,8 +147,9 @@ def mock_cloud_import():
         json={
             "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
             "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
-            "url": "https://testdrive.example.org:4200/",
+            "url": cratedb.get_connection_url(),
             "name": "testcluster",
+            "suspended": False,
         },
     )
     responses.add(

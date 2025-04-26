@@ -89,6 +89,7 @@ dependencies = [
   "colorlog",
   "crash",
   "cratedb-sqlparse==0.0.13",
+  "croud==1.13.0",
   "importlib-metadata; python_version<'3.8'",
   "importlib-resources; python_version<'3.9'",
   "orjsonl<2",
@@ -118,9 +119,6 @@ optional-dependencies.cfr = [
   "polars<1.30",
   "pyarrow<20.1",
   "queryanonymizer<1.2",
-]
-optional-dependencies.cloud = [
-  "croud==1.13.0",
 ]
 optional-dependencies.datasets = [
   "datasets<4",
@@ -152,7 +150,7 @@ optional-dependencies.dynamodb = [
   "commons-codec>=0.0.20",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,cloud,datasets,docs-api,io,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io,mcp,service]",
 ]
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io]",
@@ -212,7 +210,6 @@ optional-dependencies.test = [
   "httpx<0.29",
   "ipywidgets<9",
   "markdown-it-py<4",
-  "notebook<8",
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",

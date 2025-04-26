@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2023, Crate.io Inc.
+# Copyright (c) 2023-2025, Crate.io Inc.
 # Distributed under the terms of the Apache 2 license.
 #
 # About
@@ -16,40 +16,71 @@
 # Setup
 # =====
 #
-# To install the client SDK, use `pip`::
+# To install the client SDK CLI, use the `uv` package manager::
 #
-#   pip install 'cratedb-toolkit'
+#   uv tool install --upgrade 'cratedb-toolkit'
 #
 # Configuration
 # =============
-#
-# The program assumes you are appropriately authenticated to the CrateDB Cloud
-# platform, for example using `croud login --idp azuread`. To inspect the list
-# of available clusters, run `croud clusters list`.
 #
 # For addressing a database cluster, and obtaining corresponding credentials,
 # the program uses environment variables, which you can define interactively,
 # or store them within a `.env` file.
 #
-# You can use those configuration snippet as a blueprint. Please adjust the
-# individual settings accordingly::
+# Authentication
+# --------------
 #
-#   CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
-#   CRATEDB_USERNAME='admin'
-#   CRATEDB_PASSWORD='H3IgNXNvQBJM3CiElOiVHuSp6CjXMCiQYhB4I9dLccVHGvvvitPSYr1vTpt4'
+# To authenticate with the CrateDB Cloud platform, use an interactive approach like
+# `croud login --idp azuread`, or use headless mode via API keys specified per
+# `CRATEDB_CLOUD_API_KEY` and `CRATEDB_CLOUD_API_SECRET` environment variables.
+#
+# In order to connect to your cluster and run a database workload, you will
+# need a pair of username/password access credentials, to be provided per
+# `CRATEDB_USERNAME` and `CRATEDB_PASSWORD` environment variables. The same
+# values will be used to create the initial database user if your database
+# cluster will be deployed on demand.
+#
+# Cluster address
+# ---------------
+#
+# Other than authentication information, you need to provide information about
+# identifying the database cluster, for example using the `--cluster-id` or
+# `--cluster-name` CLI options, or the `CRATEDB_CLOUD_CLUSTER_ID` or
+# `CRATEDB_CLOUD_CLUSTER_NAME` environment variables.
+#
+# Cluster deployment
+# ------------------
+#
+# If your cluster has not been deployed yet, the program also needs the
+# organization identifier UUID, to be provided per `--org-id` CLI option
+# or `CRATEDB_CLOUD_ORGANIZATION_ID` environment variable.
+#
+# If your account uses multiple subscriptions, you will also need to select
+# a specific one for invoking the cluster deployment operation using the
+# `CRATEDB_CLOUD_SUBSCRIPTION_ID` environment variable.
 #
 # Usage
 # =====
 #
+# A quick usage example for fully unattended operation,
+# please adjust individual settings accordingly::
+#
+#   export CRATEDB_CLOUD_API_KEY=crate_cloud_key
+#   export CRATEDB_CLOUD_API_SECRET=crate_cloud_secret
+#   export CRATEDB_CLOUD_ORGANIZATION_ID=f807b302-f819-4621-8450-397fc02efe71
+#   export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
+#   export CRATEDB_USERNAME=admin
+#   export CRATEDB_PASSWORD=mypassword
+#
 # Initialize a cluster instance, and run a data import::
 #
-#   bash examples/shell/cloud_import.sh
+#   sh examples/shell/cloud_import.sh
 #
 # Query imported data::
 #
 #   ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
-
+#
 
 ctk cluster start
-ctk load table "https://github.com/crate/cratedb-datasets/raw/main/machine-learning/timeseries/nab-machine-failure.csv"
+ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
 ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'

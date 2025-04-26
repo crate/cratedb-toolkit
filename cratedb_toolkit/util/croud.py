@@ -5,11 +5,18 @@ import functools
 import io
 import json
 import logging
+import os
 import typing as t
+from pathlib import Path
+from platform import python_version
+from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
+import croud.api
 import yaml
+from croud.config.configuration import Configuration
 
+import cratedb_toolkit
 from cratedb_toolkit.exception import CroudException
 
 if t.TYPE_CHECKING:
@@ -35,6 +42,18 @@ class CroudWrapper:
         self.call = call
         self.output_format = output_format
         self.decode_output = decode_output
+
+    def invoke_safedecode(self) -> t.Any:
+        # FIXME: Fix `croud clusters deploy`.
+        #        It yields *two* payloads to stdout, making it
+        #        unusable in JSON-capturing situations.
+        # The main advantage of the `JSONDecoder` class is that it also provides
+        # a `.raw_decode` method, which will ignore extra data after the end of the JSON.
+        # https://stackoverflow.com/a/75168292
+        payload = self.invoke()
+        decoder = json.JSONDecoder()
+        data = decoder.raw_decode(payload)
+        return data
 
     def invoke(self) -> t.Any:
         """
@@ -127,8 +146,17 @@ class CroudWrapper:
         buffer.seek(0)
         return buffer.read()
 
-    @staticmethod
-    def run_croud_fun(fun: t.Callable, with_exceptions: bool = True):
+    @property
+    def headless_config(self) -> Configuration:
+        tmp_file = NamedTemporaryFile()
+        tmp_path = Path(tmp_file.name)
+        config = Configuration("headless.yaml", tmp_path)
+        config.profile["key"] = os.environ.get("CRATEDB_CLOUD_API_KEY")
+        config.profile["secret"] = os.environ.get("CRATEDB_CLOUD_API_SECRET")
+        config.profile["organization-id"] = os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
+        return config
+
+    def run_croud_fun(self, fun: t.Callable, with_exceptions: bool = True):
         """
         Wrapper function to call into `croud`, for catching and converging error messages.
 
@@ -156,19 +184,40 @@ class CroudWrapper:
             if with_exceptions and level >= logging.ERROR:
                 raise CroudException(message)
 
-        # Patch all `print_*` functions, and invoke workhorse function.
         # https://stackoverflow.com/a/46481946
         levels = ["debug", "info", "warning", "error", "success"]
         with contextlib.ExitStack() as stack:
+            # Patch all `print_*` functions.
             for level in levels:
                 p = patch(f"croud.printer.print_{level}", functools.partial(print_fun, level))
                 stack.enter_context(p)
+
+            # Patch configuration.
+            p = patch("croud.config._CONFIG", self.headless_config)
+            stack.enter_context(p)
+
             # TODO: When aiming to disable wait-for-completion.
             """
             p = patch(f"croud.clusters.commands._wait_for_completed_operation")
             stack.enter_context(p)
             """
+
+            # Invoke workhorse function.
             return fun()
+
+
+class CroudClient(croud.api.Client):
+    """
+    A slightly modified `croud.api.Client` class, to inject a custom User-Agent header.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ua = f"{cratedb_toolkit.__appname__}/{cratedb_toolkit.__version__} Python/{python_version()}"
+        self.session.headers["User-Agent"] = ua
+
+
+croud.api.Client = CroudClient
 
 
 def get_sane_log_level(src) -> int:

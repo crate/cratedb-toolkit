@@ -1,9 +1,10 @@
 # Copyright (c) 2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import os
 from pathlib import Path
 
 import pytest
-import responses
+from testbook import testbook
 
 import cratedb_toolkit
 
@@ -13,100 +14,64 @@ pytestmark = pytest.mark.python
 ROOT = Path(__file__).parent.parent.parent
 
 
-@responses.activate
-def test_example_cloud_cluster_exists_python(mocker, mock_cloud_cluster_exists):
+@pytest.fixture()
+def real_settings():
+    settings = {
+        "CRATEDB_CLOUD_API_KEY": os.environ.get("TEST_CRATEDB_CLOUD_API_KEY"),
+        "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
+        "CRATEDB_CLOUD_ORGANIZATION_ID": os.environ.get("TEST_CRATEDB_CLOUD_ORGANIZATION_ID"),
+        "CRATEDB_CLOUD_CLUSTER_NAME": os.environ.get("TEST_CRATEDB_CLOUD_CLUSTER_NAME", "testcluster"),
+        "CRATEDB_USERNAME": os.environ.get("TEST_CRATEDB_USERNAME"),
+        "CRATEDB_PASSWORD": os.environ.get("TEST_CRATEDB_PASSWORD"),
+    }
+
+    if any(setting is None for setting in settings.values()):
+        raise pytest.skip("Missing environment variables for headless mode with croud")
+
+    return settings
+
+
+def test_example_cloud_cluster_app(mocker, real_settings):
     """
-    Verify that the program `examples/cloud_cluster.py` works.
-    In this case, there is a mock which pretends the cluster already exists.
+    Verify that the program `examples/python/cloud_cluster.py` works.
     """
+
+    mocker.patch.dict("os.environ", real_settings)
 
     cratedb_toolkit.configure(
         settings_accept_env=True,
     )
 
-    mocker.patch.dict(
-        "os.environ",
-        {
-            "CRATEDB_CLOUD_SUBSCRIPTION_ID": "f33a2f55-17d1-4f21-8130-b6595d7c52db",
-            "CRATEDB_CLOUD_CLUSTER_NAME": "testcluster",
-            "CRATEDB_USERNAME": "crate",
-        },
-    )
     from examples.python.cloud_cluster import main
 
     main()
 
 
-@responses.activate
-def test_example_cloud_cluster_with_deploy(mocker, mock_cloud_cluster_deploy):
+def test_example_cloud_import_app(mocker, real_settings):
     """
-    Verify that the program `examples/cloud_cluster.py` works.
-    In this case, mocking-wise, there is no cluster, but the test exercises a full cluster deployment.
+    Verify that the program `examples/python/cloud_import.py` works.
     """
+
+    mocker.patch.dict("os.environ", real_settings)
 
     cratedb_toolkit.configure(
         settings_accept_env=True,
     )
 
-    mocker.patch.dict(
-        "os.environ",
-        {
-            "CRATEDB_CLOUD_ORGANIZATION_ID": "4148156d-b842-4a86-8024-ecb380be1fc2",
-            "CRATEDB_CLOUD_SUBSCRIPTION_ID": "f33a2f55-17d1-4f21-8130-b6595d7c52db",
-            "CRATEDB_CLOUD_CLUSTER_NAME": "testcluster",
-            "CRATEDB_USERNAME": "crate",
-        },
-    )
-    from examples.python.cloud_cluster import main
-
-    main()
-
-
-@responses.activate
-def test_example_cloud_import_python(mocker, mock_cloud_import):
-    """
-    Verify that the program `examples/cloud_import.py` works.
-    """
-
-    cratedb_toolkit.configure(
-        settings_accept_env=True,
-    )
-
-    mocker.patch.dict(
-        "os.environ",
-        {
-            "CRATEDB_CLOUD_CLUSTER_ID": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
-        },
-    )
     from examples.python.cloud_import import main
 
     main()
 
 
-@pytest.mark.skip(
-    "Does not work: Apparently, the 'responses' mockery is not properly activated when evaluating the notebook"
-)
-@responses.activate
-def test_example_cloud_import_notebook(mocker, mock_cloud_cluster_exists):
+def test_example_cloud_import_notebook(mocker, real_settings):
     """
-    Verify the Jupyter Notebook example works.
+    Verify the Jupyter notebook `examples/notebook/cloud_import.py` works.
     """
-    from pytest_notebook.nb_regression import NBRegressionFixture
 
     # Synthesize a valid environment.
-    mocker.patch.dict(
-        "os.environ",
-        {
-            "CRATEDB_CLOUD_SUBSCRIPTION_ID": "f33a2f55-17d1-4f21-8130-b6595d7c52db",
-            # "CRATEDB_CLOUD_CLUSTER_ID": "e1e38d92-a650-48f1-8a70-8133f2d5c400",  # noqa: ERA001
-            "CRATEDB_CLOUD_CLUSTER_NAME": "testcluster",
-            "CRATEDB_USERNAME": "crate",
-        },
-    )
+    mocker.patch.dict("os.environ", real_settings)
 
-    # Exercise Notebook.
-    fixture = NBRegressionFixture(
-        diff_ignore=("/metadata/language_info", "/metadata/widgets", "/cells/*/execution_count"),
-    )
-    notebook = ROOT / "examples" / "notebook" / "cloud_import.ipynb"
-    fixture.check(str(notebook))
+    # Execute the notebook.
+    notebook = Path("examples") / "notebook" / "cloud_import.ipynb"
+    with testbook(notebook, timeout=180) as tb:
+        tb.execute()
