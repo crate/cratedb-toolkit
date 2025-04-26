@@ -13,7 +13,8 @@ def jobs_list(cratedb_cloud_cluster_id: str, output_format: str = None, decode_o
         fun=import_jobs_list,
         specs=[Argument("--cluster-id", type=str, required=True, help="The cluster the import jobs belong to.")],
         arguments=[
-            f"--cluster-id={cratedb_cloud_cluster_id}",
+            "--cluster-id",
+            cratedb_cloud_cluster_id,
         ],
     )
 

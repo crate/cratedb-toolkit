@@ -7,6 +7,10 @@ from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
 
+# Default to a stable version if not specified in the environment.
+# TODO: Use `latest` CrateDB by default, or even `nightly`?
+DEFAULT_CRATEDB_VERSION = "5.10.4"
+
 
 class CloudManager:
     """
@@ -15,9 +19,9 @@ class CloudManager:
 
     def list_subscriptions(self):
         """
-        Get list of clusters
+        Get list of subscriptions.
 
-        croud clusters list --format=json
+        croud subscriptions list --format=json
         """
         from croud.__main__ import command_tree
         from croud.subscriptions.commands import subscriptions_list
@@ -33,7 +37,7 @@ class CloudManager:
 
     def list_clusters(self):
         """
-        Get list of clusters
+        Get list of clusters.
 
         croud clusters list --format=json
         """
@@ -100,12 +104,10 @@ class CloudManager:
         from croud.__main__ import command_tree
         from croud.projects.commands import project_create
 
-        arguments = [
-            f"--name={name}",
-        ]
+        arguments = ["--name", name]
 
         if organization_id is not None:
-            arguments += [f"--org-id={organization_id}"]
+            arguments += ["--org-id", organization_id]
 
         call = CroudCall(
             fun=project_create,
@@ -135,7 +137,7 @@ class CloudManager:
         from croud.__main__ import command_tree
         from croud.clusters.commands import clusters_deploy
 
-        # Automatically use subscription, if there is only a single one. Otherwise, croak.
+        # Automatically use a subscription if there is only a single one. Otherwise, croak.
         if subscription_id is None:
             subscriptions = self.list_subscriptions()
             if not subscriptions:
@@ -153,30 +155,38 @@ class CloudManager:
         if subscription_id is None:
             raise ValueError("Failed to obtain a subscription identifier")
 
-        # TODO: Use `latest` CrateDB by default.
-        # TODO: Add documentation.
-        cratedb_version = os.environ.get("CRATEDB_VERSION", "5.10.4")
+        # TODO: Add documentation about those environment variables.
+        cratedb_version = os.environ.get("CRATEDB_VERSION", DEFAULT_CRATEDB_VERSION)
         username = os.environ.get("CRATEDB_USERNAME")
         password = os.environ.get("CRATEDB_PASSWORD")
 
         if not username or not password:
             raise ValueError(
-                "Username and password must be set in the environment "
-                "variables 'CRATEDB_USERNAME' and 'CRATEDB_PASSWORD'."
+                "Username and password must be set using the environment variables "
+                "`CRATEDB_USERNAME` and `CRATEDB_PASSWORD`. These are required for "
+                "accessing a CrateDB Cloud cluster."
             )
 
         call = CroudCall(
             fun=clusters_deploy,
             specs=command_tree["clusters"]["commands"]["deploy"]["extra_args"],
             arguments=[
-                f"--subscription-id={subscription_id}",
-                f"--project-id={project_id}",
-                "--tier=default",
-                "--product-name=crfree",
-                f"--cluster-name={name}",
-                f"--version={cratedb_version}",
-                f"--username={username}",
-                f"--password={password}",
+                "--subscription-id",
+                subscription_id,
+                "--project-id",
+                project_id,
+                "--tier",
+                "default",
+                "--product-name",
+                "crfree",
+                "--cluster-name",
+                name,
+                "--version",
+                cratedb_version,
+                "--username",
+                username,
+                "--password",
+                password,
             ],
         )
 
@@ -194,8 +204,10 @@ class CloudManager:
             fun=clusters_set_suspended,
             specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
             arguments=[
-                f"--cluster-id={identifier}",
-                "--value=false",
+                "--cluster-id",
+                identifier,
+                "--value",
+                "false",
             ],
         )
 
@@ -213,8 +225,10 @@ class CloudManager:
             fun=clusters_set_suspended,
             specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
             arguments=[
-                f"--cluster-id={identifier}",
-                "--value=true",
+                "--cluster-id",
+                identifier,
+                "--value",
+                "true",
             ],
         )
 
@@ -271,7 +285,8 @@ class CloudCluster:
             fun=import_jobs_list,
             specs=[Argument("--cluster-id", type=str, required=True, help="The cluster the import jobs belong to.")],
             arguments=[
-                f"--cluster-id={self.cluster_id}",
+                "--cluster-id",
+                self.cluster_id,
             ],
         )
 
@@ -308,33 +323,48 @@ class CloudCluster:
             "under `croud organizations files list`.",
         )
 
-        # Compute command-line arguments for invoking `croud`.
-        # FIXME: This call is redundant.
-        path = Path(resource.url)
+        if self.cluster_id is None:
+            raise ValueError("Cluster ID is not set")
+        if resource.url is None:
+            raise ValueError("Source URL is not set")
+        if resource.format is None:
+            raise ValueError("Source format is not set")
+        if target.table is None:
+            raise ValueError("Target table is not set")
 
-        # TODO: Sanitize table name. Which characters are allowed?
-        if path.exists():
+        # Compute command-line arguments for invoking `croud`.
+        # TODO: Sanitize table name - which characters are allowed?
+        is_remote = "://" in resource.url
+        if not is_remote and Path(resource.url).exists():
             specs.append(file_path_argument)
             specs.append(file_id_argument)
             arguments = [
-                f"--cluster-id={self.cluster_id}",
-                f"--file-path={resource.url}",
-                f"--table={target.table}",
-                f"--file-format={resource.format}",
+                "--cluster-id",
+                self.cluster_id,
+                "--file-path",
+                resource.url,
+                "--table",
+                target.table,
+                "--file-format",
+                resource.format,
             ]
             fun = import_jobs_create_from_file
         else:
             specs.append(url_argument)
             arguments = [
-                f"--cluster-id={self.cluster_id}",
-                f"--url={resource.url}",
-                f"--table={target.table}",
-                f"--file-format={resource.format}",
+                "--cluster-id",
+                self.cluster_id,
+                "--url",
+                resource.url,
+                "--table",
+                target.table,
+                "--file-format",
+                resource.format,
             ]
             fun = import_jobs_create_from_url
 
         if resource.compression is not None:
-            arguments += [f"--compression={resource.compression}"]
+            arguments += ["--compression", resource.compression]
 
         call = CroudCall(
             fun=fun,

@@ -20,21 +20,21 @@ Synopsis
 
     # Optional: If your account uses multiple subscriptions, you will need
     # to select a specific one for invoking the cluster deployment operation.
-    export CRATEDB_CLOUD_SUBSCRIPTION_ID=f33a2f55-17d1-4f21-8130-b6595d7c52db
+    export CRATEDB_CLOUD_SUBSCRIPTION_ID='<YOUR_SUBSCRIPTION_ID_HERE>'
 
     # A quick usage example for fully unattended operation,
     # please adjust individual settings accordingly::
 
-    export CRATEDB_CLOUD_API_KEY=crate_cloud_key
-    export CRATEDB_CLOUD_API_SECRET=crate_cloud_secret
-    export CRATEDB_CLOUD_ORGANIZATION_ID=f807b302-f819-4621-8450-397fc02efe71
-    export CRATEDB_USERNAME=admin
-    export CRATEDB_PASSWORD=mypassword
+    export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
+    export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
+    export CRATEDB_CLOUD_ORGANIZATION_ID='<YOUR_ORG_ID_HERE>'
+    export CRATEDB_USERNAME='<YOUR_USERNAME_HERE>'
+    export CRATEDB_PASSWORD='<YOUR_PASSWORD_HERE>'
 
     # TODO: Store per-cluster username and password in configuration file / system keyring.
 
     # Initialize a cluster instance.
-    python examples/python/cloud_cluster.py --cluster-name Hotzenplotz
+    python examples/python/cloud_cluster.py --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
 
     # Inquire list of available clusters.
     croud clusters list
@@ -57,13 +57,13 @@ Configuration
 
 The configuration settings can be specified as CLI arguments::
 
-    --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    --cluster-name=Hotzenplotz
+    --cluster-id='<YOUR_CLUSTER_ID_HERE>'
+    --cluster-name='<YOUR_CLUSTER_NAME_HERE>'
 
 Alternatively, you can use environment variables::
 
-    export CRATEDB_CLOUD_CLUSTER_ID=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
+    export CRATEDB_CLOUD_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
+    export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 
 Command line arguments take precedence. When omitted, the program will
 fall back to probe the environment variables.
@@ -84,7 +84,7 @@ def workload():
     """
     Run a workload on a CrateDB database cluster on CrateDB Cloud.
 
-    ctk cluster start Hotzenplotz
+    ctk cluster start --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
     ctk shell --command "SELECT * from sys.summits LIMIT 2;"
     """
 
@@ -95,7 +95,7 @@ def workload():
     cluster = ManagedCluster.from_env().start()
 
     # Report information about cluster.
-    # TODO: Use `cluster.{print,format}_info()`.
+    # TODO: Implement and use `cluster.{print,format}_info()` to report cluster information.
     print(json.dumps(cluster.info.cloud), file=sys.stderr)  # noqa: T201
 
     # Run database workload.

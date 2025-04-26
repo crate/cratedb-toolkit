@@ -1,3 +1,6 @@
+from click import ClickException
+
+
 class TableNotFound(Exception):
     pass
 
@@ -6,5 +9,35 @@ class OperationFailed(Exception):
     pass
 
 
-class CroudException(Exception):
+class CroudException(ClickException):
     pass
+
+
+class DatabaseAddressMissingError(ClickException):
+    STANDARD_MESSAGE = (
+        "Missing database address, please specify cluster identifier, "
+        "cluster name, or database URI in SQLAlchemy or HTTP URL format"
+    )
+
+    EXTENDED_MESSAGE = (
+        f"{STANDARD_MESSAGE}. "
+        "Use --cluster-id / --cluster-name / --cratedb-sqlalchemy-url / --cratedb-http-url CLI options "
+        "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_CLOUD_CLUSTER_NAME / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL "
+        "environment variables."
+    )
+
+    def __init__(self, message: str = None):
+        if not message:
+            message = self.EXTENDED_MESSAGE
+        super().__init__(message)
+
+
+class DatabaseAddressDuplicateError(ClickException):
+    STANDARD_MESSAGE = (
+        "Duplicate database address, please specify only one of: cluster id, cluster name, or database URI"
+    )
+
+    def __init__(self, message: str = None):
+        if not message:
+            message = self.STANDARD_MESSAGE
+        super().__init__(message)

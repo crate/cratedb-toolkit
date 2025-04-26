@@ -38,6 +38,9 @@ class DatabaseAddress:
         return cls(uri=uri)
 
     def with_credentials(self, username: str = None, password: str = None):
+        """
+        Add credentials, with in-place modification.
+        """
         if username is not None:
             self.uri.username = username
         if password is not None:

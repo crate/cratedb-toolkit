@@ -1,7 +1,8 @@
+import contextlib
 import logging
-import sys
 
 import click
+from click import ClickException
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit import ManagedCluster
@@ -64,13 +65,9 @@ def info(ctx: click.Context, cluster_id: str, cluster_name: str):
     """
     Display CrateDB Cloud Cluster information.
     """
-    cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
-    try:
+    with handle_command_errors("inquire cluster info"):
+        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
         jd(cluster_info.asdict())
-
-    # When exiting so, it is expected that error logging has taken place appropriately.
-    except CroudException:
-        sys.exit(1)
 
 
 @make_command(cli, name="start", help=help_start)
@@ -79,20 +76,16 @@ def info(ctx: click.Context, cluster_id: str, cluster_name: str):
 @click.pass_context
 def start(ctx: click.Context, cluster_id: str, cluster_name: str):
     """
-    Start CrateDB Cloud Cluster.
+    Start or resume a CrateDB Cloud Cluster.
     """
 
-    # Acquire database cluster handle.
-    cluster = ManagedCluster(id=cluster_id, name=cluster_name).start()
-    logger.info(f"Successfully acquired cluster: {cluster}")
+    with handle_command_errors("start cluster"):
+        # Acquire the database cluster handle and submit the `start` command.
+        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).start()
+        logger.info(f"Successfully acquired cluster: {cluster}")
 
-    # Output cluster information.
-    try:
+        # Display cluster information.
         jd(cluster.info.asdict())
-
-    # When exiting so, it is expected that error logging has taken place appropriately.
-    except CroudException:
-        sys.exit(1)
 
 
 @make_command(cli, name="suspend", help=help_suspend)
@@ -104,16 +97,30 @@ def suspend(ctx: click.Context, cluster_id: str, cluster_name: str):
     Suspend CrateDB Cloud Cluster.
     """
 
-    cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
+    with handle_command_errors("suspend cluster"):
+        # Acquire the database cluster handle and submit the `suspend` command.
+        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).probe().suspend()
+        logger.info(f"Successfully suspended cluster: {cluster}")
 
-    # Acquire database cluster handle and submit suspend command.
-    cluster = ManagedCluster(id=cluster_info.cloud_id, name=cluster_info.cloud_name).probe().suspend()
-    logger.info(f"Successfully suspended cluster: {cluster}")
-
-    # Output cluster information.
-    try:
+        # Display cluster information.
         jd(cluster.info.asdict())
 
-    # When exiting so, it is expected that error logging has taken place appropriately.
-    except CroudException:
-        sys.exit(1)
+
+@contextlib.contextmanager
+def handle_command_errors(operation_name):
+    """Handle common command errors and exit with appropriate error messages."""
+    try:
+        yield
+    except CroudException as ex:
+        logger.error(
+            f"Failed to {operation_name}. "
+            f"Please check if you are addressing the right cluster, "
+            f"and if credentials and permissions are valid. "
+            f"The underlying error was: {ex}"
+        )
+        raise
+    except ClickException:
+        raise
+    except Exception as ex:
+        logger.exception(f"Unexpected error on operation: {operation_name}")
+        raise SystemExit(1) from ex

@@ -1,12 +1,13 @@
 # Copyright (c) 2021-2023, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import os
+import typing as t
 
 import pytest
-import responses
 import sqlalchemy as sa
 from verlib2 import Version
 
+import cratedb_toolkit
 from cratedb_toolkit.api.main import ManagedClusterSettings
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
@@ -74,13 +75,31 @@ def prune_environment():
     """
     Delete all environment variables starting with `CRATEDB_` or `CRATE_`,
     to prevent leaking from the developer's environment to the test suite.
+
+    TODO: Possibly synchronize with `reset_environment()`, as suggested.
     """
-    delete_items = []
+    envvars = []
     for envvar in os.environ.keys():
         if envvar.startswith("CRATEDB_") or envvar.startswith("CRATE_"):
-            delete_items.append(envvar)
-    for envvar in delete_items:
-        del os.environ[envvar]
+            envvars.append(envvar)
+    for envvar in envvars:
+        os.environ.pop(envvar, None)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def reset_environment():
+    """
+    Reset all environment variables in use, so that they do not pollute the test suite.
+
+    TODO: Possibly synchronize with `prune_environment()`, as suggested.
+    """
+    envvars = []
+    specs = ManagedClusterSettings.settings_spec
+    for spec in specs:
+        if spec.click.envvar:
+            envvars.append(spec.click.envvar)
+    for envvar in envvars:
+        os.environ.pop(envvar, None)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -115,59 +134,49 @@ def cratedb(cratedb_custom_service):
     yield cratedb_custom_service
 
 
-@pytest.fixture
-def mock_cloud_cluster_exists(cratedb):
+@pytest.fixture()
+def cloud_cluster_id() -> str:
     """
-    Mock a CrateDB Cloud API conversation, pretending a cluster exists.
+    Provide the ID of a CrateDB Cloud cluster to be used for integration tests.
     """
-    responses.add_passthru("http+docker://localhost/")
-    responses.add(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/clusters/",
-        json=[
-            {
-                "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
-                "url": cratedb.get_connection_url(),
-                "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
-                "name": "testcluster",
-                "suspended": False,
-            }
-        ],
-    )
+    return os.environ.get("TEST_CRATEDB_CLOUD_CLUSTER_ID", "7475893f-9672-469a-9943-5e413c598589")
 
 
-@pytest.fixture
-def mock_cloud_import(cratedb):
+@pytest.fixture()
+def cloud_cluster_name() -> str:
     """
-    Mock a CrateDB Cloud API conversation, pretending to run a successful data import.
+    Provide the name of a CrateDB Cloud cluster to be used for integration tests.
     """
-    responses.add(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/",
-        json={
-            "id": "e1e38d92-a650-48f1-8a70-8133f2d5c400",
-            "project_id": "3b6b7c82-d0ab-458c-ae6f-88f8346765ee",
-            "url": cratedb.get_connection_url(),
-            "name": "testcluster",
-            "suspended": False,
-        },
+    return os.environ.get("TEST_CRATEDB_CLOUD_CLUSTER_NAME", "testcluster")
+
+
+@pytest.fixture()
+def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str], None, None]:
+    """
+    Provide environment variables for integration tests with CrateDB Cloud.
+    """
+    settings = {
+        "CRATEDB_CLOUD_API_KEY": os.environ.get("TEST_CRATEDB_CLOUD_API_KEY"),
+        "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
+        "CRATEDB_CLOUD_ORGANIZATION_ID": os.environ.get("TEST_CRATEDB_CLOUD_ORGANIZATION_ID"),
+        "CRATEDB_CLOUD_CLUSTER_NAME": cloud_cluster_name,
+        "CRATEDB_USERNAME": os.environ.get("TEST_CRATEDB_USERNAME"),
+        "CRATEDB_PASSWORD": os.environ.get("TEST_CRATEDB_PASSWORD"),
+    }
+
+    if any(setting is None for setting in settings.values()):
+        raise pytest.skip("Missing environment variables for headless mode with croud")
+
+    mocker.patch.dict("os.environ", settings)
+
+    cratedb_toolkit.configure(
+        settings_accept_env=True,
     )
-    responses.add(
-        method="POST",
-        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
-        json={"id": "testdrive-job-id", "status": "REGISTERED"},
-    )
-    responses.add(
-        method="GET",
-        url="https://console.cratedb.cloud/api/v2/clusters/e1e38d92-a650-48f1-8a70-8133f2d5c400/import-jobs/",
-        json=[
-            {
-                "id": "testdrive-job-id",
-                "status": "SUCCEEDED",
-                "progress": {"message": "Import succeeded"},
-                "destination": {"table": "basic"},
-            }
-        ],
+
+    yield settings
+
+    cratedb_toolkit.configure(
+        settings_accept_env=False,
     )
 
 
@@ -205,22 +214,6 @@ def check_sqlalchemy2(**kwargs):
     """
     if not IS_SQLALCHEMY2:
         raise pytest.skip("This feature or subsystem needs SQLAlchemy 2.x", **kwargs)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def reset_environment():
-    """
-    Reset all environment variables in use, so that they do not pollute the test suite.
-    """
-    envvars = []
-    specs = ManagedClusterSettings.settings_spec
-    for spec in specs:
-        envvars.append(spec.click.envvar)
-    for envvar in envvars:
-        try:
-            del os.environ[envvar]
-        except KeyError:
-            pass
 
 
 setup_logging()

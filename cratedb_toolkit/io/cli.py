@@ -5,8 +5,8 @@ from pathlib import Path
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.api.main import ClusterBase, ManagedCluster, StandaloneCluster
-from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
+from cratedb_toolkit.api.main import UniversalCluster
+from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click, make_command
 
@@ -54,44 +54,19 @@ def load_table(
     Import data into CrateDB and CrateDB Cloud clusters.
     """
 
-    error_message = (
-        "Either CrateDB Cloud Cluster identifier or CrateDB SQLAlchemy or HTTP URL needs to be supplied. "
-        "Use --cluster-id / --cluster-name / --cratedb-sqlalchemy-url / --cratedb-http-url CLI options "
-        "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_CLOUD_CLUSTER_NAME / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL "
-        "environment variables."
-    )
-
     # When `--transformation` is given, but empty, fix it.
     if transformation is not None and transformation.name == "":
         transformation = None
-
-    # When SQLAlchemy URL is not given, but HTTP URL is, compute the former on demand.
-    if cluster_id:
-        address = None
-    elif cluster_name:
-        address = None
-    elif cratedb_sqlalchemy_url:
-        address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
-    elif cratedb_http_url:
-        address = DatabaseAddress.from_httpuri(cratedb_sqlalchemy_url)
-    else:
-        raise KeyError(error_message)
 
     # Encapsulate source and target parameters.
     source = InputOutputResource(url=url, format=format_, compression=compression)
     target = TableAddress(schema=schema, table=table)
 
     # Dispatch "load table" operation.
-    # TODO: Unify cluster factory.
-    cluster: ClusterBase
-    if cluster_id is not None or cluster_name is not None:
-        cluster = ManagedCluster(id=cluster_id, name=cluster_name)
-    elif cratedb_sqlalchemy_url or cratedb_http_url:
-        if cratedb_sqlalchemy_url:
-            address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
-        elif cratedb_http_url:
-            address = DatabaseAddress.from_httpuri(cratedb_sqlalchemy_url)
-        cluster = StandaloneCluster(address=address)
-    else:
-        raise KeyError(error_message)
+    cluster = UniversalCluster.create(
+        cluster_id=cluster_id,
+        cluster_name=cluster_name,
+        sqlalchemy_url=cratedb_sqlalchemy_url,
+        http_url=cratedb_http_url,
+    )
     return cluster.load_table(source=source, target=target, transformation=transformation)

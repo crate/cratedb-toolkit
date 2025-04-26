@@ -7,7 +7,7 @@
 - CFR: Added the ability to anonymize queries recorded by `collect`
 - Cloud API: SDK and CLI for CrateDB Cloud Cluster and Import APIs.
   Supports headless/unattended operations on CrateDB Cloud clusters, covering
-  deploy/start/resume and data import procedures using fluent API and CLI interfaces.
+  deploy/start/resume and data import procedures using fluent API and CLI.
 
 ## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through

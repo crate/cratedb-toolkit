@@ -26,7 +26,7 @@ Synopsis
     croud clusters list
 
     # Invoke example import of CSV and Parquet files.
-    python examples/python/cloud_import.py --cluster-id e1e38d92-a650-48f1-8a70-8133f2d5c400
+    python examples/python/cloud_import.py --cluster-id '<YOUR_CLUSTER_ID_HERE>'
 
 Usage
 =====
@@ -43,13 +43,13 @@ Configuration
 
 The configuration settings can be specified as CLI arguments::
 
-    --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    --cluster-name=Hotzenplotz
+    --cluster-id='<YOUR_CLUSTER_ID_HERE>'
+    --cluster-name='<YOUR_CLUSTER_NAME_HERE>'
 
 Alternatively, you can use environment variables::
 
-    export CRATEDB_CLOUD_CLUSTER_ID=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
+    export CRATEDB_CLOUD_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
+    export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 
 Command line arguments take precedence. When omitted, the program will
 fall back to probe the environment variables.

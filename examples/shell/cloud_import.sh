@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env sh
+
 # Copyright (c) 2023-2025, Crate.io Inc.
 # Distributed under the terms of the Apache 2 license.
 #
@@ -65,15 +66,15 @@
 # A quick usage example for fully unattended operation,
 # please adjust individual settings accordingly::
 #
-#   export CRATEDB_CLOUD_API_KEY=crate_cloud_key
-#   export CRATEDB_CLOUD_API_SECRET=crate_cloud_secret
-#   export CRATEDB_CLOUD_ORGANIZATION_ID=f807b302-f819-4621-8450-397fc02efe71
-#   export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
-#   export CRATEDB_USERNAME=admin
-#   export CRATEDB_PASSWORD=mypassword
+#   export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
+#   export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
+#   export CRATEDB_CLOUD_ORGANIZATION_ID='<YOUR_ORG_ID_HERE>'
+#   export CRATEDB_USERNAME='<YOUR_USERNAME_HERE>'
+#   export CRATEDB_PASSWORD='<YOUR_PASSWORD_HERE>'
 #
 # Initialize a cluster instance, and run a data import::
 #
+#   export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 #   sh examples/shell/cloud_import.sh
 #
 # Query imported data::
@@ -81,6 +82,14 @@
 #   ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
 #
 
+# Exit on error.
+set -e
+
+# Start or resume the CrateDB Cloud cluster.
 ctk cluster start
+
+# Import data from a public CSV file into a table named "nab-machine-failure".
 ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
+
+# Query the first 10 rows from the imported table.
 ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'

@@ -44,15 +44,20 @@ class CroudWrapper:
         self.decode_output = decode_output
 
     def invoke_safedecode(self) -> t.Any:
-        # FIXME: Fix `croud clusters deploy`.
-        #        It yields *two* payloads to stdout, making it
-        #        unusable in JSON-capturing situations.
+        """
+        TODO: Fix `croud clusters deploy`.
+              It yields *two* payloads to stdout, making it
+              unusable in JSON-capturing situations.
+
+        FIXME: Remove after this patch has been merged and released:
+               https://github.com/crate/croud/pull/564
+        """
         # The main advantage of the `JSONDecoder` class is that it also provides
         # a `.raw_decode` method, which will ignore extra data after the end of the JSON.
         # https://stackoverflow.com/a/75168292
         payload = self.invoke()
         decoder = json.JSONDecoder()
-        data = decoder.raw_decode(payload)
+        data, _ = decoder.raw_decode(payload)
         return data
 
     def invoke(self) -> t.Any:
@@ -151,9 +156,13 @@ class CroudWrapper:
         tmp_file = NamedTemporaryFile()
         tmp_path = Path(tmp_file.name)
         config = Configuration("headless.yaml", tmp_path)
+
+        # Get credentials from the environment.
         config.profile["key"] = os.environ.get("CRATEDB_CLOUD_API_KEY")
         config.profile["secret"] = os.environ.get("CRATEDB_CLOUD_API_SECRET")
         config.profile["organization-id"] = os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
+        # config.profile["endpoint"] = os.environ.get("CRATEDB_CLOUD_ENDPOINT")  # noqa: ERA001
+
         return config
 
     def run_croud_fun(self, fun: t.Callable, with_exceptions: bool = True):
@@ -243,11 +252,38 @@ def table_fqn(table: str) -> str:
     """
     Return the table name, quoted, like `"<table>"`. When applicable,
     use the full qualified name `"<schema>"."<table>"`.
+
+    Args:
+        table: The table name or schema-qualified table name
+
+    Returns:
+        A properly quoted table name suitable for SQL queries
+
+    Examples:
+        >>> table_fqn("mytable")
+        '"mytable"'
+        >>> table_fqn("myschema.mytable")
+        '"myschema"."mytable"'
+        >>> table_fqn('"already.quoted"')
+        '"already.quoted"'
+
+    TODO: Possibly use more elaborate function from CTK.
     """
+
+    # Empty or None table name.
+    if not table:
+        raise ValueError("Table name cannot be empty")
+
     if '"' in table:
         return table
+
+    # Schema-qualified table name.
     if "." in table:
-        schema, table = table.split(".")
-        return f'"{schema}"."{table}"'
+        # Handle multi-part qualified names (e.g., catalog.schema.table).
+        parts = table.split(".")
+        quoted_parts = [f'"{part}"' for part in parts]
+        return ".".join(quoted_parts)
+
+    # Simple table name
     else:
         return f'"{table}"'

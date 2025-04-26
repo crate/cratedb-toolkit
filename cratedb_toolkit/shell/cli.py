@@ -1,15 +1,31 @@
 import click
 
 from cratedb_toolkit.cluster.model import ClusterInformation
+from cratedb_toolkit.exception import DatabaseAddressMissingError
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_sqlalchemy_url
-from cratedb_toolkit.util.cli import boot_click
+from cratedb_toolkit.util.cli import boot_click, docstring_format_verbatim
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
 
 output_formats = get_crash_output_formats()
 
 
-@click.command()
+def help_cli():
+    """
+    Start an interactive database shell, or invoke SQL commands.
+
+    The API wrapper uses `crash` under the hood, provides a subset of its features,
+    but a more convenient interface, specifically when using CrateDB Cloud.
+
+    See also:
+    - https://cratedb-toolkit.readthedocs.io/util/shell.html
+    - https://cratedb.com/docs/crate/crash/
+
+    TODO: Learn/forward more options of `crash`.
+    """
+
+
+@click.command(help=docstring_format_verbatim(help_cli.__doc__))
 @option_cluster_id
 @option_cluster_name
 @option_sqlalchemy_url
@@ -48,9 +64,7 @@ def cli(
     debug: bool,
 ):
     """
-    Start an interactive database shell, or invoke SQL commands.
-
-    TODO: Learn/forward more options of `crash`.
+    Start an interactive database shell, or invoke SQL commands, using `crash`.
     """
     boot_click(ctx, verbose, debug)
 
@@ -61,9 +75,7 @@ def cli(
         cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
         cratedb_http_url = cluster_info.cloud["url"]
     else:
-        raise ValueError(
-            "Unknown database address, please specify cluster id, cluster name, or database URI in SQLAlchemy format"
-        )
+        raise DatabaseAddressMissingError()
 
     run_crash(
         hosts=cratedb_http_url,

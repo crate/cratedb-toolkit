@@ -47,5 +47,16 @@ def setup_logging(level=logging.INFO, verbose: bool = False, debug: bool = False
     logging.getLogger("faker").setLevel(logging.ERROR)
 
 
-def croak(message: str = "Foo."):
+def croak(message: str = "Operation failed due to invalid input or state."):
+    """
+    Raise a ValueError with the provided message.
+
+    A simple utility function for raising exceptions with custom messages.
+
+    Args:
+        message: The error message to include in the ValueError.
+
+    Raises:
+        ValueError: Always raised with the provided message.
+    """
     raise ValueError(message)

@@ -22,6 +22,10 @@ class ClientBundle:
 
 
 class ClusterBase(abc.ABC):
+    """
+    A common base class for all cluster-related functionality across CrateDB and CrateDB Cloud.
+    """
+
     @abc.abstractmethod
     def load_table(self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None):
         raise NotImplementedError("Child class needs to implement this method")
