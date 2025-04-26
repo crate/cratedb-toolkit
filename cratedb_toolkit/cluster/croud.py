@@ -1,7 +1,9 @@
 import json
+import os
 import typing as t
 from pathlib import Path
 
+from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
 
@@ -126,6 +128,18 @@ class CloudManager:
         if subscription_id is None:
             raise ValueError("Failed to obtain a subscription identifier")
 
+        # TODO: Use `latest` CrateDB by default.
+        # TODO: Add documentation.
+        cratedb_version = os.environ.get("CRATEDB_VERSION", "5.10.4")
+        username = os.environ.get("CRATEDB_USERNAME")
+        password = os.environ.get("CRATEDB_PASSWORD")
+
+        if not username or not password:
+            raise ValueError(
+                "Username and password must be set in the environment "
+                "variables 'CRATEDB_USERNAME' and 'CRATEDB_PASSWORD'."
+            )
+
         call = CroudCall(
             fun=clusters_deploy,
             specs=command_tree["clusters"]["commands"]["deploy"]["extra_args"],
@@ -135,25 +149,58 @@ class CloudManager:
                 "--tier=default",
                 "--product-name=crfree",
                 f"--cluster-name={name}",
-                "--version=5.5.0",
-                "--username=admin",
-                "--password=H3IgNXNvQBJM3CiElOiVHuSp6CjXMCiQYhB4I9dLccVHGvvvitPSYr1vTpt4",
+                f"--version={cratedb_version}",
+                f"--username={username}",
+                f"--password={password}",
             ],
         )
 
         wr = CroudWrapper(call=call, decode_output=False)
+        return wr.invoke_safedecode()
 
-        # FIXME: Fix `croud clusters deploy`.
-        #        It yields *two* payloads to stdout, making it
-        #        unusable in JSON-capturing situations.
-        # The main advantage of the `JSONDecoder` class is that it also provides
-        # a `.raw_decode` method, which will ignore extra data after the end of the JSON.
-        # https://stackoverflow.com/a/75168292
-        payload = wr.invoke()
-        decoder = json.JSONDecoder()
-        data = decoder.raw_decode(payload)
+    def resume_cluster(self, identifier: str):
+        """
+        Resume cluster.
+        """
+        from croud.__main__ import command_tree
+        from croud.clusters.commands import clusters_set_suspended
 
-        return data
+        call = CroudCall(
+            fun=clusters_set_suspended,
+            specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
+            arguments=[
+                f"--cluster-id={identifier}",
+                "--value=false",
+            ],
+        )
+
+        wr = CroudWrapper(call=call, decode_output=False)
+        return wr.invoke_safedecode()
+
+    def suspend_cluster(self, identifier: str):
+        """
+        Suspend cluster.
+        """
+        from croud.__main__ import command_tree
+        from croud.clusters.commands import clusters_set_suspended
+
+        call = CroudCall(
+            fun=clusters_set_suspended,
+            specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
+            arguments=[
+                f"--cluster-id={identifier}",
+                "--value=true",
+            ],
+        )
+
+        wr = CroudWrapper(call=call, decode_output=False)
+        try:
+            return wr.invoke_safedecode()
+        except CroudException as e:
+            if "This cluster is already suspended" in str(e):
+                pass
+            else:
+                raise
 
 
 class CloudCluster:

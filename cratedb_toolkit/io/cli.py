@@ -61,15 +61,14 @@ def load_table(
         "environment variables."
     )
 
-    if not cluster_id and not cratedb_sqlalchemy_url and not cratedb_http_url:
-        raise KeyError(error_message)
-
     # When `--transformation` is given, but empty, fix it.
     if transformation is not None and transformation.name == "":
         transformation = None
 
     # When SQLAlchemy URL is not given, but HTTP URL is, compute the former on demand.
     if cluster_id:
+        address = None
+    elif cluster_name:
         address = None
     elif cratedb_sqlalchemy_url:
         address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)

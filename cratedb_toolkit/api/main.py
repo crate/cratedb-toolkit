@@ -123,6 +123,8 @@ class ManagedCluster(ClusterBase):
         if self.id is None and self.name is None:
             raise ValueError("Failed to address cluster: Either cluster identifier or name needs to be specified")
 
+        self.cm = CloudManager()
+
     @classmethod
     @flexfun(domain="settings")
     def from_env(cls) -> "ManagedCluster":
@@ -160,10 +162,11 @@ class ManagedCluster(ClusterBase):
                 raise
 
     def stop(self) -> "ManagedCluster":
-        logger.warning("Stopping cluster not implemented yet")
+        raise NotImplementedError("Stopping cluster not implemented yet")
         return self
 
     def delete(self) -> "ManagedCluster":
+        raise NotImplementedError("Deleting cluster not implemented yet")
         return self
 
     def probe(self) -> "ManagedCluster":
@@ -189,7 +192,9 @@ class ManagedCluster(ClusterBase):
     def start(self) -> "ManagedCluster":
         """
         Start a database cluster.
-        When cluster does not exist, acquire/deploy it.
+        If the cluster does not exist, deploy it first.
+
+        Command: ctk cluster start
         """
         logger.info(f"Deploying/starting/resuming CrateDB Cloud Cluster: id={self.id}, name={self.name}")
         self.acquire()
@@ -204,14 +209,19 @@ class ManagedCluster(ClusterBase):
         - When a cluster exists, but is stopped/hibernated, start/resume it.
         """
         self.probe()
-        if not self.exists:
+        if self.exists:
+            suspended = self.info.cloud.get("suspended")
+            if suspended is True:
+                logger.info(f"Cluster is suspended, resuming it: id={self.id}, name={self.name}")
+                self.resume()
+            elif suspended is False:
+                logger.info(f"Cluster is running: id={self.id}, name={self.name}")
+            else:
+                raise CroudException(f"Cluster in unknown state: {self.name}")
+        else:
             logger.info(f"Cluster does not exist, deploying it: id={self.id}, name={self.name}")
             self.deploy()
             logger.info(f"Cluster deployed: id={self.id}, name={self.name}")
-
-            # Wait a bit, to let the deployment settle, to work around DNS propagation problems.
-            time.sleep(3.25)
-
             self.probe()
             if not self.exists:
                 # TODO: Is it possible to gather and propagate more information why the deployment failed?
@@ -221,19 +231,50 @@ class ManagedCluster(ClusterBase):
     def deploy(self) -> "ManagedCluster":
         """
         Run the cluster deployment procedure.
+
+        Command: ctk cluster start
         """
         # FIXME: Accept id or name.
         if self.name is None:
             raise ValueError("Need cluster name to deploy")
-        cm = CloudManager()
-        # TODO: Only create new project when needed. Otherwise, use existing project.
-        project = cm.create_project(name=self.name, organization_id=self.settings.organization_id)
+        # FIXME: Only create new project when needed. Otherwise, use existing project.
+        project = self.cm.create_project(name=self.name, organization_id=self.settings.organization_id)
         project_id = project["id"]
         logger.info(f"Created project: {project_id}")
-        cluster_info = cm.deploy_cluster(
+        cluster_info = self.cm.deploy_cluster(
             name=self.name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
+
+        # Wait a bit to let the deployment settle, mostly to work around DNS propagation issues.
+        time.sleep(3.25)
+
         return cluster_info
+
+    def resume(self) -> "ManagedCluster":
+        """
+        Resume a database cluster.
+
+        Command: ctk cluster start
+        """
+        if self.id is None:
+            raise ValueError("Need cluster identifier to resume")
+        logger.info(f"Resuming CrateDB Cloud Cluster: id={self.id}, name={self.name}")
+        self.cm.resume_cluster(identifier=self.id)
+        self.probe()
+        return self
+
+    def suspend(self) -> "ManagedCluster":
+        """
+        Suspend a database cluster.
+
+        Command: ctk cluster suspend
+        """
+        if self.id is None:
+            raise ValueError("Need cluster identifier to suspend")
+        logger.info(f"Suspending CrateDB Cloud Cluster: id={self.id}, name={self.name}")
+        self.cm.suspend_cluster(identifier=self.id)
+        self.probe()
+        return self
 
     @flexfun(domain="runtime")
     def load_table(
@@ -273,16 +314,16 @@ class ManagedCluster(ClusterBase):
             logger.info("Job information:\n%s", json.dumps(cloud_job.info, indent=2))
             # TODO: Explicitly report about `failed_records`, etc.
             texts = GuidingTexts(
-                admin_url=self.info.cloud["url"],
-                table_name=cloud_job.info["destination"]["table"],
+                cluster_info=self.info,
+                job=cloud_job,
             )
             if cloud_job.success:
-                logger.info("Data loading was successful: %s", texts.success())
+                logger.info("Data loading was successful.\n%s\n", texts.success())
                 return cloud_job
             else:
                 # TODO: Add "reason" to exception message.
-                message = f"Data loading failed: {cloud_job.message}"
-                logger.error(f"{message}{texts.error()}")
+                message = f"Data loading failed.\n{cloud_job.message}"
+                logger.error(f"{message}\n{texts.error()}\n")
                 raise OperationFailed(message)
 
         # When exiting so, it is expected that error logging has taken place appropriately.

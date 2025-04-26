@@ -17,7 +17,7 @@ Synopsis
 ::
 
     # Install utility package.
-    pip install 'cratedb-toolkit'
+    uv tool install --upgrade 'cratedb-toolkit'
 
     # Log in to CrateDB Cloud.
     croud login --idp azuread
@@ -26,7 +26,7 @@ Synopsis
     croud clusters list
 
     # Invoke example import of CSV and Parquet files.
-    python examples/cloud_import.py --cluster-id e1e38d92-a650-48f1-8a70-8133f2d5c400
+    python examples/python/cloud_import.py --cluster-id e1e38d92-a650-48f1-8a70-8133f2d5c400
 
 Usage
 =====
@@ -72,27 +72,24 @@ def import_csv():
 
     The corresponding shell commands are::
 
-        ctk load table "https://github.com/crate/cratedb-datasets/raw/main/machine-learning/timeseries/nab-machine-failure.csv"
+        ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
         ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
     """
 
-    # Acquire database cluster handle, obtaining cluster identifier
-    # or name from the user's environment.
+    # Acquire a database cluster handle and get cluster identifier or name from the user's environment.
     cluster = ManagedCluster.from_env().start()
 
     # Define data source.
     url = "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
     source = InputOutputResource(url=url)
 
-    # Invoke import job. Without `target` argument, the destination
+    # Invoke the import job. Without the `target` argument, the destination
     # table name will be derived from the input file name.
     cluster.load_table(source=source)
 
     # Query data.
-    """
     results = cluster.query('SELECT * FROM "nab-machine-failure" LIMIT 5;')
     pprint(results)  # noqa: T203
-    """
 
 
 def import_parquet():
@@ -101,12 +98,11 @@ def import_parquet():
 
     The corresponding shell commands are::
 
-        ctk load table "https://github.com/crate/cratedb-datasets/raw/main/timeseries/yc.2019.07-tiny.parquet.gz"
+        ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz"
         ctk shell --command 'SELECT * FROM "testdrive"."yc-201907" LIMIT 10;'
     """
 
-    # Acquire database cluster handle, obtaining cluster identifier
-    # or name from the user's environment.
+    # Acquire a database cluster handle and get cluster identifier or name from the user's environment.
     cluster = ManagedCluster.from_env().start()
 
     # Define data source and target table.
@@ -114,14 +110,12 @@ def import_parquet():
     source = InputOutputResource(url=url)
     target = TableAddress(schema="testdrive", table="yc-201907")
 
-    # Invoke import job. The destination table name is explicitly specified.
+    # Invoke the import job. The destination table name is explicitly specified.
     cluster.load_table(source=source, target=target)
 
     # Query data.
-    """
-    results = cluster.query('SELECT * FROM "yc-201907" LIMIT 5;')
+    results = cluster.query('SELECT * FROM "testdrive"."yc-201907" LIMIT 5;')
     pprint(results)  # noqa: T203
-    """
 
 
 def main():
@@ -130,8 +124,8 @@ def main():
 
 
 if __name__ == "__main__":
-    # Configure toolkit environment to be suitable for a CLI application, with
-    # interactive guidance, and accepting configuration settings from the environment.
+    # Configure a toolkit environment to be suitable for a CLI application, with
+    # interactive guidance and accepting configuration settings from the environment.
     setup_logging()
     cratedb_toolkit.configure(
         runtime_errors="exit",
@@ -140,5 +134,5 @@ if __name__ == "__main__":
         settings_errors="exit",
     )
 
-    # Run program.
+    # Run the program.
     main()

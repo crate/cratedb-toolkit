@@ -99,6 +99,78 @@ jobs:
         fail_ci_if_error: true
 
 
+  tests-cloud:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: [
+          "3.13",
+        ]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+
+    name: "
+    Cloud:
+    Python ${{ matrix.python-version }} on OS ${{ matrix.os }}
+    "
+    steps:
+
+    - name: Acquire sources
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+        cache: 'pip'
+        cache-dependency-path: 'pyproject.toml'
+
+    - name: Set up project
+      run: |
+
+        # Install sponge.
+        sudo apt-get install moreutils
+
+        # `setuptools 64` adds support for editable install hooks (PEP 660).
+        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
+        # `setuptools 71` significantly re-vendors setuptools packages, causing hiccups on Python 3.8.
+        # https://github.com/pypa/setuptools/pull/4457
+        pip install "setuptools>=64,<71" --upgrade
+
+        # Install package in editable mode.
+        pip install --use-pep517 --prefer-binary --editable='.[full,test,develop]'
+
+    - name: Run linter and software tests
+      env:
+        KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+        KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        TEST_CRATEDB_CLOUD_API_KEY: ${{ secrets.TEST_CRATEDB_CLOUD_API_KEY }}
+        TEST_CRATEDB_CLOUD_API_SECRET: ${{ secrets.TEST_CRATEDB_CLOUD_API_SECRET }}
+        TEST_CRATEDB_CLOUD_ORGANIZATION_ID: ${{ secrets.TEST_CRATEDB_CLOUD_ORGANIZATION_ID }}
+        #TEST_CRATEDB_CLOUD_CLUSTER_NAME: ${{ secrets.TEST_CRATEDB_CLOUD_CLUSTER_NAME }}
+        TEST_CRATEDB_USERNAME: ${{ secrets.TEST_CRATEDB_USERNAME }}
+        TEST_CRATEDB_PASSWORD: ${{ secrets.TEST_CRATEDB_PASSWORD }}
+      run: |
+        poe check
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        files: ./coverage.xml
+        flags: cloud
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+
+
   tests-cfr:
 
     runs-on: ${{ matrix.os }}

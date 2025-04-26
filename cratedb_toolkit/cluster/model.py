@@ -14,6 +14,14 @@ class ClusterInformation:
     cratedb: t.Any = dataclasses.field(default_factory=dict)
     cloud: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
 
+    @property
+    def cloud_id(self) -> str:
+        return self.cloud["id"]
+
+    @property
+    def cloud_name(self) -> str:
+        return self.cloud["name"]
+
     @classmethod
     def from_id_or_name(cls, cluster_id: str = None, cluster_name: str = None) -> "ClusterInformation":
         """
