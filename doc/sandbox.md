@@ -8,12 +8,14 @@ git clone https://github.com/crate/cratedb-toolkit
 cd cratedb-toolkit
 ```
 
-It is recommended to use a Python virtualenv for the subsequent operations.
+It is recommended to use a Python virtualenv for the following operations:
 If you something gets messed up during development, it is easy to nuke the
-installation, and start from scratch.
+installation, and start from scratch. We also recommend the [`uv` package manager].
 ```shell
-python3 -m venv .venv
-source .venv/bin/activate
+pipx install uv   # or: brew install uv
+```
+```shell
+uv venv --python 3.12 --seed .venv
 ```
 
 Install project in sandbox mode.
@@ -52,3 +54,6 @@ docker.errors.DockerException: Error while fetching server API version:
 AttributeError: 'CrateDBContainer' object has no attribute '_container'
 ```
 In order to fix the problem, just start your Docker daemon.
+
+
+[`uv` package manager]: https://github.com/astral-sh/uv

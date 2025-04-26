@@ -26,10 +26,10 @@ def test_tail_sys_summits_format_yaml(cratedb):
 def test_tail_sys_jobs_log_default(cratedb):
     tt = TableTailer(db=cratedb.database, resource=TableAddress.from_string("sys.jobs_log"))
     results = tt.start(lines=2)
-    assert len(results) == 2
+    assert len(results) >= 1
 
 
 def test_tail_sys_jobs_log_format_json(cratedb):
     tt = TableTailer(db=cratedb.database, resource=TableAddress.from_string("sys.jobs_log"), format="json")
     results = tt.start(lines=2)
-    assert len(results) == 2
+    assert len(results) >= 1

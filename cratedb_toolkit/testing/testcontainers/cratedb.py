@@ -141,7 +141,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         """
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
-        wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
+        self._wait_for_node_startup()
         return super()._create_connection_url(
             dialect=dialect,
             username=self.CRATEDB_USER,
@@ -152,6 +152,10 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
 
     @wait_container_is_ready()
     def _connect(self):
+        self._wait_for_node_startup()
+
+    def _wait_for_node_startup(self):
+        """Wait for CrateDB node to be fully started."""
         # TODO: Better use a network connectivity health check?
         #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
         # TODO: Provide a client instance.

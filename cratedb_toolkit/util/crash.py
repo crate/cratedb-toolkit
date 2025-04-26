@@ -1,6 +1,8 @@
+import contextlib
 import os
 import sys
 import typing as t
+from unittest import mock
 
 from crate.crash.command import main
 
@@ -9,7 +11,7 @@ def run_crash(
     hosts: str, command: str, output_format: str = None, schema: str = None, username: str = None, password: str = None
 ):
     """
-    Run interactive CrateDB database shell, using `crash`.
+    Run the interactive CrateDB database shell using `crash`.
     """
 
     cmd = ["crash", "--hosts", hosts]
@@ -21,10 +23,12 @@ def run_crash(
         cmd += ["--command", command]
     if output_format:
         cmd += ["--format", output_format]
-    sys.argv = cmd
-    if password:
-        os.environ["CRATEPW"] = password
-    main()
+    with mock.patch.object(sys, "argv", cmd):
+        password_context: contextlib.AbstractContextManager = contextlib.nullcontext()
+        if password:
+            password_context = mock.patch.dict(os.environ, {"CRATEPW": password})
+        with password_context:
+            main()
 
 
 def get_crash_output_formats() -> t.List[str]:

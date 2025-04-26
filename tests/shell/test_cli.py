@@ -25,7 +25,7 @@ def test_shell_standalone(cratedb):
     assert json.loads(result.output) == [{"answer": 42}]
 
 
-def test_shell_cloud(cratedb, mocker):
+def test_shell_cloud(cratedb, mocker, cloud_cluster_name):
     """
     Verify the successful incantation of `ctk shell` against CrateDB Cloud.
     """
@@ -47,7 +47,7 @@ def test_shell_cloud(cratedb, mocker):
 
     result = runner.invoke(
         cli,
-        args="--cluster-name=testcluster --command 'SELECT 42 AS answer;' --format=json",
+        args=f"--cluster-name={cloud_cluster_name} --command 'SELECT 42 AS answer;' --format=json",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -59,11 +59,10 @@ def test_shell_no_address():
     Verify `ctk shell` fails when invoked without a database address.
     """
     runner = CliRunner()
-
-    with pytest.raises(ValueError) as ex:
-        runner.invoke(
-            cli,
-            args="--command 'SELECT 42 AS answer;' --format=json",
-            catch_exceptions=False,
-        )
-    assert ex.match("Unknown database address")
+    result = runner.invoke(
+        cli,
+        args="--command 'SELECT 42 AS answer;' --format=json",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 1
+    assert "Error: Missing database address" in result.output

@@ -46,13 +46,13 @@ class CloudJob:
 
     @property
     def id(self):  # noqa: A003
-        return self.info["id"]
+        return self.info.get("id")
 
     @property
     def status(self):
         if self._custom_status:
             return self._custom_status
-        return self.info["status"]
+        return self.info.get("status", "UNKNOWN")
 
     @property
     def success(self):
@@ -62,7 +62,7 @@ class CloudJob:
     def message(self):
         if self._custom_message:
             return self._custom_message
-        return self.info["progress"]["message"]
+        return self.info.get("progress", {}).get("message", "No message available")
 
     def fix_job_info_table_name(self):
         """
@@ -92,11 +92,11 @@ class CloudIo:
         self.cluster_id = cluster_id
         self.cluster = CloudCluster(cluster_id=cluster_id)
 
-    def load_resource(self, resource: InputOutputResource, target: TableAddress) -> CloudJob:
+    def load_resource(
+        self, resource: InputOutputResource, target: TableAddress, max_retries: int = 10, retry_delay: float = 0.15
+    ) -> CloudJob:
         """
         Load resource from URL into CrateDB, using CrateDB Cloud infrastructure.
-
-        TODO: Refactor return value to use dedicated type.
         """
 
         # Use `schema` and `table` when given, otherwise derive from input URL.
@@ -107,14 +107,22 @@ class CloudIo:
 
         import_job = self.create_import_job(resource=resource, target=target)
         job_id = import_job.id
-        # TODO: Review this.
-        time.sleep(0.15)
-        cloud_job = self.find_job(job_id=job_id)
-        if not cloud_job.found:
-            logger.error(cloud_job.message)
-        if not cloud_job.info:
-            cloud_job.info = import_job.info
-        return cloud_job
+
+        for _ in range(max_retries):
+            job = self.find_job(job_id=job_id)
+            if job.found:
+                break
+            time.sleep(retry_delay)
+        else:
+            msg = "Job never appeared in the listing"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        if not job.found:
+            logger.error(job.message)
+        if not job.info:
+            job.info = import_job.info
+        return job
 
     def find_job(self, job_id: str) -> CloudJob:
         """
@@ -147,7 +155,6 @@ class CloudIo:
         """
 
         # Compute command-line arguments for invoking `croud`.
-        # FIXME: This call is redundant.
         path = Path(resource.url)
 
         # Honor `schema` argument.

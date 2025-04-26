@@ -1,13 +1,14 @@
 import functools
 import logging
 import sys
+import typing as t
 
 from cratedb_toolkit.config import CONFIG
 
 logger = logging.getLogger()
 
 
-def flexfun(domain: str = None):
+def flexfun(domain: t.Literal["runtime", "settings"] = None):
     """
     Function decorator, which honors toolkit environment settings wrt. error handling.
 
@@ -43,24 +44,26 @@ def flexfun(domain: str = None):
                 return fn(*args, **kwargs)
             except Exception as ex:
                 if domain == "runtime":
-                    if CONFIG.runtime_errors == "raise":
+                    runtime_mode = getattr(CONFIG, "runtime_errors", "raise")
+                    if runtime_mode == "raise":
                         raise
-                    elif CONFIG.runtime_errors == "exit":  # noqa: RET506
+                    elif runtime_mode == "exit":  # noqa: RET506
                         logger.error(ex)
                         sys.exit(runtime_error_exit_code)
                     else:
                         raise NotImplementedError(
-                            f"Unknown way to handle runtime errors: {CONFIG.runtime_errors}"
+                            f"Unknown way to handle settings errors: {CONFIG.runtime_errors}"
                         ) from ex
                 elif domain == "settings":
-                    if CONFIG.settings_errors == "raise":
+                    settings_mode = getattr(CONFIG, "settings_errors", "raise")
+                    if settings_mode == "raise":
                         raise
-                    elif CONFIG.settings_errors == "exit":  # noqa: RET506
+                    elif settings_mode == "exit":  # noqa: RET506
                         logger.error(ex)
                         sys.exit(settings_error_exit_code)
                     else:
                         raise NotImplementedError(
-                            f"Unknown way to handle settings errors: {CONFIG.runtime_errors}"
+                            f"Unknown way to handle settings errors: {CONFIG.settings_errors}"
                         ) from ex
                 else:
                     logger.debug(f"Not suppressing exception on unknown domain: {domain}")

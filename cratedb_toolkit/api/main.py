@@ -1,21 +1,25 @@
 import dataclasses
 import json
 import logging
-import sys
 import time
 import typing as t
-from functools import lru_cache
+from copy import deepcopy
 from pathlib import Path
 
 import click
 from boltons.urlutils import URL
 
-from cratedb_toolkit.api.guide import GuidingTexts
+from cratedb_toolkit.api.guide import DataImportGuide
 from cratedb_toolkit.api.model import ClientBundle, ClusterBase
 from cratedb_toolkit.cluster.croud import CloudManager
 from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.config import CONFIG
-from cratedb_toolkit.exception import CroudException, OperationFailed
+from cratedb_toolkit.exception import (
+    CroudException,
+    DatabaseAddressDuplicateError,
+    DatabaseAddressMissingError,
+    OperationFailed,
+)
 from cratedb_toolkit.io.croud import CloudJob
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.data import asbool
@@ -104,48 +108,70 @@ class ManagedCluster(ClusterBase):
 
     def __init__(
         self,
-        id: str = None,  # noqa: A002
-        name: str = None,
+        cluster_id: str = None,
+        cluster_name: str = None,
         settings: ManagedClusterSettings = None,
         address: DatabaseAddress = None,
         info: ClusterInformation = None,
     ):
-        self.id = id
-        self.name = name
+        self.cluster_id = cluster_id
+        self.cluster_name = cluster_name
         self.settings = settings or ManagedClusterSettings()
         self.address = address
         self.info: ClusterInformation = info or ClusterInformation()
         self.exists: bool = False
 
         # Default settings and sanity checks.
-        self.id = self.id or self.settings.cluster_id
-        self.name = self.name or self.settings.cluster_name
-        if self.id is None and self.name is None:
-            raise ValueError("Failed to address cluster: Either cluster identifier or name needs to be specified")
+        self.cluster_id = self.cluster_id or self.settings.cluster_id or None
+        self.cluster_name = self.cluster_name or self.settings.cluster_name or None
+        if self.cluster_id is None and self.cluster_name is None:
+            raise DatabaseAddressMissingError(
+                "Failed to address cluster: Either cluster identifier or name needs to be specified"
+            )
 
         self.cm = CloudManager()
+
+    def __enter__(self):
+        """Enter the context manager, ensuring the cluster is running."""
+        return self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the context manager, suspending the cluster."""
+        if exc_type is not None:
+            # Log the exception but still attempt to suspend the cluster
+            logger.error(f"Exception occurred: {exc_type.__name__}: {exc_val}")
+
+        try:
+            self.suspend()
+            logger.info(f"Successfully suspended cluster: id={self.cluster_id}, name={self.cluster_name}")
+        except Exception as ex:
+            logger.error(f"Failed to suspend cluster: {ex}")
+            # Don't swallow the original exception
+            return False
+
+        return False  # Don't suppress any exceptions
 
     @classmethod
     @flexfun(domain="settings")
     def from_env(cls) -> "ManagedCluster":
         """
-        Obtain CrateDB Cloud cluster identifier or name from user environment.
+        Obtain CrateDB Cloud cluster identifier or name from the user environment.
         The settings are mutually exclusive.
 
         When the toolkit environment is configured with `settings_accept_cli`,
         the settings can be specified that way:
 
-            --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
-            --cluster-name=Hotzenplotz
+            --cluster-id='<YOUR_CLUSTER_ID_HERE>'
+            --cluster-name='<YOUR_CLUSTER_NAME_HERE>'
 
         When the toolkit environment is configured with `settings_accept_env`,
         the settings can be specified that way:
 
-            export CRATEDB_CLOUD_CLUSTER_ID=e1e38d92-a650-48f1-8a70-8133f2d5c400
-            export CRATEDB_CLOUD_CLUSTER_NAME=Hotzenplotz
+            export CRATEDB_CLOUD_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
+            export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
         """
         if not CONFIG.settings_accept_cli and not CONFIG.settings_accept_env:
-            raise ValueError(
+            raise DatabaseAddressMissingError(
                 "Unable to obtain cluster identifier or name without accepting settings from user environment"
             )
 
@@ -154,12 +180,11 @@ class ManagedCluster(ClusterBase):
             return cls(settings=settings)
 
         # TODO: With `flexfun`, can this section be improved?
-        except ValueError as ex:
+        except DatabaseAddressMissingError as ex:
             logger.error(f"Failed to address cluster: {ex}")
             if CONFIG.settings_errors == "exit":
-                sys.exit(1)
-            else:
-                raise
+                raise SystemExit(1) from ex
+            raise
 
     def stop(self) -> "ManagedCluster":
         raise NotImplementedError("Stopping cluster not implemented yet")
@@ -176,10 +201,10 @@ class ManagedCluster(ClusterBase):
         TODO: Investigate callers, and reduce number of invocations.
         """
         try:
-            self.info = ClusterInformation.from_id_or_name(cluster_id=self.id, cluster_name=self.name)
-            self.id = self.info.cloud["id"]
-            self.name = self.info.cloud["name"]
-        except (CroudException, ValueError) as ex:
+            self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
+            self.cluster_id = self.info.cloud["id"]
+            self.cluster_name = self.info.cloud["name"]
+        except (CroudException, DatabaseAddressMissingError) as ex:
             self.exists = False
             if "Cluster not found" not in str(ex):
                 raise
@@ -196,7 +221,9 @@ class ManagedCluster(ClusterBase):
 
         Command: ctk cluster start
         """
-        logger.info(f"Deploying/starting/resuming CrateDB Cloud Cluster: id={self.id}, name={self.name}")
+        logger.info(
+            f"Deploying/starting/resuming CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}"
+        )
         self.acquire()
         return self
 
@@ -212,20 +239,22 @@ class ManagedCluster(ClusterBase):
         if self.exists:
             suspended = self.info.cloud.get("suspended")
             if suspended is True:
-                logger.info(f"Cluster is suspended, resuming it: id={self.id}, name={self.name}")
+                logger.info(f"Cluster is suspended, resuming it: id={self.cluster_id}, name={self.cluster_name}")
                 self.resume()
             elif suspended is False:
-                logger.info(f"Cluster is running: id={self.id}, name={self.name}")
+                logger.info(f"Cluster is running: id={self.cluster_id}, name={self.cluster_name}")
             else:
-                raise CroudException(f"Cluster in unknown state: {self.name}")
+                raise CroudException(f"Cluster in unknown state: {self.cluster_name}")
         else:
-            logger.info(f"Cluster does not exist, deploying it: id={self.id}, name={self.name}")
+            logger.info(f"Cluster does not exist, deploying it: id={self.cluster_id}, name={self.cluster_name}")
             self.deploy()
-            logger.info(f"Cluster deployed: id={self.id}, name={self.name}")
+            logger.info(f"Cluster deployed: id={self.cluster_id}, name={self.cluster_name}")
             self.probe()
             if not self.exists:
-                # TODO: Is it possible to gather and propagate more information why the deployment failed?
-                raise CroudException(f"Deployment of cluster failed: {self.name}")
+                # TODO: Gather and propagate more information why the deployment failed.
+                #       Capture deployment logs or status if available.
+                #       Possibly use details from `last_async_operation`.
+                raise CroudException(f"Deployment of cluster failed: {self.cluster_name}")
         return self
 
     def deploy(self) -> "ManagedCluster":
@@ -235,11 +264,10 @@ class ManagedCluster(ClusterBase):
         Command: ctk cluster start
         """
         # FIXME: Accept id or name.
-        if self.name is None:
-            raise ValueError("Need cluster name to deploy")
+        if self.cluster_name is None:
+            raise DatabaseAddressMissingError("Need cluster name to deploy")
 
-        # Try to find the existing project by name first.
-        # FIXME: Only create new project when needed. Otherwise, use existing project.
+        # Find the existing project by name (equals cluster name).
         project_id = None
         try:
             projects = self.cm.list_projects()
@@ -258,7 +286,7 @@ class ManagedCluster(ClusterBase):
             logger.info(f"Created project: {project_id}")
 
         cluster_info = self.cm.deploy_cluster(
-            name=self.name, project_id=project_id, subscription_id=self.settings.subscription_id
+            name=self.cluster_name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
 
         # Wait a bit to let the deployment settle, mostly to work around DNS propagation issues.
@@ -272,10 +300,10 @@ class ManagedCluster(ClusterBase):
 
         Command: ctk cluster start
         """
-        if self.id is None:
-            raise ValueError("Need cluster identifier to resume")
-        logger.info(f"Resuming CrateDB Cloud Cluster: id={self.id}, name={self.name}")
-        self.cm.resume_cluster(identifier=self.id)
+        if self.cluster_id is None:
+            raise DatabaseAddressMissingError("Need cluster identifier to resume")
+        logger.info(f"Resuming CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
+        self.cm.resume_cluster(identifier=self.cluster_id)
         self.probe()
         return self
 
@@ -285,10 +313,10 @@ class ManagedCluster(ClusterBase):
 
         Command: ctk cluster suspend
         """
-        if self.id is None:
-            raise ValueError("Need cluster identifier to suspend")
-        logger.info(f"Suspending CrateDB Cloud Cluster: id={self.id}, name={self.name}")
-        self.cm.suspend_cluster(identifier=self.id)
+        if self.cluster_id is None:
+            raise DatabaseAddressMissingError("Need cluster identifier to suspend")
+        logger.info(f"Suspending CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
+        self.cm.suspend_cluster(identifier=self.cluster_id)
         self.probe()
         return self
 
@@ -315,13 +343,13 @@ class ManagedCluster(ClusterBase):
         target = target or TableAddress()
 
         # FIXME: Accept id or name.
-        if self.id is None:
-            raise ValueError("Need cluster identifier to load table")
+        if self.cluster_id is None:
+            raise DatabaseAddressMissingError("Need cluster identifier to load table")
 
         try:
-            cio = CloudIo(cluster_id=self.id)
+            cio = CloudIo(cluster_id=self.cluster_id)
         except CroudException as ex:
-            msg = f"Connecting to cluster resource failed: {self.id}. Reason: {ex}"
+            msg = f"Connecting to cluster resource failed: {self.cluster_id}. Reason: {ex}"
             logger.exception(msg)
             raise OperationFailed(msg) from ex
 
@@ -329,7 +357,7 @@ class ManagedCluster(ClusterBase):
             cloud_job = cio.load_resource(resource=source, target=target)
             logger.info("Job information:\n%s", json.dumps(cloud_job.info, indent=2))
             # TODO: Explicitly report about `failed_records`, etc.
-            texts = GuidingTexts(
+            texts = DataImportGuide(
                 cluster_info=self.info,
                 job=cloud_job,
             )
@@ -344,11 +372,10 @@ class ManagedCluster(ClusterBase):
 
         # When exiting so, it is expected that error logging has taken place appropriately.
         except CroudException as ex:
-            msg = "Data loading failed: Unknown error"
+            msg = f"Data loading failed: {ex}"
             logger.exception(msg)
             raise OperationFailed(msg) from ex
 
-    @lru_cache(maxsize=1)  # noqa: B019
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
         """
         Return a bundle of client handles to the CrateDB Cloud cluster database.
@@ -363,8 +390,7 @@ class ManagedCluster(ClusterBase):
             username = self.settings.username
         if password is None:
             password = self.settings.password
-        address = DatabaseAddress.from_httpuri(cratedb_http_url)
-        address.with_credentials(username=username, password=password)
+        address = DatabaseAddress.from_httpuri(cratedb_http_url).with_credentials(username=username, password=password)
         adapter = DatabaseAdapter(address.dburi)
         return ClientBundle(
             adapter=adapter,
@@ -375,7 +401,12 @@ class ManagedCluster(ClusterBase):
     def query(self, sql: str):
         """
         Shortcut method to submit a database query in SQL format, and retrieve the results.
+
+        # TODO: Use the `records` package for invoking SQL statements.
         """
+        # Ensure we have cluster connection details.
+        if not self.info or not self.info.cloud.get("url"):
+            self.probe()
         client_bundle = self.get_client_bundle()
         return client_bundle.adapter.run_sql(sql, records=True)
 
@@ -388,6 +419,51 @@ class StandaloneCluster(ClusterBase):
 
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
+    exists: bool = False
+
+    def __post_init__(self):
+        if self.address is None or self.address.dburi is None:
+            raise DatabaseAddressMissingError(
+                "Failed to address cluster: Either SQLAlchemy or HTTP URL needs to be specified"
+            )
+
+    def probe(self) -> "StandaloneCluster":
+        """
+        Probe a CrateDB Cloud cluster, API-wise.
+
+        TODO: Investigate callers, and reduce number of invocations.
+        """
+        client_bundle = self.get_client_bundle()
+        self.exists = client_bundle.adapter.run_sql("SELECT 42", records=True) == [{"42": 42}]
+        return self
+
+    def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
+        """
+        Return a bundle of client handles to the CrateDB Cloud cluster database.
+
+        - adapter: A high-level `DatabaseAdapter` instance, offering a few convenience methods.
+        - dbapi: A DBAPI connection object, as provided by SQLAlchemy's `dbapi_connection`.
+        - sqlalchemy: An SQLAlchemy `Engine` object.
+        """
+        logger.info(f"Connecting to database cluster at: {self.address}")
+        address = deepcopy(self.address)
+        if username is not None and password is not None:
+            address = address.with_credentials(username=username, password=password)
+        adapter = DatabaseAdapter(address.dburi)
+        return ClientBundle(
+            adapter=adapter,
+            dbapi=adapter.connection.connection.dbapi_connection,
+            sqlalchemy=adapter.engine,
+        )
+
+    def query(self, sql: str):
+        """
+        Shortcut method to submit a database query in SQL format, and retrieve the results.
+
+        # TODO: Use the `records` package for invoking SQL statements.
+        """
+        client_bundle = self.get_client_bundle()
+        return client_bundle.adapter.run_sql(sql, records=True)
 
     def load_table(self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None):
         """
@@ -464,5 +540,58 @@ class StandaloneCluster(ClusterBase):
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
 
-    def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
-        raise NotImplementedError("Not implemented for `StandaloneCluster` yet")
+
+class UniversalCluster:
+    """
+    Manage a CrateDB Cloud or standalone cluster.
+    """
+
+    @staticmethod
+    def create(
+        cluster_id: str = None, cluster_name: str = None, sqlalchemy_url: str = None, http_url: str = None
+    ) -> t.Union[ManagedCluster, StandaloneCluster]:
+        """
+        Create the cluster instance based on the provided parameters.
+
+        - Create a cloud-managed cluster handle when cluster ID or cluster name is provided.
+        - Create a standalone cluster handle when direct connection URLs are provided.
+
+        Args:
+            cluster_id: CrateDB Cloud cluster ID
+            cluster_name: CrateDB Cloud cluster name
+            sqlalchemy_url: SQLAlchemy connection URL
+            http_url: HTTP connection URL
+
+        Returns:
+            A ManagedCluster or StandaloneCluster instance.
+
+        Raises:
+            DatabaseAddressMissingError: If no connection information is provided.
+            DatabaseAddressDuplicateError: If multiple connection methods are provided.
+        """
+
+        # Fail if more than one address option was provided.
+        address_options_count = sum(
+            1
+            for option in [cluster_id, cluster_name, sqlalchemy_url, http_url]
+            if option is not None and option.strip() != ""
+        )
+        if address_options_count == 0:
+            raise DatabaseAddressMissingError
+        if address_options_count > 1:
+            raise DatabaseAddressDuplicateError()
+
+        # Cluster handle factory: Managed vs. standalone.
+        cluster: t.Union[ManagedCluster, StandaloneCluster]
+        if cluster_id is not None or cluster_name is not None:
+            cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name)
+        elif sqlalchemy_url:
+            address = DatabaseAddress.from_string(sqlalchemy_url)
+            cluster = StandaloneCluster(address=address)
+        elif http_url:
+            address = DatabaseAddress.from_httpuri(http_url)
+            cluster = StandaloneCluster(address=address)
+        else:
+            raise DatabaseAddressMissingError()
+
+        return cluster

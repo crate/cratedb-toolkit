@@ -12,6 +12,7 @@
 #    under the License.
 import logging
 import os
+import typing as t
 from abc import abstractmethod
 
 import pytest
@@ -47,7 +48,10 @@ class ExtendedDockerContainer(DockerContainer):
         port = getattr(self, "port", getattr(self, "port_to_expose", None))
         if port is None:
             raise ValueError("Unable to discover port number")
-        return f"{self.get_real_host_ip()}:{port}"
+
+        # Strip optional “/proto” suffix that docker-py might use (“5432/tcp” → “5432”).
+        port_str = str(port).split("/")[0]
+        return f"{self.get_real_host_ip()}:{port_str}"
 
 
 class KeepaliveContainer(DockerContainer):
@@ -144,13 +148,13 @@ class DockerSkippingContainer(DockerContainer):
 
     def __init__(self, *args, **kwargs):
         # Set `_container` attribute early, because parent's `__del__` may access it.
-        self._container: Container = None
+        self._container: t.Optional[Container] = None
         try:
             super().__init__(*args, **kwargs)
         # Detect when Docker daemon is not running.
         # FIXME: Synchronize with `PytestTestcontainerAdapter`.
         except DockerException as ex:
-            if "Connection aborted" in str(ex):
+            if any(token in str(ex) for token in ("Connection aborted", "Error while fetching server API version")):
                 # TODO: Make this configurable through some `pytest_` variable.
                 raise pytest.skip(reason="Skipping test because Docker is not running", allow_module_level=True) from ex
             else:  # noqa: RET506
@@ -185,7 +189,7 @@ class PytestTestcontainerAdapter:
         # Detect when Docker daemon is not running.
         # FIXME: Synchronize with `DockerSkippingContainer`.
         except DockerException as ex:
-            if "Connection aborted" in str(ex):
+            if any(token in str(ex) for token in ("Connection aborted", "Error while fetching server API version")):
                 # TODO: Make this configurable through some `pytest_` variable.
                 raise pytest.skip(
                     reason="Skipping test because Docker daemon is not available", allow_module_level=True

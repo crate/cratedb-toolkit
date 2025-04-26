@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 try:
     from importlib.metadata import PackageNotFoundError, version
 except (ImportError, ModuleNotFoundError):  # pragma:nocover
@@ -14,6 +15,15 @@ from .config import preconfigure
 
 preconfigure()
 
-from .api import ManagedCluster  # noqa: E402, F401
-from .config import configure  # noqa: E402, F401
-from .model import InputOutputResource, TableAddress  # noqa: E402, F401
+from .api import ManagedCluster, StandaloneCluster, UniversalCluster
+from .config import configure
+from .model import InputOutputResource, TableAddress
+
+__all__ = [
+    "ManagedCluster",
+    "UniversalCluster",
+    "StandaloneCluster",
+    "InputOutputResource",
+    "TableAddress",
+    "configure",
+]

@@ -1,5 +1,7 @@
+import os
+
 import pytest
-import responses
+from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -12,7 +14,7 @@ def dummy_csv(tmp_path):
     return csvfile
 
 
-def test_import_csv_pandas(cratedb, dummy_csv):
+def test_import_standalone_csv_pandas(cratedb, dummy_csv):
     """
     Invoke convenience function `import_csv_pandas`, and verify database content.
     """
@@ -24,7 +26,7 @@ def test_import_csv_pandas(cratedb, dummy_csv):
     assert result == [(2,)]
 
 
-def test_import_csv_dask(cratedb, dummy_csv, needs_sqlalchemy2):
+def test_import_standalone_csv_dask(cratedb, dummy_csv, needs_sqlalchemy2):
     """
     Invoke convenience function `import_csv_dask`, and verify database content.
     """
@@ -37,7 +39,7 @@ def test_import_csv_dask(cratedb, dummy_csv, needs_sqlalchemy2):
     assert result == [(2,)]
 
 
-def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2):
+def test_import_standalone_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2):
     """
     Invoke convenience function `import_csv_dask`, and verify database content.
     This time, use `progress=True` to make Dask display a progress bar.
@@ -52,48 +54,42 @@ def test_import_csv_dask_with_progressbar(cratedb, dummy_csv, needs_sqlalchemy2)
     assert result == [(2,)]
 
 
-@pytest.mark.skip("Does not work. Q: Why? A: Response mocking? Q: And now? A: Just patch the low-level functions!")
-@responses.activate
-def test_import_cloud_file(tmp_path, caplog, mock_cloud_import):
+@pytest.mark.skipif(
+    os.getenv("FORCE", "no") != "yes",
+    reason="Only works when invoked exclusively, using "
+    "`FORCE=yes pytest --no-cov tests/io/test_import.py -k managed_csv_local`. "
+    "Otherwise croaks per `AssertionError: ERROR: The following arguments are required: --url`. "
+    "We don't know why.",
+)
+def test_import_managed_csv_local(cloud_environment, dummy_csv, caplog):
     """
     CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a local file.
     """
 
-    from click.testing import CliRunner
-
     from cratedb_toolkit.cli import cli
-
-    csv_file = tmp_path / "test.csv"
-    csv_file.write_text("temperature,humidity\n42.42,84.84\n")
 
     runner = CliRunner()
 
-    resource_url = str(csv_file)
+    resource_url = str(dummy_csv)
 
     result = runner.invoke(
         cli,
         args=f"load table {resource_url}",
-        env={"CRATEDB_CLOUD_CLUSTER_ID": "e1e38d92-a650-48f1-8a70-8133f2d5c400"},
         catch_exceptions=False,
     )
     assert result.exit_code == 0, f"ERROR: {result.output}"
 
-    assert (
-        f"Loading data. "
-        f"source=InputOutputResource(url='{resource_url}', format=None, compression=None), "
-        f"target=TableAddress(schema=None, table='test')" in caplog.messages
-    )
-
+    assert "Loading data." in caplog.text
+    assert "target=TableAddress(schema=None, table='dummy')" in caplog.text
     assert "Import succeeded (status: SUCCEEDED)" in caplog.messages
 
+    # TODO: Read back data from database.
 
-@responses.activate
-def test_import_cloud_url(caplog, mock_cloud_import):
+
+def test_import_managed_parquet_remote(cloud_environment, tmp_path, caplog):
     """
     CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a URL.
     """
-
-    from click.testing import CliRunner
 
     from cratedb_toolkit.cli import cli
 
@@ -104,15 +100,12 @@ def test_import_cloud_url(caplog, mock_cloud_import):
     result = runner.invoke(
         cli,
         args=f"load table {resource_url}",
-        env={"CRATEDB_CLOUD_CLUSTER_ID": "e1e38d92-a650-48f1-8a70-8133f2d5c400"},
         catch_exceptions=False,
     )
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0, f"ERROR: {result.output}"
 
-    assert (
-        f"Loading data. "
-        f"source=InputOutputResource(url='{resource_url}', format=None, compression=None), "
-        f"target=TableAddress(schema=None, table='basic')" in caplog.messages
-    )
-
+    assert "Loading data." in caplog.text
+    assert "target=TableAddress(schema=None, table='basic')" in caplog.text
     assert "Import succeeded (status: SUCCEEDED)" in caplog.messages
+
+    # TODO: Read back data from database.
