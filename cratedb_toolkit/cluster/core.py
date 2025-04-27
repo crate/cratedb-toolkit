@@ -113,6 +113,7 @@ class ManagedCluster(ClusterBase):
         address: DatabaseAddress = None,
         info: ClusterInformation = None,
     ):
+        super().__init__()
         self.cluster_id = cluster_id
         self.cluster_name = cluster_name
         self.settings = settings or ManagedClusterSettings()
@@ -141,6 +142,7 @@ class ManagedCluster(ClusterBase):
             logger.error(f"Exception occurred: {exc_type.__name__}: {exc_val}")
 
         try:
+            self.close_connections()
             self.suspend()
             logger.info(f"Successfully suspended cluster: id={self.cluster_id}, name={self.cluster_name}")
         except Exception as ex:
@@ -383,6 +385,11 @@ class ManagedCluster(ClusterBase):
         - dbapi: A DBAPI connection object, as provided by SQLAlchemy's `dbapi_connection`.
         - sqlalchemy: An SQLAlchemy `Engine` object.
         """
+
+        # Store the client bundle, effectively making it a singleton.
+        if self._client_bundle is not None:
+            return self._client_bundle
+
         cratedb_http_url = self.info.cloud["url"]
         logger.info(f"Connecting to database cluster at: {cratedb_http_url}")
         if username is None:
@@ -391,11 +398,12 @@ class ManagedCluster(ClusterBase):
             password = self.settings.password
         address = DatabaseAddress.from_httpuri(cratedb_http_url).with_credentials(username=username, password=password)
         adapter = DatabaseAdapter(address.dburi)
-        return ClientBundle(
+        self._client_bundle = ClientBundle(
             adapter=adapter,
             dbapi=adapter.connection.connection.dbapi_connection,
             sqlalchemy=adapter.engine,
         )
+        return self._client_bundle
 
     def query(self, sql: str):
         """
@@ -421,6 +429,7 @@ class StandaloneCluster(ClusterBase):
     exists: bool = False
 
     def __post_init__(self):
+        super().__init__()
         if self.address is None or self.address.dburi is None:
             raise DatabaseAddressMissingError(
                 "Failed to address cluster: Either SQLAlchemy or HTTP URL needs to be specified"
@@ -428,12 +437,17 @@ class StandaloneCluster(ClusterBase):
 
     def probe(self) -> "StandaloneCluster":
         """
-        Probe a CrateDB Cloud cluster, API-wise.
-
-        TODO: Investigate callers, and reduce number of invocations.
+        Probe a standalone CrateDB cluster, API-wise.
         """
-        client_bundle = self.get_client_bundle()
-        self.exists = client_bundle.adapter.run_sql("SELECT 42", records=True) == [{"42": 42}]
+        try:
+            client_bundle = self.get_client_bundle()
+            result = client_bundle.adapter.run_sql("SELECT 42", records=True)
+            self.exists = result == [{"42": 42}]
+            if self.exists:
+                logger.info(f"Successfully connected to standalone cluster at: {self.address.safe}")
+        except Exception as ex:
+            self.exists = False
+            logger.debug(f"Failed to connect to standalone cluster: {ex}")
         return self
 
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
@@ -444,16 +458,22 @@ class StandaloneCluster(ClusterBase):
         - dbapi: A DBAPI connection object, as provided by SQLAlchemy's `dbapi_connection`.
         - sqlalchemy: An SQLAlchemy `Engine` object.
         """
+
+        # Store the client bundle, effectively making it a singleton.
+        if self._client_bundle is not None:
+            return self._client_bundle
+
         logger.info(f"Connecting to database cluster at: {self.address}")
         address = deepcopy(self.address)
         if username is not None and password is not None:
             address = address.with_credentials(username=username, password=password)
         adapter = DatabaseAdapter(address.dburi)
-        return ClientBundle(
+        self._client_bundle = ClientBundle(
             adapter=adapter,
             dbapi=adapter.connection.connection.dbapi_connection,
             sqlalchemy=adapter.engine,
         )
+        return self._client_bundle
 
     def query(self, sql: str):
         """

@@ -93,7 +93,7 @@ class CloudIo:
         self.cluster = CloudCluster(cluster_id=cluster_id)
 
     def load_resource(
-        self, resource: InputOutputResource, target: TableAddress, max_retries: int = 10, retry_delay: float = 0.15
+        self, resource: InputOutputResource, target: TableAddress, max_retries: int = 20, retry_delay: float = 0.15
     ) -> CloudJob:
         """
         Load resource from URL into CrateDB, using CrateDB Cloud infrastructure.
@@ -108,6 +108,7 @@ class CloudIo:
         import_job = self.create_import_job(resource=resource, target=target)
         job_id = import_job.id
 
+        # Find the submitted job per CrateDB Cloud API.
         for _ in range(max_retries):
             job = self.find_job(job_id=job_id)
             if job.found:
@@ -119,7 +120,7 @@ class CloudIo:
             raise RuntimeError(msg)
 
         if not job.found:
-            logger.error(job.message)
+            logger.error(f"Job not found: {job.message}")
         if not job.info:
             job.info = import_job.info
         return job
