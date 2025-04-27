@@ -63,6 +63,31 @@ class CloudManager:
         wr = CroudWrapper(call=call)
         return wr.invoke()
 
+    def list_projects(self):
+        """
+        Get list of projects.
+
+        croud projects list --format=json
+        """
+        from croud.parser import Argument
+        from croud.projects.commands import projects_list
+
+        call = CroudCall(
+            fun=projects_list,
+            specs=[
+                Argument(
+                    "--org-id",
+                    type=str,
+                    required=False,
+                    help="The organization ID to use.",
+                ),
+            ],
+            arguments=[],
+        )
+
+        wr = CroudWrapper(call=call)
+        return wr.invoke()
+
     def create_project(self, name: str, organization_id: str = None):
         """
         Create project.
