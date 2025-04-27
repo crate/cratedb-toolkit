@@ -2,7 +2,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.exception import DatabaseAddressDuplicateError, DatabaseAddressMissingError
-from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click
 
 

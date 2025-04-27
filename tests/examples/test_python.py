@@ -9,7 +9,7 @@ pytestmark = pytest.mark.python
 ROOT = Path(__file__).parent.parent.parent
 
 
-def test_example_cloud_cluster_app(cloud_environment):
+def test_managed_cluster_app(cloud_environment):
     """
     Verify that the program `examples/python/cloud_cluster.py` works.
     """
@@ -19,7 +19,7 @@ def test_example_cloud_cluster_app(cloud_environment):
     main()
 
 
-def test_example_cloud_import_app(cloud_environment):
+def test_managed_import_app(cloud_environment):
     """
     Verify that the program `examples/python/cloud_import.py` works.
     """
@@ -29,7 +29,7 @@ def test_example_cloud_import_app(cloud_environment):
     main()
 
 
-def test_example_cloud_import_notebook(cloud_environment):
+def test_managed_import_notebook(cloud_environment):
     """
     Verify the Jupyter notebook `examples/notebook/cloud_import.py` works.
     """

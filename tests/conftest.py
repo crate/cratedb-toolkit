@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from verlib2 import Version
 
 import cratedb_toolkit
-from cratedb_toolkit.api.main import ManagedClusterSettings
+from cratedb_toolkit.cluster.core import ManagedClusterSettings
 from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
 from cratedb_toolkit.util.common import setup_logging

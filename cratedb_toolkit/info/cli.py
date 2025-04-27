@@ -4,8 +4,8 @@ import logging
 
 import click
 
-from cratedb_toolkit.api.cli import make_cli
 from cratedb_toolkit.info.core import InfoContainer, JobInfoContainer, LogContainer
+from cratedb_toolkit.util.app import make_cli
 from cratedb_toolkit.util.cli import make_command
 from cratedb_toolkit.util.data import jd
 from cratedb_toolkit.util.database import DatabaseAdapter
