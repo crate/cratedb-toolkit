@@ -237,10 +237,26 @@ class ManagedCluster(ClusterBase):
         # FIXME: Accept id or name.
         if self.name is None:
             raise ValueError("Need cluster name to deploy")
+
+        # Try to find the existing project by name first.
         # FIXME: Only create new project when needed. Otherwise, use existing project.
-        project = self.cm.create_project(name=self.name, organization_id=self.settings.organization_id)
-        project_id = project["id"]
-        logger.info(f"Created project: {project_id}")
+        project_id = None
+        try:
+            projects = self.cm.list_projects()
+            for project in projects:
+                if project["name"] == self.cluster_name:
+                    project_id = project["id"]
+                    logger.info(f"Using existing project: {project_id}")
+                    break
+        except Exception as ex:
+            logger.warning(f"Error finding existing project: {ex}")
+
+        # Create a new project if none exists.
+        if not project_id:
+            project = self.cm.create_project(name=self.cluster_name, organization_id=self.settings.organization_id)
+            project_id = project["id"]
+            logger.info(f"Created project: {project_id}")
+
         cluster_info = self.cm.deploy_cluster(
             name=self.name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
