@@ -11,15 +11,25 @@ description = "CrateDB Toolkit"
 readme = "README.md"
 keywords = [
   "cratedb",
+  "cratedb-admin",
+  "cratedb-cloud",
+  "cratedb-diagnostics",
+  "cratedb-shell",
   "data-processing",
   "data-retention",
+  "managed-cratedb",
   "toolkit",
 ]
 license = { text = "AGPL 3, EUPL 1.2" }
-authors = [
-  { name = "Niklas Schmidtmer", email = "niklas@crate.io" },
-  { name = "Marija Selakovic", email = "marija@crate.io" },
+maintainers = [
   { name = "Andreas Motl", email = "andreas.motl@crate.io" },
+  { name = "Hernan Cianfagna", email = "hernan@crate.io" },
+  { name = "Niklas Schmidtmer", email = "niklas@crate.io" },
+  { name = "Walter Behmann", email = "walter@crate.io" },
+]
+
+authors = [
+  { name = "The CrateDB Developers" },
 ]
 requires-python = ">=3.8"
 classifiers = [
