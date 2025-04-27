@@ -9,10 +9,9 @@ from pathlib import Path
 import click
 from boltons.urlutils import URL
 
-from cratedb_toolkit.api.guide import DataImportGuide
-from cratedb_toolkit.api.model import ClientBundle, ClusterBase
 from cratedb_toolkit.cluster.croud import CloudManager
-from cratedb_toolkit.cluster.model import ClusterInformation
+from cratedb_toolkit.cluster.guide import DataImportGuide
+from cratedb_toolkit.cluster.model import ClientBundle, ClusterBase, ClusterInformation
 from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import (
     CroudException,

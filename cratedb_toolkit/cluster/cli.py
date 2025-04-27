@@ -8,7 +8,7 @@ from click_aliases import ClickAliasedGroup
 from cratedb_toolkit import ManagedCluster
 from cratedb_toolkit.cluster.model import ClusterInformation
 from cratedb_toolkit.exception import CroudException
-from cratedb_toolkit.options import option_cluster_id, option_cluster_name
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name
 from cratedb_toolkit.util.cli import boot_click, make_command
 from cratedb_toolkit.util.data import jd
 

@@ -5,9 +5,9 @@ from pathlib import Path
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.api.main import UniversalCluster
+from cratedb_toolkit.cluster.core import UniversalCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
-from cratedb_toolkit.options import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click, make_command
 
 logger = logging.getLogger(__name__)

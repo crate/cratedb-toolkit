@@ -15,7 +15,7 @@ from .config import preconfigure
 
 preconfigure()
 
-from .api import ManagedCluster, StandaloneCluster, UniversalCluster
+from .cluster.core import ManagedCluster, StandaloneCluster, UniversalCluster
 from .config import configure
 from .model import InputOutputResource, TableAddress
 

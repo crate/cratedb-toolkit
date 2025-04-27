@@ -1,6 +1,6 @@
 from click.testing import CliRunner
 
-from cratedb_toolkit.api.cli import make_cli
+from cratedb_toolkit.util.app import make_cli
 
 
 def test_api_no_address():

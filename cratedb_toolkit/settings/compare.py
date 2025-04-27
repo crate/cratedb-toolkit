@@ -26,7 +26,7 @@ from collections import defaultdict
 
 import click
 
-from cratedb_toolkit.options import option_sqlalchemy_url
+from cratedb_toolkit.option import option_sqlalchemy_url
 from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
