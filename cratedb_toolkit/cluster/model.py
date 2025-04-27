@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+import logging
 import typing as t
 from copy import deepcopy
 from pathlib import Path
@@ -12,6 +13,8 @@ from cratedb_toolkit.exception import CroudException, DatabaseAddressMissingErro
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
 
+logger = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass
 class ClusterInformation:
@@ -19,7 +22,7 @@ class ClusterInformation:
     Manage a database cluster's information.
     """
 
-    cratedb: t.Any = dataclasses.field(default_factory=dict)
+    cratedb: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
     cloud: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
 
     @property
@@ -84,16 +87,57 @@ class ClientBundle:
     dbapi: crate.client.connection.Connection
     sqlalchemy: sa.engine.Engine
 
+    def close(self):
+        """
+        Close all database connections created to this cluster.
+        Should be called when the cluster handle is no longer needed.
+        """
+
+        try:
+            self.adapter.connection.close()
+        except Exception as e:
+            logger.warning(f"Error closing adapter connection: {e}")
+
+        try:
+            self.adapter.engine.dispose()
+        except Exception as e:
+            logger.warning(f"Error disposing SQLAlchemy engine: {e}")
+
+        try:
+            self.dbapi.close()
+        except Exception as e:
+            logger.warning(f"Error closing DBAPI connection: {e}")
+
 
 class ClusterBase(abc.ABC):
     """
     A common base class for all cluster-related functionality across CrateDB and CrateDB Cloud.
     """
 
+    def __init__(self):
+        self._client_bundle = None
+
     @abc.abstractmethod
     def load_table(self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None):
+        """
+        Load data from a source into a target table.
+
+        Args:
+            source: The source data resource
+            target: The target table address
+            transformation: Optional path to a transformation script or function
+        """
         raise NotImplementedError("Child class needs to implement this method")
 
     @abc.abstractmethod
     def get_client_bundle(self) -> ClientBundle:
         raise NotImplementedError("Child class needs to implement this method")
+
+    def close_connections(self):
+        """
+        Close all database connections created to this cluster.
+        Should be called when the cluster handle is no longer needed.
+        """
+        if self._client_bundle is not None:
+            self._client_bundle.close()
+            self._client_bundle = None

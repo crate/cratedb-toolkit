@@ -34,7 +34,12 @@ def make_cli():
         """
 
         # Check if at least one address option was provided.
-        if not cluster_id and not cluster_name and not cratedb_sqlalchemy_url and not cratedb_http_url:
+        if not (
+            (cluster_id and cluster_id.strip())
+            or (cluster_name and cluster_name.strip())
+            or (cratedb_sqlalchemy_url and cratedb_sqlalchemy_url.strip())
+            or (cratedb_http_url and cratedb_http_url.strip())
+        ):
             raise click.UsageError(DatabaseAddressMissingError.EXTENDED_MESSAGE)
 
         # Fail if more than one address option was provided.
