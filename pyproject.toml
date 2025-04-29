@@ -117,6 +117,7 @@ optional-dependencies.cfr = [
   "pandas<2.3",
   "polars<1.30",
   "pyarrow<20.1",
+  "queryanonymizer<1.2",
 ]
 optional-dependencies.cloud = [
   "croud==1.13.0",

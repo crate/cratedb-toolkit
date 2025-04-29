@@ -39,6 +39,39 @@ def test_cfr_jobstats_collect_self(cratedb, caplog):
     assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last") == 1
 
 
+def test_cfr_jobstats_collect_anonymized(cratedb, caplog):
+    """
+    Verify `ctk cfr jobstats collect` into the same database, using the `--anonymize` option.
+    """
+
+    # Configure database URI.
+    dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
+
+    # Invoke command.
+    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    result = runner.invoke(
+        cli,
+        args="jobstats collect --once --anonymize",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+
+    # Verify outcome: Log output.
+    assert "Recording information snapshot" in caplog.messages
+
+    # Verify outcome: Database content.
+    # stats.statement_log, stats.last_execution
+    results = cratedb.database.run_sql("SHOW TABLES", records=True)
+    assert {"table_name": "jobstats_last"} in results
+    assert {"table_name": "jobstats_statements"} in results
+
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_statements")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_statements") >= 19
+
+    cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last")
+    assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last") == 1
+
+
 def test_cfr_jobstats_collect_reportdb(cratedb, caplog):
     """
     Verify `ctk cfr jobstats collect` into a different database.

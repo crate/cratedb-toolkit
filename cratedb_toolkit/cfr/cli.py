@@ -75,8 +75,12 @@ def help_statistics():
     ========
 
     export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/?sslmode=require
     ctk cfr jobstats collect
+    ctk cfr jobstats collect --anonymize <decoder_dictionary.json>
+    ctk cfr jobstats collect -r "crate://crate@localhost:4200/?schema=<schema>&sslmode=require"
     ctk cfr jobstats view
+    ctk cfr jobstats view --deanonymize <decoder_dictionary.json>
 
     """  # noqa: E501
 
@@ -102,8 +106,16 @@ cli.add_command(job_statistics, name="jobstats")
     required=False,
     help="Database URL to store report data (crate://crate@localhost:4200/?sslmode=require)",
 )
+@click.option(
+    "--anonymize",
+    type=str,
+    is_flag=False,
+    flag_value="decoder_dictionary.json",  # Use this value when flag is used without value
+    default=None,  # No anonymization by default
+    help="Path to the decoder dictionary file for anonymizing SQL statements",
+)
 @click.pass_context
-def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[str]):
+def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[str], anonymize: t.Optional[str]):
     """
     Run jobs_log collector.
     """
@@ -116,7 +128,13 @@ def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[
         report_address = DatabaseAddress.from_string(reportdb)
         logger.info(f"Using separate database for reporting: {reportdb}")
 
-    cratedb_toolkit.cfr.jobstats.boot(address=address, report_address=report_address)
+    anonymize_statements = bool(anonymize)
+    cratedb_toolkit.cfr.jobstats.boot(
+        address=address,
+        report_address=report_address,
+        anonymize_statements=anonymize_statements,
+        decoder_dict_file=anonymize,
+    )
     if once:
         cratedb_toolkit.cfr.jobstats.record_once()
     else:
@@ -131,8 +149,16 @@ def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[
     required=False,
     help="Database URL to read report data from (crate://crate@localhost:4200/?sslmode=require)",
 )
+@click.option(
+    "--deanonymize",
+    type=str,
+    is_flag=False,
+    flag_value="decoder_dictionary.json",  # Use this value when flag is used without value
+    default=None,  # No deanonymization by default
+    help="Path to the decoder dictionary file for deanonymizing SQL statements",
+)
 @click.pass_context
-def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str]):
+def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str], deanonymize: t.Optional[str]):
     """
     View job statistics about collected queries.
     """
@@ -145,7 +171,15 @@ def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str]):
         report_address = DatabaseAddress.from_string(reportdb)
         logger.info(f"Reading from report database: {reportdb}")
 
-    cratedb_toolkit.cfr.jobstats.boot(address=address, report_address=report_address)
+    # Enable deanonymization if a dictionary file is provided
+    deanonymize_statements = bool(deanonymize)
+
+    cratedb_toolkit.cfr.jobstats.boot(
+        address=address,
+        report_address=report_address,
+        decoder_dict_file=deanonymize,
+        deanonymize_statements=deanonymize_statements,
+    )
 
     response: t.Dict = {"meta": {}, "data": {}}
     response["meta"]["remark"] = "WIP! This is a work in progress. The output format will change."
