@@ -50,8 +50,8 @@ def _(limitsl):
     import pandas as pd
     import sqlalchemy as sa
 
-    cratedb_sqlalchemy_url = os.getenv("CRATEDB_SQLALCHEMY_URL", "crate://?schema=stats")
-    engine = sa.create_engine(cratedb_sqlalchemy_url)
+    sqlalchemy_url = os.getenv("CRATEDB_SQLALCHEMY_URL", "crate://?schema=stats")
+    engine = sa.create_engine(sqlalchemy_url)
     df = pd.read_sql(
         sql=f"""
         SELECT stmt, username, query_type, last_used, avg_duration, bucket

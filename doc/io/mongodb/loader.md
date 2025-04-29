@@ -85,7 +85,7 @@ ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
 # Extended JSON, filesystem, multiple files.
 ctk load table \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --cratedb-sqlalchemy-url="crate://crate@localhost:4200/datasets"
+  --sqlalchemy-url="crate://crate@localhost:4200/datasets"
 ```
 :::{important}
 When transferring **multiple collections**, make sure to use a CrateDB database
@@ -185,7 +185,7 @@ schema `datasets`, using a batch size of 2,500 items.
 ```shell
 ctk load table \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --cratedb-sqlalchemy-url="crate://crate@localhost:4200/datasets" \
+  --sqlalchemy-url="crate://crate@localhost:4200/datasets" \
   --transformation zyp-mongodb-json-files.yaml
 ```
 

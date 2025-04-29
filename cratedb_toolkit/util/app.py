@@ -21,8 +21,8 @@ def make_cli():
         ctx: click.Context,
         cluster_id: str,
         cluster_name: str,
-        cratedb_sqlalchemy_url: str,
-        cratedb_http_url: str,
+        sqlalchemy_url: str,
+        http_url: str,
         verbose: bool,
         debug: bool,
         scrub: bool,
@@ -37,16 +37,14 @@ def make_cli():
         if not (
             (cluster_id and cluster_id.strip())
             or (cluster_name and cluster_name.strip())
-            or (cratedb_sqlalchemy_url and cratedb_sqlalchemy_url.strip())
-            or (cratedb_http_url and cratedb_http_url.strip())
+            or (sqlalchemy_url and sqlalchemy_url.strip())
+            or (http_url and http_url.strip())
         ):
             raise click.UsageError(DatabaseAddressMissingError.EXTENDED_MESSAGE)
 
         # Fail if more than one address option was provided.
         address_options_count = sum(
-            1
-            for option in [cluster_id, cluster_name, cratedb_sqlalchemy_url, cratedb_http_url]
-            if option and option.strip()
+            1 for option in [cluster_id, cluster_name, sqlalchemy_url, http_url] if option and option.strip()
         )
         if address_options_count > 1:
             raise click.UsageError(DatabaseAddressDuplicateError.STANDARD_MESSAGE)
@@ -55,8 +53,8 @@ def make_cli():
             {
                 "cluster_id": cluster_id,
                 "cluster_name": cluster_name,
-                "cratedb_http_url": cratedb_http_url,
-                "cratedb_sqlalchemy_url": cratedb_sqlalchemy_url,
+                "sqlalchemy_url": sqlalchemy_url,
+                "http_url": http_url,
                 "scrub": scrub,
             }
         )

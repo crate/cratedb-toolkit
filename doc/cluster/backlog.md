@@ -9,10 +9,9 @@ individual backlog items and carry them over into dedicated [issues], if you
 want to signal interest about them. If you feel you could whip up and submit
 a patch for some item, it will be very much welcome.
 
+[issues]: https://github.com/crate/cratedb-toolkit/issues
+
 ## Iteration +1
-- Documentation
-- Naming things: s/UniversalCluster/DatabaseCluster/`
-- CLI: Naming things: Rename `--cratedb-sqlalchemy-url` to `--sqlalchemy-url`, etc.
 - CLI: Naming things: Rename `--cluster-id` to `--id`, etc.
 - CLI: Naming things: Rename `CRATEDB_CLOUD_CLUSTER_NAME` to `CRATEDB_CLUSTER_NAME`, etc. 
 - CLI: Is it possible to just use `--url` instead of `--sqlalchemy-url` or `--http-url`?
@@ -75,6 +74,6 @@ a patch for some item, it will be very much welcome.
 - Update `shunit2`. -- https://github.com/kward/shunit2
 - Refactor from `ctk.api` to `ctk.cluster`
 - `StandaloneCluster.get_client_bundle()` needs implementation
-
-
-[issues]: https://github.com/crate/cratedb-toolkit/issues
+- Documentation
+- Naming things: s/UniversalCluster/DatabaseCluster/`
+- CLI: Naming things: Rename `--cratedb-sqlalchemy-url` to `--sqlalchemy-url`, etc.

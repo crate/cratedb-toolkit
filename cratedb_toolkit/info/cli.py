@@ -58,9 +58,9 @@ cli = make_cli()
 @make_command(cli, "cluster", help_cluster)
 @click.pass_context
 def cluster(ctx: click.Context):
-    cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
+    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
+    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
     sample = InfoContainer(adapter=adapter, scrub=scrub)
     jd(sample.to_dict())
 
@@ -68,9 +68,9 @@ def cluster(ctx: click.Context):
 @make_command(cli, "logs", help_logs)
 @click.pass_context
 def logs(ctx: click.Context):
-    cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
+    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
+    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
     sample = LogContainer(adapter=adapter, scrub=scrub)
     jd(sample.to_dict())
 
@@ -81,9 +81,9 @@ def job_information(ctx: click.Context):
     """
     Display ad hoc job information.
     """
-    cratedb_sqlalchemy_url = ctx.meta["cratedb_sqlalchemy_url"]
+    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
+    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
     sample = JobInfoContainer(adapter=adapter, scrub=scrub)
     jd(sample.to_dict())
 

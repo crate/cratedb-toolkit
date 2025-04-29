@@ -82,7 +82,7 @@ connection URLs.
 ```shell
 ctk load table \
   "influxdb2://9fafc869a91a3517:T268DVLDHD8...oPic4A==@eu-central-1-1.aws.cloud2.influxdata.com/testdrive/demo?ssl=true" \
-  --cratedb-sqlalchemy-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+  --sqlalchemy-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
 ## Parameters

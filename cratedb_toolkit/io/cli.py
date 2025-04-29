@@ -42,8 +42,8 @@ def load_table(
     url: str,
     cluster_id: str,
     cluster_name: str,
-    cratedb_sqlalchemy_url: str,
-    cratedb_http_url: str,
+    sqlalchemy_url: str,
+    http_url: str,
     schema: str,
     table: str,
     format_: str,
@@ -66,7 +66,7 @@ def load_table(
     cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
-        sqlalchemy_url=cratedb_sqlalchemy_url,
-        http_url=cratedb_http_url,
+        sqlalchemy_url=sqlalchemy_url,
+        http_url=http_url,
     )
     cluster.load_table(source=source, target=target, transformation=transformation)

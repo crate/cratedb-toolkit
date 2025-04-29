@@ -60,10 +60,10 @@ variables.
 ### CrateDB database address
 
 The CrateDB database address can be defined on the command line, using the
-`--cratedb-sqlalchemy-url` option, or by using the `CRATEDB_SQLALCHEMY_URL`
+`--sqlalchemy-url` option, or by using the `CRATEDB_SQLALCHEMY_URL`
 environment variable.
 ```shell
-ctk cfr --cratedb-sqlalchemy-url=crate://localhost/ sys-export
+ctk cfr --sqlalchemy-url=crate://localhost/ sys-export
 ```
 
 
