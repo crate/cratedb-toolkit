@@ -52,7 +52,7 @@
 - UX: Provide Bash/zsh completion
 - Beautify `list-jobs` output
 - `ctk list-clusters`
-- Store `CRATEDB_CLOUD_CLUSTER_ID` into `cratedb_toolkit.constants`
+- Store `CRATEDB_CLUSTER_ID` into `cratedb_toolkit.constants`
 - Cloud Tests: Verify file uploads
 - Docs: Add examples in more languages: Java, JavaScript, Lua, PHP
 - Docs:

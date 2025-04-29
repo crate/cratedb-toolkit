@@ -48,8 +48,8 @@ The configuration settings can be specified as CLI arguments::
 
 Alternatively, you can use environment variables::
 
-    export CRATEDB_CLOUD_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
-    export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
+    export CRATEDB_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
+    export CRATEDB_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 
 Command line arguments take precedence. When omitted, the program will
 fall back to probe the environment variables.

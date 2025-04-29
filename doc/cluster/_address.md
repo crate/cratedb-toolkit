@@ -6,7 +6,7 @@ in different situations, managed or not.
 :CLI options:
   `--cluster-id`, `--cluster-name`, `--sqlalchemy-url`, `--http-url`
 :Environment variables:
-  `CRATEDB_CLOUD_CLUSTER_ID`, `CRATEDB_CLOUD_CLUSTER_NAME`, `CRATEDB_SQLALCHEMY_URL`, `CRATEDB_HTTP_URL`
+  `CRATEDB_CLUSTER_ID`, `CRATEDB_CLUSTER_NAME`, `CRATEDB_SQLALCHEMY_URL`, `CRATEDB_HTTP_URL`
 
 :::{note}
 - All address options are mutually exclusive.

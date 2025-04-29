@@ -46,8 +46,8 @@
 #
 # Other than authentication information, you need to provide information about
 # identifying the database cluster, for example using the `--cluster-id` or
-# `--cluster-name` CLI options, or the `CRATEDB_CLOUD_CLUSTER_ID` or
-# `CRATEDB_CLOUD_CLUSTER_NAME` environment variables.
+# `--cluster-name` CLI options, or the `CRATEDB_CLUSTER_ID` or
+# `CRATEDB_CLUSTER_NAME` environment variables.
 #
 # Cluster deployment
 # ------------------
@@ -74,7 +74,7 @@
 #
 # Initialize a cluster instance, and run a data import::
 #
-#   export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
+#   export CRATEDB_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 #   sh examples/shell/cloud_import.sh
 #
 # Query imported data::
