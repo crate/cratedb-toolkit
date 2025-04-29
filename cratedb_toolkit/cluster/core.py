@@ -49,7 +49,7 @@ class ManagedClusterSettings:
         Setting(
             click=click.Option(
                 param_decls=["--cluster-id"],
-                envvar="CRATEDB_CLOUD_CLUSTER_ID",
+                envvar="CRATEDB_CLUSTER_ID",
                 help="CrateDB Cloud cluster identifier (UUID)",
             ),
             group="cluster-identifier",
@@ -57,7 +57,7 @@ class ManagedClusterSettings:
         Setting(
             click=click.Option(
                 param_decls=["--cluster-name"],
-                envvar="CRATEDB_CLOUD_CLUSTER_NAME",
+                envvar="CRATEDB_CLUSTER_NAME",
                 help="CrateDB Cloud cluster name",
             ),
             group="cluster-identifier",
@@ -170,8 +170,8 @@ class ManagedCluster(ClusterBase):
         When the toolkit environment is configured with `settings_accept_env`,
         the settings can be specified that way:
 
-            export CRATEDB_CLOUD_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
-            export CRATEDB_CLOUD_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
+            export CRATEDB_CLUSTER_ID='<YOUR_CLUSTER_ID_HERE>'
+            export CRATEDB_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
         """
         if not CONFIG.settings_accept_cli and not CONFIG.settings_accept_env:
             raise DatabaseAddressMissingError(
@@ -333,7 +333,7 @@ class ManagedCluster(ClusterBase):
 
         Synopsis
         --------
-        export CRATEDB_CLOUD_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
+        export CRATEDB_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
         ctk load table https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz
 
         https://console.cratedb.cloud

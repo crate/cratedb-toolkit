@@ -139,7 +139,7 @@ def cloud_cluster_id() -> str:
     """
     Provide the ID of a CrateDB Cloud cluster to be used for integration tests.
     """
-    return os.environ.get("TEST_CRATEDB_CLOUD_CLUSTER_ID", "7475893f-9672-469a-9943-5e413c598589")
+    return os.environ.get("TEST_CRATEDB_CLUSTER_ID", "7475893f-9672-469a-9943-5e413c598589")
 
 
 @pytest.fixture()
@@ -147,7 +147,7 @@ def cloud_cluster_name() -> str:
     """
     Provide the name of a CrateDB Cloud cluster to be used for integration tests.
     """
-    return os.environ.get("TEST_CRATEDB_CLOUD_CLUSTER_NAME", "testcluster")
+    return os.environ.get("TEST_CRATEDB_CLUSTER_NAME", "testcluster")
 
 
 @pytest.fixture()
@@ -159,7 +159,7 @@ def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str
         "CRATEDB_CLOUD_API_KEY": os.environ.get("TEST_CRATEDB_CLOUD_API_KEY"),
         "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
         "CRATEDB_CLOUD_ORGANIZATION_ID": os.environ.get("TEST_CRATEDB_CLOUD_ORGANIZATION_ID"),
-        "CRATEDB_CLOUD_CLUSTER_NAME": cloud_cluster_name,
+        "CRATEDB_CLUSTER_NAME": cloud_cluster_name,
         "CRATEDB_USERNAME": os.environ.get("TEST_CRATEDB_USERNAME"),
         "CRATEDB_PASSWORD": os.environ.get("TEST_CRATEDB_PASSWORD"),
     }

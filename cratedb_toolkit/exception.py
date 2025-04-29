@@ -22,7 +22,7 @@ class DatabaseAddressMissingError(ClickException):
     EXTENDED_MESSAGE = (
         f"{STANDARD_MESSAGE}. "
         "Use --cluster-id / --cluster-name / --sqlalchemy-url / --http-url CLI options "
-        "or CRATEDB_CLOUD_CLUSTER_ID / CRATEDB_CLOUD_CLUSTER_NAME / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL "
+        "or CRATEDB_CLUSTER_ID / CRATEDB_CLUSTER_NAME / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL "
         "environment variables."
     )
 

@@ -7,7 +7,7 @@ orphan: true
 ## 
 
 ```
-$ croud clusters import-jobs list --cluster-id=$CRATEDB_CLOUD_CLUSTER_ID --format=table
+$ croud clusters import-jobs list --cluster-id=$CRATEDB_CLUSTER_ID --format=table
 Traceback (most recent call last):
   File "/Users/amo/dev/crate/ecosystem/cratedb-retentions/.venv/bin/croud", line 8, in <module>
     sys.exit(main())

@@ -12,8 +12,6 @@ a patch for some item, it will be very much welcome.
 [issues]: https://github.com/crate/cratedb-toolkit/issues
 
 ## Iteration +1
-- CLI: Naming things: Rename `--cluster-id` to `--id`, etc.
-- CLI: Naming things: Rename `CRATEDB_CLOUD_CLUSTER_NAME` to `CRATEDB_CLUSTER_NAME`, etc. 
 - CLI: Is it possible to just use `--url` instead of `--sqlalchemy-url` or `--http-url`?
 - CLI: Is it possible to just use `--cluster` to address a cluster, effectively shrinking
   all four addressing options into a single one? Maybe optionally?
@@ -77,3 +75,5 @@ a patch for some item, it will be very much welcome.
 - Documentation
 - Naming things: s/UniversalCluster/DatabaseCluster/`
 - CLI: Naming things: Rename `--cratedb-sqlalchemy-url` to `--sqlalchemy-url`, etc.
+- CLI: Naming things: Rename `--cluster-id` to `--id`, etc.
+- CLI: Naming things: Rename `CRATEDB_CLOUD_CLUSTER_NAME` to `CRATEDB_CLUSTER_NAME`, etc. 

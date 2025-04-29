@@ -39,7 +39,7 @@ export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
 environment variables.
 
 :Environment variables:
-  `CRATEDB_CLOUD_CLUSTER_ID`, `CRATEDB_CLOUD_CLUSTER_NAME`, `CRATEDB_SQLALCHEMY_URL`, `CRATEDB_HTTP_URL`
+  `CRATEDB_CLUSTER_ID`, `CRATEDB_CLUSTER_NAME`, `CRATEDB_SQLALCHEMY_URL`, `CRATEDB_HTTP_URL`
 
 :::{note}
 - All address options are mutually exclusive.

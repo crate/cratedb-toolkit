@@ -13,7 +13,7 @@ except ImportError:
 
 @click.command(name="list-jobs")
 @click.option(
-    "--cluster-id", envvar="CRATEDB_CLOUD_CLUSTER_ID", type=str, required=True, help="CrateDB Cloud cluster identifier"
+    "--cluster-id", envvar="CRATEDB_CLUSTER_ID", type=str, required=True, help="CrateDB Cloud cluster identifier"
 )
 @click.option(
     "--format",

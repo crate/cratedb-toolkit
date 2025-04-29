@@ -78,7 +78,7 @@ class CroudWrapper:
             if "Resource not found" in message:
                 explanation = (
                     "Apparently, the addressed cluster resource was not found. "
-                    "Please validate the `--cluster-id` option, or the `CRATEDB_CLOUD_CLUSTER_ID` environment variable "
+                    "Please validate the `--cluster-id` option, or the `CRATEDB_CLUSTER_ID` environment variable "
                     "used by CrateDB Toolkit."
                 )
             if "Another cluster operation is currently in progress" in message:
