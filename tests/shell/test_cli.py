@@ -25,7 +25,7 @@ def test_shell_standalone(cratedb):
     assert json.loads(result.output) == [{"answer": 42}]
 
 
-def test_shell_cloud(cratedb, mocker, cloud_cluster_name):
+def test_shell_managed(mocker, cloud_cluster_name):
     """
     Verify the successful incantation of `ctk shell` against CrateDB Cloud.
     """

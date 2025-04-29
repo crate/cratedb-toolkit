@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.cluster.core import UniversalCluster
+from cratedb_toolkit.cluster.core import DatabaseCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click, make_command
@@ -63,10 +63,10 @@ def load_table(
     target = TableAddress(schema=schema, table=table)
 
     # Dispatch "load table" operation.
-    cluster = UniversalCluster.create(
+    cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
         sqlalchemy_url=cratedb_sqlalchemy_url,
         http_url=cratedb_http_url,
     )
-    return cluster.load_table(source=source, target=target, transformation=transformation)
+    cluster.load_table(source=source, target=target, transformation=transformation)

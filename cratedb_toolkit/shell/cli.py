@@ -1,9 +1,15 @@
 import click
 
-from cratedb_toolkit.cluster.model import ClusterInformation
-from cratedb_toolkit.exception import DatabaseAddressMissingError
-from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_sqlalchemy_url
+from cratedb_toolkit import DatabaseCluster
+from cratedb_toolkit.option import (
+    option_cluster_id,
+    option_cluster_name,
+    option_http_url,
+    option_password,
+    option_schema,
+    option_sqlalchemy_url,
+    option_username,
+)
 from cratedb_toolkit.util.cli import boot_click, docstring_format_verbatim
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
 
@@ -29,15 +35,10 @@ def help_cli():
 @option_cluster_id
 @option_cluster_name
 @option_sqlalchemy_url
-@click.option("--username", envvar="CRATEDB_USERNAME", type=str, required=False, help="Username for CrateDB cluster")
-@click.option("--password", envvar="CRATEDB_PASSWORD", type=str, required=False, help="Password for CrateDB cluster")
-@click.option(
-    "--schema",
-    envvar="CRATEDB_SCHEMA",
-    type=str,
-    required=False,
-    help="Default schema for statements if schema is not explicitly stated within queries",
-)
+@option_http_url
+@option_username
+@option_password
+@option_schema
 @click.option("--command", type=str, required=False, help="SQL command")
 @click.option(
     "--format",
@@ -52,9 +53,10 @@ def help_cli():
 @click.pass_context
 def cli(
     ctx: click.Context,
-    cratedb_sqlalchemy_url: str,
     cluster_id: str,
     cluster_name: str,
+    cratedb_sqlalchemy_url: str,
+    cratedb_http_url: str,
     username: str,
     password: str,
     schema: str,
@@ -64,18 +66,17 @@ def cli(
     debug: bool,
 ):
     """
-    Start an interactive database shell, or invoke SQL commands, using `crash`.
+    Start an interactive database shell or invoke SQL commands, using `crash`.
     """
     boot_click(ctx, verbose, debug)
 
-    if cratedb_sqlalchemy_url:
-        address = DatabaseAddress.from_string(cratedb_sqlalchemy_url)
-        cratedb_http_url = address.httpuri
-    elif cluster_id or cluster_name:
-        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
-        cratedb_http_url = cluster_info.cloud["url"]
-    else:
-        raise DatabaseAddressMissingError()
+    cluster = DatabaseCluster.create(
+        cluster_id=cluster_id,
+        cluster_name=cluster_name,
+        sqlalchemy_url=cratedb_sqlalchemy_url,
+        http_url=cratedb_http_url,
+    ).probe()
+    cratedb_http_url = cluster.address.httpuri
 
     run_crash(
         hosts=cratedb_http_url,

@@ -19,7 +19,6 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.io.croud import CloudJob
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -146,7 +145,7 @@ class ManagedCluster(ClusterBase):
             self.suspend()
             logger.info(f"Successfully suspended cluster: id={self.cluster_id}, name={self.cluster_name}")
         except Exception as ex:
-            logger.error(f"Failed to suspend cluster: {ex}")
+            logger.error(f"Failed to stop cluster: {ex}")
             # Don't swallow the original exception
             return False
 
@@ -186,10 +185,6 @@ class ManagedCluster(ClusterBase):
             if CONFIG.settings_errors == "exit":
                 raise SystemExit(1) from ex
             raise
-
-    def stop(self) -> "ManagedCluster":
-        raise NotImplementedError("Stopping cluster not implemented yet")
-        return self
 
     def delete(self) -> "ManagedCluster":
         raise NotImplementedError("Deleting cluster not implemented yet")
@@ -302,21 +297,21 @@ class ManagedCluster(ClusterBase):
         Command: ctk cluster start
         """
         if self.cluster_id is None:
-            raise DatabaseAddressMissingError("Need cluster identifier to resume")
+            raise DatabaseAddressMissingError("Need cluster identifier to resume cluster")
         logger.info(f"Resuming CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
         self.cm.resume_cluster(identifier=self.cluster_id)
         self.probe()
         return self
 
-    def suspend(self) -> "ManagedCluster":
+    def stop(self) -> "ManagedCluster":
         """
         Suspend a database cluster.
 
         Command: ctk cluster suspend
         """
         if self.cluster_id is None:
-            raise DatabaseAddressMissingError("Need cluster identifier to suspend")
-        logger.info(f"Suspending CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
+            raise DatabaseAddressMissingError("Need cluster identifier to stop cluster")
+        logger.info(f"Stopping CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
         self.cm.suspend_cluster(identifier=self.cluster_id)
         self.probe()
         return self
@@ -327,7 +322,7 @@ class ManagedCluster(ClusterBase):
         source: InputOutputResource,
         target: t.Optional[TableAddress] = None,
         transformation: t.Union[Path, None] = None,
-    ) -> CloudJob:
+    ) -> "ManagedCluster":
         """
         Load data into a database table on CrateDB Cloud.
 
@@ -364,7 +359,6 @@ class ManagedCluster(ClusterBase):
             )
             if cloud_job.success:
                 logger.info("Data loading was successful.\n%s\n", texts.success())
-                return cloud_job
             else:
                 # TODO: Add "reason" to exception message.
                 message = f"Data loading failed.\n{cloud_job.message}"
@@ -376,6 +370,8 @@ class ManagedCluster(ClusterBase):
             msg = f"Data loading failed: {ex}"
             logger.exception(msg)
             raise OperationFailed(msg) from ex
+
+        return self
 
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
         """
@@ -560,7 +556,7 @@ class StandaloneCluster(ClusterBase):
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
 
 
-class UniversalCluster:
+class DatabaseCluster:
     """
     Manage a CrateDB Cloud or standalone cluster.
     """
@@ -589,14 +585,16 @@ class UniversalCluster:
             DatabaseAddressDuplicateError: If multiple connection methods are provided.
         """
 
-        # Fail if more than one address option was provided.
+        # Count number of address options.
         address_options_count = sum(
             1
             for option in [cluster_id, cluster_name, sqlalchemy_url, http_url]
             if option is not None and option.strip() != ""
         )
+        # Fail if no address option was provided.
         if address_options_count == 0:
             raise DatabaseAddressMissingError
+        # Fail if more than one address option was provided.
         if address_options_count > 1:
             raise DatabaseAddressDuplicateError()
 

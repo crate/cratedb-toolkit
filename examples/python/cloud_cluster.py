@@ -70,9 +70,9 @@ fall back to probe the environment variables.
 
 """
 
-import json
 import logging
 import sys
+from pprint import pprint
 
 import cratedb_toolkit
 from cratedb_toolkit.util.common import setup_logging
@@ -80,40 +80,54 @@ from cratedb_toolkit.util.common import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def workload():
+def workload_procedural():
     """
-    Run a workload on a CrateDB database cluster on CrateDB Cloud.
-
-    ctk cluster start --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
-    ctk shell --command "SELECT * from sys.summits LIMIT 2;"
+    Use CTK Cluster API procedural.
     """
 
     from cratedb_toolkit import ManagedCluster
 
-    # Acquire database cluster handle, obtaining cluster identifier
-    # or name from the user's environment.
+    # Acquire a database cluster handle, obtaining cluster identifier or name from the user's environment.
     cluster = ManagedCluster.from_env().start()
 
     # Report information about cluster.
     # TODO: Implement and use `cluster.{print,format}_info()` to report cluster information.
-    print(json.dumps(cluster.info.cloud), file=sys.stderr)  # noqa: T201
+    pprint(cluster.info, stream=sys.stderr)  # noqa: T201
 
     # Run database workload.
-    cratedb = cluster.get_client_bundle()
-    results = cratedb.adapter.run_sql("SELECT * from sys.summits LIMIT 2;", records=True)
-    print(json.dumps(results, indent=2))  # noqa: T201
+    results = cluster.query("SELECT * from sys.summits LIMIT 2;")
+    pprint(results, stream=sys.stderr)  # noqa: T201
 
-    # TODO: Stop cluster again.
+    # Stop the cluster again.
     # cluster.stop()
 
 
+def workload_contextmanager():
+    """
+    Use CTK Cluster API as a context manager.
+    """
+
+    from cratedb_toolkit import ManagedCluster
+
+    # Acquire a database cluster handle, and run database workload.
+    with ManagedCluster.from_env() as cluster:
+        pprint(cluster.query("SELECT * from sys.summits LIMIT 2;"), stream=sys.stderr)  # noqa: T201
+
+
 def main():
-    workload()
+    """
+    Run a workload on a CrateDB database cluster on CrateDB Cloud.
+
+        ctk cluster start --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
+        ctk shell --command "SELECT * from sys.summits LIMIT 2;"
+    """
+    workload_procedural()
+    workload_contextmanager()
 
 
 if __name__ == "__main__":
-    # Configure toolkit environment to be suitable for a CLI application, with
-    # interactive guidance, and accepting configuration settings from the environment.
+    # Configure the toolkit environment to be suitable for a CLI application, with
+    # interactive guidance and accepting configuration settings from the environment.
     setup_logging()
     cratedb_toolkit.configure(
         runtime_errors="exit",

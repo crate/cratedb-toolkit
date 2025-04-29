@@ -76,7 +76,7 @@ def import_csv():
         ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
     """
 
-    # Acquire a database cluster handle and get cluster identifier or name from the user's environment.
+    # Acquire a database cluster handle, obtaining cluster identifier or name from the user's environment.
     cluster = ManagedCluster.from_env().start()
 
     # Define data source.
