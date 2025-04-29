@@ -61,6 +61,8 @@ class DatabaseAddress:
         """
         uri = deepcopy(self.uri)
         uri.scheme = "http"
+        if not uri.host:
+            uri.host = "localhost"
         if not uri.port:
             uri.port = 4200
 
