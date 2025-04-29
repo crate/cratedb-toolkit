@@ -111,6 +111,7 @@ class ManagedCluster(ClusterBase):
         settings: ManagedClusterSettings = None,
         address: DatabaseAddress = None,
         info: ClusterInformation = None,
+        stop_on_exit: bool = False,
     ):
         super().__init__()
         self.cluster_id = cluster_id
@@ -118,6 +119,7 @@ class ManagedCluster(ClusterBase):
         self.settings = settings or ManagedClusterSettings()
         self.address = address
         self.info: ClusterInformation = info or ClusterInformation()
+        self.stop_on_exit = stop_on_exit
         self.exists: bool = False
 
         # Default settings and sanity checks.
@@ -138,12 +140,13 @@ class ManagedCluster(ClusterBase):
         """Exit the context manager, suspending the cluster."""
         if exc_type is not None:
             # Log the exception but still attempt to suspend the cluster
-            logger.error(f"Exception occurred: {exc_type.__name__}: {exc_val}")
+            logger.error(f"Exception occurred while shutting down: {exc_type.__name__}: {exc_val}")
 
         try:
             self.close_connections()
-            self.suspend()
-            logger.info(f"Successfully suspended cluster: id={self.cluster_id}, name={self.cluster_name}")
+            if self.stop_on_exit:
+                self.stop()
+                logger.info(f"Successfully stopped cluster: id={self.cluster_id}, name={self.cluster_name}")
         except Exception as ex:
             logger.error(f"Failed to stop cluster: {ex}")
             # Don't swallow the original exception
@@ -153,7 +156,7 @@ class ManagedCluster(ClusterBase):
 
     @classmethod
     @flexfun(domain="settings")
-    def from_env(cls) -> "ManagedCluster":
+    def from_env(cls, stop_on_exit: bool = False) -> "ManagedCluster":
         """
         Obtain CrateDB Cloud cluster identifier or name from the user environment.
         The settings are mutually exclusive.
@@ -177,7 +180,7 @@ class ManagedCluster(ClusterBase):
 
         settings = ManagedClusterSettings.from_cli_or_env()
         try:
-            return cls(settings=settings)
+            return cls(settings=settings, stop_on_exit=stop_on_exit)
 
         # TODO: With `flexfun`, can this section be improved?
         except DatabaseAddressMissingError as ex:
@@ -200,6 +203,8 @@ class ManagedCluster(ClusterBase):
             self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
             self.cluster_id = self.info.cloud["id"]
             self.cluster_name = self.info.cloud["name"]
+            self.address = DatabaseAddress.from_httpuri(self.info.cloud["url"])
+
         except (CroudException, DatabaseAddressMissingError) as ex:
             self.exists = False
             if "Cluster not found" not in str(ex):
@@ -423,6 +428,7 @@ class StandaloneCluster(ClusterBase):
     address: DatabaseAddress
     info: t.Optional[ClusterInformation] = None
     exists: bool = False
+    _load_table_result: t.Optional[bool] = None
 
     def __post_init__(self):
         super().__init__()
@@ -480,7 +486,9 @@ class StandaloneCluster(ClusterBase):
         client_bundle = self.get_client_bundle()
         return client_bundle.adapter.run_sql(sql, records=True)
 
-    def load_table(self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None):
+    def load_table(
+        self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
+    ) -> "StandaloneCluster":
         """
         Load data into a database table on a standalone CrateDB Server.
 
@@ -499,10 +507,10 @@ class StandaloneCluster(ClusterBase):
             from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
 
             if dynamodb_copy(str(source_url_obj), target_url, progress=True):
-                return True
+                self._load_table_result = True
             else:
                 logger.error("Data loading failed or incomplete")
-                return False
+                self._load_table_result = False
 
         elif (
             source_url_obj.scheme.startswith("influxdb") or source_url.endswith(".lp") or source_url.endswith(".lp.gz")
@@ -514,10 +522,10 @@ class StandaloneCluster(ClusterBase):
                 http_scheme = "https"
             source_url_obj.scheme = source_url_obj.scheme.replace("influxdb2", http_scheme)
             if influxdb_copy(str(source_url_obj), target_url, progress=True):
-                return True
+                self._load_table_result = True
             else:
                 logger.error("Data loading failed or incomplete")
-                return False
+                self._load_table_result = False
 
         elif source_url_obj.scheme.startswith("kinesis"):
             if "+cdc" in source_url_obj.scheme:
@@ -547,13 +555,15 @@ class StandaloneCluster(ClusterBase):
                     transformation=transformation,
                     progress=True,
                 ):
-                    return True
+                    self._load_table_result = True
                 else:
                     logger.error("Data loading failed or incomplete")
-                    return False
+                    self._load_table_result = False
 
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
+
+        return self
 
 
 class DatabaseCluster:
