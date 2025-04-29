@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import urllib3
 from crate import client
+from queryanonymizer import anonymize, deanonymize
 
 from cratedb_toolkit.model import DatabaseAddress
 
@@ -42,12 +43,44 @@ cursor: t.Any
 report_cursor: t.Any
 last_scrape: int
 interval: float
+anonymize_sql: bool = False
+deanonymize_sql: bool = False  # Added global flag for deanonymization
+decoder_dict_path: str
 
 
-def boot(address: DatabaseAddress, report_address: t.Optional[DatabaseAddress] = None):
+def boot(
+    address: DatabaseAddress,
+    report_address: t.Optional[DatabaseAddress] = None,
+    anonymize_statements: bool = False,
+    decoder_dict_file: t.Optional[str] = None,
+    deanonymize_statements: bool = False,
+):
     # TODO: Refactor to non-global variables.
-    global stmt_log_table, last_exec_table, cursor, report_cursor, last_scrape, interval
+    global \
+        stmt_log_table, \
+        last_exec_table, \
+        cursor, \
+        report_cursor, \
+        last_scrape, \
+        interval, \
+        anonymize_sql, \
+        deanonymize_sql, \
+        decoder_dict_path
+    anonymize_sql = anonymize_statements
+    deanonymize_sql = deanonymize_statements
+
+    if (anonymize_sql or deanonymize_sql) and decoder_dict_file is None:
+        raise ValueError("Decoder dictionary file is required when anonymization or deanonymization is enabled")
+
     schema = address.schema or "stats"
+
+    if anonymize_sql and decoder_dict_file:
+        decoder_dict_path = decoder_dict_file
+        logger.info(f"SQL anonymization is enabled, using dictionary: {decoder_dict_path}")
+
+    if deanonymize_sql and decoder_dict_file:
+        decoder_dict_path = decoder_dict_file
+        logger.info(f"SQL deanonymization is enabled, using dictionary: {decoder_dict_path}")
 
     interval = float(os.getenv("INTERVAL", 10))
     stmt_log_table = os.getenv("STMT_TABLE", f'"{schema}".jobstats_statements')
@@ -86,6 +119,59 @@ def boot(address: DatabaseAddress, report_address: t.Optional[DatabaseAddress] =
     last_scrape = int(time.time() * 1000) - int(interval * 60000)
 
     dbinit()
+
+
+def anonymize_statement(statement: str) -> str:
+    """Anonymize SQL statement using queryanonymizer."""
+    if anonymize_sql and anonymize is not None:
+        try:
+            # Load dictionary file each time
+            encoder_dict = {}
+            try:
+                with open(decoder_dict_path, "r") as f:
+                    encoder_dict = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                logger.warning(f"Could not load encoder dictionary: {e}")
+
+            # Call anonymize and extract only the anonymized statement (first item)
+            result = anonymize(
+                query=statement,
+                keywords_group="SQL",
+                anonymize_strings_inside_square_brackets=True,
+                anonymize_strings_inside_apostrophes=True,
+                anonymize_strings_inside_quotation_marks=True,
+                path_to_decoder_dictionary_file=decoder_dict_path,
+                custom_encoder_dictionary=encoder_dict,
+            )
+            # Return only the anonymized statement string
+            if isinstance(result, tuple) and len(result) > 0:
+                return result[0]
+            return result
+        except Exception as e:
+            logger.warning(f"Failed to anonymize statement: {e}")
+    return statement
+
+
+def deanonymize_statement(statement: str) -> str:
+    """Deanonymize SQL statement using queryanonymizer."""
+    if deanonymize_sql and decoder_dict_path:
+        try:
+            with open(decoder_dict_path, "r") as f:
+                _ = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.warning(f"Could not load decoder dictionary: {e}")
+
+        # Call anonymize to decode the statement
+        result = deanonymize(
+            statement,
+            path_to_decoder_dictionary_file=decoder_dict_path,
+        )
+
+        # Return only the deanonymized statement string
+        if isinstance(result, tuple) and len(result) > 0:
+            return result[0]
+        return result
+    return statement  # Return original statement if not deanonymizing
 
 
 def dbinit():
@@ -198,7 +284,19 @@ def read_stats():
         f"FROM {stmt_log_table} ORDER BY calls DESC, avg_duration DESC;"
     )
     report_cursor.execute(stmt)
-    init_stmts(report_cursor.fetchall())
+    results = report_cursor.fetchall()
+
+    # Deanonymize statements if needed
+    if deanonymize_sql and decoder_dict_path:
+        deanonymized_results = []
+        for row in results:
+            row_list = list(row)
+            if row_list[1]:  # Check if stmt (at index 1) exists
+                row_list[1] = deanonymize_statement(row_list[1])
+            deanonymized_results.append(tuple(row_list))
+        results = deanonymized_results
+
+    init_stmts(results)
     return sys_jobs_log
 
 
@@ -224,6 +322,9 @@ def update_statistics(query_results):
         stmt = result[3]
         user = result[4]
         node = json.dumps(result[5])
+
+        # Anonymize the statement if requested
+        stmt = anonymize_statement(stmt)
 
         duration = ended - started
         if stmt not in sys_jobs_log:
