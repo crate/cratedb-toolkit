@@ -32,7 +32,6 @@ changes
 
 Cluster Information <info/index>
 Cluster Flight Recorder (CFR) <cfr/index>
-util/index
 ```
 
 ```{toctree}
@@ -41,6 +40,8 @@ util/index
 :hidden:
 
 adapter/index
+cluster/index
+util/index
 datasets
 docs-api
 io/index

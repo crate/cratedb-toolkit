@@ -1,4 +1,4 @@
-# Utility Commands
+# Commands
 
 A bundle of ad hoc inquiry utilities, for diagnostics and more.
 
@@ -6,5 +6,6 @@ A bundle of ad hoc inquiry utilities, for diagnostics and more.
 :maxdepth: 1
 
 settings
+shell
 tail
 ```
