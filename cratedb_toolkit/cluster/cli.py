@@ -31,17 +31,17 @@ def help_start():
 
     ctk cluster start
     ctk cluster start --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    ctk cluster start --cluster-name=Hotzenplotz
+    ctk cluster start --cluster-name=hotzenplotz
     """
 
 
-def help_suspend():
+def help_stop():
     """
-    Suspend cluster.
+    Stop (suspend) cluster.
 
-    ctk cluster suspend
-    ctk cluster suspend --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
-    ctk cluster suspend --cluster-name=Hotzenplotz
+    ctk cluster stop
+    ctk cluster stop --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
+    ctk cluster stop --cluster-name=hotzenplotz
     """
 
 
@@ -88,18 +88,18 @@ def start(ctx: click.Context, cluster_id: str, cluster_name: str):
         jd(cluster.info.asdict())
 
 
-@make_command(cli, name="suspend", help=help_suspend)
+@make_command(cli, name="stop", help=help_stop)
 @option_cluster_id
 @option_cluster_name
 @click.pass_context
-def suspend(ctx: click.Context, cluster_id: str, cluster_name: str):
+def stop(ctx: click.Context, cluster_id: str, cluster_name: str):
     """
-    Suspend CrateDB Cloud Cluster.
+    Stop (suspend) CrateDB Cloud Cluster.
     """
 
-    with handle_command_errors("suspend cluster"):
+    with handle_command_errors("stop cluster"):
         # Acquire the database cluster handle and submit the `suspend` command.
-        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).probe().suspend()
+        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).probe().stop()
         logger.info(f"Successfully suspended cluster: {cluster}")
 
         # Display cluster information.

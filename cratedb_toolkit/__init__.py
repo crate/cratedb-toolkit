@@ -15,13 +15,13 @@ from .config import preconfigure
 
 preconfigure()
 
-from .cluster.core import ManagedCluster, StandaloneCluster, UniversalCluster
+from .cluster.core import DatabaseCluster, ManagedCluster, StandaloneCluster
 from .config import configure
 from .model import InputOutputResource, TableAddress
 
 __all__ = [
     "ManagedCluster",
-    "UniversalCluster",
+    "DatabaseCluster",
     "StandaloneCluster",
     "InputOutputResource",
     "TableAddress",
