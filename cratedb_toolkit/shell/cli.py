@@ -76,6 +76,10 @@ def cli(
         sqlalchemy_url=cratedb_sqlalchemy_url,
         http_url=cratedb_http_url,
     ).probe()
+
+    if cluster.address is None:
+        raise click.UsageError("Inquiring cluster address failed.")
+
     cratedb_http_url = cluster.address.httpuri
 
     run_crash(
