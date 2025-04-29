@@ -18,7 +18,7 @@ def test_shell_standalone(cratedb):
 
     result = runner.invoke(
         cli,
-        args=f"--cratedb-sqlalchemy-url='{database_url}' --command 'SELECT 42 AS answer;' --format=json",
+        args=f"--sqlalchemy-url='{database_url}' --command 'SELECT 42 AS answer;' --format=json",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

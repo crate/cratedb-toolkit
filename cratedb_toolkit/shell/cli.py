@@ -55,8 +55,8 @@ def cli(
     ctx: click.Context,
     cluster_id: str,
     cluster_name: str,
-    cratedb_sqlalchemy_url: str,
-    cratedb_http_url: str,
+    sqlalchemy_url: str,
+    http_url: str,
     username: str,
     password: str,
     schema: str,
@@ -73,17 +73,17 @@ def cli(
     cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
-        sqlalchemy_url=cratedb_sqlalchemy_url,
-        http_url=cratedb_http_url,
+        sqlalchemy_url=sqlalchemy_url,
+        http_url=http_url,
     ).probe()
 
     if cluster.address is None:
         raise click.UsageError("Inquiring cluster address failed.")
 
-    cratedb_http_url = cluster.address.httpuri
+    http_url = cluster.address.httpuri
 
     run_crash(
-        hosts=cratedb_http_url,
+        hosts=http_url,
         username=username,
         password=password,
         schema=schema,

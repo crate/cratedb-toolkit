@@ -65,7 +65,7 @@ def test_api_duplicate_address_standalone():
     runner = CliRunner()
     result = runner.invoke(
         cli,
-        args="--cratedb-http-url=http://localhost:4200 --cratedb-sqlalchemy-url=crate://crate@localhost:4200 foo",
+        args="--http-url=http://localhost:4200 --sqlalchemy-url=crate://crate@localhost:4200 foo",
         catch_exceptions=False,
     )
     assert result.exit_code == 2

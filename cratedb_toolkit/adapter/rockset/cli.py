@@ -6,13 +6,10 @@ import sys
 import click
 from click_aliases import ClickAliasedGroup
 
+from cratedb_toolkit.option import option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click, make_command
 
 logger = logging.getLogger()
-
-cratedb_sqlalchemy_option = click.option(
-    "--cratedb-sqlalchemy-url", envvar="CRATEDB_SQLALCHEMY_URL", type=str, required=False, help="CrateDB SQLAlchemy URL"
-)
 
 
 def help_serve():
@@ -29,19 +26,19 @@ def help_serve():
 
 
 @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
-@cratedb_sqlalchemy_option
+@option_sqlalchemy_url
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.version_option()
 @click.pass_context
-def cli(ctx: click.Context, cratedb_sqlalchemy_url: str, verbose: bool, debug: bool):
+def cli(ctx: click.Context, sqlalchemy_url: str, verbose: bool, debug: bool):
     """
     Rockset adapter utilities.
     """
-    if not cratedb_sqlalchemy_url:
+    if not sqlalchemy_url:
         logger.error("Unable to operate without database address")
         sys.exit(1)
-    ctx.meta.update({"cratedb_sqlalchemy_url": cratedb_sqlalchemy_url})
+    ctx.meta.update({"sqlalchemy_url": sqlalchemy_url})
     return boot_click(ctx, verbose, debug)
 
 

@@ -332,7 +332,7 @@ def report_comparison(color: Color, default_settings, non_default_settings):
     help="Disable colored output",
 )
 def compare_cluster_settings(
-    cratedb_sqlalchemy_url: str,
+    sqlalchemy_url: str,
     large_tolerance=2.9,
     small_tolerance=1.0,
     threshold=20.0,
@@ -358,8 +358,8 @@ def compare_cluster_settings(
         color.RESET,
     )
 
-    print(f"{BOLD}Comparing settings in {BLUE}{cratedb_sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
-    adapter = DatabaseAdapter(dburi=cratedb_sqlalchemy_url)
+    print(f"{BOLD}Comparing settings in {BLUE}{sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
+    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
 
     # Acquire default settings from documentation.
     try:

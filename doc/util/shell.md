@@ -65,7 +65,7 @@ echo "SELECT * from sys.summits LIMIT 2;" | ctk shell --cluster-name testcluster
 Connect to a standalone CrateDB instance on localhost, authenticating with the
 default user `crate`.
 ```shell
-ctk shell --cratedb-sqlalchemy-url 'crate://localhost:4200' --command "SELECT 42;"
+ctk shell --sqlalchemy-url 'crate://localhost:4200' --command "SELECT 42;"
 ```
 
 When working with self-hosted or standalone [CrateDB] instances, include
