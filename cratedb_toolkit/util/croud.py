@@ -153,6 +153,10 @@ class CroudWrapper:
 
     @property
     def headless_config(self) -> Configuration:
+        cfg = Configuration("croud.yaml")
+        if cfg._file_path.exists() and "CRATEDB_CLOUD_API_KEY" not in os.environ:
+            return cfg
+
         tmp_file = NamedTemporaryFile()
         tmp_path = Path(tmp_file.name)
         config = Configuration("headless.yaml", tmp_path)
