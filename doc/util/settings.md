@@ -1,6 +1,5 @@
 (setting)=
 (settings)=
-
 # ctk settings
 
 CrateDB Toolkit's "Settings" subsystem provides tools to list and compare default
