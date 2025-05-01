@@ -160,8 +160,6 @@ def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str
         "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
         "CRATEDB_CLOUD_ORGANIZATION_ID": os.environ.get("TEST_CRATEDB_CLOUD_ORGANIZATION_ID"),
         "CRATEDB_CLUSTER_NAME": cloud_cluster_name,
-        "CRATEDB_USERNAME": os.environ.get("TEST_CRATEDB_USERNAME"),
-        "CRATEDB_PASSWORD": os.environ.get("TEST_CRATEDB_PASSWORD"),
     }
 
     if any(setting is None for setting in settings.values()):

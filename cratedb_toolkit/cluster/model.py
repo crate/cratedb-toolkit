@@ -17,6 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
+class JwtResponse:
+    expiry: str
+    refresh: str
+    token: str
+
+    def get_token(self):
+        # TODO: Persist token across sessions.
+        # TODO: Refresh automatically when expired.
+        return self.token
+
+
+@dataclasses.dataclass
 class ClusterInformation:
     """
     Manage a database cluster's information.
@@ -75,6 +87,14 @@ class ClusterInformation:
 
     def asdict(self) -> t.Dict[str, t.Any]:
         return deepcopy(dataclasses.asdict(self))
+
+    @property
+    def jwt(self) -> JwtResponse:
+        """
+        Return per-cluster JWT token response.
+        """
+        cc = CloudCluster(cluster_id=self.cloud_id)
+        return JwtResponse(**cc.get_jwt_token())
 
 
 @dataclasses.dataclass

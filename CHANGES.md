@@ -10,6 +10,7 @@
   deploy/start/resume and data import procedures using fluent API and CLI.
 - CLI naming things: Rename `--cratedb-sqlalchemy-url` to `--sqlalchemy-url`
   and `--cratedb-http-url` to `--http-url`.
+- Auth: Added JWT authentication to client API and `ctk shell`.
 
 ## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through

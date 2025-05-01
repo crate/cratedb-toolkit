@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 import croud.api
 import yaml
+from boltons.typeutils import classproperty
 from croud.config.configuration import Configuration
 
 import cratedb_toolkit
@@ -151,24 +152,6 @@ class CroudWrapper:
         buffer.seek(0)
         return buffer.read()
 
-    @property
-    def headless_config(self) -> Configuration:
-        cfg = Configuration("croud.yaml")
-        if cfg._file_path.exists() and "CRATEDB_CLOUD_API_KEY" not in os.environ:
-            return cfg
-
-        tmp_file = NamedTemporaryFile()
-        tmp_path = Path(tmp_file.name)
-        config = Configuration("headless.yaml", tmp_path)
-
-        # Get credentials from the environment.
-        config.profile["key"] = os.environ.get("CRATEDB_CLOUD_API_KEY")
-        config.profile["secret"] = os.environ.get("CRATEDB_CLOUD_API_SECRET")
-        config.profile["organization-id"] = os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
-        # config.profile["endpoint"] = os.environ.get("CRATEDB_CLOUD_ENDPOINT")  # noqa: ERA001
-
-        return config
-
     def run_croud_fun(self, fun: t.Callable, with_exceptions: bool = True):
         """
         Wrapper function to call into `croud`, for catching and converging error messages.
@@ -200,14 +183,13 @@ class CroudWrapper:
         # https://stackoverflow.com/a/46481946
         levels = ["debug", "info", "warning", "error", "success"]
         with contextlib.ExitStack() as stack:
-            # Patch all `print_*` functions.
+            # Patch all `print_*` functions, as they would obstruct the output.
             for level in levels:
                 p = patch(f"croud.printer.print_{level}", functools.partial(print_fun, level))
                 stack.enter_context(p)
 
             # Patch configuration.
-            p = patch("croud.config._CONFIG", self.headless_config)
-            stack.enter_context(p)
+            stack.enter_context(headless_config())
 
             # TODO: When aiming to disable wait-for-completion.
             """
@@ -219,6 +201,15 @@ class CroudWrapper:
             return fun()
 
 
+@contextlib.contextmanager
+def headless_config():
+    """
+    Patch the `croud.config` module to use a headless configuration.
+    """
+    with patch("croud.config._CONFIG", CroudClient.get_headless_config):
+        yield
+
+
 class CroudClient(croud.api.Client):
     """
     A slightly modified `croud.api.Client` class, to inject a custom User-Agent header.
@@ -228,6 +219,42 @@ class CroudClient(croud.api.Client):
         super().__init__(*args, **kwargs)
         ua = f"{cratedb_toolkit.__appname__}/{cratedb_toolkit.__version__} Python/{python_version()}"
         self.session.headers["User-Agent"] = ua
+
+    @staticmethod
+    def create() -> "croud.api.Client":
+        """
+        Canonical factory method for creating a `croud.api.Client` instance.
+        """
+        with headless_config():
+            from croud.config import CONFIG
+
+            return croud.api.Client(
+                CONFIG.endpoint,
+                token=CONFIG.token,
+                on_token=CONFIG.set_current_auth_token,
+                key=CONFIG.key,
+                secret=CONFIG.secret,
+                region=CONFIG.region,
+                sudo=False,
+            )
+
+    @classproperty
+    def get_headless_config(cls) -> Configuration:
+        cfg = Configuration("croud.yaml")
+        if cfg._file_path.exists() and "CRATEDB_CLOUD_API_KEY" not in os.environ:
+            return cfg
+
+        tmp_file = NamedTemporaryFile()
+        tmp_path = Path(tmp_file.name)
+        config = Configuration("headless.yaml", tmp_path)
+
+        # Get credentials from the environment.
+        config.profile["key"] = os.environ.get("CRATEDB_CLOUD_API_KEY")
+        config.profile["secret"] = os.environ.get("CRATEDB_CLOUD_API_SECRET")
+        config.profile["organization-id"] = os.environ.get("CRATEDB_CLOUD_ORGANIZATION_ID")
+        # config.profile["endpoint"] = os.environ.get("CRATEDB_CLOUD_ENDPOINT")  # noqa: ERA001
+
+        return config
 
 
 croud.api.Client = CroudClient

@@ -120,18 +120,17 @@ class DatabaseAdapter:
         Invoke SQL statement, and return results.
         """
         results = []
-        with self.engine.connect() as connection:
-            for statement in sqlparse.split(sql):
-                if self.internal:
-                    statement += self.internal_tag
-                result = connection.execute(sa.text(statement), parameters)
-                data: t.Any
-                if records:
-                    rows = result.mappings().fetchall()
-                    data = [dict(row.items()) for row in rows]
-                else:
-                    data = result.fetchall()
-                results.append(data)
+        for statement in sqlparse.split(sql):
+            if self.internal:
+                statement += self.internal_tag
+            result = self.connection.execute(sa.text(statement), parameters)
+            data: t.Any
+            if records:
+                rows = result.mappings().fetchall()
+                data = [dict(row.items()) for row in rows]
+            else:
+                data = result.fetchall()
+            results.append(data)
 
         # Backward-compatibility.
         if len(results) == 1:
