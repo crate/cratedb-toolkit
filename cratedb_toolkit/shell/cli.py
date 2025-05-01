@@ -1,3 +1,5 @@
+import logging
+
 import click
 
 from cratedb_toolkit import DatabaseCluster
@@ -12,6 +14,8 @@ from cratedb_toolkit.option import (
 )
 from cratedb_toolkit.util.cli import boot_click, docstring_format_verbatim
 from cratedb_toolkit.util.crash import get_crash_output_formats, run_crash
+
+logger = logging.getLogger(__name__)
 
 output_formats = get_crash_output_formats()
 
@@ -39,7 +43,7 @@ def help_cli():
 @option_username
 @option_password
 @option_schema
-@click.option("--command", type=str, required=False, help="SQL command")
+@click.option("--command", "-c", type=str, required=False, help="SQL command")
 @click.option(
     "--format",
     "format_",
@@ -82,10 +86,20 @@ def cli(
 
     http_url = cluster.address.httpuri
 
+    is_cloud = cluster_id is not None or cluster_name is not None
+    jwt_token = None
+    if is_cloud:
+        if username is not None:
+            logger.info("Using username/password credentials for authentication")
+        else:
+            logger.info("Using JWT token for authentication")
+            jwt_token = cluster.info.jwt.token
+
     run_crash(
         hosts=http_url,
         username=username,
         password=password,
+        jwt_token=jwt_token,
         schema=schema,
         command=command,
         output_format=format_,

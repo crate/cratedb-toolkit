@@ -57,18 +57,11 @@ to, and its connection credentials.
 export CRATEDB_CLUSTER_ID='e1e38d92-a650-48f1-8a70-8133f2d5c400'
 ```
 
-Define authentication credentials, to satisfy the `ctk shell` command you will
-use to inspect the database content after transferring data.
-```shell
-export CRATEDB_USERNAME='admin'
-export CRATEDB_PASSWORD='3$MJ5fALP8bNOYCYBMLOrzd&'
-```
-
 ### Usage
 Load data into database table.
 ```shell
 ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz'
-ctk load table 'https://github.com/crate/cratedb-datasets/raw/main/cloud-tutorials/data_marketing.json.gz'
+ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_marketing.json.gz'
 ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz'
 ```
 

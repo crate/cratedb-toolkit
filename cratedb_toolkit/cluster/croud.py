@@ -1,15 +1,19 @@
 import json
+import logging
 import os
 import typing as t
 from pathlib import Path
 
 from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.model import InputOutputResource, TableAddress
-from cratedb_toolkit.util.croud import CroudCall, CroudWrapper
+from cratedb_toolkit.util.croud import CroudCall, CroudClient, CroudWrapper
 
 # Default to a stable version if not specified in the environment.
 # TODO: Use `latest` CrateDB by default, or even `nightly`?
 DEFAULT_CRATEDB_VERSION = "5.10.4"
+
+
+logger = logging.getLogger(__name__)
 
 
 class CloudManager:
@@ -374,3 +378,16 @@ class CloudCluster:
 
         wr = CroudWrapper(call=call)
         return wr.invoke()
+
+    def get_jwt_token(self) -> t.Dict[str, str]:
+        """
+        Retrieve per-cluster JWT token.
+        """
+        client = CroudClient.create()
+        data, errors = client.get(f"/api/v2/clusters/{self.cluster_id}/jwt/")
+        errmsg = "Getting JWT token failed: Unknown error"
+        if errors:
+            errmsg = f"Getting JWT token failed: {errors}"
+        if data is None:
+            raise IOError(errmsg)
+        return data

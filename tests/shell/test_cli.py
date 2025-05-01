@@ -25,9 +25,36 @@ def test_shell_standalone(cratedb):
     assert json.loads(result.output) == [{"answer": 42}]
 
 
-def test_shell_managed(mocker, cloud_cluster_name):
+def test_shell_managed_jwt(mocker, cloud_cluster_name):
     """
-    Verify the successful incantation of `ctk shell` against CrateDB Cloud.
+    Verify the successful incantation of `ctk shell` against CrateDB Cloud, using JWT authentication.
+    """
+
+    settings = {
+        "CRATEDB_CLOUD_API_KEY": os.environ.get("TEST_CRATEDB_CLOUD_API_KEY"),
+        "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
+    }
+
+    if any(setting is None for setting in settings.values()):
+        raise pytest.skip("Missing environment variables for headless mode with croud")
+
+    # Synthesize a valid environment.
+    mocker.patch.dict("os.environ", settings)
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli,
+        args=f"--cluster-name={cloud_cluster_name} --command 'SELECT 42 AS answer;' --format=json",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0
+    assert json.loads(result.output) == [{"answer": 42}]
+
+
+def test_shell_managed_username_password(mocker, cloud_cluster_name):
+    """
+    Verify the successful incantation of `ctk shell` against CrateDB Cloud, using username/password authentication..
     """
 
     settings = {

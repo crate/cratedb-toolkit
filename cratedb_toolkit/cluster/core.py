@@ -3,6 +3,7 @@ import json
 import logging
 import time
 import typing as t
+from contextlib import nullcontext
 from copy import deepcopy
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from cratedb_toolkit.exception import (
     OperationFailed,
 )
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
+from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.runtime import flexfun
@@ -131,6 +133,8 @@ class ManagedCluster(ClusterBase):
             )
 
         self.cm = CloudManager()
+        self._jwt_ctx: t.ContextManager = nullcontext()
+        self._client_bundle: t.Optional[ClientBundle] = None
 
     def __enter__(self):
         """Enter the context manager, ensuring the cluster is running."""
@@ -204,6 +208,7 @@ class ManagedCluster(ClusterBase):
             self.cluster_id = self.info.cloud["id"]
             self.cluster_name = self.info.cloud["name"]
             self.address = DatabaseAddress.from_httpuri(self.info.cloud["url"])
+            self._jwt_ctx = jwt_token_patch(self.info.jwt.token)
 
         except (CroudException, DatabaseAddressMissingError) as ex:
             self.exists = False
@@ -415,8 +420,9 @@ class ManagedCluster(ClusterBase):
         # Ensure we have cluster connection details.
         if not self.info or not self.info.cloud.get("url"):
             self.probe()
-        client_bundle = self.get_client_bundle()
-        return client_bundle.adapter.run_sql(sql, records=True)
+        with self._jwt_ctx:
+            client_bundle = self.get_client_bundle()
+            return client_bundle.adapter.run_sql(sql, records=True)
 
 
 @dataclasses.dataclass
@@ -429,6 +435,7 @@ class StandaloneCluster(ClusterBase):
     info: t.Optional[ClusterInformation] = None
     exists: bool = False
     _load_table_result: t.Optional[bool] = None
+    _client_bundle: t.Optional[ClientBundle] = None
 
     def __post_init__(self):
         super().__init__()

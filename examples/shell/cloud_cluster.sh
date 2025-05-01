@@ -29,15 +29,13 @@
 # Authentication
 # --------------
 #
-# To authenticate with the CrateDB Cloud platform, use an interactive approach like
-# `croud login --idp azuread`, or use headless mode via API keys specified per
-# `CRATEDB_CLOUD_API_KEY` and `CRATEDB_CLOUD_API_SECRET` environment variables.
+# To authenticate with the CrateDB Cloud platform, use an interactive approach
+# like `croud login --idp azuread`, or use headless mode via API keys specified
+# per `CRATEDB_CLOUD_API_KEY` and `CRATEDB_CLOUD_API_SECRET` environment variables.
 #
-# In order to connect to your cluster and run a database workload, you will
-# need a pair of username/password access credentials, to be provided per
-# `CRATEDB_USERNAME` and `CRATEDB_PASSWORD` environment variables. The same
-# values will be used to create the initial database user if your database
-# cluster will be deployed on demand.
+# If your database cluster hasn't been deployed yet, you will need to configure
+# a pair of username/password access credentials, to be provided per
+# `CRATEDB_USERNAME` and `CRATEDB_PASSWORD` environment variables.
 #
 # Cluster address
 # ---------------
@@ -66,13 +64,10 @@
 #
 #   export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
 #   export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
-#   export CRATEDB_CLOUD_ORGANIZATION_ID='<YOUR_ORG_ID_HERE>'
-#   export CRATEDB_USERNAME='<YOUR_USERNAME_HERE>'
-#   export CRATEDB_PASSWORD='<YOUR_PASSWORD_HERE>'
+#   export CRATEDB_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 #
 # Initialize a cluster instance, and run basic query::
 #
-#   export CRATEDB_CLUSTER_NAME='<YOUR_CLUSTER_NAME_HERE>'
 #   sh examples/shell/cloud_cluster.sh
 #
 

@@ -45,13 +45,6 @@ export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
 export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
 ```
 
-Additionally, supply database access credentials.
-```shell
-# CrateDB database credentials.
-export CRATEDB_USERNAME='<YOUR_USERNAME_HERE>'
-export CRATEDB_PASSWORD='<YOUR_PASSWORD_HERE>'
-```
-
 Connect to CrateDB Cloud.
 ```shell
 ctk shell --cluster-name hotzenplotz --command "SELECT * from sys.summits LIMIT 2;"

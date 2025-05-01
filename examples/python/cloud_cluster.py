@@ -28,10 +28,6 @@ Synopsis
     export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
     export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
     export CRATEDB_CLOUD_ORGANIZATION_ID='<YOUR_ORG_ID_HERE>'
-    export CRATEDB_USERNAME='<YOUR_USERNAME_HERE>'
-    export CRATEDB_PASSWORD='<YOUR_PASSWORD_HERE>'
-
-    # TODO: Store per-cluster username and password in configuration file / system keyring.
 
     # Initialize a cluster instance.
     python examples/python/cloud_cluster.py --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
