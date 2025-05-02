@@ -138,14 +138,6 @@ def cratedb(cratedb_custom_service):
 
 
 @pytest.fixture()
-def cloud_cluster_id() -> str:
-    """
-    Provide the ID of a CrateDB Cloud cluster to be used for integration tests.
-    """
-    return os.environ.get("TEST_CRATEDB_CLUSTER_ID", "7475893f-9672-469a-9943-5e413c598589")
-
-
-@pytest.fixture()
 def cloud_cluster_name() -> str:
     """
     Provide the name of a CrateDB Cloud cluster to be used for integration tests.
