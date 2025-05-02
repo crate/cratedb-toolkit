@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 from boltons.urlutils import URL
 
-from cratedb_toolkit.cluster.croud import CloudManager
+from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootServices
 from cratedb_toolkit.cluster.guide import DataImportGuide
 from cratedb_toolkit.cluster.model import ClientBundle, ClusterBase, ClusterInformation
 from cratedb_toolkit.config import CONFIG
@@ -132,7 +132,8 @@ class ManagedCluster(ClusterBase):
                 "Failed to address cluster: Either cluster identifier or name needs to be specified"
             )
 
-        self.cm = CloudManager()
+        self.root = CloudRootServices()
+        self.operation: t.Optional[CloudClusterServices] = None
         self._jwt_ctx: t.ContextManager = nullcontext()
         self._client_bundle: t.Optional[ClientBundle] = None
 
@@ -148,15 +149,18 @@ class ManagedCluster(ClusterBase):
 
         try:
             self.close_connections()
-            if self.stop_on_exit:
-                self.stop()
-                logger.info(f"Successfully stopped cluster: id={self.cluster_id}, name={self.cluster_name}")
         except Exception as ex:
-            logger.error(f"Failed to stop cluster: {ex}")
-            # Don't swallow the original exception
-            return False
+            logger.error(f"Failed to close connections: {ex}")
+        finally:
+            if self.stop_on_exit:
+                try:
+                    self.stop()
+                    logger.info(f"Successfully stopped cluster: id={self.cluster_id}, name={self.cluster_name}")
+                except Exception as ex:
+                    logger.error(f"Failed to stop cluster: {ex}")
 
-        return False  # Don't suppress any exceptions
+        # Don't suppress the original exception.
+        return False
 
     @classmethod
     @flexfun(domain="settings")
@@ -202,6 +206,10 @@ class ManagedCluster(ClusterBase):
         Probe a CrateDB Cloud cluster, API-wise.
 
         TODO: Investigate callers, and reduce number of invocations.
+        TODO: self._jwt_ctx is created once in probe() and reused for every query.
+              If the per-cluster JWT expires (default 1 h) subsequent queries will fail.
+              Consider refreshing self._jwt_ctx (or simply calling jwt_token_patch()
+              inside query()) when probe() is older than e.g. 30 min.
         """
         try:
             self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
@@ -209,6 +217,8 @@ class ManagedCluster(ClusterBase):
             self.cluster_name = self.info.cloud["name"]
             self.address = DatabaseAddress.from_httpuri(self.info.cloud["url"])
             self._jwt_ctx = jwt_token_patch(self.info.jwt.token)
+            if self.cluster_id:
+                self.operation = CloudClusterServices(cluster_id=self.cluster_id)
 
         except (CroudException, DatabaseAddressMissingError) as ex:
             self.exists = False
@@ -269,14 +279,13 @@ class ManagedCluster(ClusterBase):
 
         Command: ctk cluster start
         """
-        # FIXME: Accept id or name.
         if self.cluster_name is None:
             raise DatabaseAddressMissingError("Need cluster name to deploy")
 
         # Find the existing project by name (equals cluster name).
         project_id = None
         try:
-            projects = self.cm.list_projects()
+            projects = self.root.list_projects()
             for project in projects:
                 if project["name"] == self.cluster_name:
                     project_id = project["id"]
@@ -287,11 +296,11 @@ class ManagedCluster(ClusterBase):
 
         # Create a new project if none exists.
         if not project_id:
-            project = self.cm.create_project(name=self.cluster_name, organization_id=self.settings.organization_id)
+            project = self.root.create_project(name=self.cluster_name, organization_id=self.settings.organization_id)
             project_id = project["id"]
             logger.info(f"Created project: {project_id}")
 
-        cluster_info = self.cm.deploy_cluster(
+        cluster_info = self.root.deploy_cluster(
             name=self.cluster_name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
 
@@ -309,7 +318,8 @@ class ManagedCluster(ClusterBase):
         if self.cluster_id is None:
             raise DatabaseAddressMissingError("Need cluster identifier to resume cluster")
         logger.info(f"Resuming CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
-        self.cm.resume_cluster(identifier=self.cluster_id)
+        if self.operation:
+            self.operation.resume()
         self.probe()
         return self
 
@@ -322,7 +332,8 @@ class ManagedCluster(ClusterBase):
         if self.cluster_id is None:
             raise DatabaseAddressMissingError("Need cluster identifier to stop cluster")
         logger.info(f"Stopping CrateDB Cloud Cluster: id={self.cluster_id}, name={self.cluster_name}")
-        self.cm.suspend_cluster(identifier=self.cluster_id)
+        if self.operation:
+            self.operation.suspend()
         self.probe()
         return self
 
@@ -348,7 +359,6 @@ class ManagedCluster(ClusterBase):
         self.probe()
         target = target or TableAddress()
 
-        # FIXME: Accept id or name.
         if self.cluster_id is None:
             raise DatabaseAddressMissingError("Need cluster identifier to load table")
 

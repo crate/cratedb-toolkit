@@ -1,5 +1,10 @@
 # Main Backlog
 
+## Iteration +0
+- CLI: Is it possible to just use `--url` instead of `--sqlalchemy-url` or `--http-url`?
+- CLI: Is it possible to just use `--cluster` to address a cluster, effectively shrinking
+  all four addressing options into a single one? Maybe optionally?
+
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec
 - Table Loader/Docs: Advertise using OCI image
@@ -39,7 +44,7 @@
 - UX: No stack traces when `cratedb_toolkit.util.croud.CroudException: 401 - Unauthorized`
 - UX: Explain `cratedb_toolkit.util.croud.CroudException: Another cluster operation is currently in progress, please try again later.`
 - UX: Explain `cratedb_toolkit.util.croud.CroudException: Resource not found.` when accessing unknown cluster id.
-- UX: Make `ctk list-jobs` respect `"status": "SUCCEEDED"` etc.
+- UX: Make `ctk cluster list-jobs` respect `"status": "SUCCEEDED"` etc.
 - UX: Improve textual report from `ctk load table`
 - UX: Accept alias `--format {jsonl,ndjson}` for `--format json_row` 
 - Catch recursion errors:

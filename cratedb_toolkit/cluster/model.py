@@ -8,7 +8,7 @@ from pathlib import Path
 import crate.client
 import sqlalchemy as sa
 
-from cratedb_toolkit.cluster.croud import CloudCluster, CloudManager
+from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootServices
 from cratedb_toolkit.exception import CroudException, DatabaseAddressMissingError
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -69,8 +69,8 @@ class ClusterInformation:
         Look up cluster by identifier (UUID).
         """
 
-        cc = CloudCluster(cluster_id=cluster_id)
-        return ClusterInformation(cloud=cc.get_info())
+        cc = CloudClusterServices(cluster_id=cluster_id)
+        return ClusterInformation(cloud=cc.info())
 
     @classmethod
     def from_name(cls, cluster_name: str) -> "ClusterInformation":
@@ -78,7 +78,7 @@ class ClusterInformation:
         Look up cluster by name.
         """
 
-        cm = CloudManager()
+        cm = CloudRootServices()
         cluster_list = cm.list_clusters()
         for cluster in cluster_list:
             if cluster["name"] == cluster_name:
@@ -93,7 +93,7 @@ class ClusterInformation:
         """
         Return per-cluster JWT token response.
         """
-        cc = CloudCluster(cluster_id=self.cloud_id)
+        cc = CloudClusterServices(cluster_id=self.cloud_id)
         return JwtResponse(**cc.get_jwt_token())
 
 

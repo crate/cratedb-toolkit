@@ -1,8 +1,11 @@
+import dataclasses
 import json
 import logging
 import os
 import typing as t
 from pathlib import Path
+
+from croud.projects.commands import _transform_backup_location
 
 from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.model import InputOutputResource, TableAddress
@@ -16,10 +19,92 @@ DEFAULT_CRATEDB_VERSION = "5.10.4"
 logger = logging.getLogger(__name__)
 
 
-class CloudManager:
+@dataclasses.dataclass
+class CloudRootUrlGenerator:
+    """
+    Helper for generating CrateDB Cloud API URLs.
+    """
+
+    org_id: t.Optional[str] = None
+
+    def with_organization(self, org_id: t.Optional[str]):
+        self.org_id = org_id
+        return self
+
+    @property
+    def cluster_deploy(self):
+        if not self.org_id:
+            raise ValueError("Organization ID is not set")
+        return f"/api/v2/organizations/{self.org_id}/clusters/"
+
+    @property
+    def cluster_list(self):
+        if self.org_id:
+            return f"/api/v2/organizations/{self.org_id}/clusters/"
+        else:
+            return "/api/v2/clusters/"
+
+    @property
+    def project_list(self):
+        if self.org_id:
+            return f"/api/v2/organizations/{self.org_id}/projects/"
+        else:
+            return "/api/v2/projects/"
+
+    @property
+    def subscription_list(self):
+        if self.org_id:
+            return f"/api/v2/organizations/{self.org_id}/subscriptions/"
+        else:
+            return "/api/v2/subscriptions/"
+
+
+@dataclasses.dataclass
+class CloudClusterUrlGenerator:
+    """
+    Helper for generating CrateDB Cloud API URLs.
+    """
+
+    cluster_id: t.Optional[str] = None
+
+    def with_cluster_id(self, cluster_id: str):
+        self.cluster_id = cluster_id
+        return self
+
+    @property
+    def home(self):
+        return f"/api/v2/clusters/{self.cluster_id}/"
+
+    @property
+    def suspend(self):
+        return f"/api/v2/clusters/{self.cluster_id}/suspend/"
+
+    @property
+    def jwt(self):
+        return f"/api/v2/clusters/{self.cluster_id}/jwt/"
+
+    @property
+    def import_jobs(self):
+        return f"/api/v2/clusters/{self.cluster_id}/import-jobs/"
+
+
+@dataclasses.dataclass
+class CloudRootServices:
     """
     A wrapper around the CrateDB Cloud API through the `croud` package, providing common methods.
     """
+
+    org_id: t.Optional[str] = None
+    project_id: t.Optional[str] = None
+    subscription_id: t.Optional[str] = None
+
+    def __post_init__(self):
+        self.client = CroudClient.create()
+        self.url = CloudRootUrlGenerator().with_organization(self.org_id)
+
+    def with_organization(self, org_id: t.Optional[str] = None):
+        self.org_id = org_id
+        return self
 
     def list_subscriptions(self):
         """
@@ -27,17 +112,12 @@ class CloudManager:
 
         croud subscriptions list --format=json
         """
-        from croud.__main__ import command_tree
-        from croud.subscriptions.commands import subscriptions_list
-
-        call = CroudCall(
-            fun=subscriptions_list,
-            specs=command_tree["subscriptions"]["commands"]["list"]["extra_args"],
-            arguments=[],
-        )
-
-        wr = CroudWrapper(call=call)
-        return wr.invoke()
+        data, errors = self.client.get(self.url.subscription_list)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting list of subscriptions failed: {errors}")
+        return data
 
     def list_clusters(self):
         """
@@ -45,31 +125,15 @@ class CloudManager:
 
         croud clusters list --format=json
         """
-        from croud.clusters.commands import clusters_list
-        from croud.parser import Argument
-
-        call = CroudCall(
-            fun=clusters_list,
-            specs=[
-                Argument(
-                    "-p",
-                    "--project-id",
-                    type=str,
-                    required=False,
-                    help="The project ID to use.",
-                ),
-                Argument(
-                    "--org-id",
-                    type=str,
-                    required=False,
-                    help="The organization ID to use.",
-                ),
-            ],
-            arguments=[],
-        )
-
-        wr = CroudWrapper(call=call)
-        return wr.invoke()
+        params = {}
+        if self.project_id:
+            params["project_id"] = self.project_id
+        data, errors = self.client.get(self.url.cluster_list, params=params)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting list of clusters failed: {errors}")
+        return data
 
     def list_projects(self):
         """
@@ -77,24 +141,14 @@ class CloudManager:
 
         croud projects list --format=json
         """
-        from croud.parser import Argument
-        from croud.projects.commands import projects_list
-
-        call = CroudCall(
-            fun=projects_list,
-            specs=[
-                Argument(
-                    "--org-id",
-                    type=str,
-                    required=False,
-                    help="The organization ID to use.",
-                ),
-            ],
-            arguments=[],
-        )
-
-        wr = CroudWrapper(call=call)
-        return wr.invoke()
+        data, errors = self.client.get(self.url.project_list)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting list of subscriptions failed: {errors}")
+        for item in data:
+            item["backup_location"] = _transform_backup_location(item["backup_location"])
+        return data
 
     def create_project(self, name: str, organization_id: str = None):
         """
@@ -197,107 +251,66 @@ class CloudManager:
         wr = CroudWrapper(call=call, decode_output=False)
         return wr.invoke_safedecode()
 
-    def resume_cluster(self, identifier: str):
-        """
-        Resume cluster.
-        """
-        from croud.__main__ import command_tree
-        from croud.clusters.commands import clusters_set_suspended
 
-        call = CroudCall(
-            fun=clusters_set_suspended,
-            specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
-            arguments=[
-                "--cluster-id",
-                identifier,
-                "--value",
-                "false",
-            ],
-        )
-
-        wr = CroudWrapper(call=call, decode_output=False)
-        return wr.invoke_safedecode()
-
-    def suspend_cluster(self, identifier: str):
-        """
-        Suspend cluster.
-        """
-        from croud.__main__ import command_tree
-        from croud.clusters.commands import clusters_set_suspended
-
-        call = CroudCall(
-            fun=clusters_set_suspended,
-            specs=command_tree["clusters"]["commands"]["set-suspended-state"]["extra_args"],
-            arguments=[
-                "--cluster-id",
-                identifier,
-                "--value",
-                "true",
-            ],
-        )
-
-        wr = CroudWrapper(call=call, decode_output=False)
-        try:
-            return wr.invoke_safedecode()
-        except CroudException as e:
-            if "This cluster is already suspended" in str(e):
-                pass
-            else:
-                raise
-
-
-class CloudCluster:
+@dataclasses.dataclass
+class CloudClusterServices:
     """
     A wrapper around the CrateDB Cloud API through the `croud` package, providing methods specific to a cluster.
     """
 
-    def __init__(self, cluster_id: str):
-        self.cluster_id = cluster_id
+    cluster_id: str
 
-    def get_info(self):
+    def __post_init__(self):
+        self.client = CroudClient.create()
+        self.url = CloudClusterUrlGenerator().with_cluster_id(self.cluster_id)
+
+    def info(self):
         """
         Get cluster information.
 
         ctk cluster info
         croud clusters get e1e38d92-a650-48f1-8a70-8133f2d5c400 --format=json
         """
-        from croud.clusters.commands import clusters_get
-        from croud.parser import Argument
+        data, errors = self.client.get(self.url.home)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting cluster information failed: {errors}")
+        return data
 
-        call = CroudCall(
-            fun=clusters_get,
-            specs=[
-                Argument(
-                    "id",
-                    type=str,
-                    help="The ID of the cluster.",
-                )
-            ],
-            arguments=[
-                self.cluster_id,
-            ],
-        )
+    def suspend(self):
+        body = {"suspended": True}
+        data, errors = self.client.put(self.url.suspend, body=body)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Suspending cluster failed: {errors}")
+        return data
 
-        wr = CroudWrapper(call=call)
-        return wr.invoke()
+    def resume(self):
+        body = {"suspended": False}
+        data, errors = self.client.put(self.url.suspend, body=body)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Resuming cluster failed: {errors}")
+        return data
 
     def list_jobs(self):
-        from croud.clusters.commands import import_jobs_list
-        from croud.parser import Argument
-
-        call = CroudCall(
-            fun=import_jobs_list,
-            specs=[Argument("--cluster-id", type=str, required=True, help="The cluster the import jobs belong to.")],
-            arguments=[
-                "--cluster-id",
-                self.cluster_id,
-            ],
-        )
-
-        wr = CroudWrapper(call=call)
-        return wr.invoke()
+        """
+        croud clusters import-jobs list
+        """
+        data, errors = self.client.get(self.url.import_jobs)
+        if data is None:
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting list of import jobs failed: {errors}")
+        return data
 
     def create_import_job(self, resource: InputOutputResource, target: TableAddress) -> t.Dict[str, t.Any]:
+        """
+        croud clusters import-jobs create
+        """
         from croud.__main__ import import_job_create_common_args
         from croud.clusters.commands import import_jobs_create_from_file, import_jobs_create_from_url
         from croud.parser import Argument
@@ -384,9 +397,9 @@ class CloudCluster:
         Retrieve per-cluster JWT token.
         """
         client = CroudClient.create()
-        data, errors = client.get(f"/api/v2/clusters/{self.cluster_id}/jwt/")
+        data, errors = client.get(self.url.jwt)
         if data is None:
-            if errors:
-                raise IOError(f"Getting JWT token failed: {errors}")
-            raise IOError("Getting JWT token failed: Unknown error")
+            if not errors:
+                errors = "Unknown error"
+            raise CroudException(f"Getting JWT token failed: {errors}")
         return data

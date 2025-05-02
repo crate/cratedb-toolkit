@@ -57,4 +57,4 @@ def test_standalone_cluster_info_unknown(caplog):
     )
     assert result.exit_code == 1
     assert "Failed to inquire cluster info" in caplog.text
-    assert "Error: 401 - Unauthorized" in result.output
+    assert "401 - Unauthorized" in result.output

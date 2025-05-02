@@ -10,7 +10,6 @@ from .cmd.tail.cli import cli as tail_cli
 from .docs.cli import cli as docs_cli
 from .info.cli import cli as info_cli
 from .io.cli import cli as io_cli
-from .job.cli import cli_list_jobs
 from .query.cli import cli as query_cli
 from .settings.cli import cli as settings_cli
 from .shell.cli import cli as shell_cli
@@ -37,4 +36,3 @@ cli.add_command(rockset_cli, name="rockset")
 cli.add_command(shell_cli, name="shell")
 cli.add_command(settings_cli, name="settings")
 cli.add_command(tail_cli, name="tail")
-cli.add_command(cli_list_jobs)
