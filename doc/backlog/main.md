@@ -1,9 +1,9 @@
 # Main Backlog
 
 ## Iteration +0
-- CLI: Is it possible to just use `--url` instead of `--sqlalchemy-url` or `--http-url`?
-- CLI: Is it possible to just use `--cluster` to address a cluster, effectively shrinking
-  all four addressing options into a single one? Maybe optionally?
+- CLI: Consider simplifying by using `--url` instead of `--sqlalchemy-url` or `--http-url`
+- CLI: Explore consolidating all four addressing options into a single `--cluster` option
+  for more intuitive cluster addressing. This could be implemented as an option alongside existing methods.
 
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec

@@ -35,6 +35,10 @@ def test_cluster_universal_managed(cloud_environment, cloud_cluster_id, cloud_cl
     assert mc.info.cloud_id == cloud_cluster_id
     assert mc.info.cloud_name == cloud_cluster_name
 
+    # Run two queries to detect context patching flaws.
+    assert mc.query("SELECT 42") == [{"42": 42}]
+    assert mc.query("SELECT 42") == [{"42": 42}]
+
 
 def test_cluster_universal_standalone_sqlalchemy_url(cratedb):
     """

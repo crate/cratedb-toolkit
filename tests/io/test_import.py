@@ -3,6 +3,8 @@ import os
 import pytest
 from click.testing import CliRunner
 
+from cratedb_toolkit import ManagedCluster
+
 
 @pytest.fixture
 def dummy_csv(tmp_path):
@@ -81,9 +83,11 @@ def test_import_managed_csv_local(cloud_environment, dummy_csv, caplog):
 
     assert "Loading data." in caplog.text
     assert "target=TableAddress(schema=None, table='dummy')" in caplog.text
-    assert "Import succeeded (status: SUCCEEDED)" in caplog.messages
+    assert "Import succeeded (status: SUCCEEDED)" in caplog.text
 
-    # TODO: Read back data from database.
+    with ManagedCluster.from_env() as cluster:
+        results = cluster.query("SELECT count(*) AS count FROM dummy;")
+    assert results[0]["count"] >= 2
 
 
 def test_import_managed_parquet_remote(cloud_environment, tmp_path, caplog):
@@ -106,6 +110,8 @@ def test_import_managed_parquet_remote(cloud_environment, tmp_path, caplog):
 
     assert "Loading data." in caplog.text
     assert "target=TableAddress(schema=None, table='basic')" in caplog.text
-    assert "Import succeeded (status: SUCCEEDED)" in caplog.messages
+    assert "Import succeeded (status: SUCCEEDED)" in caplog.text
 
-    # TODO: Read back data from database.
+    with ManagedCluster.from_env() as cluster:
+        results = cluster.query("SELECT count(*) AS count FROM basic;")
+    assert results[0]["count"] >= 2
