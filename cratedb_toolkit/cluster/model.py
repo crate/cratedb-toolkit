@@ -93,6 +93,28 @@ class ClusterInformation:
         return deepcopy(dataclasses.asdict(self))
 
     @property
+    def meta(self):
+        return {
+            "cluster-id": self.cloud_id,
+            "cluster-name": self.cloud_name,
+        }
+
+    @property
+    def health(self):
+        return {
+            "meta": self.meta,
+            "cloud": self.asdict()["cloud"]["health"],
+        }
+
+    @property
+    def status(self):
+        return self.health["cloud"]["status"]
+
+    @property
+    def ready(self):
+        return self.status == "GREEN"
+
+    @property
     def jwt(self) -> JwtResponse:
         """
         Return per-cluster JWT token response.
