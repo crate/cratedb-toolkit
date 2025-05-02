@@ -59,6 +59,15 @@ with ManagedCluster.from_env() as cluster:
     pprint(cluster.query("SELECT * from sys.summits LIMIT 2;"))
 ```
 
+By default, the cluster will spin up, but not shut down after exiting the
+context manager. If you want to do it, use the `stop_on_exit=True` option.
+```python
+from cratedb_toolkit import ManagedCluster
+
+with ManagedCluster.from_env(stop_on_exit=True) as cluster:
+    # ...
+```
+
 :::{seealso}
 {ref}`cluster-api-tutorial` includes a full end-to-end tutorial.
 :::
