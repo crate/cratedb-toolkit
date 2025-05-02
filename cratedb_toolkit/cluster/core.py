@@ -274,29 +274,15 @@ class ManagedCluster(ClusterBase):
             raise DatabaseAddressMissingError("Need cluster name to deploy")
 
         # Find the existing project by name (equals cluster name).
-        project_id = None
-        try:
-            projects = self.root.list_projects()
-            for project in projects:
-                if project["name"] == self.cluster_name:
-                    project_id = project["id"]
-                    logger.info(f"Using existing project: {project_id}")
-                    break
-        except Exception as ex:
-            logger.warning(f"Error finding existing project: {ex}")
+        project_id = self.root.get_or_create_project(name=self.cluster_name)
 
-        # Create a new project if none exists.
-        if not project_id:
-            project = self.root.create_project(name=self.cluster_name, organization_id=self.settings.organization_id)
-            project_id = project["id"]
-            logger.info(f"Created project: {project_id}")
-
+        # Deploy the cluster and retrieve cluster information.
         cluster_info = self.root.deploy_cluster(
             name=self.cluster_name, project_id=project_id, subscription_id=self.settings.subscription_id
         )
 
         # Wait a bit to let the deployment settle, mostly to work around DNS propagation issues.
-        time.sleep(3.25)
+        time.sleep(5)
 
         return cluster_info
 

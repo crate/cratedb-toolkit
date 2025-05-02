@@ -408,9 +408,6 @@ class DatabaseAdapter:
         except Exception as e:
             logger.warning(f"Error disposing SQLAlchemy engine: {e}")
 
-    def __del__(self):
-        self.close()
-
 
 def sa_is_empty(thing):
     """

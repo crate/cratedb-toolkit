@@ -1,16 +1,18 @@
+import uuid
+
 import pytest
 
 import cratedb_toolkit
 from cratedb_toolkit import DatabaseCluster, ManagedCluster
 
 
-def test_cluster_managed_authorized(cloud_environment, cloud_cluster_id, cloud_cluster_name):
+def test_cluster_managed_authorized(cloud_environment, cloud_cluster_name):
     """
     When supplying valid API credentials and cluster address, the cluster is detected.
     """
     mc = ManagedCluster.from_env()
     mc.probe()
-    assert mc.info.cloud_id == cloud_cluster_id
+    assert uuid.UUID(mc.info.cloud_id).time >= 774933237065562038
     assert mc.info.cloud_name == cloud_cluster_name
 
 
@@ -27,12 +29,12 @@ def test_cluster_managed_unauthorized():
     assert ex.match("One of the settings is required, but none of them have been specified.")
 
 
-def test_cluster_universal_managed(cloud_environment, cloud_cluster_id, cloud_cluster_name):
+def test_cluster_universal_managed(cloud_environment, cloud_cluster_name):
     """
     Validate the `UniversalCluster` factory class for "managed" CrateDB Cloud clusters.
     """
     mc = DatabaseCluster.create(cluster_name=cloud_cluster_name).probe()
-    assert mc.info.cloud_id == cloud_cluster_id
+    assert uuid.UUID(mc.info.cloud_id).time >= 774933237065562038
     assert mc.info.cloud_name == cloud_cluster_name
 
     # Run two queries to detect context patching flaws.

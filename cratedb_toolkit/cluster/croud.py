@@ -8,6 +8,7 @@ from pathlib import Path
 from croud.projects.commands import _transform_backup_location
 
 from cratedb_toolkit.exception import CroudException
+from cratedb_toolkit.meta.release import CrateDBRelease
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import CroudCall, CroudClient, CroudWrapper
 
@@ -121,9 +122,11 @@ class CloudRootServices:
 
     def list_clusters(self):
         """
-        Get list of clusters.
+        Get the list of clusters.
 
+        ```
         croud clusters list --format=json
+        ```
         """
         params = {}
         if self.project_id:
@@ -137,7 +140,7 @@ class CloudRootServices:
 
     def list_projects(self):
         """
-        Get list of projects.
+        Get the list of projects.
 
         croud projects list --format=json
         """
@@ -154,10 +157,11 @@ class CloudRootServices:
         """
         Create project.
 
+        ```
         croud projects list --format=json
         croud projects create --name "foobar" -o json | jq -r '.id'
-
-        """  # noqa: E501
+        ```
+        """
         # TODO: Add more parameters, like `--org-id`, `--region`.
         from croud.__main__ import command_tree
         from croud.projects.commands import project_create
@@ -176,6 +180,31 @@ class CloudRootServices:
         wr = CroudWrapper(call=call)
         return wr.invoke()
 
+    def get_or_create_project(self, name: str) -> str:
+        """
+        Get or create a project by name.
+
+        A project is a container for clusters.
+        """
+        project_id = None
+        try:
+            projects = self.list_projects()
+            for project in projects:
+                if project["name"] == name:
+                    project_id = project["id"]
+                    logger.info(f"Using existing project: {project_id}")
+                    break
+        except Exception as ex:
+            logger.warning(f"Error finding existing project: {ex}")
+
+        # Create a new project if none exists.
+        if not project_id:
+            project = self.create_project(name=name, organization_id=self.org_id)
+            project_id = project["id"]
+            logger.info(f"Created project: {project_id}")
+
+        return project_id
+
     def deploy_cluster(self, name: str, project_id: str, subscription_id: str = None):
         """
         Deploy cluster.
@@ -184,14 +213,11 @@ class CloudRootServices:
         croud clusters get e1e38d92-a650-48f1-8a70-8133f2d5c400 --format=json
 
         """  # noqa: E501
-        # TODO: Use specific subscription, or, if only one exists, use it.
+        # TODO: Use specific subscription, or, if only one exists, use that one.
         #       Alternatively, acquire value from user environment.
-        # TODO: `--product-name=crfree` is not always the right choice. ;]
         # TODO: Auto-generate cluster name when not given.
-        # TODO: How to select CrateDB nightly, like `--version=nightly`?
-        # TODO: Let the user provide the credentials.
-        # TODO: Add more parameters, like `--org-id`, `--channel`, `--unit`, and more.
-        # TODO: What about `--sudo`?
+        # TODO: Obtain more parameters, like `--org-id`, `--unit`, etc.
+        # TODO: What about adding/forwarding `--sudo`?
         from croud.__main__ import command_tree
         from croud.clusters.commands import clusters_deploy
 
@@ -214,6 +240,9 @@ class CloudRootServices:
             raise ValueError("Failed to obtain a subscription identifier")
 
         # TODO: Add documentation about those environment variables.
+        cratedb_cloud_tier = os.environ.get("CRATEDB_CLOUD_TIER", "default")
+        cratedb_cloud_product = os.environ.get("CRATEDB_CLOUD_PRODUCT", "crfree")  # s2, etc.
+        cratedb_channel = os.environ.get("CRATEDB_CHANNEL", "stable")
         cratedb_version = os.environ.get("CRATEDB_VERSION", DEFAULT_CRATEDB_VERSION)
         username = os.environ.get("CRATEDB_USERNAME")
         password = os.environ.get("CRATEDB_PASSWORD")
@@ -222,8 +251,14 @@ class CloudRootServices:
             raise ValueError(
                 "Username and password must be set using the environment variables "
                 "`CRATEDB_USERNAME` and `CRATEDB_PASSWORD`. These are required for "
-                "accessing a CrateDB Cloud cluster."
+                "accessing a CrateDB Cloud cluster after deployment."
             )
+
+        # Optionally, select CrateDB Nightly.
+        if cratedb_version == "nightly":
+            cratedb_channel = "nightly"
+            cratedb_version = CrateDBRelease().nightly.cloud_version
+        logger.info(f"Using CrateDB version: {cratedb_version} (channel: {cratedb_channel})")
 
         call = CroudCall(
             fun=clusters_deploy,
@@ -234,11 +269,13 @@ class CloudRootServices:
                 "--project-id",
                 project_id,
                 "--tier",
-                os.environ.get("CRATEDB_CLOUD_TIER", "default"),
+                cratedb_cloud_tier,
                 "--product-name",
-                os.environ.get("CRATEDB_CLOUD_PRODUCT", "crfree"),
+                cratedb_cloud_product,
                 "--cluster-name",
                 name,
+                "--channel",
+                cratedb_channel,
                 "--version",
                 cratedb_version,
                 "--username",
@@ -396,8 +433,7 @@ class CloudClusterServices:
         """
         Retrieve per-cluster JWT token.
         """
-        client = CroudClient.create()
-        data, errors = client.get(self.url.jwt)
+        data, errors = self.client.get(self.url.jwt)
         if data is None:
             if not errors:
                 errors = "Unknown error"
