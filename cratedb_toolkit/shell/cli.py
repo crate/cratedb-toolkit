@@ -31,7 +31,7 @@ def help_cli():
     - https://cratedb-toolkit.readthedocs.io/util/shell.html
     - https://cratedb.com/docs/crate/crash/
 
-    TODO: Learn/forward more options of `crash`.
+    TODO: Implement/forward more options of `crash`.
     """
 
 
@@ -84,8 +84,6 @@ def cli(
     if cluster.address is None:
         raise click.UsageError("Inquiring cluster address failed.")
 
-    http_url = cluster.address.httpuri
-
     is_cloud = cluster_id is not None or cluster_name is not None
     jwt_token = None
     if is_cloud:
@@ -93,10 +91,12 @@ def cli(
             logger.info("Using username/password credentials for authentication")
         else:
             logger.info("Using JWT token for authentication")
-            jwt_token = cluster.info.jwt.token
+            jwt_token_obj = getattr(cluster.info, "jwt", None)
+            if jwt_token_obj:
+                jwt_token = jwt_token_obj.token
 
     run_crash(
-        hosts=http_url,
+        hosts=cluster.address.httpuri,
         username=username,
         password=password,
         jwt_token=jwt_token,

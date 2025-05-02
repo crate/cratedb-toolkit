@@ -385,9 +385,8 @@ class CloudCluster:
         """
         client = CroudClient.create()
         data, errors = client.get(f"/api/v2/clusters/{self.cluster_id}/jwt/")
-        errmsg = "Getting JWT token failed: Unknown error"
-        if errors:
-            errmsg = f"Getting JWT token failed: {errors}"
         if data is None:
-            raise IOError(errmsg)
+            if errors:
+                raise IOError(f"Getting JWT token failed: {errors}")
+            raise IOError("Getting JWT token failed: Unknown error")
         return data
