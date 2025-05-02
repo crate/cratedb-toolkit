@@ -4,7 +4,7 @@ import time
 import typing as t
 from pathlib import Path
 
-from cratedb_toolkit.cluster.croud import CloudCluster
+from cratedb_toolkit.cluster.croud import CloudClusterServices
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.croud import table_fqn
 
@@ -90,7 +90,7 @@ class CloudIo:
 
     def __init__(self, cluster_id: str):
         self.cluster_id = cluster_id
-        self.cluster = CloudCluster(cluster_id=cluster_id)
+        self.cluster = CloudClusterServices(cluster_id=cluster_id)
 
     def load_resource(
         self, resource: InputOutputResource, target: TableAddress, max_retries: int = 20, retry_delay: float = 0.15

@@ -1,7 +1,10 @@
 import contextlib
+import json
 import logging
+import sys
 
 import click
+import yaml
 from click import ClickException
 from click_aliases import ClickAliasedGroup
 
@@ -42,6 +45,15 @@ def help_stop():
     ctk cluster stop
     ctk cluster stop --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
     ctk cluster stop --cluster-name=hotzenplotz
+    """
+
+
+def help_list_jobs():
+    """
+    List jobs on cluster.
+
+    ctk cluster list-jobs
+    croud clusters import-jobs
     """
 
 
@@ -104,6 +116,39 @@ def stop(ctx: click.Context, cluster_id: str, cluster_name: str):
 
         # Display cluster information.
         jd(cluster.info.asdict())
+
+
+@make_command(cli, name="list-jobs", help=help_list_jobs)
+@option_cluster_id
+@option_cluster_name
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "yaml"], case_sensitive=False),
+    default="json",
+    required=False,
+    help="The output format for the result of the operation",
+)
+@click.pass_context
+def list_jobs(ctx: click.Context, cluster_id: str, cluster_name: str, output_format: str):
+    """
+    List jobs on cluster.
+    """
+
+    with handle_command_errors("list cluster jobs"):
+        # Acquire the database cluster handle and acquire job information.
+        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).probe()
+        if not cluster.operation:
+            raise CroudException("Cluster does not support job operations")
+        data = cluster.operation.list_jobs()
+
+        # Display job information.
+        if output_format == "json":
+            print(json.dumps(data, indent=2), file=sys.stdout)  # noqa: T201
+        elif output_format == "yaml":
+            print(yaml.dump(data), file=sys.stdout)  # noqa: T201
+        else:
+            raise ValueError(f"Unknown output format: {output_format}")
 
 
 @contextlib.contextmanager
