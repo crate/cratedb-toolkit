@@ -39,10 +39,14 @@ class ClusterInformation:
 
     @property
     def cloud_id(self) -> str:
+        if "id" not in self.cloud:
+            raise ValueError("Cloud cluster information is missing 'id' field")
         return self.cloud["id"]
 
     @property
     def cloud_name(self) -> str:
+        if "name" not in self.cloud:
+            raise ValueError("Cloud cluster information is missing 'name' field")
         return self.cloud["name"]
 
     @classmethod

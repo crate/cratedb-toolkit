@@ -3,7 +3,6 @@ import json
 import logging
 import time
 import typing as t
-from contextlib import nullcontext
 from copy import deepcopy
 from pathlib import Path
 
@@ -134,7 +133,6 @@ class ManagedCluster(ClusterBase):
 
         self.root = CloudRootServices()
         self.operation: t.Optional[CloudClusterServices] = None
-        self._jwt_ctx: t.ContextManager = nullcontext()
         self._client_bundle: t.Optional[ClientBundle] = None
 
     def __enter__(self):
@@ -204,19 +202,12 @@ class ManagedCluster(ClusterBase):
     def probe(self) -> "ManagedCluster":
         """
         Probe a CrateDB Cloud cluster, API-wise.
-
-        TODO: Investigate callers, and reduce number of invocations.
-        TODO: self._jwt_ctx is created once in probe() and reused for every query.
-              If the per-cluster JWT expires (default 1 h) subsequent queries will fail.
-              Consider refreshing self._jwt_ctx (or simply calling jwt_token_patch()
-              inside query()) when probe() is older than e.g. 30 min.
         """
         try:
             self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
             self.cluster_id = self.info.cloud["id"]
             self.cluster_name = self.info.cloud["name"]
             self.address = DatabaseAddress.from_httpuri(self.info.cloud["url"])
-            self._jwt_ctx = jwt_token_patch(self.info.jwt.token)
             if self.cluster_id:
                 self.operation = CloudClusterServices(cluster_id=self.cluster_id)
 
@@ -430,7 +421,7 @@ class ManagedCluster(ClusterBase):
         # Ensure we have cluster connection details.
         if not self.info or not self.info.cloud.get("url"):
             self.probe()
-        with self._jwt_ctx:
+        with jwt_token_patch(self.info.jwt.token):
             client_bundle = self.get_client_bundle()
             return client_bundle.adapter.run_sql(sql, records=True)
 

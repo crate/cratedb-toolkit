@@ -147,8 +147,6 @@ def list_jobs(ctx: click.Context, cluster_id: str, cluster_name: str, output_for
             print(json.dumps(data, indent=2), file=sys.stdout)  # noqa: T201
         elif output_format == "yaml":
             print(yaml.dump(data), file=sys.stdout)  # noqa: T201
-        else:
-            raise ValueError(f"Unknown output format: {output_format}")
 
 
 @contextlib.contextmanager

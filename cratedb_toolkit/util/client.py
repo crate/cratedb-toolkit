@@ -1,6 +1,9 @@
 import contextlib
+from unittest.mock import patch
 
 import crate.client.http
+
+original_request = crate.client.http.Client._request
 
 
 @contextlib.contextmanager
@@ -8,15 +11,11 @@ def jwt_token_patch(jwt_token: str = None):
     """
     Patch the `Client._request` method to add the Authorization header for JWT token-based authentication.
     """
-    original_request = crate.client.http.Client._request
-    crate.client.http.Client._request = _mk_crate_client_request(original_request, jwt_token)
-    try:
+    with patch.object(crate.client.http.Client, "_request", _mk_crate_client_request(jwt_token)):
         yield
-    finally:
-        crate.client.http.Client._request = original_request
 
 
-def _mk_crate_client_request(orig, jwt_token: str = None):
+def _mk_crate_client_request(jwt_token: str = None):
     """
     Create a monkey patched `Client._request` method to add the Authorization header for JWT token-based authentication.
     """
@@ -30,6 +29,6 @@ def _mk_crate_client_request(orig, jwt_token: str = None):
         if jwt_token:
             kwargs.setdefault("headers", {})
             kwargs["headers"].update({"Authorization": "Bearer " + jwt_token})
-        return orig(self, *args, **kwargs)
+        return original_request(self, *args, **kwargs)
 
     return _crate_client_request
