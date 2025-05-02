@@ -82,6 +82,40 @@ def info(ctx: click.Context, cluster_id: str, cluster_name: str):
         jd(cluster_info.asdict())
 
 
+@make_command(cli, name="health")
+@option_cluster_id
+@option_cluster_name
+@click.pass_context
+def health(ctx: click.Context, cluster_id: str, cluster_name: str):
+    """
+    Display cluster health information.
+    """
+    with handle_command_errors("inquire cluster health"):
+        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
+        jd(cluster_info.health)
+
+
+@make_command(cli, name="ping")
+@option_cluster_id
+@option_cluster_name
+@click.pass_context
+def ping(ctx: click.Context, cluster_id: str, cluster_name: str):
+    """
+    Ping cluster: API and database.
+    """
+    with handle_command_errors("ping cluster"):
+        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
+        cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).start()
+        has_db_result = bool(cluster.query("SELECT 42 AS availability_check  -- ctk"))
+        response = {
+            "meta": cluster_info.meta,
+            "cloud": cluster_info.ready,
+            "database": has_db_result,
+        }
+        jd(response)
+        sys.exit(0 if (cluster_info.ready and has_db_result) else 1)
+
+
 @make_command(cli, name="start", help=help_start)
 @option_cluster_id
 @option_cluster_name

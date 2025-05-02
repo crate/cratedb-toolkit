@@ -105,6 +105,9 @@ class ManagedCluster(ClusterBase):
     Manage a CrateDB database cluster on CrateDB Cloud.
     """
 
+    POST_DEPLOY_WAIT_ATTEMPTS = 10
+    POST_DEPLOY_WAIT_PAUSE = 1
+
     def __init__(
         self,
         cluster_id: str = None,
@@ -282,7 +285,15 @@ class ManagedCluster(ClusterBase):
         )
 
         # Wait a bit to let the deployment settle, mostly to work around DNS propagation issues.
-        time.sleep(5)
+        attempts = 0
+        while not self.info.ready and attempts < self.POST_DEPLOY_WAIT_ATTEMPTS:
+            attempts += 1
+            self.probe()
+            time.sleep(self.POST_DEPLOY_WAIT_PAUSE)
+
+        self.probe()
+        if not self.info.ready:
+            raise CroudException(f"Cluster deployment failed: {self.cluster_name}")
 
         return cluster_info
 
