@@ -251,6 +251,8 @@ class ManagedCluster(ClusterBase):
             if suspended is True:
                 logger.info(f"Cluster is suspended, resuming it: id={self.cluster_id}, name={self.cluster_name}")
                 self.resume()
+                logger.info(f"Cluster resumed: id={self.cluster_id}, name={self.cluster_name}")
+                self.probe()
             elif suspended is False:
                 logger.info(f"Cluster is running: id={self.cluster_id}, name={self.cluster_name}")
             else:

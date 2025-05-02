@@ -148,7 +148,7 @@ class CloudRootServices:
         if data is None:
             if not errors:
                 errors = "Unknown error"
-            raise CroudException(f"Getting list of subscriptions failed: {errors}")
+            raise CroudException(f"Getting list of projects failed: {errors}")
         for item in data:
             item["backup_location"] = _transform_backup_location(item["backup_location"])
         return data
