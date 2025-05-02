@@ -76,12 +76,8 @@ ctk shell --command "SELECT 42;"
 ```
 
 
-Include authentication credentials into the
-SQLAlchemy or HTTP connection URLs.
-
-
 :::{seealso}
-{ref}`cluster-api-tutorial` includes a full end-to-end tutorial which also includes
+{ref}`cluster-api-tutorial` demonstrates a full end-to-end tutorial, which also includes
 `ctk shell`.
 :::
 

@@ -3,7 +3,7 @@ from click.testing import CliRunner
 from cratedb_toolkit.cluster.cli import cli
 
 
-def test_managed_cluster_info_empty(cloud_environment):
+def test_managed_cluster_info_default(cloud_environment):
     """
     Verify `ctk cluster info` on a managed cluster works when a valid environment is provided.
     """

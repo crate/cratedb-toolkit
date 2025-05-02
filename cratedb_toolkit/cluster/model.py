@@ -114,14 +114,9 @@ class ClientBundle:
         """
 
         try:
-            self.adapter.connection.close()
+            self.adapter.close()
         except Exception as e:
-            logger.warning(f"Error closing adapter connection: {e}")
-
-        try:
-            self.adapter.engine.dispose()
-        except Exception as e:
-            logger.warning(f"Error disposing SQLAlchemy engine: {e}")
+            logger.warning(f"Error closing database adapter: {e}")
 
         try:
             self.dbapi.close()

@@ -95,6 +95,8 @@ def workload_procedural():
     pprint(results, stream=sys.stderr)  # noqa: T201
 
     # Stop the cluster again.
+    # Note: We intentionally don't stop the cluster here to prevent accidental
+    # shutdown of resources that might be in use for demonstration purposes.
     # cluster.stop()
 
 

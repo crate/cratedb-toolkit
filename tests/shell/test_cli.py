@@ -54,7 +54,7 @@ def test_shell_managed_jwt(mocker, cloud_cluster_name):
 
 def test_shell_managed_username_password(mocker, cloud_cluster_name):
     """
-    Verify the successful incantation of `ctk shell` against CrateDB Cloud, using username/password authentication..
+    Verify the successful incantation of `ctk shell` against CrateDB Cloud, using username/password authentication.
     """
 
     settings = {

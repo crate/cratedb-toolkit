@@ -89,7 +89,10 @@ def prune_environment():
 @pytest.fixture(scope="session", autouse=True)
 def reset_environment():
     """
-    Reset all environment variables in use, so that they do not pollute the test suite.
+    Reset environment variables defined in ManagedClusterSettings.
+
+    This complements the `prune_environment` fixture by specifically targeting
+    variables from ManagedClusterSettings rather than all CRATEDB_* variables.
 
     TODO: Possibly synchronize with `prune_environment()`, as suggested.
     """

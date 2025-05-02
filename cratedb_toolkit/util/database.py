@@ -123,13 +123,18 @@ class DatabaseAdapter:
         for statement in sqlparse.split(sql):
             if self.internal:
                 statement += self.internal_tag
+            # FIXME: Persistent self.connection risks leaks & thread-unsafety.
+            #        https://github.com/crate/cratedb-toolkit/pull/81#discussion_r2071499204
             result = self.connection.execute(sa.text(statement), parameters)
             data: t.Any
-            if records:
-                rows = result.mappings().fetchall()
-                data = [dict(row.items()) for row in rows]
+            if result.returns_rows:
+                if records:
+                    rows = result.mappings().fetchall()
+                    data = [dict(row.items()) for row in rows]
+                else:
+                    data = result.fetchall()
             else:
-                data = result.fetchall()
+                data = None
             results.append(data)
 
         # Backward-compatibility.
@@ -386,6 +391,25 @@ class DatabaseAdapter:
         inspector = sa.inspect(self.engine)
         table_address = TableAddress.from_string(table_name)
         return inspector.get_columns(table_name=t.cast(str, table_address.table), schema=table_address.schema)
+
+    def close(self):
+        """
+        Close all database connections created to this cluster.
+        Should be called when the cluster handle is no longer needed.
+        """
+
+        try:
+            self.connection.close()
+        except Exception as e:
+            logger.warning(f"Error closing adapter connection: {e}")
+
+        try:
+            self.engine.dispose()
+        except Exception as e:
+            logger.warning(f"Error disposing SQLAlchemy engine: {e}")
+
+    def __del__(self):
+        self.close()
 
 
 def sa_is_empty(thing):
