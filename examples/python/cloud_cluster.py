@@ -108,7 +108,7 @@ def workload_contextmanager():
     from cratedb_toolkit import ManagedCluster
 
     # Acquire a database cluster handle, and run database workload.
-    with ManagedCluster.from_env() as cluster:
+    with ManagedCluster.from_env(stop_on_exit=False) as cluster:
         pprint(cluster.query("SELECT * from sys.summits LIMIT 2;"), stream=sys.stderr)  # noqa: T201
 
 
