@@ -15,6 +15,7 @@ def test_managed_cluster_info_default(cloud_environment):
     )
     assert result.exit_code == 0
     assert '"name": "testcluster"' in result.output
+    assert '"product_name": "crfree"' in result.output
 
 
 def test_managed_cluster_health_default(cloud_environment):

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def help_info():
     """
-    Display information about cluster.
+    Display general cluster information.
 
     ctk cluster info
     ctk cluster info --cluster-id=e1e38d92-a650-48f1-8a70-8133f2d5c400
@@ -75,7 +75,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 @click.pass_context
 def info(ctx: click.Context, cluster_id: str, cluster_name: str):
     """
-    Display CrateDB Cloud Cluster information.
+    Display general cluster information.
     """
     with handle_command_errors("inquire cluster info"):
         cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)

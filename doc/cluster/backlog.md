@@ -2,49 +2,28 @@
 
 A few collected items about this subsystem, listing both obvious _next-steps_
 backlog items, and ideas for future iterations. You are encouraged to add your
-own ideas any time about how your dream SDK should look and feel like. Thanks! 
+own ideas any time about what your dream SDK should look and feel like. Thanks!
 
 Any kind of contribution is very much appreciated: Feel free to pick up
 individual backlog items and carry them over into dedicated [issues], if you
-want to signal interest about them. If you feel you could whip up and submit
+want to signal interest in them. If you feel you could whip up and submit
 a patch for some item, it will be very much welcome.
 
 [issues]: https://github.com/crate/cratedb-toolkit/issues
 
 ## Iteration +1
-- Unless the cluster is not healthy, do not access it
-  ```
-  "health": {
-    "last_seen": "",
-    "running_operation": "CREATE",
-    "status": "UNREACHABLE"
-  },
-
-  'health': {'last_seen': '',
-             'running_operation': '',
-             'status': 'UNREACHABLE'},
-
-  'health': {'last_seen': '2025-05-02T21:33:17.456000',
-             'running_operation': '',
-             'status': 'GREEN'},
-  ```
-- Python API: Make `cluster.query` use the excellent `records` package
-- `ctk cluster list`: New
-- Xon.sh example
-- Windows support. Powershell?
-- Document `ManagedCluster`'s `stop_on_exit` option
-- `toolkit/api/cli.py`: Also respect cluster ID and name across the board of ex-WTF utilities.
 - `ctk cluster info` does not include information about CrateDB yet.
   => Connect to ex-WTF utilities.
 - Less verbosity by default for `ctk cluster` operations.
   Possibly display cluster operation and job execution outcomes, and `last_async_operation` details
+- Python API: Make `cluster.query` use the excellent `records` package
+- `ctk cluster list`: New
 
 ## Iteration +2
+- Xon.sh example
+- Windows support. Powershell?
 - Validate multi-cluster, multi-org operations work well and make sense
 - Implement JWT token expiry handling
-- Shell: Currently, because parameters like `username` and `password` are obtained from
-  the environment, it is not possible to create multiple instances of a `ManagedCluster`,
-  using different credentials for connecting to individual clusters.
 - Add Apache Spark / Databricks to the client bundle?
 
 ## Iteration +3
@@ -60,6 +39,7 @@ a patch for some item, it will be very much welcome.
   See also https://github.com/crate/cratedb-toolkit/actions/runs/14682363239/job/41206608090?pr=81#step:5:384.
 - CI: Software tests fail when invoked with the whole test suite, but work in isolation
   `test_import_managed_csv_local`
+- Expose `ManagedCluster`'s `stop_on_exit` option per environment variable
 
 ## Done
 - Update `shunit2`. -- https://github.com/kward/shunit2
@@ -83,6 +63,27 @@ a patch for some item, it will be very much welcome.
 - `ctk cluster start`: Avoid creating a project on each deploy operation
 - `cluster/core.py`: FIXME: Accept id or name.
 - CrateDB version: How to select CrateDB nightly, like `--version=nightly`?
-  => Add `--channel` option!?
+  => Add `--channel` option.
 - Address TODO items in `cratedb_toolkit/cluster/croud.py`:
   - `--product-name=crfree` is not always the right choice. ;]
+- Unless the cluster is not healthy, do not access it
+  ```
+  "health": {
+    "last_seen": "",
+    "running_operation": "CREATE",
+    "status": "UNREACHABLE"
+  },
+
+  'health': {'last_seen': '',
+             'running_operation': '',
+             'status': 'UNREACHABLE'},
+
+  'health': {'last_seen': '2025-05-02T21:33:17.456000',
+             'running_operation': '',
+             'status': 'GREEN'},
+  ```
+- Shell: Currently it is not possible to create multiple instances of a `ManagedCluster`,
+  because parameters like `username` and `password` are obtained from the environment, 
+  using different credentials for connecting to individual clusters.
+- Document `ManagedCluster`'s `stop_on_exit` option
+- `toolkit/cluster/cli.py`: Also respect cluster ID and name across the board of ex-WTF utilities.

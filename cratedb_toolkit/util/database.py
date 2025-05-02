@@ -114,6 +114,7 @@ class DatabaseAdapter:
                 raise
             if ignore not in str(ex):
                 raise
+            return None
 
     def run_sql_real(self, sql: str, parameters: t.Mapping[str, str] = None, records: bool = False):
         """
