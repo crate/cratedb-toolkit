@@ -1,5 +1,7 @@
-# Copyright (c) 2023-2024, Crate.io Inc.
+# Copyright (c) 2023-2025, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+# TODO: Refactor to `ctk.cluster.client`.
+import contextlib
 import io
 import logging
 import os
@@ -12,15 +14,20 @@ from boltons.urlutils import URL
 from cratedb_sqlparse import sqlparse as sqlparse_cratedb
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
+from sqlalchemy_cratedb import insert_bulk
 from sqlalchemy_cratedb.dialect import CrateDialect
 
 from cratedb_toolkit.model import TableAddress
+from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import str_contains
 
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal  # type: ignore[assignment]
+
+if t.TYPE_CHECKING:
+    from cratedb_toolkit.cluster.model import JwtResponse
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +47,22 @@ class DatabaseAdapter:
 
     internal_tag = "  -- ctk"
 
-    def __init__(self, dburi: str, echo: bool = False, internal: bool = False):
+    def __init__(self, dburi: str, echo: bool = False, internal: bool = False, jwt: "JwtResponse" = None):
+        if not dburi:
+            raise ValueError("Database URI must be specified")
         self.dburi = dburi
         self.internal = internal
-        self.engine = sa.create_engine(self.dburi, echo=echo)
-        # TODO: Make that go away.
-        logger.debug(f"Connecting to CrateDB: {dburi}")
-        self.connection = self.engine.connect()
+        self.jwt = jwt
+        self.ctx: contextlib.AbstractContextManager
+        if self.jwt:
+            self.ctx = jwt_token_patch(self.jwt.token)
+        else:
+            self.ctx = contextlib.nullcontext()
+        with self.ctx:
+            self.engine = sa.create_engine(self.dburi, echo=echo)
+            # TODO: Make that go away.
+            logger.debug(f"Connecting to CrateDB: {dburi}")
+            self.connection = self.engine.connect()
 
     @staticmethod
     def quote_relation_name(ident: str) -> str:
@@ -94,7 +110,7 @@ class DatabaseAdapter:
         ignore: str = None,
     ):
         """
-        Run SQL statement, and return results, optionally ignoring exceptions.
+        Run SQL statement and return results, optionally ignoring exceptions.
         """
 
         sql_effective: str
@@ -118,7 +134,7 @@ class DatabaseAdapter:
 
     def run_sql_real(self, sql: str, parameters: t.Mapping[str, str] = None, records: bool = False):
         """
-        Invoke SQL statement, and return results.
+        Invoke an SQL statement and return results.
         """
         results = []
         for statement in sqlparse.split(sql):
@@ -126,7 +142,8 @@ class DatabaseAdapter:
                 statement += self.internal_tag
             # FIXME: Persistent self.connection risks leaks & thread-unsafety.
             #        https://github.com/crate/cratedb-toolkit/pull/81#discussion_r2071499204
-            result = self.connection.execute(sa.text(statement), parameters)
+            with self.ctx:
+                result = self.connection.execute(sa.text(statement), parameters)
             data: t.Any
             if result.returns_rows:
                 if records:
@@ -330,11 +347,6 @@ class DatabaseAdapter:
         """
         import pandas as pd
 
-        try:
-            from sqlalchemy_cratedb.support import insert_bulk
-        except ImportError:  # pragma: nocover
-            from crate.client.sqlalchemy.support import insert_bulk
-
         df = pd.read_csv(filepath)
         with self.engine.connect() as connection:
             return df.to_sql(
@@ -356,11 +368,6 @@ class DatabaseAdapter:
         """
         import dask.dataframe as dd
         import pandas as pd
-
-        try:
-            from sqlalchemy_cratedb.support import insert_bulk
-        except ImportError:  # pragma: nocover
-            from crate.client.sqlalchemy.support import insert_bulk
 
         # Set a few defaults.
         npartitions = npartitions or os.cpu_count()

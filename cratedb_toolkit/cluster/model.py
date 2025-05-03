@@ -10,6 +10,7 @@ import sqlalchemy as sa
 
 from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootServices
 from cratedb_toolkit.exception import CroudException, DatabaseAddressMissingError
+from cratedb_toolkit.info.core import InfoContainer
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
 
@@ -34,19 +35,19 @@ class ClusterInformation:
     Manage a database cluster's information.
     """
 
-    cratedb: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
     cloud: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
+    database: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
 
     @property
     def cloud_id(self) -> str:
         if "id" not in self.cloud:
-            raise ValueError("Cloud cluster information is missing 'id' field")
+            raise CroudException("Cloud cluster information is missing 'id' field")
         return self.cloud["id"]
 
     @property
     def cloud_name(self) -> str:
         if "name" not in self.cloud:
-            raise ValueError("Cloud cluster information is missing 'name' field")
+            raise CroudException("Cloud cluster information is missing 'name' field")
         return self.cloud["name"]
 
     @classmethod
@@ -70,7 +71,7 @@ class ClusterInformation:
     @classmethod
     def from_id(cls, cluster_id: str) -> "ClusterInformation":
         """
-        Look up cluster by identifier (UUID).
+        Look up the cluster by identifier (UUID).
         """
 
         cc = CloudClusterServices(cluster_id=cluster_id)
@@ -79,7 +80,7 @@ class ClusterInformation:
     @classmethod
     def from_name(cls, cluster_name: str) -> "ClusterInformation":
         """
-        Look up cluster by name.
+        Look up the cluster by name.
         """
 
         cm = CloudRootServices()
@@ -88,9 +89,6 @@ class ClusterInformation:
             if cluster["name"] == cluster_name:
                 return ClusterInformation(cloud=cluster)
         raise CroudException(f"Cluster not found: {cluster_name}")
-
-    def asdict(self) -> t.Dict[str, t.Any]:
-        return deepcopy(dataclasses.asdict(self))
 
     @property
     def meta(self):
@@ -101,9 +99,11 @@ class ClusterInformation:
 
     @property
     def health(self):
+        info = self.asdict()
         return {
             "meta": self.meta,
-            "cloud": self.asdict()["cloud"]["health"],
+            "cloud": info["cloud"]["health"],
+            "database": info["database"]["table_health"],
         }
 
     @property
@@ -121,6 +121,22 @@ class ClusterInformation:
         """
         cc = CloudClusterServices(cluster_id=self.cloud_id)
         return JwtResponse(**cc.get_jwt_token())
+
+    def asdict(self) -> t.Dict[str, t.Any]:
+        try:
+            self.refresh()
+        except Exception as e:
+            logger.warning(f"Failed to refresh cluster information: {e}")
+        return deepcopy(dataclasses.asdict(self))
+
+    def refresh(self):
+        from cratedb_toolkit import ManagedCluster
+
+        cluster = ManagedCluster(cluster_id=self.cloud_id).probe()
+        if not cluster.address:
+            raise CroudException(f"Cluster not found: {self.cloud_name}")
+        adapter = DatabaseAdapter(dburi=cluster.address.dburi, jwt=cluster.info.jwt)
+        self.database = InfoContainer(adapter=adapter, scrub=True).database()
 
 
 @dataclasses.dataclass

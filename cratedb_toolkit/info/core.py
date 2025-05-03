@@ -38,10 +38,10 @@ class InfoContainer(InfoContainerBase):
     def cluster_name(self):
         return self.evaluate_element(Library.Health.cluster_name)
 
-    def to_dict(self, data=None):
+    def to_dict(self, data=None) -> t.Dict[str, t.Any]:
         return super().to_dict(data={"system": self.system(), "database": self.database()})
 
-    def system(self):
+    def system(self) -> t.Dict[str, t.Any]:
         data: t.Dict[str, t.Any] = {}
         data["remark"] = (
             "This section includes system information about the machine running CrateDB "
@@ -57,8 +57,8 @@ class InfoContainer(InfoContainerBase):
         # data["libraries"] = PlatformInfo.libraries()  # noqa: ERA001
         return data
 
-    def database(self):
-        data = {}
+    def database(self) -> t.Dict[str, t.Any]:
+        data: t.Dict[str, t.Any] = {}
         data["remark"] = (
             "This section includes system and other diagnostics information about the CrateDB "
             'database cluster, effectively about the "storage" domain.'
