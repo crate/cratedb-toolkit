@@ -1,14 +1,14 @@
-# Copyright (c) 2021-2024, Crate.io Inc.
+# Copyright (c) 2021-2025, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
 
 import click
 
+from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.info.core import InfoContainer, JobInfoContainer, LogContainer
 from cratedb_toolkit.util.app import make_cli
 from cratedb_toolkit.util.cli import make_command
 from cratedb_toolkit.util.data import jd
-from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -58,20 +58,18 @@ cli = make_cli()
 @make_command(cli, "cluster", help_cluster)
 @click.pass_context
 def cluster(ctx: click.Context):
-    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
-    sample = InfoContainer(adapter=adapter, scrub=scrub)
+    dc = DatabaseCluster.from_options(ctx.meta["address"])
+    sample = InfoContainer(adapter=dc.adapter, scrub=scrub)
     jd(sample.to_dict())
 
 
 @make_command(cli, "logs", help_logs)
 @click.pass_context
 def logs(ctx: click.Context):
-    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
-    sample = LogContainer(adapter=adapter, scrub=scrub)
+    dc = DatabaseCluster.from_options(ctx.meta["address"])
+    sample = LogContainer(adapter=dc.adapter, scrub=scrub)
     jd(sample.to_dict())
 
 
@@ -81,10 +79,9 @@ def job_information(ctx: click.Context):
     """
     Display ad hoc job information.
     """
-    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
     scrub = ctx.meta.get("scrub", False)
-    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
-    sample = JobInfoContainer(adapter=adapter, scrub=scrub)
+    dc = DatabaseCluster.from_options(ctx.meta["address"])
+    sample = JobInfoContainer(adapter=dc.adapter, scrub=scrub)
     jd(sample.to_dict())
 
 

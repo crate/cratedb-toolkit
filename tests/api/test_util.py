@@ -22,7 +22,7 @@ def test_api_no_address():
         args="foo",
         catch_exceptions=False,
     )
-    assert result.exit_code == 2
+    assert result.exit_code == 1
     assert "Error: Missing database address" in result.output
 
 
@@ -45,7 +45,7 @@ def test_api_duplicate_address_managed():
         args="--cluster-id=foo --cluster-name=bar foo",
         catch_exceptions=False,
     )
-    assert result.exit_code == 2
+    assert result.exit_code == 1
     assert "Error: Duplicate database address, please specify only one" in result.output
 
 
@@ -68,5 +68,5 @@ def test_api_duplicate_address_standalone():
         args="--http-url=http://localhost:4200 --sqlalchemy-url=crate://crate@localhost:4200 foo",
         catch_exceptions=False,
     )
-    assert result.exit_code == 2
+    assert result.exit_code == 1
     assert "Error: Duplicate database address, please specify only one" in result.output
