@@ -5,6 +5,7 @@ import os
 import typing as t
 from pathlib import Path
 
+from croud.clusters.commands import _wait_for_completed_operation
 from croud.projects.commands import _transform_backup_location
 
 from cratedb_toolkit.exception import CroudException
@@ -316,21 +317,22 @@ class CloudClusterServices:
         return data
 
     def suspend(self):
-        body = {"suspended": True}
-        data, errors = self.client.put(self.url.suspend, body=body)
-        if data is None:
-            if not errors:
-                errors = "Unknown error"
-            raise CroudException(f"Suspending cluster failed: {errors}")
-        return data
+        return self.set_suspended({"suspended": True})
 
     def resume(self):
-        body = {"suspended": False}
+        return self.set_suspended({"suspended": False})
+
+    def set_suspended(self, body: t.Dict[str, t.Any]):
         data, errors = self.client.put(self.url.suspend, body=body)
         if data is None:
             if not errors:
                 errors = "Unknown error"
             raise CroudException(f"Resuming cluster failed: {errors}")
+        _wait_for_completed_operation(
+            client=self.client,
+            cluster_id=self.cluster_id,
+            request_params={"type": "SUSPEND", "limit": 1},
+        )
         return data
 
     def list_jobs(self):
