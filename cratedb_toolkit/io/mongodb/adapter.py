@@ -45,7 +45,7 @@ class MongoDBAdapterBase:
     def from_url(cls, url: t.Union[str, boltons.urlutils.URL, yarl.URL]):
         if not isinstance(url, str):
             url = str(url)
-        mongodb_address = DatabaseAddress.from_string(url)
+        mongodb_address = DatabaseAddress.from_sqlalchemy_uri(url)
         mongodb_uri, mongodb_collection_address = mongodb_address.decode()
         mongodb_database = mongodb_collection_address.schema
         mongodb_collection = mongodb_collection_address.table

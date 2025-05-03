@@ -1,18 +1,36 @@
 import json
 
+import pytest
 from boltons.iterutils import get_path
 from click.testing import CliRunner
 
 from cratedb_toolkit.info.cli import cli
 
 
-def test_info_cluster(cratedb):
+@pytest.fixture
+def runner_managed(cloud_environment):
     """
-    Verify `ctk info cluster`.
+    Provide a Click runner for managed CrateDB, connecting per information from environment variables.
+    """
+    return CliRunner()
+
+
+@pytest.fixture
+def runner_standalone(cratedb):
+    """
+    Provide a Click runner for standalone CrateDB, connecting per SQLAlchemy URL.
+    """
+    return CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+
+
+@pytest.mark.parametrize("runner_factory", ["runner_standalone", "runner_managed"], ids=["standalone", "managed"])
+def test_info_cluster(request, runner_factory):
+    """
+    Verify `ctk info cluster` on both standalone and managed CrateDB.
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = request.getfixturevalue(runner_factory)
     result = runner.invoke(
         cli,
         args="cluster",
@@ -20,7 +38,7 @@ def test_info_cluster(cratedb):
     )
     assert result.exit_code == 0
 
-    # Verify outcome.
+    # Verify the outcome.
     info = json.loads(result.output)
     assert "meta" in info
     assert "data" in info
@@ -37,13 +55,14 @@ def test_info_cluster(cratedb):
     assert "cluster_nodes_count" in database_keys
 
 
-def test_info_logs(cratedb):
+@pytest.mark.parametrize("runner_factory", ["runner_standalone", "runner_managed"], ids=["standalone", "managed"])
+def test_info_logs(request, runner_factory):
     """
-    Verify `ctk info logs`.
+    Verify `ctk info logs` on both standalone and managed CrateDB.
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = request.getfixturevalue(runner_factory)
     result = runner.invoke(
         cli,
         args="logs",
@@ -51,7 +70,7 @@ def test_info_logs(cratedb):
     )
     assert result.exit_code == 0
 
-    # Verify outcome.
+    # Verify the outcome.
     info = json.loads(result.output)
     assert "meta" in info
     assert "data" in info
@@ -61,13 +80,14 @@ def test_info_logs(cratedb):
     assert len(info["data"]["user_queries_latest"]) > 3
 
 
-def test_info_jobs(cratedb):
+@pytest.mark.parametrize("runner_factory", ["runner_standalone", "runner_managed"], ids=["standalone", "managed"])
+def test_info_jobs(request, runner_factory):
     """
-    Verify `ctk info jobs`.
+    Verify `ctk info jobs` on both standalone and managed CrateDB.
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = request.getfixturevalue(runner_factory)
     result = runner.invoke(
         cli,
         args="jobs",
@@ -75,7 +95,7 @@ def test_info_jobs(cratedb):
     )
     assert result.exit_code == 0
 
-    # Verify outcome.
+    # Verify the outcome.
     info = json.loads(result.output)
     assert "meta" in info
     assert "data" in info

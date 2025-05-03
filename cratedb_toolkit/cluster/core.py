@@ -1,3 +1,5 @@
+# Copyright (c) 2021-2025, Crate.io Inc.
+# Distributed under the terms of the AGPLv3 license, see LICENSE.
 import dataclasses
 import json
 import logging
@@ -15,11 +17,10 @@ from cratedb_toolkit.cluster.model import ClientBundle, ClusterBase, ClusterInfo
 from cratedb_toolkit.config import CONFIG
 from cratedb_toolkit.exception import (
     CroudException,
-    DatabaseAddressDuplicateError,
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.model import DatabaseAddress, InputOutputResource, TableAddress
+from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -210,7 +211,7 @@ class ManagedCluster(ClusterBase):
             self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
             self.cluster_id = self.info.cloud["id"]
             self.cluster_name = self.info.cloud["name"]
-            self.address = DatabaseAddress.from_httpuri(self.info.cloud["url"])
+            self.address = DatabaseAddress.from_http_uri(self.info.cloud["url"])
             if self.cluster_id:
                 self.operation = CloudClusterServices(cluster_id=self.cluster_id)
 
@@ -383,6 +384,15 @@ class ManagedCluster(ClusterBase):
 
         return self
 
+    @property
+    def adapter(self) -> DatabaseAdapter:
+        """
+        Provide database adapter instance.
+        """
+        if self.address is None:
+            raise DatabaseAddressMissingError()
+        return DatabaseAdapter(dburi=self.address.dburi, jwt=self.info.jwt)
+
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
         """
         Return a bundle of client handles to the CrateDB Cloud cluster database.
@@ -402,7 +412,7 @@ class ManagedCluster(ClusterBase):
             username = self.settings.username
         if password is None:
             password = self.settings.password
-        address = DatabaseAddress.from_httpuri(cratedb_http_url).with_credentials(username=username, password=password)
+        address = DatabaseAddress.from_http_uri(cratedb_http_url).with_credentials(username=username, password=password)
         adapter = DatabaseAdapter(address.dburi)
         self._client_bundle = ClientBundle(
             adapter=adapter,
@@ -458,6 +468,13 @@ class StandaloneCluster(ClusterBase):
             self.exists = False
             logger.debug(f"Failed to connect to standalone cluster: {ex}")
         return self
+
+    @property
+    def adapter(self) -> DatabaseAdapter:
+        """
+        Provide database adapter instance.
+        """
+        return DatabaseAdapter(dburi=self.address.dburi)
 
     def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
         """
@@ -578,9 +595,23 @@ class DatabaseCluster:
     Manage a CrateDB Cloud or standalone cluster.
     """
 
-    @staticmethod
+    @classmethod
+    def from_params(cls, **params: dict) -> t.Union[ManagedCluster, StandaloneCluster]:
+        """
+        Factory method to create a cluster instance based on the provided parameters (Python **kwargs).
+        """
+        return DatabaseCluster.create(**ClusterAddressOptions.from_params(**params).asdict())
+
+    @classmethod
+    def from_options(cls, options: ClusterAddressOptions) -> t.Union[ManagedCluster, StandaloneCluster]:
+        """
+        Factory method to create a cluster instance based on the provided options (ClusterAddressOptions).
+        """
+        return DatabaseCluster.create(**options.asdict())
+
+    @classmethod
     def create(
-        cluster_id: str = None, cluster_name: str = None, sqlalchemy_url: str = None, http_url: str = None
+        cls, cluster_id: str = None, cluster_name: str = None, sqlalchemy_url: str = None, http_url: str = None
     ) -> t.Union[ManagedCluster, StandaloneCluster]:
         """
         Create the cluster instance based on the provided parameters.
@@ -602,29 +633,14 @@ class DatabaseCluster:
             DatabaseAddressDuplicateError: If multiple connection methods are provided.
         """
 
-        # Count number of address options.
-        address_options_count = sum(
-            1
-            for option in [cluster_id, cluster_name, sqlalchemy_url, http_url]
-            if option is not None and option.strip() != ""
-        )
-        # Fail if no address option was provided.
-        if address_options_count == 0:
-            raise DatabaseAddressMissingError
-        # Fail if more than one address option was provided.
-        if address_options_count > 1:
-            raise DatabaseAddressDuplicateError()
-
         # Cluster handle factory: Managed vs. standalone.
         cluster: t.Union[ManagedCluster, StandaloneCluster]
-        if cluster_id is not None or cluster_name is not None:
+        if sqlalchemy_url is not None or http_url is not None:
+            address = DatabaseAddress.from_string(t.cast(str, sqlalchemy_url or http_url))
+            cluster = StandaloneCluster(address=address)
+        elif cluster_id is not None or cluster_name is not None:
             cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name)
-        elif sqlalchemy_url:
-            address = DatabaseAddress.from_string(sqlalchemy_url)
-            cluster = StandaloneCluster(address=address)
-        elif http_url:
-            address = DatabaseAddress.from_httpuri(http_url)
-            cluster = StandaloneCluster(address=address)
+            cluster.probe()
         else:
             raise DatabaseAddressMissingError()
 

@@ -22,12 +22,12 @@ def test_database_address_to_httpuri_ssl_with_port():
 
 
 def test_database_address_from_httpuri_standard():
-    address = DatabaseAddress.from_httpuri("http://user:password@example.org/schema/table")
+    address = DatabaseAddress.from_http_uri("http://user:password@example.org/schema/table")
     assert address.dburi == "crate://user:password@example.org/schema/table"
 
 
 def test_database_address_from_httpuri_ssl():
-    address = DatabaseAddress.from_httpuri("https://user:password@example.org/schema/table")
+    address = DatabaseAddress.from_http_uri("https://user:password@example.org/schema/table")
     assert address.dburi == "crate://user:password@example.org/schema/table?ssl=true"
 
 

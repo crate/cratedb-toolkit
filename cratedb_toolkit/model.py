@@ -1,3 +1,5 @@
+# Copyright (c) 2021-2025, Crate.io Inc.
+# Distributed under the terms of the AGPLv3 license, see LICENSE.
 import dataclasses
 import typing as t
 from copy import deepcopy
@@ -5,16 +7,58 @@ from urllib.parse import urljoin
 
 from attr import Factory
 from attrs import define
+from boltons.dictutils import subdict
 from boltons.urlutils import URL
 
+from cratedb_toolkit.exception import DatabaseAddressDuplicateError, DatabaseAddressMissingError
 from cratedb_toolkit.util.data import asbool
+
+
+@dataclasses.dataclass
+class ClusterAddressOptions:
+    """
+    Manage and validate input options for a cluster address.
+    """
+
+    cluster_id: t.Optional[str] = None
+    cluster_name: t.Optional[str] = None
+    sqlalchemy_url: t.Optional[str] = None
+    http_url: t.Optional[str] = None
+
+    def __post_init__(self):
+        self.validate()
+
+    @classmethod
+    def from_params(cls, **params: t.Any) -> "ClusterAddressOptions":
+        return cls(**subdict(params, keep=["cluster_id", "cluster_name", "sqlalchemy_url", "http_url"]))
+
+    def validate(self):
+        cluster_options = (self.cluster_id, self.cluster_name)
+        url_options = (self.sqlalchemy_url, self.http_url)
+        try:
+            self.check_mutual(*url_options)
+        except DatabaseAddressMissingError:
+            self.check_mutual(*cluster_options)
+
+    @staticmethod
+    def check_mutual(*args):
+        # Count the number of non-empty options.
+        options_count = sum(1 for option in args if option is not None and option.strip())
+        # Fail if no address option was provided.
+        if options_count == 0:
+            raise DatabaseAddressMissingError()
+        # Fail if more than one address option was provided.
+        if options_count > 1:
+            raise DatabaseAddressDuplicateError()
+
+    def asdict(self):
+        return dataclasses.asdict(self)
 
 
 @dataclasses.dataclass
 class DatabaseAddress:
     """
-    Manage a database address, which is either a SQLAlchemy-
-    compatible database URI, or a regular HTTP URL.
+    Manage a database address, which is either an SQLAlchemy-compatible database URI or a regular HTTP URL.
     """
 
     uri: URL
@@ -24,10 +68,20 @@ class DatabaseAddress:
         """
         Factory method to create an instance from an SQLAlchemy database URL in string format.
         """
+        if url.startswith("crate"):
+            return cls.from_sqlalchemy_uri(url)
+        else:
+            return cls.from_http_uri(url)
+
+    @classmethod
+    def from_sqlalchemy_uri(cls, url: str) -> "DatabaseAddress":
+        """
+        Factory method to create an instance from an SQLAlchemy database URL in string format.
+        """
         return cls(uri=URL(url))
 
     @classmethod
-    def from_httpuri(cls, url: str) -> "DatabaseAddress":
+    def from_http_uri(cls, url: str) -> "DatabaseAddress":
         """
         Factory method to create an instance from an HTTP URL in string format.
         """
@@ -94,7 +148,7 @@ class DatabaseAddress:
 
     def decode(self) -> t.Tuple[URL, "TableAddress"]:
         """
-        Decode database and table names, and sanitize database URI.
+        Decode database and table names and sanitize database URI.
         """
         from cratedb_toolkit.util.database import decode_database_table
 

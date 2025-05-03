@@ -1,7 +1,9 @@
+# Copyright (c) 2021-2025, Crate.io Inc.
+# Distributed under the terms of the AGPLv3 license, see LICENSE.
 import click
 from click_aliases import ClickAliasedGroup
 
-from cratedb_toolkit.exception import DatabaseAddressDuplicateError, DatabaseAddressMissingError
+from cratedb_toolkit.model import ClusterAddressOptions
 from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
 from cratedb_toolkit.util.cli import boot_click
 
@@ -29,33 +31,21 @@ def make_cli():
     ):
         """
         Generic CrateDB API client.
-
-        TODO: Use `UniversalCluster.{create,validate}` instead.
         """
 
-        # Check if at least one address option was provided.
-        if not (
-            (cluster_id and cluster_id.strip())
-            or (cluster_name and cluster_name.strip())
-            or (sqlalchemy_url and sqlalchemy_url.strip())
-            or (http_url and http_url.strip())
-        ):
-            raise click.UsageError(DatabaseAddressMissingError.EXTENDED_MESSAGE)
-
-        # Fail if more than one address option was provided.
-        address_options_count = sum(
-            1 for option in [cluster_id, cluster_name, sqlalchemy_url, http_url] if option and option.strip()
+        # Read address parameters.
+        address_options = ClusterAddressOptions.from_params(
+            cluster_id=cluster_id, cluster_name=cluster_name, sqlalchemy_url=sqlalchemy_url, http_url=http_url
         )
-        if address_options_count > 1:
-            raise click.UsageError(DatabaseAddressDuplicateError.STANDARD_MESSAGE)
-
         ctx.meta.update(
             {
+                "address": address_options,
+                "scrub": scrub,
+                # TODO: Remove individual options, use `address` instead.
                 "cluster_id": cluster_id,
                 "cluster_name": cluster_name,
                 "sqlalchemy_url": sqlalchemy_url,
                 "http_url": http_url,
-                "scrub": scrub,
             }
         )
         return boot_click(ctx, verbose, debug)
