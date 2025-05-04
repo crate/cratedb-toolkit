@@ -327,7 +327,7 @@ class CloudClusterServices:
         if data is None:
             if not errors:
                 errors = "Unknown error"
-            raise CroudException(f"Resuming cluster failed: {errors}")
+            raise CroudException(f"Suspending or resuming cluster failed: {errors}")
         _wait_for_completed_operation(
             client=self.client,
             cluster_id=self.cluster_id,

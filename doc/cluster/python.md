@@ -1,4 +1,5 @@
 (cluster-api-python)=
+
 # CrateDB Cluster Python API
 
 The `cratedb_toolkit.ManagedCluster` class provides higher level API/SDK

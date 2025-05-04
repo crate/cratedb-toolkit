@@ -54,7 +54,7 @@ croud clusters list
 Define the cluster id of your CrateDB Cloud Cluster you are aiming to connect
 to, and its connection credentials.
 ```shell
-export CRATEDB_CLUSTER_ID='e1e38d92-a650-48f1-8a70-8133f2d5c400'
+export CRATEDB_CLUSTER_ID='<YOUR_CLUSTER_ID>'
 ```
 
 ### Usage

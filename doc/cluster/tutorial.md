@@ -1,4 +1,5 @@
 (cluster-api-tutorial)=
+
 # CrateDB Cluster CLI/API Tutorial
 
 This tutorial outlines end-to-end examples connecting to the CrateDB Cloud

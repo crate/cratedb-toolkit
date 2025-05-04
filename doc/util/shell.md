@@ -1,4 +1,5 @@
 (shell)=
+
 # ctk shell
 
 The database shell interface of CrateDB Toolkit is based on the

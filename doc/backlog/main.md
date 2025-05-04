@@ -1,9 +1,22 @@
 # Main Backlog
 
 ## Iteration +0
-- CLI: Consider simplifying by using `--url` instead of `--sqlalchemy-url` or `--http-url`
+- CLI: Consider simplifying the API by using canonical `--cluster-url` instead of `--sqlalchemy-url` vs. `--http-url`
 - CLI: Explore consolidating all four addressing options into a single `--cluster` option
-  for more intuitive cluster addressing. This could be implemented as an option alongside existing methods.
+  for more intuitive cluster addressing. This could be implemented as a separate option alongside
+  existing methods.
+- `cratedb_toolkit/cfr/cli.py`: Migrate to `ctx.meta["address"]`, like `cratedb_toolkit/info/cli.py`
+- Cluster API: Currently, software tests do not prune tables on CrateDB Cloud.
+  This will probably cause a disk spillover sooner or later on this instance.
+- When running the test suite, a huge log obstructs the output information.
+  ```
+  2025-05-03 22:48:22,191 [crate.client.http                   ] DEBUG   : JSON response for stmt(SELECT * FROM "sys"."allocations")
+  2025-05-03 22:48:22,768 [crate.client.http                   ] DEBUG   : JSON response for stmt(SELECT * FROM "sys"."jobs_log")
+  ```
+- Refactor `model.py`, `util/database.py`, and possibly more, to `ctk.model` module namespace
+- Search:
+  - https://vectorvfs.readthedocs.io/en/latest/usage.html
+  - https://news.ycombinator.com/item?id=43896011
 
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec
@@ -49,7 +62,7 @@
 - UX: Accept alias `--format {jsonl,ndjson}` for `--format json_row` 
 - Catch recursion errors:
   ```
-  CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/
+  CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/
   ```
 - CLI: Verify exit codes.
 - UX: Rename `ctk cluster info` to `ctk status cluster --id=foo-bar-baz`
