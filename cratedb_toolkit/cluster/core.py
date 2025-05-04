@@ -123,14 +123,14 @@ class ManagedCluster(ClusterBase):
         self.cluster_name = cluster_name
         self.settings = settings or ManagedClusterSettings()
         self.address = address
-        self.info: ClusterInformation = info or ClusterInformation()
+        self._info: t.Optional[ClusterInformation] = info
         self.stop_on_exit = stop_on_exit
         self.exists: bool = False
 
         # Default settings and sanity checks.
         self.cluster_id = self.cluster_id or self.settings.cluster_id or None
         self.cluster_name = self.cluster_name or self.settings.cluster_name or None
-        if self.cluster_id is None and self.cluster_name is None:
+        if not self.cluster_id and not self.cluster_name:
             raise DatabaseAddressMissingError(
                 "Failed to address cluster: Either cluster identifier or name needs to be specified"
             )
@@ -203,12 +203,22 @@ class ManagedCluster(ClusterBase):
         raise NotImplementedError("Deleting cluster not implemented yet")
         return self
 
-    def probe(self) -> "ManagedCluster":
+    @property
+    def info(self) -> ClusterInformation:
+        if self._info is None:
+            raise ValueError("Cluster information not yet available")
+        return self._info
+
+    def probe(self, refresh: bool = False) -> "ManagedCluster":
         """
         Probe a CrateDB Cloud cluster, API-wise.
         """
+        if refresh:
+            self._info = None
+        if self._info is not None:
+            return self
         try:
-            self.info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
+            self._info = ClusterInformation.from_id_or_name(cluster_id=self.cluster_id, cluster_name=self.cluster_name)
             self.cluster_id = self.info.cloud["id"]
             self.cluster_name = self.info.cloud["name"]
             self.address = DatabaseAddress.from_http_uri(self.info.cloud["url"])

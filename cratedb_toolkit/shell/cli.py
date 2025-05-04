@@ -75,7 +75,7 @@ def cli(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
         cluster_url=cluster_url,
-    ).probe()
+    )
 
     if cluster.address is None:
         raise click.UsageError("Inquiring cluster address failed.")

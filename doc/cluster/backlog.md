@@ -12,19 +12,20 @@ a patch for some item, it will be very much welcome.
 [issues]: https://github.com/crate/cratedb-toolkit/issues
 
 ## Iteration +1
-- `ctk cluster info` does not include information about CrateDB yet.
-  => Connect to ex-WTF utilities.
-- Less verbosity by default for `ctk cluster` operations.
+- CLI: Less verbosity by default for `ctk cluster` operations
   Possibly display cluster operation and job execution outcomes, and `last_async_operation` details
-- Python API: Make `cluster.query` use the excellent `records` package
-- `ctk cluster list`: New
+- CLI: Implement `ctk cluster list`, `ctk cluster delete`
+- Managed: Use `keyring` for caching the JWT token, and compensate token expiry
 
 ## Iteration +2
+- Python API: Make `cluster.query` use the excellent `records` package
 - Xon.sh example
 - Windows support. Powershell?
 - Validate multi-cluster, multi-org operations work well and make sense
 - Implement JWT token expiry handling
 - Add Apache Spark / Databricks to the client bundle?
+- Use universal `DatabaseCluster` across the board. For that to happen, it will
+  need to gain an `DatabaseCluster.from_env()` entry point.
 
 ## Iteration +3
 - Complete UI: `ctk cluster health`
@@ -82,8 +83,16 @@ a patch for some item, it will be very much welcome.
              'running_operation': '',
              'status': 'GREEN'},
   ```
-- Shell: Currently it is not possible to create multiple instances of a `ManagedCluster`,
+- Shell: Currently it is not possible to create multiple instances of a `ManagedCluster`
   because parameters like `username` and `password` are obtained from the environment, 
   using different credentials for connecting to individual clusters.
 - Document `ManagedCluster`'s `stop_on_exit` option
 - `toolkit/cluster/cli.py`: Also respect cluster ID and name across the board of ex-WTF utilities.
+- `ctk cluster info` does not include information about CrateDB yet.
+  => Connect to ex-WTF utilities.
+- Make CLI options override ENV vars. Otherwise, using `--sqlalchemy-url=crate://`
+  will never work if an `.env` file is present.
+- SDK: Rename `ctk.cluster` to `ctk.sdk`? => No.
+- CLI: Shrink address URLs to single parameter `--cluster-url`
+- Changelog: Notify about breaking change with input address parameter names
+- Docs: Update guidelines about input address parameter preferences

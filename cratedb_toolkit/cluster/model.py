@@ -101,6 +101,11 @@ class ClusterInformation:
 
     @property
     def health(self):
+        try:
+            self.acquire_dynamic_content()
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to refresh cluster information: {e}")
         info = self.asdict()
         return {
             "meta": self.meta,
@@ -128,13 +133,9 @@ class ClusterInformation:
         """
         Convert to dictionary after acquiring dynamic content.
         """
-        try:
-            self.refresh()
-        except Exception as e:
-            logger.warning(f"Failed to refresh cluster information: {e}")
         return deepcopy(dataclasses.asdict(self))
 
-    def refresh(self):
+    def acquire_dynamic_content(self):
         """
         Refresh dynamic content. Here: The `database` attribute, after inquiring the cluster.
         """

@@ -104,16 +104,15 @@ def ping(ctx: click.Context, cluster_id: str, cluster_name: str):
     Ping cluster: API and database.
     """
     with handle_command_errors("ping cluster"):
-        cluster_info = ClusterInformation.from_id_or_name(cluster_id=cluster_id, cluster_name=cluster_name)
         cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).start()
         has_db_result = bool(cluster.query("SELECT 42 AS availability_check  -- ctk"))
         response = {
-            "meta": cluster_info.meta,
-            "cloud": cluster_info.ready,
+            "meta": cluster.info.meta,
+            "cloud": cluster.info.ready,
             "database": has_db_result,
         }
         jd(response)
-        sys.exit(0 if (cluster_info.ready and has_db_result) else 1)
+        sys.exit(0 if (cluster.info.ready and has_db_result) else 1)
 
 
 @make_command(cli, name="start", help=help_start)

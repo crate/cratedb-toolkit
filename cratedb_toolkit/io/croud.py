@@ -77,6 +77,7 @@ class CloudJob:
         full-qualified representation.
 
         FIXME: Remove after upstream has fixed the flaw.
+               https://github.com/crate/croud/issues/566
         """
         job_info = self.info
         if "destination" in job_info and "table" in job_info["destination"]:

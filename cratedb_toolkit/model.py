@@ -64,7 +64,9 @@ class DatabaseAddress:
         """
         Factory method to create an instance from an SQLAlchemy database URL in string format.
         """
-        if url.startswith("crate"):
+        # Parse the URL to determine the scheme.
+        parsed_url = URL(url)
+        if parsed_url.scheme == "crate":
             return cls.from_sqlalchemy_uri(url)
         else:
             return cls.from_http_uri(url)

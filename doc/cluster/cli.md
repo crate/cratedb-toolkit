@@ -1,4 +1,5 @@
 (cluster-api-cli)=
+
 # CrateDB Cluster CLI
 
 The `ctk cluster {start,info,stop}` subcommands provide higher level CLI

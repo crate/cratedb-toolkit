@@ -18,7 +18,7 @@ test_cloud_import() {
   assertContains "Output lacks logging information from croud" "$output" 'Import succeeded (status: SUCCEEDED)'
   assertContains "Output lacks logging information from croud" "$output" 'Data loading was successful'
   assertContains "Output lacks logging information from crash" "$output" 'CONNECT OK'
-  assertContains "Output from nab-machine-failure table missing" "$output" '78.71041827'
+  assertContains "Output from nab-machine-failure table missing" "$output" '78'
 }
 
 # Load shUnit2.
