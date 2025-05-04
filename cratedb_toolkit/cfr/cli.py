@@ -29,10 +29,10 @@ def sys_export(ctx: click.Context, target: str):
     """
     Export CrateDB system tables.
     """
-    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
+    cluster_url = ctx.meta["cluster_url"]
     try:
         target_path = path_from_url(target)
-        stc = SystemTableExporter(dburi=sqlalchemy_url, target=target_path)
+        stc = SystemTableExporter(dburi=cluster_url, target=target_path)
 
         archive = None
         if target_path.name.endswith(".tgz") or target_path.name.endswith(".tar.gz"):
@@ -58,9 +58,9 @@ def sys_import(ctx: click.Context, source: str):
     """
     Import CrateDB system tables.
     """
-    sqlalchemy_url = ctx.meta["sqlalchemy_url"]
+    cluster_url = ctx.meta["cluster_url"]
     try:
-        stc = SystemTableImporter(dburi=sqlalchemy_url, source=path_from_url(source))
+        stc = SystemTableImporter(dburi=cluster_url, source=path_from_url(source))
         stc.load()
     except Exception as ex:
         error_logger(ctx)(ex)
@@ -74,8 +74,8 @@ def help_statistics():
     Synopsis
     ========
 
-    export CRATEDB_SQLALCHEMY_URL=crate://localhost/
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/?sslmode=require
+    export CRATEDB_CLUSTER_URL=crate://localhost/
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/?sslmode=require
     ctk cfr jobstats collect
     ctk cfr jobstats collect --anonymize <decoder_dictionary.json>
     ctk cfr jobstats collect -r "crate://crate@localhost:4200/?schema=<schema>&sslmode=require"
@@ -121,7 +121,7 @@ def job_statistics_collect(ctx: click.Context, once: bool, reportdb: t.Optional[
     """
     import cratedb_toolkit.cfr.jobstats
 
-    address = DatabaseAddress.from_string(ctx.meta["http_url"] or ctx.meta["sqlalchemy_url"])
+    address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
     report_address = None
 
     if reportdb:
@@ -164,7 +164,7 @@ def job_statistics_view(ctx: click.Context, reportdb: t.Optional[str], deanonymi
     """
     import cratedb_toolkit.cfr.jobstats
 
-    address = DatabaseAddress.from_string(ctx.meta["http_url"] or ctx.meta["sqlalchemy_url"])
+    address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
     report_address = None
 
     if reportdb:
@@ -195,8 +195,8 @@ def job_statistics_report(ctx: click.Context):
     """
     import cratedb_toolkit.cfr.marimo
 
-    address = DatabaseAddress.from_string(ctx.meta["http_url"] or ctx.meta["sqlalchemy_url"])
-    os.environ["CRATEDB_SQLALCHEMY_URL"] = address.dburi
+    address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
+    os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     cratedb_toolkit.cfr.marimo.app.run()
 
 
@@ -212,8 +212,8 @@ def job_statistics_ui(ctx: click.Context):
 
     import cratedb_toolkit.cfr.marimo
 
-    address = DatabaseAddress.from_string(ctx.meta["http_url"] or ctx.meta["sqlalchemy_url"])
-    os.environ["CRATEDB_SQLALCHEMY_URL"] = address.dburi
+    address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
+    os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     server = marimo.create_asgi_app()
     server = server.with_app(path="/", root=cratedb_toolkit.cfr.marimo.__file__)
     app = FastAPI()
@@ -238,7 +238,7 @@ cli.add_command(info, name="info")
 @click.pass_context
 def record(ctx: click.Context, once: bool):
     scrub = ctx.meta.get("scrub", False)
-    address = DatabaseAddress.from_string(ctx.meta["http_url"] or ctx.meta["sqlalchemy_url"])
+    address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
     adapter = DatabaseAdapter(dburi=address.dburi, echo=False)
     recorder = InfoRecorder(adapter=adapter, scrub=scrub)
     if once:

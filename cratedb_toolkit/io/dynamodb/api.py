@@ -10,7 +10,7 @@ def dynamodb_copy(source_url, target_url, progress: bool = False):
 
     Synopsis
     --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
     ctk load table dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/us-east-1/ProductCatalog
     ctk load table dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
 

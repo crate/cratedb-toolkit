@@ -21,8 +21,8 @@ class DatabaseAddressMissingError(ClickException):
 
     EXTENDED_MESSAGE = (
         f"{STANDARD_MESSAGE}. "
-        "Use --cluster-id / --cluster-name / --sqlalchemy-url / --http-url CLI options "
-        "or CRATEDB_CLUSTER_ID / CRATEDB_CLUSTER_NAME / CRATEDB_SQLALCHEMY_URL / CRATEDB_HTTP_URL "
+        "Use --cluster-id / --cluster-name / --cluster-url CLI options "
+        "or CRATEDB_CLUSTER_ID / CRATEDB_CLUSTER_NAME / CRATEDB_CLUSTER_URL "
         "environment variables."
     )
 
@@ -34,7 +34,7 @@ class DatabaseAddressMissingError(ClickException):
 
 class DatabaseAddressDuplicateError(ClickException):
     STANDARD_MESSAGE = (
-        "Duplicate database address, please specify only one of: cluster id, cluster name, or database URI"
+        "Duplicate database address, please specify only one of: cluster id, cluster name, or database URL"
     )
 
     def __init__(self, message: str = None):

@@ -5,7 +5,7 @@ import click
 
 from cratedb_toolkit.cmd.tail.main import TableTailer
 from cratedb_toolkit.model import TableAddress
-from cratedb_toolkit.option import option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_url
 from cratedb_toolkit.util.cli import boot_click
 from cratedb_toolkit.util.database import DatabaseAdapter
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()
-@option_sqlalchemy_url
+@option_cluster_url
 @click.option(
     "--lines", "-n", type=int, required=False, default=10, help="Displays n last lines of the input. Default: 10"
 )
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def cli(
     ctx: click.Context,
-    sqlalchemy_url: str,
+    cluster_url: str,
     resource: str,
     lines: int,
     format_: str,
@@ -41,11 +41,11 @@ def cli(
     """
     A polling tail implementation for database tables.
     """
-    if not sqlalchemy_url:
+    if not cluster_url:
         logger.error("Unable to operate without database address")
         sys.exit(1)
     boot_click(ctx, verbose, debug)
-    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
+    adapter = DatabaseAdapter(dburi=cluster_url)
     # TODO: Tail multiple tables.
     if len(resource) > 1:
         raise NotImplementedError("`ctk tail` currently implements tailing a single table only")

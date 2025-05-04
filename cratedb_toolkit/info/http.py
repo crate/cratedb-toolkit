@@ -20,7 +20,7 @@ app = FastAPI()
 @lru_cache
 def database_adapter() -> DatabaseAdapter:
     # TODO: return config.Settings()
-    sqlalchemy_url = os.environ["CRATEDB_SQLALCHEMY_URL"]
+    sqlalchemy_url = os.environ["CRATEDB_CLUSTER_URL"]
     return DatabaseAdapter(dburi=sqlalchemy_url)
 
 
