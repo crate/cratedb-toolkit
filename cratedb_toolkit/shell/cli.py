@@ -6,10 +6,9 @@ from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.option import (
     option_cluster_id,
     option_cluster_name,
-    option_http_url,
+    option_cluster_url,
     option_password,
     option_schema,
-    option_sqlalchemy_url,
     option_username,
 )
 from cratedb_toolkit.util.cli import boot_click, docstring_format_verbatim
@@ -38,8 +37,7 @@ def help_cli():
 @click.command(help=docstring_format_verbatim(help_cli.__doc__))
 @option_cluster_id
 @option_cluster_name
-@option_sqlalchemy_url
-@option_http_url
+@option_cluster_url
 @option_username
 @option_password
 @option_schema
@@ -59,8 +57,7 @@ def cli(
     ctx: click.Context,
     cluster_id: str,
     cluster_name: str,
-    sqlalchemy_url: str,
-    http_url: str,
+    cluster_url: str,
     username: str,
     password: str,
     schema: str,
@@ -77,8 +74,7 @@ def cli(
     cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
-        sqlalchemy_url=sqlalchemy_url,
-        http_url=http_url,
+        cluster_url=cluster_url,
     ).probe()
 
     if cluster.address is None:

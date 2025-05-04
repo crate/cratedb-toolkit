@@ -16,16 +16,18 @@ For more information about installing CrateDB Toolkit, see {ref}`install`.
 
 Define CrateDB database cluster address per command-line option. Choose one of both alternatives.
 ```shell
-ctk cfr --http-url "https://username:password@localhost:4200/?schema=ext" jobstats collect
-ctk cfr --sqlalchemy-url "crate://username:password@localhost:4200/?schema=ext&ssl=true" jobstats collect
+ctk cfr --cluster-url "https://username:password@localhost:4200/?schema=ext" jobstats collect
+```
+```shell
+ctk cfr --cluster-url "crate://username:password@localhost:4200/?schema=ext&ssl=true" jobstats collect
 ```
 
 Define CrateDB database cluster address per environment variable. Choose one of both alternatives.
 ```shell
-export CRATEDB_HTTP_URL=https://username:password@localhost:4200/?schema=ext
+export CRATEDB_CLUSTER_URL=https://username:password@localhost:4200/?schema=ext
 ```
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://username:password@localhost:4200/?schema=ext&ssl=true
+export CRATEDB_CLUSTER_URL=crate://username:password@localhost:4200/?schema=ext&ssl=true
 ```
 :::{note}
 For some commands, both options might not be available yet, just one of them.

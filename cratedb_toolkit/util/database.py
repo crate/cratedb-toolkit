@@ -17,7 +17,7 @@ from sqlalchemy.sql.elements import AsBoolean
 from sqlalchemy_cratedb import insert_bulk
 from sqlalchemy_cratedb.dialect import CrateDialect
 
-from cratedb_toolkit.model import TableAddress
+from cratedb_toolkit.model import DatabaseAddress, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import str_contains
 
@@ -50,7 +50,11 @@ class DatabaseAdapter:
     def __init__(self, dburi: str, echo: bool = False, internal: bool = False, jwt: "JwtResponse" = None):
         if not dburi:
             raise ValueError("Database URI must be specified")
-        self.dburi = dburi
+        if dburi.startswith("crate://"):
+            self.dburi = dburi
+        else:
+            address = DatabaseAddress.from_string(dburi)
+            self.dburi = address.dburi
         self.internal = internal
         self.jwt = jwt
         self.ctx: contextlib.AbstractContextManager

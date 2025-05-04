@@ -15,7 +15,7 @@ def test_cfr_jobstats_collect_self(cratedb, caplog):
     dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": dburi})
     result = runner.invoke(
         cli,
         args="jobstats collect --once",
@@ -84,7 +84,7 @@ def test_cfr_jobstats_collect_reportdb(cratedb, caplog):
     dburi_report = cratedb.database.dburi + f"?schema={schema_reportdb}"
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": dburi})
     result = runner.invoke(
         cli,
         args=f"jobstats collect --once --reportdb={dburi_report}",
@@ -117,7 +117,7 @@ def test_cfr_jobstats_view(cratedb):
     dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": dburi})
     result = runner.invoke(
         cli,
         args="jobstats view",

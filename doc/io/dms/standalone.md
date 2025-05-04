@@ -18,7 +18,7 @@ pip install --upgrade 'cratedb-toolkit[kinesis]'
 1. Set up a DMS instance, replicating data to Amazon Kinesis.
 2. Transfer data from Kinesis Data Stream into CrateDB database table.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table kinesis+dms://arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
 ```
 

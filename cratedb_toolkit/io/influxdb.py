@@ -11,7 +11,7 @@ def influxdb_copy(source_url, target_url, progress: bool = False):
     """
     Synopsis
     --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
     ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
     """
 

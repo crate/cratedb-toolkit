@@ -35,7 +35,7 @@ def test_cfr_sys_export_success(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -66,7 +66,7 @@ def test_cfr_sys_export_to_archive_file(cratedb, tmp_path, caplog):
     target = os.path.join(tmp_path, "cluster-data.tgz")
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
     result = runner.invoke(
         cli,
         args=f"--debug sys-export {target}",
@@ -102,7 +102,7 @@ def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": "crate://foo.bar/", "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_TARGET": str(tmp_path)})
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -116,7 +116,7 @@ def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
 
 
 def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -172,7 +172,7 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
     shutil.copy(sys_operations_data, data_path)
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)})
     result = runner.invoke(
         cli,
         args="--debug sys-import",
@@ -198,7 +198,7 @@ def test_cfr_sys_import_failure(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": "crate://foo.bar/", "CFR_SOURCE": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_SOURCE": str(tmp_path)})
     result = runner.invoke(
         cli,
         args="--debug sys-import",

@@ -39,11 +39,12 @@ export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
 environment variables.
 
 :Environment variables:
-  `CRATEDB_CLUSTER_ID`, `CRATEDB_CLUSTER_NAME`, `CRATEDB_SQLALCHEMY_URL`, `CRATEDB_HTTP_URL`
+  `CRATEDB_CLUSTER_ID`, `CRATEDB_CLUSTER_NAME`, `CRATEDB_CLUSTER_URL`
 
 :::{note}
 - All address options are mutually exclusive.
 - The cluster identifier takes precedence over the cluster name.
+- The cluster url takes precedence over the cluster id and name.
 - Environment variables can be stored into an `.env` file in your working directory.
 :::
 

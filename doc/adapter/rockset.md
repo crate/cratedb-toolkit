@@ -77,7 +77,7 @@ docker run --rm -it --name=cratedb --publish=4200:4200 --env=CRATE_HEAP_SIZE=2g 
 Start the API server, by default listening on `localhost:4243`. Optionally,
 use the `--listen` option to configure host and port number.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+export CRATEDB_CLUSTER_URL=crate://localhost/
 ctk rockset serve
 ```
 

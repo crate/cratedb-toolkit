@@ -25,7 +25,7 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
 
     Synopsis
     --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
     ctk load table mongodb://localhost:27017/testdrive/demo
 
     Backlog
@@ -108,7 +108,7 @@ def mongodb_copy(
 
     Synopsis
     --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
     ctk load table mongodb://localhost:27017/testdrive/demo
     """
 
@@ -189,7 +189,7 @@ def mongodb_relay_cdc(
     """
     Synopsis
     --------
-    export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo-cdc
+    export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo-cdc
     ctk load table mongodb+cdc://localhost:27017/testdrive/demo
 
     Backlog

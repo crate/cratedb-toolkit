@@ -46,7 +46,7 @@ Docker or Podman in the {ref}`mongodb-services-standalone` section.
 ```shell
 export MONGODB_URL=mongodb://localhost/testdrive
 export MONGODB_URL_CTK=mongodb+cdc://localhost/testdrive/demo
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost/testdrive/demo-cdc
+export CRATEDB_CLUSTER_URL=crate://crate@localhost/testdrive/demo-cdc
 ctk load table "${MONGODB_URL_CTK}"
 ```
 
@@ -83,8 +83,8 @@ CrateDB Cloud.
 ```shell
 export MONGODB_URL=mongodb+srv://user:password@testdrive.jaxmmfp.mongodb.net/testdrive
 export MONGODB_URL_CTK=mongodb+srv+cdc://user:password@testdrive.jaxmmfp.mongodb.net/testdrive/demo
-export CRATEDB_HTTP_URL="https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/"
-export CRATEDB_SQLALCHEMY_URL="crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo-cdc?ssl=true"
+export CRATEDB_CLUSTER_URL="https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/"
+export CRATEDB_CLUSTER_URL="crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo-cdc?ssl=true"
 ```
 ```shell
 ctk load table "${MONGODB_URL_CTK}"
@@ -107,7 +107,7 @@ mongosh "${MONGODB_URL}" --eval 'db.demo.updateOne({"foo": "bar"}, { $set: { sta
 :::{rubric} Query data in CrateDB
 :::
 ```shell
-crash --hosts "${CRATEDB_HTTP_URL}" --command 'SELECT * FROM "testdrive"."demo-cdc";'
+crash --hosts "${CRATEDB_CLUSTER_URL}" --command 'SELECT * FROM "testdrive"."demo-cdc";'
 ```
 
 

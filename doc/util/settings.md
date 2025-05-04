@@ -34,7 +34,7 @@ from a CrateDB cluster and compare them against each other.
 Also handles memory and time-based settings with appropriate tolerances.
 
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/
 ctk settings compare
 ```
 

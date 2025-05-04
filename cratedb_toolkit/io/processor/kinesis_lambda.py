@@ -50,7 +50,7 @@ SQL_ECHO: bool = asbool(os.environ.get("SQL_ECHO", "false"))
 
 MESSAGE_FORMAT: str = os.environ.get("MESSAGE_FORMAT", "unknown")
 COLUMN_TYPES: str = os.environ.get("COLUMN_TYPES", "")
-CRATEDB_SQLALCHEMY_URL: str = os.environ.get("CRATEDB_SQLALCHEMY_URL", "crate://")
+CRATEDB_CLUSTER_URL: str = os.environ.get("CRATEDB_CLUSTER_URL", "crate://")
 CRATEDB_TABLE: t.Optional[str] = os.environ.get("CRATEDB_TABLE")
 
 logger = logging.getLogger(__name__)
@@ -88,11 +88,11 @@ elif MESSAGE_FORMAT == "dynamodb":
 # connections to be re-used by subsequent function invocations.
 # TODO: Examine long-running jobs about successful reconnection behavior.
 try:
-    engine = sa.create_engine(CRATEDB_SQLALCHEMY_URL, echo=SQL_ECHO)
+    engine = sa.create_engine(CRATEDB_CLUSTER_URL, echo=SQL_ECHO)
     connection = engine.connect()
-    logger.info(f"Connection to sink database succeeded: {CRATEDB_SQLALCHEMY_URL}")
+    logger.info(f"Connection to sink database succeeded: {CRATEDB_CLUSTER_URL}")
 except Exception as ex:
-    logger.exception(f"Connection to sink database failed: {CRATEDB_SQLALCHEMY_URL}")
+    logger.exception(f"Connection to sink database failed: {CRATEDB_CLUSTER_URL}")
     if ON_ERROR == "exit":
         # Signal "Resource temporarily unavailable" when connection to database fails.
         sys.exit(11)

@@ -23,7 +23,7 @@ def test_rockset_cli(cratedb):
     Quickly verify `ctk rockset serve` roughly works.
     """
     with mock.patch("cratedb_toolkit.adapter.rockset.server.main.start_service"):
-        runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+        runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
         result = runner.invoke(
             cli,
             args="serve",
@@ -48,7 +48,7 @@ def test_rockset_add_documents(cratedb, mocker):
     """
     Verify adding documents.
     """
-    mocker.patch.dict(os.environ, {"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    mocker.patch.dict(os.environ, {"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
 
     response = client.post(
         f"/v1/orgs/self/ws/{TESTDRIVE_DATA_SCHEMA}/collections/foobar/docs",
@@ -71,7 +71,7 @@ def test_rockset_query(cratedb, mocker):
     """
     Verify querying documents.
     """
-    mocker.patch.dict(os.environ, {"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    mocker.patch.dict(os.environ, {"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
 
     # Create record.
     client.post(

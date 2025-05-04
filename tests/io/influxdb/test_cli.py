@@ -23,7 +23,7 @@ def test_line_protocol_load_table_success(caplog, cratedb, needs_sqlalchemy2):
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
         args=f"load table {ilp_url}",
@@ -45,7 +45,7 @@ def test_line_protocol_load_table_wrong_cratedb_url_failure(caplog, cratedb, nee
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive"
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     with pytest.raises(ValueError) as ex:
         runner.invoke(
             cli,
@@ -72,7 +72,7 @@ def test_influxdb2_load_table(caplog, cratedb, influxdb, needs_sqlalchemy2):
     adapter.write_df(df)
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     influxdb_url = influxdb_url.replace("http://", "influxdb2://")
     result = runner.invoke(
         cli,

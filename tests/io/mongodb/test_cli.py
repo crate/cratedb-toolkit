@@ -109,7 +109,7 @@ def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
     demo.insert_many(df.to_dict("records"))
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
         args=f"load table {mongodb_url}",
@@ -139,7 +139,7 @@ def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
     transformation = Path("examples/zyp/zyp-treatment-all.yaml")
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
         args=f"load table {mongodb_url} --transformation={transformation}",
@@ -179,7 +179,7 @@ def test_mongodb_load_table_complex_lists_ignore(caplog, cratedb, mongodb):
     transformation = Path("examples/zyp/zyp-treatment-ignore.yaml")
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
         args=f"load table {mongodb_url} --transformation={transformation}",
