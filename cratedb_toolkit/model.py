@@ -22,23 +22,19 @@ class ClusterAddressOptions:
 
     cluster_id: t.Optional[str] = None
     cluster_name: t.Optional[str] = None
-    sqlalchemy_url: t.Optional[str] = None
-    http_url: t.Optional[str] = None
+    cluster_url: t.Optional[str] = None
 
     def __post_init__(self):
         self.validate()
 
     @classmethod
     def from_params(cls, **params: t.Any) -> "ClusterAddressOptions":
-        return cls(**subdict(params, keep=["cluster_id", "cluster_name", "sqlalchemy_url", "http_url"]))
+        return cls(**subdict(params, keep=["cluster_id", "cluster_name", "cluster_url"]))
 
     def validate(self):
-        cluster_options = (self.cluster_id, self.cluster_name)
-        url_options = (self.sqlalchemy_url, self.http_url)
-        try:
-            self.check_mutual(*url_options)
-        except DatabaseAddressMissingError:
-            self.check_mutual(*cluster_options)
+        cluster_options = (self.cluster_id, self.cluster_name, self.cluster_url)
+        self.check_mutual(*cluster_options)
+        return self
 
     @staticmethod
     def check_mutual(*args):

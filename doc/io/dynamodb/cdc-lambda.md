@@ -81,8 +81,8 @@ pip install 'cratedb-toolkit[kinesis]'
 :::{rubric} Configure
 :::
 ```shell
-export CRATEDB_HTTP_URL='https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/'
-export CRATEDB_SQLALCHEMY_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
+export CRATEDB_CLUSTER_URL='https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/'
+export CRATEDB_CLUSTER_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
 ```
 
 :::{rubric} CrateDB Table
@@ -91,7 +91,7 @@ The destination table name in CrateDB, where the CDC record
 processor will re-materialize CDC events into.
 ```shell
 pip install crash
-crash --hosts "${CRATEDB_HTTP_URL}" -c 'CREATE TABLE "demo-sink" (data OBJECT(DYNAMIC));'
+crash --hosts "${CRATEDB_CLUSTER_URL}" -c 'CREATE TABLE "demo-sink" (data OBJECT(DYNAMIC));'
 ```
 
 :::{rubric} Invoke pipeline
@@ -129,7 +129,7 @@ aws dynamodb execute-statement --statement \
 When the stream delivered the CDC data to the processor, and everything worked well,
 data should have materialized in the target table in CrateDB.
 ```shell
-crash --hosts "${CRATEDB_HTTP_URL}" --command \
+crash --hosts "${CRATEDB_CLUSTER_URL}" --command \
   'SELECT * FROM "demo-sink";'
 ```
 
@@ -166,13 +166,13 @@ been absorbed yet. See also [Monitoring and troubleshooting Lambda functions].
 
 Query records in CrateDB table.
 ```shell
-crash --hosts "${CRATEDB_HTTP_URL}" --command \
+crash --hosts "${CRATEDB_CLUSTER_URL}" --command \
   'SELECT * FROM "demo-sink";'
 ```
 
 Truncate CrateDB table.
 ```shell
-crash --hosts "${CRATEDB_HTTP_URL}" --command \
+crash --hosts "${CRATEDB_CLUSTER_URL}" --command \
   'DELETE FROM "demo-sink";'
 ```
 

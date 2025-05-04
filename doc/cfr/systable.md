@@ -17,10 +17,10 @@ For more information about installing CrateDB Toolkit, see {ref}`install`.
 
 ## Synopsis
 
-Define CrateDB database cluster address using the `CRATEDB_SQLALCHEMY_URL`
+Define CrateDB database cluster address using the `CRATEDB_CLUSTER_URL`
 environment variable.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+export CRATEDB_CLUSTER_URL=crate://localhost/
 ```
 
 Export system table information into timestamped file, by default into the
@@ -60,10 +60,10 @@ variables.
 ### CrateDB database address
 
 The CrateDB database address can be defined on the command line, using the
-`--sqlalchemy-url` option, or by using the `CRATEDB_SQLALCHEMY_URL`
+`--cluster-url` option, or by using the `CRATEDB_CLUSTER_URL`
 environment variable.
 ```shell
-ctk cfr --sqlalchemy-url=crate://localhost/ sys-export
+ctk cfr --cluster-url=crate://localhost/ sys-export
 ```
 
 
@@ -81,7 +81,7 @@ docker run --rm -it \
 
 Define the database URI address, and an alias to the `cfr` program.
 ```shell
-echo "CRATEDB_SQLALCHEMY_URL=crate://localhost/" > .env
+echo "CRATEDB_CLUSTER_URL=crate://localhost/" > .env
 alias cfr="docker run --rm -it --network=host --volume=$(PWD)/cfr:/cfr --env-file=.env ghcr.io/crate/cratedb-toolkit:latest ctk cfr"
 ```
 

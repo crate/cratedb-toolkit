@@ -128,7 +128,7 @@ def test_processor_kinesis_dynamodb_insert_update(cratedb, reset_handler, mocker
 
     # Configure Lambda processor per environment variables.
     handler_environment = {
-        "CRATEDB_SQLALCHEMY_URL": cratedb.get_connection_url(),
+        "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
         "MESSAGE_FORMAT": "dynamodb",
         "CRATEDB_TABLE": table_name,
     }

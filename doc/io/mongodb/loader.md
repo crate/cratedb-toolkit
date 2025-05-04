@@ -39,13 +39,13 @@ concrete usage examples.
 ### MongoDB Atlas
 Transfer a single collection from MongoDB Atlas.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/ticker/stocks
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/ticker/stocks
 ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker/stocks?batch-size=5000"
 ```
 
 Transfer all collections in database from MongoDB Atlas.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/ticker
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/ticker
 ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker?batch-size=5000"
 ```
 :::{important}
@@ -58,12 +58,12 @@ database address also MUST reference a **database**, NOT a specific collection.
 ### MongoDB Community and Enterprise
 Transfer data from MongoDB database/collection into CrateDB schema/table.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table "mongodb://localhost:27017/testdrive/demo"
 ```
 Query data in CrateDB.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
@@ -85,7 +85,7 @@ ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
 # Extended JSON, filesystem, multiple files.
 ctk load table \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --sqlalchemy-url="crate://crate@localhost:4200/datasets"
+  --CRATEDB_CLUSTER_URL-url="crate://crate@localhost:4200/datasets"
 ```
 :::{important}
 When transferring **multiple collections**, make sure to use a CrateDB database
@@ -185,7 +185,7 @@ schema `datasets`, using a batch size of 2,500 items.
 ```shell
 ctk load table \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --sqlalchemy-url="crate://crate@localhost:4200/datasets" \
+  --CRATEDB_CLUSTER_URL-url="crate://crate@localhost:4200/datasets" \
   --transformation zyp-mongodb-json-files.yaml
 ```
 

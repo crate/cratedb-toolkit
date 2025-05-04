@@ -9,7 +9,7 @@ def test_settings_list(cratedb, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi}, mix_stderr=False)
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi}, mix_stderr=False)
     result = runner.invoke(
         cli,
         args="list",
@@ -26,7 +26,7 @@ def test_settings_compare(cratedb, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi}, mix_stderr=False)
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi}, mix_stderr=False)
     result = runner.invoke(
         cli,
         args="compare --no-color",

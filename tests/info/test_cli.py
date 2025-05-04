@@ -20,7 +20,7 @@ def runner_standalone(cratedb):
     """
     Provide a Click runner for standalone CrateDB, connecting per SQLAlchemy URL.
     """
-    return CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    return CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
 
 
 @pytest.mark.parametrize("runner_factory", ["runner_standalone", "runner_managed"], ids=["standalone", "managed"])

@@ -56,7 +56,7 @@ ctk --version
 MongoDB collection.
 
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table mongodb://localhost:27017/testdrive/demo
 ```
 

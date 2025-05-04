@@ -4,7 +4,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.model import ClusterAddressOptions
-from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_cluster_url
 from cratedb_toolkit.util.cli import boot_click
 
 
@@ -12,8 +12,7 @@ def make_cli():
     @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
     @option_cluster_id
     @option_cluster_name
-    @option_sqlalchemy_url
-    @option_http_url
+    @option_cluster_url
     @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
     @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
     @click.option("--scrub", envvar="SCRUB", is_flag=True, required=False, help="Blank out identifiable information")
@@ -23,8 +22,7 @@ def make_cli():
         ctx: click.Context,
         cluster_id: str,
         cluster_name: str,
-        sqlalchemy_url: str,
-        http_url: str,
+        cluster_url: str,
         verbose: bool,
         debug: bool,
         scrub: bool,
@@ -35,7 +33,9 @@ def make_cli():
 
         # Read address parameters.
         address_options = ClusterAddressOptions.from_params(
-            cluster_id=cluster_id, cluster_name=cluster_name, sqlalchemy_url=sqlalchemy_url, http_url=http_url
+            cluster_id=cluster_id,
+            cluster_name=cluster_name,
+            cluster_url=cluster_url,
         )
         ctx.meta.update(
             {
@@ -44,8 +44,7 @@ def make_cli():
                 # TODO: Remove individual options, use `address` instead.
                 "cluster_id": cluster_id,
                 "cluster_name": cluster_name,
-                "sqlalchemy_url": sqlalchemy_url,
-                "http_url": http_url,
+                "cluster_url": cluster_url,
             }
         )
         return boot_click(ctx, verbose, debug)

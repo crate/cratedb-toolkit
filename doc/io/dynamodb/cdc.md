@@ -20,13 +20,13 @@ pip install --upgrade 'cratedb-toolkit[kinesis]'
 Consume data from Kinesis Data Stream of DynamoDB CDC events into
 CrateDB schema/table.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk load table kinesis+dynamodb+cdc://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@aws/cdc-stream?region=eu-central-1
 ```
 
 Query data in CrateDB.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ctk shell --command "SELECT * FROM testdrive.demo;"
 ctk show table "testdrive.demo"
 ```
@@ -119,7 +119,7 @@ to the wire. The default value is `0.5`.
 When aiming to transfer data to CrateDB Cloud, the shape of the target URL
 looks like that.
 ```shell
-export CRATEDB_SQLALCHEMY_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
+export CRATEDB_CLUSTER_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
 ```
 
 ### LocalStack

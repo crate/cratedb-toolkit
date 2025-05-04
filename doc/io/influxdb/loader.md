@@ -25,7 +25,7 @@ pip install --upgrade 'cratedb-toolkit[influxdb]'
 Prepare subsequent commands by defining the database address of your
 CrateDB database cluster.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 ```
 
 ### InfluxDB 2 API
@@ -82,7 +82,7 @@ connection URLs.
 ```shell
 ctk load table \
   "influxdb2://9fafc869a91a3517:T268DVLDHD8...oPic4A==@eu-central-1-1.aws.cloud2.influxdata.com/testdrive/demo?ssl=true" \
-  --sqlalchemy-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+  --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
 ## Parameters
@@ -102,7 +102,7 @@ behavior. The default value is `fail`, the possible values are:
 In order to always replace the target table, i.e. to drop and re-create it
 prior to inserting data, use `?if-exists=replace`.
 ```shell
-export CRATEDB_SQLALCHEMY_URL="crate://crate@localhost:4200/testdrive/demo?if-exists=replace"
+export CRATEDB_CLUSTER_URL="crate://crate@localhost:4200/testdrive/demo?if-exists=replace"
 ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
 ```
 

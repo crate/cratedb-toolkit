@@ -41,7 +41,7 @@ def main():
         table_name="demo-source",
         stream_name="dynamodb-cdc",
         environment={
-            "CRATEDB_SQLALCHEMY_URL": os.environ.get("CRATEDB_SQLALCHEMY_URL", "crate://"),
+            "CRATEDB_CLUSTER_URL": os.environ.get("CRATEDB_CLUSTER_URL", "crate://"),
             "CRATEDB_TABLE": "demo-sink",
         },
     )

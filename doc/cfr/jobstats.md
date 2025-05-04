@@ -3,7 +3,7 @@
 
 Collect and display job statistics.
 ```shell
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/?schema=stats
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/?schema=stats
 ```
 ```shell
 ctk cfr jobstats collect

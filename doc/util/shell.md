@@ -58,17 +58,17 @@ echo "SELECT * from sys.summits LIMIT 2;" | ctk shell --cluster-name testcluster
 Connect to a standalone CrateDB instance on localhost, authenticating with the
 default user `crate`.
 ```shell
-ctk shell --sqlalchemy-url 'crate://localhost:4200' --command "SELECT 42;"
+ctk shell --cluster-url 'crate://localhost:4200' --command "SELECT 42;"
 ```
 
 When working with self-hosted or standalone [CrateDB] instances, include
 authentication credentials into the SQLAlchemy or HTTP connection URLs.
 We recommend using the SQLAlchemy connection URL variant.
 ```shell
-export CRATEDB_HTTP_URL='https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/'
+export CRATEDB_CLUSTER_URL='https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/'
 ```
 ```shell
-export CRATEDB_SQLALCHEMY_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
+export CRATEDB_CLUSTER_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
 ```
 When using environment variables to configure ctk, the command itself becomes even shorter.
 ```shell

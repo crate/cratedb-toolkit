@@ -24,7 +24,7 @@ def test_http_root():
 
 
 def test_http_info(cratedb, mocker):
-    mocker.patch.dict(os.environ, {"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    mocker.patch.dict(os.environ, {"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
 
     response = client.get("/info/all")
     info = response.json()

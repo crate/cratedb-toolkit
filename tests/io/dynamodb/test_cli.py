@@ -17,7 +17,7 @@ def test_dynamodb_load_table(caplog, cratedb, dynamodb, dynamodb_test_manager):
     dynamodb_test_manager.load_product_catalog()
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
         args=f"load table {dynamodb_url}",

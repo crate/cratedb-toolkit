@@ -9,7 +9,7 @@ def test_cfr_info_record(cratedb, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": cratedb.database.dburi})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi})
     result = runner.invoke(
         cli,
         args="--debug info record --once",

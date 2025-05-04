@@ -14,7 +14,7 @@ uv pip install 'cratedb-toolkit[settings]'
 
 ## Usage
 ```
-export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200
+export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200
 ctk settings compare [OPTIONS]
 ```
 """  # noqa: E501
@@ -26,7 +26,7 @@ from collections import defaultdict
 
 import click
 
-from cratedb_toolkit.option import option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_url
 from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
@@ -307,7 +307,7 @@ def report_comparison(color: Color, default_settings, non_default_settings):
 
 
 @click.command()
-@option_sqlalchemy_url
+@option_cluster_url
 @click.option(
     "--large-tolerance",
     type=float,
@@ -332,7 +332,7 @@ def report_comparison(color: Color, default_settings, non_default_settings):
     help="Disable colored output",
 )
 def compare_cluster_settings(
-    sqlalchemy_url: str,
+    cluster_url: str,
     large_tolerance=2.9,
     small_tolerance=1.0,
     threshold=20.0,
@@ -358,8 +358,8 @@ def compare_cluster_settings(
         color.RESET,
     )
 
-    print(f"{BOLD}Comparing settings in {BLUE}{sqlalchemy_url}{RESET}{BOLD} against default settings{RESET}")
-    adapter = DatabaseAdapter(dburi=sqlalchemy_url)
+    print(f"{BOLD}Comparing settings in {BLUE}{cluster_url}{RESET}{BOLD} against default settings{RESET}")
+    adapter = DatabaseAdapter(dburi=cluster_url)
 
     # Acquire default settings from documentation.
     try:

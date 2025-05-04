@@ -9,6 +9,9 @@ def test_api_no_address():
     """
 
     # Create CLI with a placeholder subcommand entrypoint.
+    import click
+
+    @click.command()
     def foo():
         pass
 
@@ -32,6 +35,9 @@ def test_api_duplicate_address_managed():
     """
 
     # Create CLI with a placeholder subcommand entrypoint.
+    import click
+
+    @click.command()
     def foo():
         pass
 
@@ -55,6 +61,9 @@ def test_api_duplicate_address_standalone():
     """
 
     # Create CLI with a placeholder subcommand entrypoint.
+    import click
+
+    @click.command()
     def foo():
         pass
 
@@ -65,7 +74,7 @@ def test_api_duplicate_address_standalone():
     runner = CliRunner()
     result = runner.invoke(
         cli,
-        args="--http-url=http://localhost:4200 --sqlalchemy-url=crate://crate@localhost:4200 foo",
+        args="--cluster-id=foo --cluster-url=http://localhost:1234 foo",
         catch_exceptions=False,
     )
     assert result.exit_code == 1
