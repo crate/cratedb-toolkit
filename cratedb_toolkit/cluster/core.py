@@ -518,7 +518,7 @@ class StandaloneCluster(ClusterBase):
 
         Synopsis
         --------
-        export CRATEDB_SQLALCHEMY_URL=crate://crate@localhost:4200/testdrive/demo
+        export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 
         ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
         ctk load table mongodb://localhost:27017/testdrive/demo
@@ -611,7 +611,7 @@ class DatabaseCluster:
 
     @classmethod
     def create(
-        cls, cluster_id: str = None, cluster_name: str = None, sqlalchemy_url: str = None, http_url: str = None
+        cls, cluster_id: str = None, cluster_name: str = None, cluster_url: str = None
     ) -> t.Union[ManagedCluster, StandaloneCluster]:
         """
         Create the cluster instance based on the provided parameters.
@@ -622,8 +622,7 @@ class DatabaseCluster:
         Args:
             cluster_id: CrateDB Cloud cluster ID
             cluster_name: CrateDB Cloud cluster name
-            sqlalchemy_url: SQLAlchemy connection URL
-            http_url: HTTP connection URL
+            cluster_url: SQLAlchemy or HTTP connection URL
 
         Returns:
             A ManagedCluster or StandaloneCluster instance.
@@ -635,8 +634,8 @@ class DatabaseCluster:
 
         # Cluster handle factory: Managed vs. standalone.
         cluster: t.Union[ManagedCluster, StandaloneCluster]
-        if sqlalchemy_url is not None or http_url is not None:
-            address = DatabaseAddress.from_string(t.cast(str, sqlalchemy_url or http_url))
+        if cluster_url is not None:
+            address = DatabaseAddress.from_string(cluster_url)
             cluster = StandaloneCluster(address=address)
         elif cluster_id is not None or cluster_name is not None:
             cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name)

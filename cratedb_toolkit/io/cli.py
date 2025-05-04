@@ -7,7 +7,7 @@ from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.cluster.core import DatabaseCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
-from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_http_url, option_sqlalchemy_url
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_cluster_url
 from cratedb_toolkit.util.cli import boot_click, make_command
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 @click.argument("url")
 @option_cluster_id
 @option_cluster_name
-@option_sqlalchemy_url
-@option_http_url
+@option_cluster_url
 @click.option("--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema where to import the data")
 @click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
@@ -42,8 +41,7 @@ def load_table(
     url: str,
     cluster_id: str,
     cluster_name: str,
-    sqlalchemy_url: str,
-    http_url: str,
+    cluster_url: str,
     schema: str,
     table: str,
     format_: str,
@@ -66,7 +64,6 @@ def load_table(
     cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,
-        sqlalchemy_url=sqlalchemy_url,
-        http_url=http_url,
+        cluster_url=cluster_url,
     )
     cluster.load_table(source=source, target=target, transformation=transformation)

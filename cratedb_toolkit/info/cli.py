@@ -20,7 +20,7 @@ def help_cluster():
     Synopsis
     ========
 
-    export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+    export CRATEDB_CLUSTER_URL=crate://localhost/
     ctk info cluster
 
     """  # noqa: E501
@@ -33,7 +33,7 @@ def help_logs():
     Synopsis
     ========
 
-    export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+    export CRATEDB_CLUSTER_URL=crate://localhost/
     ctk info logs
 
     """  # noqa: E501
@@ -46,7 +46,7 @@ def help_serve():
     Synopsis
     ========
 
-    export CRATEDB_SQLALCHEMY_URL=crate://localhost/
+    export CRATEDB_CLUSTER_URL=crate://localhost/
     ctk info serve
 
     """  # noqa: E501

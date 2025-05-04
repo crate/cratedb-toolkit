@@ -1,3 +1,5 @@
+# Copyright (c) 2021-2025, Crate.io Inc.
+# Distributed under the terms of the AGPLv3 license, see LICENSE.
 import abc
 import dataclasses
 import logging
@@ -123,6 +125,9 @@ class ClusterInformation:
         return JwtResponse(**cc.get_jwt_token())
 
     def asdict(self) -> t.Dict[str, t.Any]:
+        """
+        Convert to dictionary after acquiring dynamic content.
+        """
         try:
             self.refresh()
         except Exception as e:
@@ -130,6 +135,9 @@ class ClusterInformation:
         return deepcopy(dataclasses.asdict(self))
 
     def refresh(self):
+        """
+        Refresh dynamic content. Here: The `database` attribute, after inquiring the cluster.
+        """
         from cratedb_toolkit import ManagedCluster
 
         cluster = ManagedCluster(cluster_id=self.cloud_id).probe()

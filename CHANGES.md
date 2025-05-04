@@ -8,10 +8,14 @@
 - Cloud API: SDK and CLI for CrateDB Cloud Cluster and Import APIs.
   Supports headless/unattended operations on CrateDB Cloud clusters, covering
   deploy/start/resume and data import procedures using fluent API and CLI.
-- CLI naming things: Rename `--cratedb-sqlalchemy-url` to `--sqlalchemy-url`
-  and `--cratedb-http-url` to `--http-url`.
 - Cloud API: Added JWT authentication to client API and `ctk shell`.
 - Cloud API: Added `health` and `ping` subcommands to `ctk cluster`
+
+**Breaking changes**
+
+Naming things for CLI options and environment variables:
+- Converged `--cratedb-sqlalchemy-url` vs. `--cratedb-http-url` options into single `--cluster-url`
+- Converged `CRATEDB_SQLALCHEMY_URL` vs. `CRATEDB_HTTP_URL` env vars into single `CRATEDB_CLUSTER_URL`
 
 ## 2025/04/23 v0.0.32
 - MCP: Add subsystem providing a few server and client utilities through
@@ -34,7 +38,7 @@
 - Added basic utility command `ctk tail`, for tailing a database
   table, and optionally following the tail
 - Table Loader: Added capability to load InfluxDB Line Protocol (ILP) files
-- Query Collector: Now respects `CRATEDB_SQLALCHEMY_URL` environment variable
+- Query Collector: Now respects `CRATEDB_CLUSTER_URL` environment variable
 
 ## 2024/10/13 v0.0.29
 - MongoDB: Added Zyp transformations to the CDC subsystem,

@@ -50,7 +50,7 @@ def _(limitsl):
     import pandas as pd
     import sqlalchemy as sa
 
-    sqlalchemy_url = os.getenv("CRATEDB_SQLALCHEMY_URL", "crate://?schema=stats")
+    sqlalchemy_url = os.getenv("CRATEDB_CLUSTER_URL", "crate://?schema=stats")
     engine = sa.create_engine(sqlalchemy_url)
     df = pd.read_sql(
         sql=f"""
