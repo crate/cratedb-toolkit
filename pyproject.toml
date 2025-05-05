@@ -102,6 +102,7 @@ dependencies = [
   "croud==1.13.0",
   "importlib-metadata; python_version<'3.8'",
   "importlib-resources; python_version<'3.9'",
+  "keyrings-cryptfile<2",
   "orjsonl<2",
   "pympler<1.2",
   "python-dateutil<3",
