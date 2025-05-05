@@ -1,4 +1,5 @@
 import dataclasses
+import datetime as dt
 import json
 import logging
 import os
@@ -7,6 +8,7 @@ from pathlib import Path
 
 from croud.clusters.commands import _wait_for_completed_operation
 from croud.projects.commands import _transform_backup_location
+from keyrings.cryptfile.cryptfile import CryptFileKeyring
 
 from cratedb_toolkit.exception import CroudException
 from cratedb_toolkit.meta.release import CrateDBRelease
@@ -433,8 +435,29 @@ class CloudClusterServices:
 
     def get_jwt_token(self) -> t.Dict[str, str]:
         """
+        Retrieve per-cluster JWT token from keyring, falling back to API.
+        """
+        kr = CryptFileKeyring()
+        kr.keyring_key = os.getenv("CTK_KEYRING_CRYPTFILE_PASSWORD") or "TruaframEkEk"
+        key = "ctk-cluster-jwt"
+        data = None
+        data_raw = kr.get_password(key, self.cluster_id)
+        if data_raw is not None:
+            data = json.loads(data_raw)
+            now = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=5)).isoformat()
+            if now > data["expiry"]:
+                logger.info("JWT token expired")
+                data = None
+        if data is None:
+            data = self._get_jwt_token()
+            kr.set_password(key, self.cluster_id, json.dumps(data))
+        return data
+
+    def _get_jwt_token(self) -> t.Dict[str, str]:
+        """
         Retrieve per-cluster JWT token.
         """
+        logger.info("Retrieving JWT token from API")
         data, errors = self.client.get(self.url.jwt)
         if data is None:
             if not errors:

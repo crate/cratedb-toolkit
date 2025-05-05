@@ -25,11 +25,6 @@ class JwtResponse:
     refresh: str
     token: str
 
-    def get_token(self):
-        # TODO: Persist token across sessions.
-        # TODO: Refresh automatically when expired.
-        return self.token
-
 
 @dataclasses.dataclass
 class ClusterInformation:
@@ -144,6 +139,8 @@ class ClusterInformation:
         cluster = ManagedCluster(cluster_id=self.cloud_id).probe()
         if not cluster.address:
             raise CroudException(f"Cluster not found: {self.cloud_name}")
+        if not cluster.info:
+            raise CroudException(f"Cluster information not available for: {self.cloud_name}")
         adapter = DatabaseAdapter(dburi=cluster.address.dburi, jwt=cluster.info.jwt)
         self.database = InfoContainer(adapter=adapter, scrub=True).database()
 
