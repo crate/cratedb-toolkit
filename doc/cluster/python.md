@@ -2,7 +2,7 @@
 
 # CrateDB Cluster Python API
 
-The `cratedb_toolkit.ManagedCluster` class provides higher level API/SDK
+The `cratedb_toolkit.ManagedCluster` class provides the higher level API/SDK
 entrypoints to start/deploy/resume a database cluster, inquire information
 about it, and stop/suspend it again.
 

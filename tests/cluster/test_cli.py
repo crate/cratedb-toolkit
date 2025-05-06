@@ -1,6 +1,31 @@
+import pytest
+from click import ClickException
 from click.testing import CliRunner
 
-from cratedb_toolkit.cluster.cli import cli
+from cratedb_toolkit.cluster.cli import cli, handle_command_errors
+from cratedb_toolkit.exception import CroudException
+
+
+def test_exception_handling_croud(caplog):
+    with pytest.raises(CroudException):
+        with handle_command_errors("test operation"):
+            raise CroudException("test error")
+    assert "Failed to test operation" in caplog.text
+    assert "test error" in caplog.text
+
+
+def test_exception_handling_click():
+    with pytest.raises(ClickException):
+        with handle_command_errors("test operation"):
+            raise ClickException("click error")
+
+
+def test_exception_handling_generic_to_system_exit(caplog):
+    with pytest.raises(SystemExit) as excinfo:
+        with handle_command_errors("test operation"):
+            raise ValueError("value error")
+    assert excinfo.value.code == 1
+    assert "Unexpected error on operation: test operation" in caplog.text
 
 
 def test_managed_cluster_info_default(cloud_environment):

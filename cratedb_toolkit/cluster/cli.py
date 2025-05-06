@@ -106,6 +106,11 @@ def ping(ctx: click.Context, cluster_id: str, cluster_name: str):
     with handle_command_errors("ping cluster"):
         cluster = ManagedCluster(cluster_id=cluster_id, cluster_name=cluster_name).start()
         has_db_result = bool(cluster.query("SELECT 42 AS availability_check  -- ctk"))
+
+        # Ensure cluster.info is present.
+        if not cluster.info:
+            raise CroudException("Unable to retrieve cluster information")
+
         response = {
             "meta": cluster.info.meta,
             "cloud": cluster.info.ready,

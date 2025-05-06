@@ -95,4 +95,4 @@ a patch for some item, it will be very much welcome.
 - CLI: Shrink address URLs to single parameter `--cluster-url`
 - Changelog: Notify about breaking change with input address parameter names
 - Docs: Update guidelines about input address parameter preferences
-- Managed: Use `keyring` for caching the JWT token, and compensate token expiry
+- Managed: Use `keyring` for caching the JWT token, and compensate for token expiry
