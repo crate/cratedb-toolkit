@@ -49,8 +49,12 @@ def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str
     - Environment variable. Example: `export FOOBAR=bazqux`.
     - Environment variable prefix. Example: `export APPNAME_FOOBAR=bazqux`.
     """
+
     # Load environment variables from `.env` file.
-    init_dotenv()
+    try:
+        init_dotenv()
+    except Exception as ex:
+        logger.warning(f"Failed to load environment variables from .env file: {ex}")
 
     # Decode settings from command-line arguments or environment variables.
     prog_name = prog_name or sys.argv[0]
@@ -97,8 +101,10 @@ def check_mutual_exclusiveness(
         raise ValueError(message_none)
     if values.count(None) < len(values) - 1:
         if message_multiple is None:
+            # Collect and format the specified settings.
+            specified = [f"{param}={val}" for param, val in zip(parameter_names, values) if val is not None]
             message_multiple = (
-                f"The settings are mutually exclusive, but multiple of them have been specified. {guidance}"
+                f"The settings are mutually exclusive, but multiple were specified: {', '.join(specified)}. {guidance}"
             )
         raise ValueError(message_multiple)
     return values

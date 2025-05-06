@@ -75,20 +75,28 @@ class CloudClusterUrlGenerator:
         self.cluster_id = cluster_id
         return self
 
+    def validate(self):
+        if not self.cluster_id:
+            raise ValueError("Cluster ID is not set")
+
     @property
     def home(self):
+        self.validate()
         return f"/api/v2/clusters/{self.cluster_id}/"
 
     @property
     def suspend(self):
+        self.validate()
         return f"/api/v2/clusters/{self.cluster_id}/suspend/"
 
     @property
     def jwt(self):
+        self.validate()
         return f"/api/v2/clusters/{self.cluster_id}/jwt/"
 
     @property
     def import_jobs(self):
+        self.validate()
         return f"/api/v2/clusters/{self.cluster_id}/import-jobs/"
 
 

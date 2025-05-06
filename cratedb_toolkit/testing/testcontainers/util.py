@@ -180,6 +180,11 @@ class PytestTestcontainerAdapter:
 
     @abstractmethod
     def setup(self):
+        """
+        Override this method to initialize self.container with a DockerContainer instance.
+        This method should create the container but NOT start it, as start() will be called
+        automatically after setup() completes successfully.
+        """
         raise NotImplementedError("Must be implemented by child class")
 
     def run_setup(self):

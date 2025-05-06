@@ -1,5 +1,6 @@
 :::{rubric} Cluster address
 :::
+
 The program provides various options for addressing the database cluster
 in different situations, managed or not.
 
