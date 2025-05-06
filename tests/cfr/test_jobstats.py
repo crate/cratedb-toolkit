@@ -48,7 +48,7 @@ def test_cfr_jobstats_collect_anonymized(cratedb, caplog):
     dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_SQLALCHEMY_URL": dburi})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": dburi})
     result = runner.invoke(
         cli,
         args="jobstats collect --once --anonymize",
