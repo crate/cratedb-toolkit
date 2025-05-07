@@ -10,6 +10,7 @@
   deploy/start/resume and data import procedures using fluent API and CLI.
 - Cloud API: Added JWT authentication to client API and `ctk shell`.
 - Cloud API: Added `health` and `ping` subcommands to `ctk cluster`
+- Add baseline infrastructure for emulating materialized views.
 
 **Breaking changes**
 
