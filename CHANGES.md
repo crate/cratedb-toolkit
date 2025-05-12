@@ -10,6 +10,7 @@
   deploy/start/resume and data import procedures using fluent API and CLI.
 - Cloud API: Added JWT authentication to client API and `ctk shell`.
 - Cloud API: Added `health` and `ping` subcommands to `ctk cluster`
+- CLI: Downgraded to Click 8.1, as the code is not compatible with 8.2 yet
 
 **Breaking changes**
 
