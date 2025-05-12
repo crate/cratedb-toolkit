@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/05/12 v0.0.33
 - CFR: Enhanced job statistics with optional reporting database support. Thanks, @WalBeh.
 - Settings: Added settings comparison utility. Thanks, @WalBeh.
 - Meta: Added parser for `https://cratedb.com/releases.json` file. Thanks, @WalBeh.
