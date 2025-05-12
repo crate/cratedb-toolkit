@@ -17,6 +17,32 @@
 - Search:
   - https://vectorvfs.readthedocs.io/en/latest/usage.html
   - https://news.ycombinator.com/item?id=43896011
+  - https://exa.ai/
+  - https://news.ycombinator.com/item?id=43906841
+  - https://github.com/TrevorS/rhizome
+    via: https://news.ycombinator.com/item?id=43963868
+- Compat: Offer RESP3, like Kronotop?
+  https://github.com/kronotop/kronotop
+- `ctk list {tables|views}`
+  ```sql
+  SELECT
+    c.table_schema,
+    c.table_name,
+    c.column_name,
+    c.data_type,
+    t.table_type
+  FROM
+    "information_schema"."columns" c
+  JOIN
+    "information_schema"."tables" t ON c.table_schema = t.table_schema AND c.table_name = t.table_name
+  ORDER BY
+    table_schema,
+    table_name,
+    ordinal_position;;
+  ```
+- `ctk mount table`
+- Apply input sanitizer against shell escapes and HTML shenanigans.
+  - https://nh3.readthedocs.io/
 
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec
