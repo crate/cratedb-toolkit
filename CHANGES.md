@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Added lost `pytest` dependencies to `cratedb-toolkit[testing]`
 
 ## 2025/05/13 v0.0.34
 - Downgraded to sqlalchemy-cratedb 0.41, version 0.42 is not GA yet
