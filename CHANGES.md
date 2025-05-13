@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Downgraded to sqlalchemy-cratedb 0.41, version 0.42 is not GA yet
 
 ## 2025/05/12 v0.0.33
 - CFR: Enhanced job statistics with optional reporting database support. Thanks, @WalBeh.
