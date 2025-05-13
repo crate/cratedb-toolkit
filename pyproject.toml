@@ -233,6 +233,9 @@ optional-dependencies.test-mongodb = [
   "testcontainers-mongodb==0.0.1rc1",
 ]
 optional-dependencies.testing = [
+  "pytest<9",
+  "pytest-cov<7",
+  "pytest-mock<4",
   "testcontainers<5",
 ]
 urls.Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
