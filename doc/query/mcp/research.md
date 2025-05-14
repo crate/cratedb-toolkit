@@ -51,6 +51,7 @@ The [MCP specification](https://spec.modelcontextprotocol.io).
 - https://github.com/stuzero/pg-mcp ([discuss](https://news.ycombinator.com/item?id=43520953))
 - https://github.com/runekaagaard/mcp-alchemy
 - https://github.com/OpenLinkSoftware/mcp-sqlalchemy-server
+- https://github.com/googleapis/genai-toolbox
 
 ### Docs and Knowledge
 
