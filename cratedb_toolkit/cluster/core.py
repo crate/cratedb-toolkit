@@ -15,6 +15,7 @@ from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootService
 from cratedb_toolkit.cluster.guide import DataImportGuide
 from cratedb_toolkit.cluster.model import ClientBundle, ClusterBase, ClusterInformation
 from cratedb_toolkit.config import CONFIG
+from cratedb_toolkit.datasets import load_dataset
 from cratedb_toolkit.exception import (
     CroudException,
     DatabaseAddressMissingError,
@@ -339,6 +340,14 @@ class ManagedCluster(ClusterBase):
         return self
 
     @flexfun(domain="runtime")
+    def load_dataset(self, name: str, table: str = None):
+        if table is None:
+            table = name.replace("/", ".")
+        with jwt_token_patch(self.info.jwt.token):
+            ds = load_dataset(name)
+            return ds.dbtable(dburi=self.address.dburi, table=table).load()
+
+    @flexfun(domain="runtime")
     def load_table(
         self,
         source: InputOutputResource,
@@ -618,6 +627,10 @@ class DatabaseCluster:
         Factory method to create a cluster instance based on the provided options (ClusterAddressOptions).
         """
         return DatabaseCluster.create(**options.asdict())
+
+    @classmethod
+    def from_ctx(cls, ctx: "click.Context") -> t.Union[ManagedCluster, StandaloneCluster]:
+        return DatabaseCluster.from_options(ctx.meta["address"])
 
     @classmethod
     def create(

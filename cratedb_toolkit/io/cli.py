@@ -3,26 +3,18 @@ import typing as t
 from pathlib import Path
 
 import click
-from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.cluster.core import DatabaseCluster
 from cratedb_toolkit.model import InputOutputResource, TableAddress
 from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_cluster_url
-from cratedb_toolkit.util.cli import boot_click, make_command
+from cratedb_toolkit.util.app import make_cli
+from cratedb_toolkit.util.cli import make_command
 
 logger = logging.getLogger(__name__)
 
 
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
-@click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
-@click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
-@click.version_option()
-@click.pass_context
-def cli(ctx: click.Context, verbose: bool, debug: bool):
-    """
-    Load data into CrateDB.
-    """
-    return boot_click(ctx, verbose, debug)
+cli = make_cli()
+cli.help = "Load data into CrateDB."
 
 
 @make_command(cli, name="table")
@@ -67,3 +59,34 @@ def load_table(
         cluster_url=cluster_url,
     )
     cluster.load_table(source=source, target=target, transformation=transformation)
+
+    logger.info(f"Importing table succeeded. source={source}, target={target}")
+
+
+@make_command(cli, name="dataset")
+@click.argument("name", envvar="DATASET_NAME", type=str)
+@click.option("--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema where to import the data")
+@click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
+@click.pass_context
+def load_dataset(
+    ctx: click.Context,
+    name: str,
+    schema: str,
+    table: str,
+):
+    """
+    Import named dataset into CrateDB and CrateDB Cloud clusters.
+    """
+
+    # Adjust/convert target table parameter.
+    effective_table = None
+    if table is not None:
+        table_address = TableAddress(schema=schema, table=table)
+        effective_table = table_address.fullname
+
+    # Dispatch "load dataset" operation.
+    cluster = DatabaseCluster.from_ctx(ctx)
+    ds = cluster.load_dataset(name=name, table=effective_table)
+
+    logger.info(f"Importing dataset succeeded. Name: {name}, Table: {ds.table}")
+    logger.info(f"Peek SQL: SELECT * FROM {ds.table} LIMIT 42;")
