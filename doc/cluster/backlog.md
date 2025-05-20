@@ -25,6 +25,13 @@ a patch for some item, it will be very much welcome.
 - Add Apache Spark / Databricks to the client bundle?
 - Use universal `DatabaseCluster` across the board. For that to happen, it will
   need to gain an `DatabaseCluster.from_env()` entry point.
+- Add `WorkspaceClient` as root entrypoint API?
+  - https://github.com/databricks/databricks-sdk-py
+  - https://github.com/databricks/databricks-sdk-py/tree/main/examples/workspace/warehouses
+  - https://github.com/databricks/databricks-sdk-py/blob/main/examples/workspace/statement_execution/execute_tables.py
+  - https://databricks-sdk-py.readthedocs.io/en/latest/dataplane.html
+  - https://github.com/databricks/databricks-sdk-py/blob/v0.53.0/databricks/sdk/service/serving.py#L4852-L5000
+  - https://docs.databricks.com/aws/en/dev-tools/databricks-utils
 
 ## Iteration +3
 - Complete UI: `ctk cluster health`
