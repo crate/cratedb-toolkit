@@ -41,7 +41,7 @@ Using [cratedb-mcp].
 ```shell
 export CRATEDB_MCP_HTTP_URL=http://localhost:4200
 mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
-  uvx 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments' \
+  uvx cratedb-mcp serve \
   | jq
 ```
 Using [mcp-alchemy].
@@ -112,7 +112,7 @@ ctk query mcp --server-name=postgres-basic launch
 
 
 [CrateDB]: https://cratedb.com/database
-[cratedb-mcp]: https://github.com/crate/cratedb-mcp
+[cratedb-mcp]: https://cratedb.com/docs/guide/integrate/mcp/cratedb-mcp.html
 [CrateDB Cloud]: https://cratedb.com/docs/cloud/
 [CrateDB Toolkit]: https://cratedb-toolkit.readthedocs.io/
 [Docker]: https://www.docker.com/
