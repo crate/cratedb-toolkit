@@ -9,15 +9,15 @@ The CrateDB MCP server specialises on advanced CrateDB SQL operations by blendin
 knowledge base resources from CrateDB's documentation about query optimizations.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: <https://github.com/crate/cratedb-mcp>
+:Homepage: <https://cratedb.com/docs/guide/integrate/mcp/cratedb-mcp.html>
 :Validated with CrateDB: True
-:Install: `uv pip install 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments'`
-:Run: `cratedb-mcp`
+:Install: `uv pip install cratedb-mcp`
+:Run: `cratedb-mcp serve`
 :Example:
   ```shell
   export CRATEDB_MCP_HTTP_URL=http://localhost:4200
   mcpt call query_sql --params '{"query":"SELECT * FROM sys.summits LIMIT 3"}' \
-    uvx 'cratedb-mcp @ git+https://github.com/crate/cratedb-mcp@packaging-adjustments' \
+    uvx cratedb-mcp serve \
     | jq
   ```
 
