@@ -87,7 +87,6 @@ Servers <server>
 Landscape <landscape>
 Sandbox <sandbox>
 Backlog <backlog>
-Research <research>
 ```
 
 
