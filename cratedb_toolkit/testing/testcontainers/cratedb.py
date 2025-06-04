@@ -54,7 +54,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
     """
 
     CRATEDB_USER = os.environ.get("CRATEDB_USER", "crate")
-    CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "")
+    CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "crate")
     CRATEDB_DB = os.environ.get("CRATEDB_DB", "doc")
     KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
     CMD_OPTS = {
