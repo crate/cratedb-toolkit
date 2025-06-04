@@ -4,6 +4,7 @@ import typing as t
 from unittest import mock
 
 import pytest
+from verlib2 import Version
 
 pymongo = pytest.importorskip("pymongo", reason="Skipping tests because pymongo is not installed")
 
@@ -11,6 +12,9 @@ from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
 from tests.conftest import check_sqlalchemy1
 
 check_sqlalchemy1(allow_module_level=True)
+
+if Version(pymongo.version) >= Version("4.9"):
+    raise pytest.skip("This feature or subsystem needs PyMongo 4.8", allow_module_level=True)
 
 from cratedb_toolkit.adapter.pymongo import PyMongoCrateDBAdapter
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId
