@@ -103,7 +103,7 @@ class BulkProcessor:
     https://cratedb.com/docs/crate/reference/en/latest/interfaces/http.html#bulk-operations
     """
 
-    connection: sa.Connection
+    connection: sa.engine.Connection
     data: t.Iterable[t.List[t.Dict[str, t.Any]]]
     batch_to_operation: t.Callable[[t.List[t.Dict[str, t.Any]]], SQLOperation]
     progress_bar: t.Union[tqdm, None] = None

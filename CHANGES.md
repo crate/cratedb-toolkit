@@ -16,6 +16,7 @@
 - CDC: Enabled loading DMS events from Kinesis streams and stream-dump files
 - CDC: Added subcommand `ctk dms table-mappings`
 - Dependencies: Updated to `commons-codec>=0.0.23`
+- I/O: Adapter for PostgreSQL full-load using ingestr
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`

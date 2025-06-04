@@ -169,13 +169,23 @@ optional-dependencies.influxdb = [
   "influxio>=0.5,<1",
 ]
 optional-dependencies.io = [
+  "cratedb-toolkit[io-base]",
+  "sqlalchemy>=2",
+]
+optional-dependencies.io-base = [
   "cr8",
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
   "pandas>=1,<2.3",
   "polars<1.32",
-  "sqlalchemy>=2",
   "universal-pathlib<0.3",
+]
+optional-dependencies.io-ingestr = [
+  "cratedb-toolkit[io-base]",
+  "dlt>=1.10",
+  "dlt-cratedb>=0.0.1",
+  "ingestr>=0.11,<0.14",
+  "sqlalchemy>=1",
 ]
 optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.3",
@@ -229,7 +239,7 @@ optional-dependencies.test = [
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",
-  "testcontainers[azurite,localstack,minio]",
+  "testcontainers[azurite,localstack,minio,postgres]",
 ]
 optional-dependencies.test-mongodb = [
   "cratedb-toolkit[test]",
@@ -340,6 +350,7 @@ markers = [
   "influxdb",
   "kinesis",
   "mongodb",
+  "postgresql",
   "pymongo",
   "python",
   "shell",
@@ -421,6 +432,6 @@ release = [
   { cmd = "twine upload --skip-existing dist/*" },
 ]
 
-test = { cmd = "pytest" }
+test = { cmd = "pytest -m 'not postgresql'" }
 
 build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }

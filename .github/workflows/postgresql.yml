@@ -1,0 +1,118 @@
+---
+name: "Tests: PostgreSQL"
+
+on:
+  pull_request:
+    paths:
+    - '.github/workflows/postgresql.yml'
+    - 'cratedb_toolkit/io/ingestr/**'
+    - 'tests/io/ingestr/*postgresql*'
+    - 'pyproject.toml'
+  push:
+    branches: [ main ]
+    paths:
+    - '.github/workflows/postgresql.yml'
+    - 'cratedb_toolkit/io/ingestr/**'
+    - 'tests/io/ingestr/*postgresql*'
+    - 'pyproject.toml'
+
+  # Allow job to be triggered manually.
+  workflow_dispatch:
+
+  # Run the job each night after CrateDB nightly has been published.
+  schedule:
+    - cron: '0 3 * * *'
+
+# Cancel in-progress jobs when pushing to the same branch.
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+
+  tests:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        cratedb-version: [
+          "nightly",
+        ]
+        postgresql-version: [
+          "latest",
+        ]
+        python-version: [
+          "3.10",
+          "3.13",
+        ]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+      CRATEDB_VERSION: ${{ matrix.cratedb-version }}
+      POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}
+      UV_SYSTEM_PYTHON: true
+      TC_KEEPALIVE: true  # Do not tear down Testcontainers
+      INGESTR_DISABLE_TELEMETRY: true
+
+    services:
+      cratedb:
+        image: crate/crate:${{ matrix.cratedb-version }}
+        ports:
+          - 4200:4200
+          - 5432:5432
+        env:
+          CRATE_HEAP_SIZE: 4g
+      postgresql:
+        image: postgres:${{ matrix.postgresql-version }}
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+
+    name: "
+    Python ${{ matrix.python-version }},
+    PostgreSQL ${{ matrix.postgresql-version }},
+    OS ${{ matrix.os }}
+    "
+    steps:
+
+    - name: Acquire sources
+      uses: actions/checkout@v4
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+        cache-suffix: ${{ matrix.python-version }}
+        enable-cache: true
+        version: "latest"
+
+    - name: Set up project
+      run: |
+
+        # Install package in editable mode.
+        uv pip install --editable='.[io-ingestr,test,develop]'
+
+    - name: Run linter and software tests
+      run: |
+        pytest -m postgresql
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        files: ./coverage.xml
+        flags: postgresql
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
