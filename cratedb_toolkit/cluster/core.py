@@ -20,6 +20,7 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
+from cratedb_toolkit.io.iceberg import from_iceberg
 from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
@@ -606,6 +607,9 @@ class StandaloneCluster(ClusterBase):
                 else:
                     logger.error("Data loading failed or incomplete")
                     self._load_table_result = False
+
+        elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
+            return from_iceberg(str(source_url_obj), target_url)
 
         elif ingestr_select(source_url):
             if ingestr_copy(source_url, self.address, progress=True):
