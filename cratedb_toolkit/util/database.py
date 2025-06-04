@@ -431,7 +431,7 @@ def sa_is_empty(thing):
     return isinstance(thing, AsBoolean)
 
 
-def decode_database_table(url: str) -> t.Tuple[str, t.Union[str, None]]:
+def decode_database_table(url: str) -> t.Tuple[t.Union[str, None], t.Union[str, None]]:
     """
     Decode database and table names from database URI path and/or query string.
 
