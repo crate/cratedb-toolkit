@@ -20,6 +20,7 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
+from cratedb_toolkit.io.iceberg import from_iceberg, to_iceberg
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import asbool
@@ -569,6 +570,9 @@ class StandaloneCluster(ClusterBase):
             else:
                 raise NotImplementedError("Loading full data via Kinesis not implemented yet")
 
+        elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
+            return from_iceberg(str(source_url_obj), target_url)
+
         elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:
             if "+cdc" in source_url_obj.scheme:
                 source_url_obj.scheme = source_url_obj.scheme.replace("+cdc", "")
@@ -596,6 +600,30 @@ class StandaloneCluster(ClusterBase):
 
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
+
+        return self
+
+    def save_table(
+        self, source: TableAddress, target: InputOutputResource, transformation: t.Union[Path, None] = None
+    ) -> "StandaloneCluster":
+        """
+        Export data from a database table on a standalone CrateDB Server.
+
+        Synopsis
+        --------
+        export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
+
+        ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
+        ctk load table mongodb://localhost:27017/testdrive/demo
+        """
+        source_url = self.address.dburi
+        target_url_obj = URL(target.url)
+        # source_url = source.url
+
+        if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
+            return to_iceberg(source_url, target.url)
+        else:
+            raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
 
         return self
 
