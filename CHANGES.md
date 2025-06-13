@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- I/O: Enabled loading DMS events from Kinesis streams and dump files
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`

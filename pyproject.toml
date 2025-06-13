@@ -178,7 +178,7 @@ optional-dependencies.io = [
 ]
 optional-dependencies.kinesis = [
   "aiobotocore<2.23",
-  "async-kinesis<1.2",
+  "async-kinesis @ git+https://github.com/daq-tools/async-kinesis@stream-arn",
   "botocore<1.39",
   "commons-codec>=0.0.20",
   "lorrystream[carabas]>=0.0.6",
