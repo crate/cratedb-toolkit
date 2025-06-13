@@ -180,7 +180,7 @@ optional-dependencies.kinesis = [
   "aiobotocore<2.24",
   "async-kinesis<3",
   "botocore<1.39",
-  "commons-codec>=0.0.20",
+  "commons-codec @ git+https://github.com/crate/commons-codec@main",
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.mcp = [

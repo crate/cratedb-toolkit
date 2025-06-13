@@ -13,7 +13,7 @@ import botocore
 from yarl import URL
 
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter
-from cratedb_toolkit.io.kinesis.adapter import KinesisAdapter
+from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter
 from tests.io.dynamodb.manager import DynamoDBTestManager
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class DynamoDBFixture:
         self.container = None
         self.url = None
         self.dynamodb_adapter: typing.Union[DynamoDBAdapter, None] = None
-        self.kinesis_adapter: typing.Union[KinesisAdapter, None] = None
+        self.kinesis_adapter: typing.Union[KinesisStreamAdapter, None] = None
         self.setup()
 
     def setup(self):
@@ -53,7 +53,7 @@ class DynamoDBFixture:
         self.container.start()
 
         self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}/?region=us-east-1"))
-        self.kinesis_adapter = KinesisAdapter(
+        self.kinesis_adapter = KinesisStreamAdapter(
             URL(f"{self.get_connection_url_kinesis_dynamodb_cdc()}/?region=us-east-1")
         )
 
