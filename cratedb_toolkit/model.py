@@ -194,6 +194,8 @@ class TableAddress:
         """
         from cratedb_toolkit.util.database import DatabaseAdapter
 
+        if self.table is None:
+            raise ValueError("Table name must be specified")
         return DatabaseAdapter.quote_relation_name(f"{self.schema}.{self.table}")
 
     @classmethod

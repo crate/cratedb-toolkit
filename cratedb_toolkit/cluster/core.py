@@ -532,15 +532,18 @@ class StandaloneCluster(ClusterBase):
 
         ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
         ctk load table mongodb://localhost:27017/testdrive/demo
+        ctk load table kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
+        ctk load table kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
-        source_url_obj = URL(source.url)
         source_url = source.url
         target_url = self.address.dburi
 
-        if source_url_obj.scheme.startswith("dynamodb"):
+        source_url_obj = URL(source.url)
+
+        if source_url.startswith("dynamodb"):
             from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
 
-            if dynamodb_copy(str(source_url_obj), target_url, progress=True):
+            if dynamodb_copy(source_url, target_url, progress=True):
                 self._load_table_result = True
             else:
                 logger.error("Data loading failed or incomplete")
@@ -561,13 +564,10 @@ class StandaloneCluster(ClusterBase):
                 logger.error("Data loading failed or incomplete")
                 self._load_table_result = False
 
-        elif source_url_obj.scheme.startswith("kinesis"):
-            if "+cdc" in source_url_obj.scheme:
-                from cratedb_toolkit.io.kinesis.api import kinesis_relay
+        elif source_url.startswith("kinesis"):
+            from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
-                return kinesis_relay(str(source_url_obj), target_url)
-            else:
-                raise NotImplementedError("Loading full data via Kinesis not implemented yet")
+            return kinesis_relay(source_url, target_url)
 
         elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:
             if "+cdc" in source_url_obj.scheme:
