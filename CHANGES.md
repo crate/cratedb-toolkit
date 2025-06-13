@@ -5,6 +5,7 @@
   same, but provided using a dedicated package now
 - Dependencies: Updated to `croud-1.14`
 - Dependencies: Updated to `async-kinesis-2.0.0`. Thanks, @hampsterx.
+- CDC: Enabled loading DMS events from Kinesis streams and stream-dump files
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`

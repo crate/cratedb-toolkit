@@ -1,7 +1,10 @@
+import abc
 import asyncio
 import typing as t
+from pathlib import Path
 
 import boto3
+import orjsonl
 from aiobotocore.session import AioSession
 from kinesis import Consumer, JsonProcessor, Producer
 from yarl import URL
@@ -9,7 +12,35 @@ from yarl import URL
 from cratedb_toolkit.util.data import asbool
 
 
-class KinesisAdapter:
+class KinesisAdapterBase(abc.ABC):
+    @classmethod
+    def factory(cls, kinesis_url: URL) -> t.Union["KinesisFileAdapter", "KinesisStreamAdapter"]:
+        path = Path(kinesis_url.path)
+        if path.exists():
+            if path.is_file():
+                return KinesisFileAdapter(kinesis_url)
+            else:
+                raise ValueError(f"Path exists but is not a file: {path}")
+        return KinesisStreamAdapter(kinesis_url)
+
+    @abc.abstractmethod
+    def consume_forever(self, handler: t.Callable):
+        pass
+
+    @abc.abstractmethod
+    def consume_once(self, handler: t.Callable):
+        pass
+
+    @abc.abstractmethod
+    def stop(self):
+        pass
+
+
+class KinesisStreamAdapter(KinesisAdapterBase):
+    """
+    Read a Kinesis stream from an API.
+    """
+
     # Configuration for Kinesis shard iterators.
     # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html
     # Map `start` option to `ShardIteratorType`.
@@ -22,22 +53,23 @@ class KinesisAdapter:
 
     def __init__(self, kinesis_url: URL):
         self.async_session = AioSession()
-        self.async_session.set_credentials(access_key=kinesis_url.user, secret_key=kinesis_url.password)
-
         self.session = boto3.Session(
-            aws_access_key_id=kinesis_url.user,
-            aws_secret_access_key=kinesis_url.password,
             region_name=kinesis_url.query.get("region"),
         )
+        if kinesis_url.user:
+            self.session._session.set_credentials(access_key=kinesis_url.user, secret_key=kinesis_url.password)
+            self.async_session.set_credentials(access_key=kinesis_url.user, secret_key=kinesis_url.password)
 
         self.endpoint_url = None
         if kinesis_url.host and kinesis_url.host.lower() != "aws":
             self.endpoint_url = f"http://{kinesis_url.host}:{kinesis_url.port}"
 
+        # TODO: Almost every URL query param becomes its own instance attribute, inflating the object.
+        #       A small @dataclass (e.g. StreamConfig) would cut clutter and make validation explicit.
         self.kinesis_url = kinesis_url
         self.stream_name = self.kinesis_url.path.lstrip("/")
 
-        self.region_name: str = self.kinesis_url.query.get("region", "us-east-1")
+        self.region_name: t.Union[str, None] = self.kinesis_url.query.get("region", None)
         self.batch_size: int = int(self.kinesis_url.query.get("batch-size", 100))
         self.create: bool = asbool(self.kinesis_url.query.get("create", "false"))
         self.create_shards: int = int(self.kinesis_url.query.get("create-shards", 1))
@@ -127,3 +159,27 @@ class KinesisAdapter:
             create_stream_shards=self.create_shards,
         ) as producer:
             await producer.put(data)
+
+
+class KinesisFileAdapter(KinesisAdapterBase):
+    """
+    Read a Kinesis stream dump file from disk.
+    """
+
+    def __init__(self, kinesis_url: URL):
+        self.kinesis_url = kinesis_url
+        self.path = Path(self.kinesis_url.path)
+        self.stream_name = self.path.name
+
+    def consume_forever(self, handler: t.Callable):
+        return self.consume(handler)
+
+    def consume_once(self, handler: t.Callable):
+        return self.consume(handler)
+
+    def consume(self, handler: t.Callable):
+        for item in orjsonl.stream(self.path):
+            handler(item)
+
+    def stop(self):
+        pass

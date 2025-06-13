@@ -346,7 +346,7 @@ class ManagedCluster(ClusterBase):
         transformation: t.Union[Path, None] = None,
     ) -> "ManagedCluster":
         """
-        Load data into a database table on CrateDB Cloud.
+        Load data into managed CrateDB Cloud cluster.
 
         Synopsis
         --------
@@ -524,7 +524,7 @@ class StandaloneCluster(ClusterBase):
         self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
     ) -> "StandaloneCluster":
         """
-        Load data into a database table on a standalone CrateDB Server.
+        Load data into unmanaged CrateDB cluster.
 
         Synopsis
         --------
@@ -532,10 +532,13 @@ class StandaloneCluster(ClusterBase):
 
         ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
         ctk load table mongodb://localhost:27017/testdrive/demo
+        ctk load table kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
+        ctk load table kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
-        source_url_obj = URL(source.url)
         source_url = source.url
         target_url = self.address.dburi
+
+        source_url_obj = URL(source.url)
 
         if source_url_obj.scheme.startswith("dynamodb"):
             from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
@@ -562,12 +565,10 @@ class StandaloneCluster(ClusterBase):
                 self._load_table_result = False
 
         elif source_url_obj.scheme.startswith("kinesis"):
-            if "+cdc" in source_url_obj.scheme:
-                from cratedb_toolkit.io.kinesis.api import kinesis_relay
+            from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
-                return kinesis_relay(str(source_url_obj), target_url)
-            else:
-                raise NotImplementedError("Loading full data via Kinesis not implemented yet")
+            kinesis_relay(source_url, target_url)
+            self._load_table_result = True
 
         elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:
             if "+cdc" in source_url_obj.scheme:

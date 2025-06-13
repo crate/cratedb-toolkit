@@ -173,9 +173,9 @@ class DatabaseAddress:
     @property
     def schema(self) -> t.Union[str, None]:
         """
-        Return the `?schema=` query parameter of the database URI.
+        Return the schema name from the URL path or from the `?schema=` query parameter of the database URI.
         """
-        return self.uri.query_params.get("schema")
+        return self.uri.query_params.get("schema") or self.uri.path.lstrip("/")
 
 
 @dataclasses.dataclass
@@ -194,7 +194,11 @@ class TableAddress:
         """
         from cratedb_toolkit.util.database import DatabaseAdapter
 
-        return DatabaseAdapter.quote_relation_name(f"{self.schema}.{self.table}")
+        if not self.table:
+            raise ValueError("Table name must be specified")
+        # Default missing schema to CrateDB’s "doc"
+        schema = self.schema or "doc"
+        return DatabaseAdapter.quote_relation_name(f"{schema}.{self.table}")
 
     @classmethod
     def from_string(cls, table_name_full: str) -> "TableAddress":
