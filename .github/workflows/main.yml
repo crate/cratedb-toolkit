@@ -29,7 +29,6 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: [
-          "3.8",
           "3.9",
           "3.12",
         ]
@@ -70,12 +69,6 @@ jobs:
 
         # Install sponge.
         sudo apt-get install moreutils
-
-        # `setuptools 64` adds support for editable install hooks (PEP 660).
-        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
-        # `setuptools 71` significantly re-vendors setuptools packages, causing hiccups on Python 3.8.
-        # https://github.com/pypa/setuptools/pull/4457
-        pip install "setuptools>=64,<71" --upgrade
 
         # Install package in editable mode.
         pip install --use-pep517 --prefer-binary --editable='.[full,test,develop]'
@@ -136,12 +129,6 @@ jobs:
 
         # Install sponge.
         sudo apt-get install moreutils
-
-        # `setuptools 64` adds support for editable install hooks (PEP 660).
-        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
-        # `setuptools 71` significantly re-vendors setuptools packages, causing hiccups on Python 3.8.
-        # https://github.com/pypa/setuptools/pull/4457
-        pip install "setuptools>=64,<71" --upgrade
 
         # Install package in editable mode.
         pip install --use-pep517 --prefer-binary --editable='.[full,test,develop]'

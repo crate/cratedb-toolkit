@@ -41,7 +41,6 @@ jobs:
         # TODO: yarl, dependency of influxio, is currently not available on Python 3.12.
         #       https://github.com/aio-libs/yarl/pull/942
         python-version: [
-          "3.8",
           "3.9",
           "3.11",
         ]
