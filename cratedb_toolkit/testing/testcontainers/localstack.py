@@ -23,14 +23,14 @@ class LocalStackContainerWithKeepalive(KeepaliveContainer, LocalStackContainer):
 
     It honors the `TC_KEEPALIVE` and `LOCALSTACK_VERSION` environment variables.
 
-    Defining `TC_KEEPALIVE` will set a signal not to shut down the container
-    after running the test cases, in order to speed up subsequent invocations.
+    Defining `TC_KEEPALIVE` sets a signal to not shut down the container
+    after running the test cases, to speed up later invocations.
 
-    `LOCALSTACK_VERSION` will define the designated LocalStack version, which is
-    useful when used within a test matrix. Its default value is `latest`.
+    `LOCALSTACK_VERSION` defines the designated LocalStack version, which is
+    useful when used within a test matrix.
     """
 
-    LOCALSTACK_VERSION = os.environ.get("LOCALSTACK_VERSION", "3.7")
+    LOCALSTACK_VERSION = os.environ.get("LOCALSTACK_VERSION", "4.5")
 
     def __init__(
         self,
