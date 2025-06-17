@@ -34,7 +34,7 @@ class DynamoDBFixture:
     """
     A little helper wrapping Testcontainer's `LocalStackContainer`.
 
-    TODO: Generalize into `LocalStackFixture`.
+    TODO: Generalize into `LocalStackFixture`, see also `tests.io.kinesis.conftest.KinesisFixture`.
     """
 
     def __init__(self):
