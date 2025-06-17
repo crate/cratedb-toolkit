@@ -30,7 +30,7 @@ jobs:
         os: ["ubuntu-latest"]
         python-version: [
           "3.9",
-          "3.12",
+          "3.13",
         ]
 
     env:
@@ -165,7 +165,10 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.9", "3.12"]
+        python-version: [
+          "3.9",
+          "3.13",
+        ]
 
     env:
       OS: ${{ matrix.os }}
@@ -230,7 +233,10 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.9", "3.12"]
+        python-version: [
+          "3.9",
+          "3.12",
+        ]
 
     env:
       OS: ${{ matrix.os }}
@@ -295,7 +301,10 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.9", "3.12"]
+        python-version: [
+          "3.9",
+          "3.13",
+        ]
 
     env:
       OS: ${{ matrix.os }}
