@@ -5,7 +5,7 @@ from pathlib import Path
 
 from boltons.urlutils import URL
 from polars.exceptions import PanicException
-from zyp.model.project import TransformationProject
+from tikray.model.project import ProjectTransformation
 
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
@@ -19,7 +19,13 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 logger = logging.getLogger(__name__)
 
 
-def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limit: int = 0, progress: bool = False):
+def mongodb_copy_migr8(
+    source_url,
+    target_url,
+    transformation: t.Union[Path, TransformationManager, ProjectTransformation, None] = None,
+    limit: int = 0,
+    progress: bool = False,
+):
     """
     Transfer MongoDB collection using migr8.
 
@@ -100,7 +106,7 @@ def mongodb_copy_migr8(source_url, target_url, transformation: Path = None, limi
 def mongodb_copy(
     source_url: t.Union[str, URL],
     target_url: t.Union[str, URL],
-    transformation: t.Union[Path, TransformationManager, TransformationProject, None] = None,
+    transformation: t.Union[Path, TransformationManager, ProjectTransformation, None] = None,
     progress: bool = False,
 ):
     """
@@ -184,7 +190,7 @@ def mongodb_copy(
 def mongodb_relay_cdc(
     source_url,
     target_url,
-    transformation: t.Union[Path, TransformationManager, TransformationProject, None] = None,
+    transformation: t.Union[Path, TransformationManager, ProjectTransformation, None] = None,
 ):
     """
     Synopsis

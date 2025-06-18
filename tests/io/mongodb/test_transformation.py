@@ -35,7 +35,7 @@ def test_mongodb_copy_transform_timestamp(caplog, cratedb, mongodb):
     mongodb_copy(
         mongodb_url,
         cratedb_url,
-        transformation=Path("examples/zyp/zyp-int64-to-timestamp.yaml"),
+        transformation=Path("examples/tikray/tikray-int64-to-timestamp.yaml"),
     )
 
     # Verify data in target database.
@@ -56,7 +56,7 @@ def test_mongodb_copy_transform_timestamp(caplog, cratedb, mongodb):
 
 def test_mongodb_copy_treatment_all(caplog, cratedb, mongodb):
     """
-    Verify MongoDB -> CrateDB data transfer with Zyp Treatment transformation.
+    Verify MongoDB -> CrateDB data transfer with Tikray Treatment transformation.
     """
 
     data_in = {
@@ -100,7 +100,7 @@ def test_mongodb_copy_treatment_all(caplog, cratedb, mongodb):
     mongodb_copy(
         mongodb_url,
         cratedb_url,
-        transformation=Path("examples/zyp/zyp-treatment-all.yaml"),
+        transformation=Path("examples/tikray/tikray-treatment-all.yaml"),
     )
 
     # Verify data in target database.

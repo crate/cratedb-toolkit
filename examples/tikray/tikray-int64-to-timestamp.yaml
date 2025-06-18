@@ -1,11 +1,11 @@
-# Zyp transformation defining a schema override on a top-level column.
+# Tikray transformation defining a schema override on a top-level column.
 
 # Timestamps in Unixtime/Epoch format are sometimes stored as
 # int64 / BIGINT. This transformation defines an adjustment to
 # make the target schema use a native datetime/timestamp column.
 ---
 meta:
-  type: zyp-project
+  type: tikray-project
   version: 1
 collections:
 - address:

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Dependencies: Migrated from `zyp` to `tikray`. It's effectively the
+  same, but provided using a dedicated package now
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`

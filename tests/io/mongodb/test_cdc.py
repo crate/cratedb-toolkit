@@ -34,7 +34,7 @@ def test_mongodb_cdc_insert_update(caplog, mongodb_replicaset, cratedb):
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Optionally configure transformations.
-    tm = TransformationManager.from_any(Path("examples/zyp/zyp-transformation.yaml"))
+    tm = TransformationManager.from_any(Path("examples/tikray/tikray-transformation.yaml"))
 
     # Initialize table loader.
     table_loader = MongoDBCDCRelayCrateDB(
@@ -78,5 +78,5 @@ def test_mongodb_cdc_insert_update(caplog, mongodb_replicaset, cratedb):
     # Attribute deleted.
     assert "tombstone" not in record
 
-    # Zyp transformation from dt.datetime.
+    # Tikray transformation from dt.datetime.
     assert record["some_date"] == 1720739862000

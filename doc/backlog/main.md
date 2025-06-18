@@ -56,7 +56,7 @@
   > single column in CrateDB.
   >
   > The transformation recipe attempts to outline a few features provided by
-  > Zyp Transformations, in this case exclusively applying transformations
+  > Tikray Transformations, in this case exclusively applying transformations
   > described by expressions written in jqlang.
 - MongoDB/Docs: Describe usage of `mongoimport` and `mongoexport`.
   ```shell

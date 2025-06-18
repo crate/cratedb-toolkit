@@ -222,13 +222,13 @@ Alternatively, use [cr8] to directly write the MongoDB collection into a CrateDB
         cr8 insert-json --hosts localhost:4200 --table test
 
 
-### Using Zyp transformations
-You can use [Zyp transformations] to change the shape of the data while being
-transferred. In order to add it to the pipeline, use the `--transformation`
+### Using Tikray transformations
+You can use [Tikray transformations] to change the shape of the data while being
+transferred. To add it to the pipeline, use the `--transformation`
 command line option on the `migr8 extract` and `migr8 export` commands.
 
-You can find an example file at `examples/zyp-transformation.yaml`.
+You can find an example file at `examples/tikray/tikray-transformation.yaml`.
 
 
 [cr8]: https://github.com/mfussenegger/cr8
-[Zyp transformations]: https://commons-codec.readthedocs.io/zyp/index.html
+[Tikray transformations]: https://tikray.readthedocs.io/

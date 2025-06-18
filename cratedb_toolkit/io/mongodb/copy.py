@@ -5,9 +5,9 @@ import typing as t
 import sqlalchemy as sa
 from boltons.urlutils import URL
 from commons_codec.transform.mongodb import MongoDBCrateDBConverter, MongoDBFullLoadTranslator
+from tikray.model.collection import CollectionAddress
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
-from zyp.model.collection import CollectionAddress
 
 from cratedb_toolkit.io.core import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
