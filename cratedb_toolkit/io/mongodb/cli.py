@@ -25,7 +25,7 @@ def extract_parser(subargs):
         help="Whether to fully scan the MongoDB collections or only partially.",
     )
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
-    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
+    parser.add_argument("--transformation", type=Path, required=False, help="Tikray transformation file")
     parser.add_argument("-o", "--out", required=False)
 
 
@@ -43,7 +43,7 @@ def export_parser(subargs):
     parser.add_argument("--database", required=True, help="MongoDB database")
     parser.add_argument("--collection", required=True, help="MongoDB collection to export")
     parser.add_argument("--limit", type=int, default=0, required=False, help="Limit export to N documents")
-    parser.add_argument("--transformation", type=Path, required=False, help="Zyp transformation file")
+    parser.add_argument("--transformation", type=Path, required=False, help="Tikray transformation file")
 
 
 def get_args():

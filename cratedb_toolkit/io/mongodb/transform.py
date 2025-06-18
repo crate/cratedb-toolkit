@@ -3,14 +3,14 @@ import typing as t
 from pathlib import Path
 
 from jsonpointer import JsonPointer
-from zyp.model.collection import CollectionAddress, CollectionTransformation
-from zyp.model.project import TransformationProject
+from tikray.model.collection import CollectionAddress, CollectionTransformation
+from tikray.model.project import ProjectTransformation
 
 logger = logging.getLogger(__name__)
 
 
 class TransformationManager:
-    def __init__(self, project: TransformationProject):
+    def __init__(self, project: ProjectTransformation):
         self.project = project
         self.active = True
 
@@ -20,7 +20,7 @@ class TransformationManager:
             return None
         elif isinstance(transformation, TransformationManager):
             return transformation
-        elif isinstance(transformation, TransformationProject):
+        elif isinstance(transformation, ProjectTransformation):
             return cls(project=transformation)
         elif isinstance(transformation, Path):
             return cls.from_path(path=transformation)
@@ -33,8 +33,8 @@ class TransformationManager:
             return None
         if not path.exists():
             raise FileNotFoundError(f"File does not exist: {path}")
-        logger.info("Loading Zyp transformation file: %s", path)
-        project = TransformationProject.from_yaml(path.read_text())
+        logger.info("Loading Tikray transformation file: %s", path)
+        project = ProjectTransformation.from_yaml(path.read_text())
         return cls(project=project)
 
     def apply_type_overrides(self, database_name: str, collection_name: str, collection_schema: t.Dict[str, t.Any]):

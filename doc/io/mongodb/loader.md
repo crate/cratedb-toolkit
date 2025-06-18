@@ -127,12 +127,12 @@ Use the HTTP URL query parameter `offset` on the source URL, like
 beginning.
 
 ## Transformations
-You can use [Zyp Transformations] to change the shape of the data while being
-transferred. In order to add it to the pipeline, use the `--transformation`
+You can use [Tikray Transformations] to change the shape of the data while being
+transferred. To add it to the pipeline, use the `--transformation`
 command line option.
 
 It is also available for the `migr8 extract` and `migr8 export` commands.
-Example transformation files in YAML format can be explored at [examples/zyp].
+Example transformation files in YAML format can be explored at [examples/tikray].
 
 
 ## Appendix
@@ -174,11 +174,11 @@ Acquire a copy of the repository.
 ```shell
 git clone https://github.com/ozlerhakan/mongodb-json-files.git
 ```
-The data import uses a Zyp project file [zyp-mongodb-json-files.yaml] that
+The data import uses a Tikray project file [tikray-mongodb-json-files.yaml] that
 describes a few adjustments needed to import all files flawlessly. Let's
 acquire that file.
 ```shell
-wget https://github.com/crate/cratedb-toolkit/raw/v0.0.22/examples/zyp/zyp-mongodb-json-files.yaml
+wget https://github.com/crate/cratedb-toolkit/raw/v0.0.36/examples/tikray/tikray-mongodb-json-files.yaml
 ```
 Load all referenced `.json` files into corresponding tables within the CrateDB
 schema `datasets`, using a batch size of 2,500 items.
@@ -186,7 +186,7 @@ schema `datasets`, using a batch size of 2,500 items.
 ctk load table \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
   --CRATEDB_CLUSTER_URL-url="crate://crate@localhost:4200/datasets" \
-  --transformation zyp-mongodb-json-files.yaml
+  --transformation tikray-mongodb-json-files.yaml
 ```
 
 :::{rubric} Query
@@ -240,9 +240,9 @@ recent versions like MongoDB 7 and tools version 100.9.5 or higher.
 
 
 [BSON]: https://en.wikipedia.org/wiki/BSON
-[examples/zyp]: https://github.com/crate/cratedb-toolkit/tree/main/examples/zyp
+[examples/tikray]: https://github.com/crate/cratedb-toolkit/tree/main/examples/tikray
 [libbson test files]: https://github.com/mongodb/mongo-c-driver/tree/master/src/libbson/tests/json
 [MongoDB Extended JSON]: https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/
 [mongodb-json-files]: https://github.com/ozlerhakan/mongodb-json-files
-[Zyp Transformations]: https://commons-codec.readthedocs.io/zyp/
-[zyp-mongodb-json-files.yaml]: https://github.com/crate/cratedb-toolkit/blob/v0.0.22/examples/zyp/zyp-mongodb-json-files.yaml
+[Tikray Transformations]: https://tikray.readthedocs.io/
+[tikray-mongodb-json-files.yaml]: https://github.com/crate/cratedb-toolkit/blob/v0.0.36/examples/tikray/tikray-mongodb-json-files.yaml

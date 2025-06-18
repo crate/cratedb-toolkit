@@ -1,14 +1,14 @@
-# A Zyp Transformation [1] file to support importing datasets
+# Tikray transformation [1] file to support importing datasets
 # from mongodb-json-files [2] into CrateDB [3].
 #
 # Because CrateDB
 #
-# [1] https://commons-codec.readthedocs.io/zyp/
+# [1] https://tikray.readthedocs.io/
 # [2] https://github.com/ozlerhakan/mongodb-json-files
 # [3] https://cratedb.com/docs/guide/feature/
 ---
 meta:
-  type: zyp-project
+  type: tikray-project
   version: 1
 collections:
 - address:

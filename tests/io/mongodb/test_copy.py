@@ -6,9 +6,9 @@ from unittest import mock
 import bson
 import pymongo
 import pytest
-from zyp import CollectionTransformation, MokshaTransformation
-from zyp.model.collection import CollectionAddress
-from zyp.model.project import TransformationProject
+from tikray import CollectionTransformation, MokshaTransformation
+from tikray.model.collection import CollectionAddress
+from tikray.model.project import ProjectTransformation
 
 from cratedb_toolkit.io.mongodb.api import mongodb_copy
 from tests.conftest import check_sqlalchemy2
@@ -333,7 +333,7 @@ def test_mongodb_copy_http_json_relaxed_books(caplog, cratedb):
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
 
     # Run transfer command.
-    transformation = TransformationProject().add(
+    transformation = ProjectTransformation().add(
         CollectionTransformation(
             address=CollectionAddress(container="datasets", name="books"),
             pre=MokshaTransformation().jq(".[] |= (._id |= tostring)"),
@@ -377,7 +377,7 @@ def test_mongodb_copy_http_json_relaxed_products(caplog, cratedb):
       | if (.limits.voice.n) then .limits.voice.n |= tostring end
     )
     """
-    transformation = TransformationProject().add(
+    transformation = ProjectTransformation().add(
         CollectionTransformation(
             address=CollectionAddress(container="datasets", name="products"),
             pre=MokshaTransformation().jq(jqlang_transformation),

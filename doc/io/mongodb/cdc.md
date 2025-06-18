@@ -112,7 +112,7 @@ crash --hosts "${CRATEDB_CLUSTER_URL}" --command 'SELECT * FROM "testdrive"."dem
 
 
 ## Transformations
-You can use [Zyp Transformations] to change the shape of the data while being
+You can use [Tikray Transformations] to change the shape of the data while being
 transferred. In order to add it to the pipeline, use the `--transformation`
 command line option.
 
@@ -160,4 +160,4 @@ mongosh "${MONGODB_URL}" --eval 'db.demo.drop()'
 [MongoDB Atlas]: https://www.mongodb.com/atlas
 [MongoDB Change Stream]: https://www.mongodb.com/docs/manual/changeStreams/
 [SDK and CLI for CrateDB Cloud Cluster APIs]: https://github.com/crate-workbench/cratedb-toolkit/pull/81
-[Zyp Transformations]: https://commons-codec.readthedocs.io/zyp/
+[Tikray Transformations]: https://tikray.readthedocs.io/

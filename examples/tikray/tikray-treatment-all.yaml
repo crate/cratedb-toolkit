@@ -1,7 +1,7 @@
-# Zyp transformation defining a few special treatments to be applied to inbound data.
+# Tikray transformation defining a few special treatments to be applied to inbound data.
 ---
 meta:
-  type: zyp-project
+  type: tikray-project
   version: 1
 collections:
 - address:

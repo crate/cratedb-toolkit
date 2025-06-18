@@ -136,7 +136,7 @@ def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
     demo = testdrive.create_collection("demo")
     demo.insert_many([DOCUMENT_IN])
 
-    transformation = Path("examples/zyp/zyp-treatment-all.yaml")
+    transformation = Path("examples/tikray/tikray-treatment-all.yaml")
 
     # Run transfer command.
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
@@ -176,7 +176,7 @@ def test_mongodb_load_table_complex_lists_ignore(caplog, cratedb, mongodb):
     demo = testdrive.create_collection("demo")
     demo.insert_many([DOCUMENT_IN])
 
-    transformation = Path("examples/zyp/zyp-treatment-ignore.yaml")
+    transformation = Path("examples/tikray/tikray-treatment-ignore.yaml")
 
     # Run transfer command.
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})

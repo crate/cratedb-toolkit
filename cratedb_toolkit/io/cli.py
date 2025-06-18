@@ -34,7 +34,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
 @click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
 @click.option("--compression", type=str, required=False, help="Compression format of the import resource")
-@click.option("--transformation", type=Path, required=False, help="Path to Zyp transformation file")
+@click.option("--transformation", type=Path, required=False, help="Path to Tikray transformation file")
 @click.pass_context
 def load_table(
     ctx: click.Context,

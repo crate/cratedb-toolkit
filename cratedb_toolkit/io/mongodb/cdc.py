@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from boltons.urlutils import URL
 from commons_codec.transform.mongodb import MongoDBCDCTranslator, MongoDBCrateDBConverter
 from pymongo.change_stream import CollectionChangeStream
-from zyp.model.collection import CollectionAddress
+from tikray.model.collection import CollectionAddress
 
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.model import DocumentDict
