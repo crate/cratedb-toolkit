@@ -1,0 +1,34 @@
+services:
+
+  # CrateDB
+  # https://github.com/crate/crate
+  cratedb:
+    image: crate/crate:nightly
+    container_name: cratedb
+    hostname: cratedb
+    ports:
+      - 4200:4200
+      - 5432:5432
+    healthcheck:
+      # https://github.com/crate/docker-crate/pull/151/files
+      test: curl --max-time 25 http://localhost:4200 || exit 1
+      interval: 10s
+      timeout: 30s
+
+  # PostgreSQL
+  postgresql:
+    build:
+      context: ./postgresql
+      dockerfile: Dockerfile
+    command: postgres -c log_statement=all
+    container_name: postgresql
+    hostname: postgresql
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
