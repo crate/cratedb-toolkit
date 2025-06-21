@@ -1,4 +1,6 @@
-from cratedb_toolkit.model import DatabaseAddress
+import pytest
+
+from cratedb_toolkit.model import DatabaseAddress, TableAddress
 
 
 def test_database_address_to_httpuri_standard_default_port():
@@ -41,3 +43,17 @@ def test_database_address_to_httpuri_sslmode_verify_ca():
     address = DatabaseAddress.from_string("crate://user:password@example.org/schema/table?sslmode=verify-ca")
     assert address.httpuri == "https://user:password@example.org:4200/schema/table"
     assert address.verify_ssl is True
+
+
+def test_table_address_without_schema():
+    assert TableAddress(schema=None, table="my-table").fullname == 'doc."my-table"'
+
+
+def test_table_address_complete():
+    assert TableAddress(schema="custom", table="my-table").fullname == 'custom."my-table"'
+
+
+def test_table_address_empty():
+    with pytest.raises(ValueError) as ex:
+        _ = TableAddress(schema=None, table="").fullname
+    assert ex.match("Table name must be specified")
