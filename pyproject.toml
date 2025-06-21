@@ -225,13 +225,11 @@ optional-dependencies.test = [
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",
-  "testcontainers-azurite==0.0.1rc1",
-  "testcontainers-localstack==0.0.1rc1",
-  "testcontainers-minio==0.0.1rc1",
+  "testcontainers[azurite,localstack,minio]",
 ]
 optional-dependencies.test-mongodb = [
   "cratedb-toolkit[test]",
-  "testcontainers-mongodb==0.0.1rc1",
+  "testcontainers[mongodb]",
 ]
 optional-dependencies.testing = [
   "pytest<9",
