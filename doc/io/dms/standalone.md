@@ -31,14 +31,14 @@ pip install --upgrade 'cratedb-toolkit[kinesis]'
    ```shell
    ctk load table "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive"
    ```
-   Alternatively, transfer data from stream dump file.
+   Alternatively, transfer data from a stream-dump file.
    ```shell
    ctk load table "kinesis+dms:///path/to/dms-over-kinesis.jsonl"
    ```
 
 :::{todo}
 The usage section is a bit thin on how to authenticate with AWS.
-In general, if your `~/.aws/config` and `~/.aws/credentials` file are populated correctly,
+In general, if your `~/.aws/config` and `~/.aws/credentials` file are populated correctly
 because you are using awscli or boto3 successfully, you should be ready to go.
 :::
 

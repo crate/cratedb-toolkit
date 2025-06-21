@@ -19,7 +19,7 @@ def test_kinesis_dms_stream(caplog, cratedb, kinesis, kinesis_test_manager):
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive"
 
     # Populate source stream with sample dataset.
-    # Define two CDC events: INSERT and UPDATE.
+    # Define two CDC events: CREATE TABLE and INSERT.
     events = [
         DMS_CDC_CREATE_TABLE,
         DMS_CDC_INSERT_BASIC,
