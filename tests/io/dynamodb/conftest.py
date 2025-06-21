@@ -6,6 +6,8 @@ import typing
 import pytest
 
 pytest.importorskip("boto3", reason="Skipping DynamoDB tests because 'boto3' package is not installed")
+pytest.importorskip("commons_codec", reason="Skipping DynamoDB tests because 'commons-codec' package is not installed")
+pytest.importorskip("kinesis", reason="Skipping DynamoDB tests because 'async-kinesis' package is not installed")
 
 import botocore
 from yarl import URL
