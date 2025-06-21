@@ -42,7 +42,7 @@ jobs:
           "3.9",
           "3.11",
         ]
-        mongodb-version: ["3", "4", "5", "6", "7"]
+        mongodb-version: ["4", "5", "6", "7"]
 
     env:
       OS: ${{ matrix.os }}
@@ -74,11 +74,6 @@ jobs:
 
         # Install package in editable mode.
         pip install --use-pep517 --prefer-binary --upgrade --editable=.[mongodb,test-mongodb,develop]
-
-    - name: Downgrade pymongo on MongoDB 2
-      if: matrix.mongodb-version == '2'
-      run: |
-        pip install 'pymongo<4'
 
     - name: Run linter and software tests
       run: |
