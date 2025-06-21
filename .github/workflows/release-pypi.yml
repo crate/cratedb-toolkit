@@ -10,21 +10,29 @@ jobs:
   build-and-publish:
     name: Build & publish package to PyPI
     runs-on: ubuntu-latest
+    env:
+      UV_SYSTEM_PYTHON: true
     if: startsWith(github.event.ref, 'refs/tags')
     steps:
       - name: Acquire sources
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          cache-dependency-glob: |
+            pyproject.toml
+          enable-cache: true
+          version: "latest"
 
       - name: Build package
         run: |
-          python -m pip install build twine
+          uv pip install build twine
           python -m build
           twine check dist/{*.tar.gz,*.whl}
 

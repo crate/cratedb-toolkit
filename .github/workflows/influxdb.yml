@@ -3,7 +3,6 @@ name: "Tests: InfluxDB"
 
 on:
   pull_request:
-    branches: ~
     paths:
     - '.github/workflows/influxdb.yml'
     - 'cratedb_toolkit/io/influxdb/**'
@@ -48,6 +47,7 @@ jobs:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
       INFLUXDB_VERSION: ${{ matrix.influxdb-version }}
+      UV_SYSTEM_PYTHON: true
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
@@ -61,23 +61,25 @@ jobs:
     - name: Acquire sources
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Install Python
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: x64
-        cache: 'pip'
-        cache-dependency-path: 'pyproject.toml'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+        cache-suffix: ${{ matrix.python-version }}
+        enable-cache: true
+        version: "latest"
 
     - name: Set up project
       run: |
 
-        # `setuptools 0.64.0` adds support for editable install hooks (PEP 660).
-        # https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v6400
-        pip install "setuptools>=64" --upgrade
-
         # Install package in editable mode.
-        pip install --use-pep517 --prefer-binary --editable=.[influxdb,test,develop]
+        uv pip install --editable=.[influxdb,test,develop]
 
     - name: Run linter and software tests
       run: |
