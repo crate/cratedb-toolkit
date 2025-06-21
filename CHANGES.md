@@ -4,6 +4,7 @@
 - Dependencies: Migrated from `zyp` to `tikray`. It's effectively the
   same, but provided using a dedicated package now
 - Dependencies: Updated to `croud-1.14`
+- Dependencies: Updated to `async-kinesis-2.0.0`. Thanks, @hampsterx.
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`
