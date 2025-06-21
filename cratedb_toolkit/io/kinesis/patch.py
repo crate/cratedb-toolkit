@@ -20,8 +20,7 @@ class Dummy(kinesis.base.Base):
         """
         if self.stream_name.startswith("arn:"):
             return {"StreamARN": self.stream_name}
-        else:
-            return {"StreamName": self.stream_name}
+        return {"StreamName": self.stream_name}
 
 
 async def get_stream_description(self):
