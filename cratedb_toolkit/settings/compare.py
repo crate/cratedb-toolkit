@@ -157,6 +157,9 @@ def compare_time_settings(setting_key, current_value, default_value):
     if current_ms is None or default_ms is None:
         return None
 
+    if current_ms == 0 and default_ms == 0:
+        return None
+
     # Special handling for 0 values - always show if one is zero and the other isn't
     if (current_ms == 0 and default_ms > 0) or (default_ms == 0 and current_ms > 0):
         return f"{setting_key}: {current_value} (default: {default_value})"
