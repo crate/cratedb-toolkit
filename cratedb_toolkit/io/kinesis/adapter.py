@@ -19,8 +19,7 @@ class KinesisAdapterBase(abc.ABC):
         if path.exists():
             if path.is_file():
                 return KinesisFileAdapter(kinesis_url)
-            else:
-                raise ValueError(f"Path exists but is not a file: {path}")
+            raise ValueError(f"Path exists but is not a file: {path}")
         return KinesisStreamAdapter(kinesis_url)
 
     @abc.abstractmethod
