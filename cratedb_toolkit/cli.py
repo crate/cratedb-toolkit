@@ -7,6 +7,7 @@ from .adapter.rockset.cli import cli as rockset_cli
 from .cfr.cli import cli as cfr_cli
 from .cluster.cli import cli as cloud_cli
 from .cmd.tail.cli import cli as tail_cli
+from .dms.cli import cli as dms_cli
 from .docs.cli import cli as docs_cli
 from .info.cli import cli as info_cli
 from .io.cli import cli as io_cli
@@ -30,6 +31,7 @@ cli.add_command(info_cli, name="info")
 cli.add_command(cfr_cli, name="cfr")
 cli.add_command(cloud_cli, name="cluster")
 cli.add_command(docs_cli, name="docs")
+cli.add_command(dms_cli, name="dms")
 cli.add_command(io_cli, name="load")
 cli.add_command(query_cli, name="query")
 cli.add_command(rockset_cli, name="rockset")
