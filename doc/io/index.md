@@ -4,12 +4,14 @@
 Load and extract data into/from CrateDB.
 
 ## About
-Using the InfluxDB and MongoDB I/O subsystems, you can transfer data from
-[InfluxDB] and [MongoDB] to [CrateDB] and [CrateDB Cloud].
+
+Transfer data from [AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
+[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL], and many more databases,
+platforms, and services to [CrateDB] or [CrateDB Cloud].
 
 ## What's inside
-A one-stop command `ctk load table` to load data into database tables.
 
+A one-stop command, `ctk load table`, to load data into database tables.
 
 ## Installation
 
@@ -72,9 +74,6 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=csv
 ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 ```
 
-### Backlog
-- Exercise data imports from AWS S3 and other Object Storage providers.
-
 
 ```{toctree}
 :maxdepth: 2
@@ -83,12 +82,20 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 AWS DMS <dms/index>
 DynamoDB <dynamodb/index>
 InfluxDB <influxdb/index>
+Ingestr <ingestr/index>
 MongoDB <mongodb/index>
 PostgreSQL <postgresql/index>
 ```
 
 
+[AWS DMS]: https://aws.amazon.com/dms/
 [CrateDB]: https://github.com/crate/crate
 [CrateDB Cloud]: https://console.cratedb.cloud/
+[Databricks]: https://www.databricks.com/
+[DuckDB]: https://github.com/duckdb/duckdb
+[DynamoDB]: https://aws.amazon.com/dynamodb/
 [InfluxDB]: https://github.com/influxdata/influxdb
 [MongoDB]: https://github.com/mongodb/mongo
+[MongoDB Atlas]: https://www.mongodb.com/atlas
+[MotherDuck]: https://motherduck.com/
+[PostgreSQL]: https://www.postgresql.org/

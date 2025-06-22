@@ -17,6 +17,9 @@
 - CDC: Added subcommand `ctk dms table-mappings`
 - Dependencies: Updated to `commons-codec>=0.0.23`
 - I/O: Adapter for PostgreSQL full-load using ingestr
+- I/O: Added documentation about [ingestr] adapter
+
+[ingestr]: https://github.com/bruin-data/ingestr
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`
