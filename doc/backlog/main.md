@@ -1,6 +1,10 @@
 # Main Backlog
 
 ## Iteration +0
+- Exercise data imports from AWS S3 and other Object Storage providers.
+  Evaluate the new `ingestr` subsystem.
+
+## Iteration +0.5
 - CLI: Consider simplifying the API by using canonical `--cluster-url` instead of `--sqlalchemy-url` vs. `--http-url`
 - CLI: Explore consolidating all four addressing options into a single `--cluster` option
   for more intuitive cluster addressing. This could be implemented as a separate option alongside
