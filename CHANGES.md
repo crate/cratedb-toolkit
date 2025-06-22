@@ -7,6 +7,9 @@
 - Dependencies: Updated to `async-kinesis-2.0.0`. Thanks, @hampsterx.
 - CDC: Added canonical SQL example for PostgreSQL from Ibis
 - I/O: Adapter for PostgreSQL full-load using ingestr
+- I/O: Added documentation about [ingestr] adapter
+
+[ingestr]: https://github.com/bruin-data/ingestr
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`
