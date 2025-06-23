@@ -127,7 +127,7 @@ optional-dependencies.cfr = [
   "matplotlib<3.11",
   "numpy<2.3",
   "pandas<2.3",
-  "polars<1.30",
+  "polars<1.32",
   "pyarrow<20.1",
   "queryanonymizer<1.2",
 ]
@@ -172,7 +172,7 @@ optional-dependencies.io = [
   "dask[dataframe]>=2020",
   "fsspec[s3,http]",
   "pandas>=1,<2.3",
-  "polars<1.30",
+  "polars<1.32",
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
