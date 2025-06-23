@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/06/23 v0.0.36
 - Dependencies: Migrated from `zyp` to `tikray`. It's effectively the
   same, but provided using a dedicated package now
 - Dependencies: Updated to `croud-1.14`
