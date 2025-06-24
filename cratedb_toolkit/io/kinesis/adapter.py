@@ -1,5 +1,6 @@
 import abc
 import asyncio
+import importlib.metadata
 import typing as t
 from pathlib import Path
 
@@ -7,9 +8,13 @@ import boto3
 import orjsonl
 from aiobotocore.session import AioSession
 from kinesis import Consumer, JsonProcessor, Producer
+from verlib2 import Version
 from yarl import URL
 
 from cratedb_toolkit.util.data import asbool
+
+async_kinesis_version = importlib.metadata.version("async-kinesis")
+is_async_kinesis_v1 = Version(async_kinesis_version) < Version("2")
 
 
 class KinesisAdapterBase(abc.ABC):
@@ -67,6 +72,9 @@ class KinesisStreamAdapter(KinesisAdapterBase):
         #       A small @dataclass (e.g. StreamConfig) would cut clutter and make validation explicit.
         self.kinesis_url = kinesis_url
         self.stream_name = self.kinesis_url.path.lstrip("/")
+
+        if "arn:" in self.stream_name and is_async_kinesis_v1:
+            raise ValueError("The async-kinesis 1.x package does not support stream ARNs")
 
         self.region_name: t.Union[str, None] = self.kinesis_url.query.get("region", None)
         self.batch_size: int = int(self.kinesis_url.query.get("batch-size", 100))
