@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import typing as t
 
 import sqlalchemy as sa
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
@@ -10,6 +11,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from yarl import URL
 
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase
+from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
 
@@ -25,6 +27,7 @@ class KinesisRelay:
         self,
         kinesis_url: str,
         cratedb_url: str,
+        recipe: t.Union[RecipeDefinition, None] = None,
     ):
         self.cratedb_address = DatabaseAddress.from_string(cratedb_url)
         cratedb_sqlalchemy_url, cratedb_table_address = self.cratedb_address.decode()
@@ -33,13 +36,18 @@ class KinesisRelay:
         self.kinesis_adapter = KinesisAdapterBase.factory(self.kinesis_url)
         self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
 
+        self.recipe = recipe
+
         self.cratedb_table = None
         if self.kinesis_url.scheme.startswith("kinesis+dynamodb"):
             cratedb_table_name = cratedb_table_address.fullname
             self.cratedb_table = self.cratedb_adapter.quote_relation_name(cratedb_table_name)
             self.translator = DynamoDBCDCTranslator(table_name=self.cratedb_table)
         elif self.kinesis_url.scheme == "kinesis+dms":
-            self.translator = DMSTranslatorCrateDB()
+            pks, cms = None, None
+            if self.recipe:
+                pks, cms = self.recipe.codec_options()
+            self.translator = DMSTranslatorCrateDB(primary_keys=pks, column_types=cms)
         else:
             raise NotImplementedError(f"Data processing not implemented for {self.kinesis_url}")
 

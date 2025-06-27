@@ -567,7 +567,11 @@ class StandaloneCluster(ClusterBase):
         elif source_url_obj.scheme.startswith("kinesis"):
             from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
-            kinesis_relay(source_url_obj, target_url)
+            kinesis_relay(
+                source_url=source_url_obj,
+                target_url=target_url,
+                recipe=transformation,
+            )
             self._load_table_result = True
 
         elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:

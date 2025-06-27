@@ -42,6 +42,38 @@ In general, if your `~/.aws/config` and `~/.aws/credentials` file are populated 
 because you are using awscli or boto3 successfully, you should be ready to go.
 :::
 
+## Configuration
+
+You can configure the processor element by using a recipe file, to be conveyed through
+the `--transformation` CLI option, like so:
+```shell
+ctk load table \
+  "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive" \
+  --transformation=dms-load-schema.yaml
+```
+
+The recipe file can be used to define primary key information and column type
+mapping rules.
+```yaml
+# Recipe file for digesting DMS events.
+# https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
+---
+meta:
+  type: tikray-projecta
+  version: 1
+collections:
+- address:
+    container: public
+    name: foobar
+  pk:
+    rules:
+    - pointer: /id
+      type: bigint
+  map:
+    rules:
+    - pointer: /resource
+      type: map
+```
 
 
 [AWS DMS]: https://aws.amazon.com/dms/
