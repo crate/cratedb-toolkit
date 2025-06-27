@@ -159,6 +159,7 @@ optional-dependencies.docs-api = [
 optional-dependencies.dynamodb = [
   "boto3",
   "commons-codec>=0.0.20",
+  "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
   "cratedb-toolkit[cfr,datasets,docs-api,io,mcp,service]",
@@ -176,11 +177,15 @@ optional-dependencies.io = [
   "sqlalchemy>=2",
   "universal-pathlib<0.3",
 ]
+optional-dependencies.io-recipe = [
+  "tikray>=0.2,<0.3",
+]
 optional-dependencies.kinesis = [
   "aiobotocore<2.24",
   "async-kinesis<3",
   "botocore<1.39",
   "commons-codec>=0.0.23",
+  "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.mcp = [
@@ -188,12 +193,11 @@ optional-dependencies.mcp = [
 ]
 optional-dependencies.mongodb = [
   "commons-codec[mongodb]>=0.0.22",
-  "cratedb-toolkit[io]",
+  "cratedb-toolkit[io,io-recipe]",
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.10",
   "python-bsonjs<0.7",
   "rich>=3.3.2,<15",
-  "tikray>=0.2,<0.3",
   "undatum<1.1",
 ]
 optional-dependencies.pymongo = [

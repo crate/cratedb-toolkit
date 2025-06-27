@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Settings: Fixed comparison of `0s` vs `0ms`. Thanks, @hlcianfagna.
+- DMS: Provided a recipe file to relay primary key and column type map information
 
 ## 2025/06/23 v0.0.36
 - Dependencies: Migrated from `zyp` to `tikray`. It's effectively the
