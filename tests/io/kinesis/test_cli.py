@@ -100,9 +100,10 @@ def test_kinesis_dms_load_without_ddl(caplog, tmp_path, cratedb):
     transformation_file = Path("./examples/cdc/aws/dms-load-schema.yaml")
 
     # Write a single event as a dump file to disk.
+    dms_ddl_event = json.loads(Path("./examples/cdc/aws/dms-control-create-table.json").read_text())
     dms_load_event = json.loads(Path("./examples/cdc/aws/dms-data-load.json").read_text())
     stream_dump_file = tmp_path / "dms-load.ndjson"
-    orjsonl.save(stream_dump_file, [dms_load_event])
+    orjsonl.save(stream_dump_file, [dms_ddl_event, dms_load_event])
 
     # Define source and target URLs.
     kinesis_url = f"kinesis+dms://{stream_dump_file.absolute()}"

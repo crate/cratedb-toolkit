@@ -52,8 +52,8 @@ ctk load table \
   --transformation=dms-load-schema.yaml
 ```
 
-The recipe file can be used to define primary key information and column type
-mapping rules.
+The recipe file can be used to define settings, primary key information, and
+column type mapping rules.
 ```yaml
 # Recipe file for digesting DMS events.
 # https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
@@ -65,6 +65,8 @@ collections:
 - address:
     container: public
     name: foobar
+  settings:
+    ignore_ddl: true
   pk:
     rules:
     - pointer: /id

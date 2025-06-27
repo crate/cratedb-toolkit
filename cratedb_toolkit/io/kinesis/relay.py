@@ -4,6 +4,7 @@ import logging
 import typing as t
 
 import sqlalchemy as sa
+from commons_codec.model import SkipOperation
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator
 from tqdm import tqdm
@@ -101,6 +102,8 @@ class KinesisRelay:
 
         try:
             operation = self.translator.to_sql(record)
+        except SkipOperation:
+            return
         except Exception:
             logger.exception("Translating CDC event to SQL failed")
             return

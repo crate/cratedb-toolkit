@@ -11,6 +11,11 @@ from cratedb_toolkit.util.config import Dumpable
 
 
 @define
+class SettingsDefinition:
+    ignore_ddl: bool = True
+
+
+@define
 class ColumnTypeDefinition(SchemaDefinition):
     pass
 
@@ -25,6 +30,7 @@ class PrimaryKeyDefinition(SchemaDefinition):
 @define
 class CollectionDefinition(Dumpable):
     address: t.Union[CollectionAddress, None] = None
+    settings: t.Union[SettingsDefinition, None] = None
     pk: t.Union[PrimaryKeyDefinition, None] = None
     map: t.Union[ColumnTypeDefinition, None] = None
 
