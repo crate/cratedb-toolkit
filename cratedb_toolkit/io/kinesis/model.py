@@ -23,7 +23,7 @@ class ColumnTypeDefinition(SchemaDefinition):
 @define
 class PrimaryKeyDefinition(SchemaDefinition):
     @property
-    def names(self):
+    def names(self) -> t.List[str]:
         return [rule.pointer.lstrip("/") for rule in self.rules]
 
 
@@ -38,7 +38,6 @@ class CollectionDefinition(Dumpable):
 @define
 class RecipeDefinition(ProjectTransformation):
     collections: t.List[CollectionDefinition] = Factory(list)
-    _map: t.Dict[CollectionAddress, CollectionDefinition] = Factory(dict)
 
     def codec_options(self) -> t.Tuple[PrimaryKeyStore, ColumnTypeMapStore]:
         pks = PrimaryKeyStore()
