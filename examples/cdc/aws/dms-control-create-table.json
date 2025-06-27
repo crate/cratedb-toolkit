@@ -1,0 +1,25 @@
+{
+  "control": {
+    "table-def": {
+      "columns": {
+        "rowid": {
+          "type": "INT64",
+          "nullable": false
+        },
+        "resource": {
+          "type": "TEXT",
+          "nullable": true
+        }
+      }
+    }
+  },
+  "metadata": {
+    "timestamp": "2025-06-21T12:06:51.287587Z",
+    "record-type": "control",
+    "operation": "create-table",
+    "partition-key-type": "task-id",
+    "partition-key-value": "DZ6OKLFYA5BWVG4RYROQUHXU4E",
+    "schema-name": "testdrive-data",
+    "table-name": "foobar"
+  }
+}

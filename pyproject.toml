@@ -184,7 +184,7 @@ optional-dependencies.kinesis = [
   "aiobotocore<2.24",
   "async-kinesis<3",
   "botocore<1.39",
-  "commons-codec>=0.0.23",
+  "commons-codec @ git+https://github.com/crate/commons-codec@dms-no-ddl",
   "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
 ]

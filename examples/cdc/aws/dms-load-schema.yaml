@@ -8,6 +8,8 @@ collections:
 - address:
     container: testdrive-data
     name: foobar
+  settings:
+    ignore_ddl: true
   pk:
     rules:
     - pointer: /rowid
