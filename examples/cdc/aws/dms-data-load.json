@@ -1,0 +1,14 @@
+{
+  "data": {
+    "rowid": 1,
+    "resource": "{\"temperature\": 42.42}"
+  },
+  "metadata": {
+    "timestamp": "2025-06-21T12:06:51.175136Z",
+    "record-type": "data",
+    "operation": "load",
+    "partition-key-type": "schema-table",
+    "schema-name": "testdrive-data",
+    "table-name": "foobar"
+  }
+}
