@@ -49,23 +49,33 @@ the `--transformation` CLI option, like so:
 ```shell
 ctk load table \
   "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive" \
-  --transformation=dms-load-schema.yaml
+  --transformation=dms-load-schema-universal.yaml
 ```
 
-The recipe file can be used to define settings, primary key information, and
-column type mapping rules.
+The recipe file can be used to define settings, primary key information, the column
+mapping strategy, and column type mapping rules.
+
+If you want to provide the SQL DDL manually, please toggle `settings.ignore_ddl: true`,
+and provide the primary key information per `pk` instead.
+
+When the data includes container types, for example originating from JSON(B) columns,
+use the `map` section to assign column type information to them.
+
+If your columns include names with leading underscores, you may need to resort
+to the `settings.mapping_strategy: universal` setting.
 ```yaml
 # Recipe file for digesting DMS events.
 # https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
 ---
 meta:
-  type: tikray-projecta
+  type: tikray-project
   version: 1
 collections:
 - address:
     container: public
     name: foobar
   settings:
+    mapping_strategy: direct
     ignore_ddl: true
   pk:
     rules:
@@ -74,7 +84,7 @@ collections:
   map:
     rules:
     - pointer: /resource
-      type: map
+      type: object
 ```
 
 

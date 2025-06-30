@@ -1,0 +1,12 @@
+# Recipe file for digesting DMS events.
+# https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
+---
+meta:
+  type: dms-recipe
+  version: 1
+collections:
+- address:
+    container: testdrive-data
+    name: foobar
+  settings:
+    mapping_strategy: direct

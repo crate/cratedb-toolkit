@@ -1,5 +1,6 @@
 import typing as t
 
+import attrs
 from attr import Factory
 from attrs import define
 from commons_codec.model import ColumnType, ColumnTypeMapStore, PrimaryKeyStore, TableAddress
@@ -12,7 +13,8 @@ from cratedb_toolkit.util.config import Dumpable
 
 @define
 class SettingsDefinition:
-    ignore_ddl: bool = True
+    mapping_strategy: str = "direct"
+    ignore_ddl: bool = False
 
 
 @define
@@ -30,7 +32,7 @@ class PrimaryKeyDefinition(SchemaDefinition):
 @define
 class CollectionDefinition(Dumpable):
     address: t.Union[CollectionAddress, None] = None
-    settings: t.Union[SettingsDefinition, None] = None
+    settings: t.Union[SettingsDefinition, None] = attrs.Factory(SettingsDefinition)
     pk: t.Union[PrimaryKeyDefinition, None] = None
     map: t.Union[ColumnTypeDefinition, None] = None
 
@@ -39,9 +41,11 @@ class CollectionDefinition(Dumpable):
 class RecipeDefinition(ProjectTransformation):
     collections: t.List[CollectionDefinition] = Factory(list)
 
-    def codec_options(self) -> t.Tuple[PrimaryKeyStore, ColumnTypeMapStore]:
+    def codec_options(self) -> t.Tuple[PrimaryKeyStore, ColumnTypeMapStore, t.Dict, t.Dict]:
         pks = PrimaryKeyStore()
         cms = ColumnTypeMapStore()
+        mapping_strategy = {}
+        ignore_ddl = {}
         for collection in self.collections:
             if not collection.address:
                 continue
@@ -51,4 +55,7 @@ class RecipeDefinition(ProjectTransformation):
             if collection.map:
                 for item in collection.map.rules:
                     cms.add(ta, item.pointer.lstrip("/"), ColumnType(item.type))
-        return pks, cms
+            if collection.settings:
+                mapping_strategy[ta] = collection.settings.mapping_strategy
+                ignore_ddl[ta] = collection.settings.ignore_ddl
+        return pks, cms, mapping_strategy, ignore_ddl
