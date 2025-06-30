@@ -1,5 +1,8 @@
+from pathlib import Path
+
 import pytest
 
+from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
 from tests.io.kinesis.data import DMS_CDC_CREATE_TABLE, DMS_CDC_INSERT_BASIC
 from tests.io.test_processor import wrap_kinesis
@@ -9,7 +12,7 @@ pytestmark = pytest.mark.kinesis
 pytest.importorskip("commons_codec", reason="Only works with commons-codec installed")
 
 
-def test_kinesis_earliest_dms_cdc_ddl_dml(caplog, cratedb, kinesis):
+def test_kinesis_earliest_dms_cdc_ddl_dml_universal(caplog, cratedb, kinesis):
     """
     Roughly verify that the AWS DynamoDB CDC processing through Kinesis works as expected.
 
@@ -29,8 +32,12 @@ def test_kinesis_earliest_dms_cdc_ddl_dml(caplog, cratedb, kinesis):
         wrap_kinesis(DMS_CDC_INSERT_BASIC),
     ]
 
+    # Define transformation file.
+    transformation_file = Path("./examples/cdc/aws/dms-load-schema-universal.yaml")
+
     # Initialize table loader.
-    table_loader = KinesisRelay(kinesis_url=kinesis_url, cratedb_url=cratedb_url)
+    recipe = RecipeDefinition.from_yaml(transformation_file.read_text())
+    table_loader = KinesisRelay(kinesis_url=kinesis_url, cratedb_url=cratedb_url, recipe=recipe)
 
     # Populate the Kinesis stream with data.
     for event in events:

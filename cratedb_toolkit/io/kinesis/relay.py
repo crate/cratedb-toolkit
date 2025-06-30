@@ -45,10 +45,12 @@ class KinesisRelay:
             self.cratedb_table = self.cratedb_adapter.quote_relation_name(cratedb_table_name)
             self.translator = DynamoDBCDCTranslator(table_name=self.cratedb_table)
         elif self.kinesis_url.scheme == "kinesis+dms":
-            pks, cms = None, None
+            pks, cms, mapping_strategy, ignore_ddl = None, None, None, None
             if self.recipe:
-                pks, cms = self.recipe.codec_options()
-            self.translator = DMSTranslatorCrateDB(primary_keys=pks, column_types=cms)
+                pks, cms, mapping_strategy, ignore_ddl = self.recipe.codec_options()
+            self.translator = DMSTranslatorCrateDB(
+                primary_keys=pks, column_types=cms, mapping_strategy=mapping_strategy, ignore_ddl=ignore_ddl
+            )
         else:
             raise NotImplementedError(f"Data processing not implemented for {self.kinesis_url}")
 

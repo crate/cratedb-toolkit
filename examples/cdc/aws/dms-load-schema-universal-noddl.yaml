@@ -2,13 +2,14 @@
 # https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
 ---
 meta:
-  type: tikray-projecta
+  type: dms-recipe
   version: 1
 collections:
 - address:
     container: testdrive-data
     name: foobar
   settings:
+    mapping_strategy: universal
     ignore_ddl: true
   pk:
     rules:
