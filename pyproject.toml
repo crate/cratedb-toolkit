@@ -198,7 +198,7 @@ optional-dependencies.mongodb = [
 ]
 optional-dependencies.pymongo = [
   "jessiql==1.0.0rc1",
-  "pandas<2.2",
+  "pandas<2.4",
   "pymongo<4.9",
   "sqlalchemy<2",
 ]
