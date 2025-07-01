@@ -3,6 +3,8 @@
 ## Iteration +0
 - Exercise data imports from AWS S3 and other Object Storage providers.
   Evaluate the new `ingestr` subsystem.
+- A new item for the datasets API
+  https://github.com/dr5hn/countries-states-cities-database
 
 ## Iteration +0.5
 - CLI: Consider simplifying the API by using canonical `--cluster-url` instead of `--sqlalchemy-url` vs. `--http-url`
