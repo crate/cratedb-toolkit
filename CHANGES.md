@@ -8,6 +8,11 @@
 - DMS: Provided a recipe option to ignore processing DMS control DDL events
 - DMS: Started using the "direct" column mapping by default,
   retaining the "universal" column mapping optionally.
+- Dependencies: Updated to `commons-codec>=0.0.23`
+- I/O: Adapter for PostgreSQL full-load using ingestr
+- I/O: Added documentation about [ingestr] adapter
+
+[ingestr]: https://github.com/bruin-data/ingestr
 
 ## 2025/06/23 v0.0.36
 - Dependencies: Migrated from `zyp` to `tikray`. It's effectively the
@@ -17,11 +22,6 @@
 - CDC: Added canonical SQL example for PostgreSQL from Ibis
 - CDC: Enabled loading DMS events from Kinesis streams and stream-dump files
 - CDC: Added subcommand `ctk dms table-mappings`
-- Dependencies: Updated to `commons-codec>=0.0.23`
-- I/O: Adapter for PostgreSQL full-load using ingestr
-- I/O: Added documentation about [ingestr] adapter
-
-[ingestr]: https://github.com/bruin-data/ingestr
 
 ## 2025/05/13 v0.0.35
 - Added lost `pytest` dependencies to `cratedb-toolkit[testing]`
