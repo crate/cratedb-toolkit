@@ -182,7 +182,7 @@ optional-dependencies.io-base = [
 ]
 optional-dependencies.io-ingestr = [
   "cratedb-toolkit[io-base]",
-  "dlt>=1.10",
+  "dlt>=1.10,<1.13",
   "dlt-cratedb>=0.0.1",
   "ingestr>=0.11,<0.14",
   "sqlalchemy>=1",
