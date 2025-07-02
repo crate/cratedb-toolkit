@@ -56,7 +56,7 @@ The recipe file can be used to define settings, primary key information, the col
 mapping strategy, and column type mapping rules.
 
 If you want to provide the SQL DDL manually, please toggle `settings.ignore_ddl: true`,
-and provide the primary key information per `pk` instead.
+and provide the primary key information in the `pk` section instead.
 
 When the data includes container types, for example originating from JSON(B) columns,
 use the `map` section to assign column type information to them.
