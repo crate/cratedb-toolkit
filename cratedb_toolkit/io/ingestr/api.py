@@ -16,6 +16,7 @@ def ingestr_select(source_url: str) -> bool:
     Whether to select `ingestr` for this data source.
     """
     if not ingestr_available:
+        logger.debug("ingestr is not installed")
         return False
     try:
         factory = ingestr.src.factory.SourceDestinationFactory(source_url, "csv:////tmp/foobar.csv")

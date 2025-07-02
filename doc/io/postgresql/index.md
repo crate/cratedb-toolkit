@@ -1,6 +1,9 @@
+(io-postgresql)=
+
 # PostgreSQL I/O
 
-Load and continuously replicate data from PostgreSQL to CrateDB.
+Load and continuously replicate data from PostgreSQL to CrateDB,
+building upon the [ingestr i/o subsystem].
 
 ## Install
 
@@ -19,7 +22,7 @@ ctk load table \
 
 ## Configure
 
-Because the underlying framework is [dlt], you will configure parameters like
+Because the underlying framework uses [dlt], you will configure parameters like
 batch size in your `.dlt/config.toml`.
 ```toml
 [data_writer]
@@ -37,3 +40,4 @@ research
 
 
 [dlt]: https://github.com/dlt-hub/dlt
+[ingestr i/o subsystem]: project:#ingestr
