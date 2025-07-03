@@ -12,7 +12,7 @@ Use it for ad-hoc transfers or in data pipelines, either from the command-line
 
 Install the CrateDB Toolkit package, including the Kinesis extension.
 ```shell
-pip install --upgrade 'cratedb-toolkit[kinesis]'
+uv tool install --upgrade 'cratedb-toolkit[kinesis]'
 ```
 
 ## Usage
@@ -68,7 +68,7 @@ to the `settings.mapping_strategy: universal` setting.
 # https://cratedb-toolkit.readthedocs.io/io/dms/standalone.html
 ---
 meta:
-  type: tikray-project
+  type: dms-recipe
   version: 1
 collections:
 - address:
