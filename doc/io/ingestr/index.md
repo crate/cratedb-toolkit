@@ -15,7 +15,7 @@ infrastructure and save operational costs.
 ## Install
 
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io-ingestr]'
+uv tool install --prerelease=allow --upgrade 'cratedb-toolkit[io-ingestr]'
 ```
 
 ## Synopsis
