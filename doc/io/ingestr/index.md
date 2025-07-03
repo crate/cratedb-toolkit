@@ -178,6 +178,8 @@ directly, or use the universal [`ctk load table`] interface.
 :::{tip}
 When using `ingestr ingest`, please note you must address CrateDB like
 PostgreSQL, but using the `cratedb://` URL scheme instead of `postgresql://`.
+Please install ingestr v0.13.61 or higher, e.g. by using
+`pip install 'ingestr>=0.13.61'`.
 
 When using `ctk load table` like outlined below, you will use the `--cluster-url`
 CLI option to address CrateDB using an SQLAlchemy URL, which uses the `crate://`

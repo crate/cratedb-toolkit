@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- I/O: Updated to `ingestr>=0.13.61`
 
 ## 2025/07/01 v0.0.37
 - Settings: Fixed comparison of `0s` vs `0ms`. Thanks, @hlcianfagna.
