@@ -35,7 +35,9 @@ def test_cfr_sys_export_success(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(
+        env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)}, mix_stderr=False
+    )
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -47,8 +49,8 @@ def test_cfr_sys_export_success(cratedb, tmp_path, caplog):
     assert "Exporting system tables to" in caplog.text
     assert re.search(r"Successfully exported \d+ system tables", caplog.text), "Log message missing"
 
-    # Verify outcome.
-    path = Path(json.loads(result.output)["path"])
+    # Verify the outcome.
+    path = Path(json.loads(result.stdout)["path"])
     assert filenames(path) == ["data", "schema"]
 
     schema_files = filenames(path / "schema")
@@ -66,7 +68,9 @@ def test_cfr_sys_export_to_archive_file(cratedb, tmp_path, caplog):
     target = os.path.join(tmp_path, "cluster-data.tgz")
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(
+        env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)}, mix_stderr=False
+    )
     result = runner.invoke(
         cli,
         args=f"--debug sys-export {target}",
@@ -78,8 +82,8 @@ def test_cfr_sys_export_to_archive_file(cratedb, tmp_path, caplog):
     assert "Exporting system tables to" in caplog.text
     assert re.search(r"Successfully exported \d+ system tables", caplog.text), "Log message missing"
 
-    # Verify outcome.
-    path = Path(json.loads(result.output)["path"])
+    # Verify the outcome.
+    path = Path(json.loads(result.stdout)["path"])
     assert "cluster-data.tgz" in path.name
 
     data_files = []
@@ -102,7 +106,7 @@ def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_TARGET": str(tmp_path)}, mix_stderr=False)
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -116,7 +120,9 @@ def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
 
 
 def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)})
+    runner = CliRunner(
+        env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)}, mix_stderr=False
+    )
     result = runner.invoke(
         cli,
         args="--debug sys-export",
@@ -124,7 +130,7 @@ def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
     )
     assert result.exit_code == 0
 
-    path = Path(json.loads(result.output)["path"])
+    path = Path(json.loads(result.stdout)["path"])
     sys_cluster_table_schema = path / "schema" / "sys-cluster.sql"
     with open(sys_cluster_table_schema, "r") as f:
         content = f.read()
@@ -172,7 +178,9 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
     shutil.copy(sys_operations_data, data_path)
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)})
+    runner = CliRunner(
+        env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)}, mix_stderr=False
+    )
     result = runner.invoke(
         cli,
         args="--debug sys-import",
@@ -184,7 +192,7 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
     assert "Importing system tables from" in caplog.text
     assert re.search(r"Successfully imported \d+ system tables", caplog.text), "Log message missing"
 
-    # Verify outcome.
+    # Verify the outcome.
     results = cratedb.database.run_sql("SHOW TABLES", records=True)
     assert {"table_name": "sys-operations"} in results
 
@@ -198,7 +206,7 @@ def test_cfr_sys_import_failure(cratedb, tmp_path, caplog):
     """
 
     # Invoke command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_SOURCE": str(tmp_path)})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://foo.bar/", "CFR_SOURCE": str(tmp_path)}, mix_stderr=False)
     result = runner.invoke(
         cli,
         args="--debug sys-import",
