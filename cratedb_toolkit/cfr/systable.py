@@ -23,6 +23,7 @@ import tempfile
 import typing as t
 from pathlib import Path
 
+from tqdm.contrib.logging import logging_redirect_tqdm
 if t.TYPE_CHECKING:
     import polars as pl
 
@@ -154,11 +155,16 @@ class SystemTableExporter(PathProvider):
         timestamp = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
         path = self.path / self.info.cluster_name / timestamp / "sys"
         logger.info(f"Exporting system tables to: {path}")
-        system_tables = self.inspector.table_names()
         path_schema = path / ExportSettings.SCHEMA_PATH
         path_data = path / ExportSettings.DATA_PATH
         path_schema.mkdir(parents=True, exist_ok=True)
         path_data.mkdir(parents=True, exist_ok=True)
+        with logging_redirect_tqdm():
+            self._save(path_schema, path_data)
+            return path
+
+    def _save(self, path_schema: Path, path_data: Path) -> None:
+        system_tables = self.inspector.table_names()
         table_count = 0
         for tablename in tqdm(system_tables, disable=None):
             logger.debug(f"Exporting table: {tablename}")
@@ -169,11 +175,11 @@ class SystemTableExporter(PathProvider):
             path_table_data = path_data / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.{self.data_format}"
             tablename_out = self.adapter.quote_relation_name(f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}")
 
-            # Write schema file.
+            # Write the schema file.
             with open(path_table_schema, "w") as fh_schema:
                 print(self.inspector.ddl(tablename_in=tablename, tablename_out=tablename_out), file=fh_schema)
 
-            # Write data file.
+            # Write the data file.
             df = self.read_table(tablename=tablename)
             if df.is_empty():
                 continue
@@ -187,7 +193,6 @@ class SystemTableExporter(PathProvider):
                 self.dump_table(frame=df, file=t.cast(t.TextIO, fh_data))
 
         logger.info(f"Successfully exported {table_count} system tables")
-        return path
 
 
 class SystemTableImporter:
@@ -219,6 +224,10 @@ class SystemTableImporter:
 
         logger.info(f"Importing system tables from: {self.source}")
 
+        with logging_redirect_tqdm():
+            self._load(path_schema, path_data)
+
+    def _load(self, path_schema: Path, path_data: Path):
         table_count = 0
         for tablename in tqdm(self.table_names()):
             tablename_restored = ExportSettings.TABLE_FILENAME_PREFIX + tablename
