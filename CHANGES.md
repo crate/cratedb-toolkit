@@ -3,6 +3,7 @@
 ## Unreleased
 - I/O: Updated to `ingestr>=0.13.61`
 - CFR: Improved log output
+- CFR: Fixed double quoting of table name. Thanks, @karynzv.
 
 ## 2025/07/01 v0.0.37
 - Settings: Fixed comparison of `0s` vs `0ms`. Thanks, @hlcianfagna.
