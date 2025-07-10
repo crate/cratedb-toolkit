@@ -23,7 +23,11 @@ import tempfile
 import typing as t
 from pathlib import Path
 
+import orjsonl
+import pandas as pd
+from sqlalchemy_cratedb import insert_bulk
 from tqdm.contrib.logging import logging_redirect_tqdm
+
 if t.TYPE_CHECKING:
     import polars as pl
 
@@ -247,20 +251,25 @@ class SystemTableImporter:
 
             # Load data.
             try:
-                df: "pl.DataFrame" = self.load_table(path_table_data)
-                df.write_database(table_name=tablename_restored, connection=self.dburi, if_table_exists="replace")
+                df: "pd.DataFrame" = pd.DataFrame.from_records(self.load_table(path_table_data))
+                df.to_sql(
+                    name=tablename_restored,
+                    con=self.adapter.engine,
+                    index=False,
+                    if_exists="replace",
+                    method=insert_bulk,
+                )
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
 
         logger.info(f"Successfully imported {table_count} system tables")
-        # df.to_pandas().to_sql(name=tablename, con=self.adapter.engine, if_exists="append", index=False)  # noqa: ERA001, E501
 
-    def load_table(self, path: Path) -> "pl.DataFrame":
+    def load_table(self, path: Path) -> t.List:
         import polars as pl
 
         if path.suffix in [".jsonl"]:
-            return pl.read_ndjson(path)
+            return orjsonl.load(path)
         elif path.suffix in [".parquet", ".pq"]:
-            return pl.read_parquet(path)
+            return pl.read_parquet(path).to_pandas().to_dict("records")
         else:
             raise NotImplementedError(f"Input format not implemented: {path.suffix}")

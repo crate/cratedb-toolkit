@@ -5,6 +5,7 @@
 - CFR: Improved log output
 - CFR: Fixed double quoting of table name. Thanks, @karynzv.
 - CFR: When importing, use `replace` policy instead of `append`
+- CFR: Improved importing data re. type mapping without NumPy
 
 ## 2025/07/01 v0.0.37
 - Settings: Fixed comparison of `0s` vs `0ms`. Thanks, @hlcianfagna.

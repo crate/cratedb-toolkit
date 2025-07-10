@@ -110,7 +110,7 @@ dependencies = [
   "python-slugify<9",
   "pyyaml<7",
   "requests>=2.28,<3",
-  "sqlalchemy-cratedb>=0.41",
+  "sqlalchemy-cratedb>=0.41.0",
   "sqlparse<0.6",
   "tqdm<5",
   "typing-extensions<5; python_version<='3.7'",
