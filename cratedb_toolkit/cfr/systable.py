@@ -248,7 +248,7 @@ class SystemTableImporter:
             # Load data.
             try:
                 df: "pl.DataFrame" = self.load_table(path_table_data)
-                df.write_database(table_name=tablename_restored, connection=self.dburi, if_table_exists="append")
+                df.write_database(table_name=tablename_restored, connection=self.dburi, if_table_exists="replace")
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
 
