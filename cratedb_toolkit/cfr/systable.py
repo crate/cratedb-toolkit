@@ -234,7 +234,7 @@ class SystemTableImporter:
     def _load(self, path_schema: Path, path_data: Path):
         table_count = 0
         for tablename in tqdm(self.table_names()):
-            tablename_restored = ExportSettings.TABLE_FILENAME_PREFIX + tablename
+            tablename_restored = f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}"
 
             path_table_schema = path_schema / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.sql"
             path_table_data = path_data / f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}.{self.data_format}"
@@ -249,6 +249,9 @@ class SystemTableImporter:
             schema_sql = path_table_schema.read_text()
             self.adapter.run_sql(schema_sql)
 
+            # Truncate table.
+            self.adapter.run_sql(f"DELETE FROM {self.adapter.quote_relation_name(tablename_restored)};")  # noqa: S608
+
             # Load data.
             try:
                 df: "pd.DataFrame" = pd.DataFrame.from_records(self.load_table(path_table_data))
@@ -256,7 +259,7 @@ class SystemTableImporter:
                     name=tablename_restored,
                     con=self.adapter.engine,
                     index=False,
-                    if_exists="replace",
+                    if_exists="append",
                     method=insert_bulk,
                 )
             except Exception as ex:
