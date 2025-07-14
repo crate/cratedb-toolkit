@@ -132,7 +132,7 @@ optional-dependencies.cfr = [
   "queryanonymizer<1.2",
 ]
 optional-dependencies.datasets = [
-  "datasets<4",
+  "datasets<5",
   "kaggle<1.8",
 ]
 optional-dependencies.develop = [
