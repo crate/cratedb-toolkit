@@ -128,7 +128,7 @@ optional-dependencies.cfr = [
   "numpy<2.3",
   "pandas<2.3",
   "polars<1.32",
-  "pyarrow<20.1",
+  "pyarrow<21.1",
   "queryanonymizer<1.2",
 ]
 optional-dependencies.datasets = [
