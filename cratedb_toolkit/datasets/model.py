@@ -70,6 +70,7 @@ class DatasetToDatabaseTableAdapter:
     def __post_init__(self):
         self.init_sql = None
         self.db = DatabaseAdapter(dburi=self.dburi)
+        self.table = self.db.quote_relation_name(self.table)
 
     def create(
         self,
@@ -109,11 +110,13 @@ class DatasetToDatabaseTableAdapter:
         has_data = cardinality > 0
 
         if if_exists == "noop" and has_data:
-            return
+            return self
 
         if self.init_sql is None:
             raise ValueError("SQL for loading data is missing")
         self.run_sql(self.init_sql)
+
+        return self
 
     def run_sql(self, sql: str):
         for statement in sqlparse.parse(sql):
