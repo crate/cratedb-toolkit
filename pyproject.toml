@@ -191,7 +191,7 @@ optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.3",
 ]
 optional-dependencies.kinesis = [
-  "aiobotocore<2.24",
+  "aiobotocore<2.25",
   "async-kinesis>=2,<3",
   "botocore<1.40",
   "commons-codec>=0.0.24",
