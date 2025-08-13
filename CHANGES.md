@@ -8,6 +8,7 @@
 - CFR: Improved importing data re. type mapping without NumPy
 - CFR: Truncated target table before importing, using `append`
   strategy again, because `replace` doesn't do the right DDL.
+- I/O: Tuned down ingestr, it masked native I/O adapters
 
 ## 2025/07/01 v0.0.37
 - Settings: Fixed comparison of `0s` vs `0ms`. Thanks, @hlcianfagna.

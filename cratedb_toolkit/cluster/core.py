@@ -540,14 +540,7 @@ class StandaloneCluster(ClusterBase):
         target_url = self.address.dburi
         source_url_obj = URL(source.url)
 
-        if ingestr_select(source_url):
-            if ingestr_copy(source_url, self.address, progress=True):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        elif source_url_obj.scheme.startswith("dynamodb"):
+        if source_url_obj.scheme.startswith("dynamodb"):
             from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
 
             if dynamodb_copy(str(source_url_obj), target_url, progress=True):
@@ -605,6 +598,13 @@ class StandaloneCluster(ClusterBase):
                 else:
                     logger.error("Data loading failed or incomplete")
                     self._load_table_result = False
+
+        elif ingestr_select(source_url):
+            if ingestr_copy(source_url, self.address, progress=True):
+                self._load_table_result = True
+            else:
+                logger.error("Data loading failed or incomplete")
+                self._load_table_result = False
 
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
