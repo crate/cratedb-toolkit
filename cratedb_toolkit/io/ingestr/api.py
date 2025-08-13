@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 
 from yarl import URL
 
@@ -8,13 +9,20 @@ from cratedb_toolkit.model import DatabaseAddress
 logger = logging.getLogger(__name__)
 
 
-ingestr_available, ingestr, ConfigFieldMissingException = import_ingestr()
+@lru_cache(maxsize=1)
+def _get_ingestr():
+    """
+    Get an ingestr API handle, cached.
+    """
+    return import_ingestr()
 
 
 def ingestr_select(source_url: str) -> bool:
     """
     Whether to select `ingestr` for this data source.
     """
+    ingestr_available, ingestr, ConfigFieldMissingException = _get_ingestr()
+
     if not ingestr_available:
         logger.debug("ingestr is not installed")
         return False
@@ -35,7 +43,7 @@ def ingestr_select(source_url: str) -> bool:
         return False
 
 
-def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: bool = False):
+def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: bool = False) -> bool:
     """
     Invoke data transfer to CrateDB from any source provided by `ingestr`.
 
@@ -55,6 +63,7 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
             "postgresql://pguser:secret11@postgresql.example.org:5432/postgres?table=public.diamonds" \
             --cluster-url="crate://crate:na@localhost:4200/testdrive/ibis_diamonds"
     """
+    ingestr_available, ingestr, ConfigFieldMissingException = _get_ingestr()
 
     # Sanity checks.
     if not ingestr_available:
