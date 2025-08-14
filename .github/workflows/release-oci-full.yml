@@ -1,5 +1,5 @@
 # Stage OCI container images through GitHub Actions (GHA) to GitHub Container Registry (GHCR).
-name: "Release: OCI to GHCR"
+name: "Release: OCI to GHCR (full)"
 
 on:
   pull_request: ~
@@ -61,11 +61,11 @@ jobs:
 
       - name: Run tests
         run: |
-          if [[ -f release/oci/test.yml ]]; then
+          if [[ -f release/oci-full/test.yml ]]; then
             export DOCKER_BUILDKIT=1
             export COMPOSE_DOCKER_CLI_BUILD=1
-            docker compose --file release/oci/test.yml build
-            docker compose --file release/oci/test.yml run sut
+            docker compose --file release/oci-full/test.yml build
+            docker compose --file release/oci-full/test.yml run sut
           fi
 
   build-and-publish:
@@ -132,7 +132,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: release/oci/Dockerfile
+          file: release/oci-full/Dockerfile
           platforms: linux/amd64  # linux/arm64,linux/arm/v7
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

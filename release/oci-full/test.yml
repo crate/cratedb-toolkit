@@ -2,5 +2,5 @@ services:
   sut:
     build:
       context: ../..
-      dockerfile: release/oci/Dockerfile
+      dockerfile: release/oci-full/Dockerfile
     command: selftest.sh
