@@ -1,0 +1,101 @@
+---
+name: "Tests: Kinesis"
+
+on:
+  pull_request:
+    paths:
+    - '.github/workflows/kinesis.yml'
+    - 'cratedb_toolkit/io/kinesis/**'
+    - 'tests/io/kinesis/**'
+    - 'pyproject.toml'
+  push:
+    branches: [ main ]
+    paths:
+    - '.github/workflows/kinesis.yml'
+    - 'cratedb_toolkit/io/kinesis/**'
+    - 'tests/io/kinesis/**'
+    - 'pyproject.toml'
+
+  # Allow job to be triggered manually.
+  workflow_dispatch:
+
+  # Run the job each night after CrateDB nightly has been published.
+  schedule:
+    - cron: '0 3 * * *'
+
+# Cancel in-progress jobs when pushing to the same branch.
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+
+  tests:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: [
+          "3.11",
+          "3.13",
+        ]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+      UV_SYSTEM_PYTHON: true
+      # Do not tear down Testcontainers
+      TC_KEEPALIVE: true
+
+    # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
+    services:
+      cratedb:
+        image: crate/crate:nightly
+        ports:
+          - 4200:4200
+          - 5432:5432
+
+    name: "
+    Kinesis:
+    Python ${{ matrix.python-version }} on OS ${{ matrix.os }}"
+    steps:
+
+    - name: Acquire sources
+      uses: actions/checkout@v4
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+        cache-suffix: ${{ matrix.python-version }}
+        enable-cache: true
+        version: "latest"
+
+    - name: Set up project
+      run: |
+
+        # Install package in editable mode.
+        uv pip install --editable=.[kinesis,test,develop]
+
+    - name: Run linter and software tests
+      run: |
+        pytest -m kinesis
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      with:
+        files: ./coverage.xml
+        flags: kinesis
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
