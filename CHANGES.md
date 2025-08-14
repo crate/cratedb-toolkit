@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/08/14 v0.0.38
 - I/O: Updated to `ingestr>=0.13.61`
 - CFR: Improved log output
 - CFR: Fixed double quoting of table name. Thanks, @karynzv.
