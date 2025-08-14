@@ -1,1 +1,9 @@
-.venv*
+*
+!.git
+!cratedb_toolkit
+!release
+!pyproject.toml
+!setup.py
+!*.md
+!*.rst
+!LICENSE

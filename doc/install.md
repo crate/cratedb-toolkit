@@ -28,7 +28,9 @@ ctk --version
 
 ## Container
 
-Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`.
+Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`, or,
+if you want to use the ingestr-based I/O adapters, please use the OCI image
+`ghcr.io/crate/cratedb-toolkit-ingestr`.
 
 Run with Docker or Podman.
 ```shell
