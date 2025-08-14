@@ -324,13 +324,6 @@ ctk load table \
 See [HubSpot entities] about any labels you can use for the `table` parameter
 in the source URL.
 
-### MongoDB to CrateDB
-```shell
-ctk load table \
-    "mongodb://<username>:<password>@<hostname>:<port>/?table=<database>.<collection>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/mongodb_demo"
-```
-
 ### MySQL to CrateDB
 ```shell
 ctk load table \
