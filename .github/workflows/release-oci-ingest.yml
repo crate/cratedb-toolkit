@@ -13,10 +13,12 @@ on:
   # Allow job to be triggered manually.
   workflow_dispatch:
 
-# Permit pushing to GHCR.
 permissions:
+  # Permit pushing to GHCR.
   contents: read
   packages: write
+  # Enable signed provenance/attestations.
+  id-token: write
 
 # Cancel in-progress jobs when pushing to the same branch.
 concurrency:
