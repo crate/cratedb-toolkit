@@ -1,12 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Fail on error.
-set -e
+set -Eeuo pipefail
 
 # Display all commands.
 # set -x
 
-flavor=$1
-
 echo "Invoking cratedb-toolkit"
-cratedb-toolkit --version
+exec cratedb-toolkit --version

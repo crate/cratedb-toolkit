@@ -28,18 +28,23 @@ ctk --version
 
 ## Container
 
-Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`, or,
-if you want to use the ingestr-based I/O adapters, please use the OCI image
-`ghcr.io/crate/cratedb-toolkit-ingestr`.
+Alternatively, use a container image from GHCR. Use `ghcr.io/crate/cratedb-toolkit`
+for the default toolset. To use the "ingest" image (which includes the `io-ingestr`
+extras and the ingestr-based I/O adapters), use `ghcr.io/crate/cratedb-toolkit-ingest`.
+The default image does not include these extras or drivers.
 
 Run with Docker or Podman.
 ```shell
 docker run --rm -it --pull=always "ghcr.io/crate/cratedb-toolkit" ctk --version
 ```
+```shell
+docker run --rm -it --pull=always "ghcr.io/crate/cratedb-toolkit-ingest" ctk --version
+```
 
 To conveniently use CrateDB Toolkit on your workstation without installing it.
 ```shell
 alias ctk='docker run --rm -it --network=host "ghcr.io/crate/cratedb-toolkit" ctk'
+alias ctk-ingest='docker run --rm -it --network=host "ghcr.io/crate/cratedb-toolkit-ingest" ctk'
 ```
 
 Run on Kubernetes.
