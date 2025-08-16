@@ -24,15 +24,16 @@ RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/ca
     --mount=type=cache,id=apt-lists-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests --yes git
+    && apt-get install --no-install-recommends --no-install-suggests --yes git build-essential
 
 # Provide sources.
 ARG BUILD=/usr/src
 COPY . ${BUILD}
 
-# Build package.
+# Build wheel packages.
 RUN pip install build
 RUN python -m build --wheel ${BUILD}
+RUN MAX_JOBS=8 pip wheel --wheel-dir=${BUILD}/dist --verbose python-bsonjs
 
 
 FROM python:3.12-slim-bookworm AS package
@@ -66,7 +67,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Configure runtime environment.
 ENV PATH=/root/.local/bin:$PATH
 
-# Provide wheel package.
+# Provide wheel packages.
 ARG BUILD=/usr/src
 COPY --from=build ${BUILD}/dist/*.whl /tmp
 
@@ -75,8 +76,11 @@ RUN \
     --mount=type=cache,id=pip-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/pip \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
-    && WHEEL="$(ls /tmp/*.whl)" \
-    && uv tool install --upgrade "cratedb-toolkit[all] @ file://${WHEEL}"
+    && WHEEL_BSONJS="$(ls /tmp/python_bsonjs*.whl)" \
+    && WHEEL_CTK="$(ls /tmp/cratedb_toolkit*.whl)" \
+    && uv pip install --upgrade \
+        "python-bsonjs @ file://${WHEEL_BSONJS}" \
+        "cratedb-toolkit[all] @ file://${WHEEL_CTK}"
 
 # Copy `selftest.sh` to the image.
 COPY release/oci-full/selftest.sh /usr/local/bin
