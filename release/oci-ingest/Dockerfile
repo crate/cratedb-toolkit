@@ -98,12 +98,13 @@ ARG BUILD=/usr/src
 COPY --from=build ${BUILD}/dist/*.whl /tmp
 
 # Install package.
+COPY release/oci-ingest/overrides.txt /tmp
 RUN \
     --mount=type=cache,id=pip-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/pip \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv tool install --upgrade "cratedb-toolkit[io-ingestr] @ file://${WHEEL}"
+    && uv pip install --upgrade --overrides="/tmp/overrides.txt" "cratedb-toolkit[io-ingestr] @ file://${WHEEL}"
 
 # Copy `selftest.sh` to the image.
 COPY release/oci-ingest/selftest.sh /usr/local/bin
