@@ -7,22 +7,31 @@
 # Stage 1: Build wheel package
 FROM python:3.12-slim-bookworm AS build
 
-ARG BUILD=/usr/src
+# Enable concurrent multi-arch builds.
+# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
 
-# Configure operating system
+# Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
 
 # Install Git, it is needed for `versioningit`.
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt --mount=type=cache,id=apt-library,target=/var/lib/apt \
+RUN --mount=type=cache,id=apt-cache-build-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
+    --mount=type=cache,id=apt-lists-build-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes git
 
+# Provide sources.
+ARG BUILD=/usr/src
+COPY . ${BUILD}
+
 # Build package.
 RUN pip install build
-COPY . ${BUILD}
 RUN python -m build --wheel ${BUILD}
 
 
@@ -33,11 +42,16 @@ LABEL org.opencontainers.image.source="https://github.com/crate/cratedb-toolkit"
       org.opencontainers.image.description="CrateDB Toolkit \"ingest\" image with io-ingestr extras" \
       org.opencontainers.image.licenses="AGPL-3.0-only OR EUPL-1.2"
 
-ARG BUILD=/usr/src
-
 # Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=linux
+
+# Enable concurrent multi-arch builds.
+# https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 # Configure build environment.
 ENV PIP_ROOT_USER_ACTION=ignore
@@ -54,14 +68,16 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Install PyODBC drivers for MSSQL and PostgreSQL.
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt --mount=type=cache,id=apt-library,target=/var/lib/apt \
+RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
+    --mount=type=cache,id=apt-lists-package-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes curl gpg
 RUN \
   curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-prod.gpg && \
   curl -sSL https://packages.microsoft.com/config/debian/12/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt --mount=type=cache,id=apt-library,target=/var/lib/apt \
+RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
+    --mount=type=cache,id=apt-lists-package-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && export ACCEPT_EULA='Y' \
     && apt-get update \
@@ -78,12 +94,13 @@ RUN \
     mv -f /tmp/temp.ini /etc/odbcinst.ini
 
 # Provide wheel package.
+ARG BUILD=/usr/src
 COPY --from=build ${BUILD}/dist/*.whl /tmp
 
 # Install package.
 RUN \
-    --mount=type=cache,id=pip,target=/root/.cache/pip \
-    --mount=type=cache,id=uv,target=/root/.cache/uv \
+    --mount=type=cache,id=pip-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/pip \
+    --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
     && uv tool install --upgrade "cratedb-toolkit[io-ingestr] @ file://${WHEEL}"
