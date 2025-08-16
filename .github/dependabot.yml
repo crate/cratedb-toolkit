@@ -7,7 +7,12 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "docker"
-    directory: "/release/oci"
+    directory: "/release/oci-full"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker"
+    directory: "/release/oci-ingest"
     schedule:
       interval: "weekly"
 
