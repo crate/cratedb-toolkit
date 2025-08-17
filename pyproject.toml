@@ -185,7 +185,7 @@ optional-dependencies.io-ingestr = [
   "dlt>=1.10,<1.16",
   "dlt-cratedb>=0.0.1",
   "ingestr>=0.13.61,<0.14",
-  "sqlalchemy>=1",
+  "sqlalchemy>=1,<2",
 ]
 optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.3",
