@@ -18,13 +18,6 @@ While coverage of the complete MongoDB API, and more advanced query translations
 are pretty thin yet, freedom and performance are paramount. There are no [Atlas
 Service Limits] or [MongoDB Limits and Thresholds] in place.
 
-:::{warning}
-**Please note this is pre-alpha software, and is only intended for demonstration
-purposes.**
-<br>
-**Here be dragons. You have been warned.**
-:::
-
 
 ## Synopsis
 

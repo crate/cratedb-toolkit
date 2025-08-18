@@ -33,17 +33,6 @@ It aims for [DWIM]-like usefulness and [UX], and provides CLI and HTTP
 interfaces, and others.
 
 
-## Status
-
-Please note that the `cratedb-toolkit` package contains alpha-, beta- and
-incubation-quality code, and as such, is considered to be a work in progress.
-Contributions of all kinds are much welcome, in order to make it more solid,
-and to add features.
-
-Breaking changes should be expected until a 1.0 release, so version pinning is
-strongly recommended, especially when using it as a library.
-
-
 ## Install
 
 Install package.
@@ -63,12 +52,18 @@ ctk --version
 ```
 
 
-## Development
+## Contribute
 
 Contributions are very much welcome. Please visit the [](#sandbox)
 documentation to learn about how to spin up a sandbox environment on your
 workstation, or create a [ticket][Issues] to report a bug or share an idea
 about a possible feature.
+
+## Status
+
+Breaking changes should be expected until a 1.0 release, so version pinning is
+strongly recommended, especially when using this software as a library.
+
 
 
 
