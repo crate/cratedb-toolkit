@@ -206,7 +206,7 @@ optional-dependencies.mongodb = [
   "cratedb-toolkit[io,io-recipe]",
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.10",
-  "python-bsonjs<0.7",
+  "python-bsonjs<0.8",
   "rich>=3.3.2,<15",
   "undatum<1.1",
 ]
