@@ -18,12 +18,6 @@ HTTP API], using [CrateDB] as a database backend.
 While the [API coverage](#rockset-api-coverage) is thin yet, the performance is
 paramount. There are no [API Rate Limits] or [Ingest Related Limits] in place.
 
-:::{warning}
-**Please note this is pre-alpha software, and is only intended for demonstration
-purposes.**
-<br>
-**Here be dragons. You have been warned.**
-:::
 
 ## Synopsis
 
