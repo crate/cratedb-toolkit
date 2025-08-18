@@ -2,3 +2,7 @@
 # Failed to build `ibm-db==3.2.6`: `NameError: name 'arch_' is not defined`.
 # https://github.com/crate/cratedb-toolkit/actions/runs/17011304532/job/48227731964?pr=508#step:9:3592
 ibm-db; platform_machine != "aarch64"
+
+# Support for ARM64 available since version 0.7.0.
+# https://github.com/mongodb-labs/python-bsonjs/issues/81
+python-bsonjs>=0.7; platform_machine == "aarch64"
