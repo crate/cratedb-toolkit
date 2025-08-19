@@ -574,7 +574,15 @@ class StandaloneCluster(ClusterBase):
             )
             self._load_table_result = True
 
-        elif source_url_obj.scheme in ["file+bson", "http+bson", "https+bson", "mongodb", "mongodb+srv"]:
+        elif source_url_obj.scheme in [
+            "file+bson",
+            "http+bson",
+            "https+bson",
+            "mongodb",
+            "mongodb+srv",
+            "mongodb+cdc",
+            "mongodb+srv+cdc",
+        ]:
             if "+cdc" in source_url_obj.scheme:
                 source_url_obj.scheme = source_url_obj.scheme.replace("+cdc", "")
 
