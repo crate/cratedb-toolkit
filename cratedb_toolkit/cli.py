@@ -3,8 +3,8 @@ from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.util.cli import boot_click
 
-from .admin.xmover.cli import main as admin_xmover_cli
 from .adapter.rockset.cli import cli as rockset_cli
+from .admin.xmover.cli import main as admin_xmover_cli
 from .cfr.cli import cli as cfr_cli
 from .cluster.cli import cli as cloud_cli
 from .cmd.tail.cli import cli as tail_cli
