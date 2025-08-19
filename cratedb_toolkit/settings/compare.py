@@ -412,6 +412,23 @@ def compare_cluster_settings(
 
         result = None  # Initialize the result to None for each setting
 
+        # Apply special rules for gateway settings.
+        # Ignore the `gateway.recover_after_time` setting under default conditions,
+        # even if it looks like it is deviating from its default value of `5m`.
+        if setting_key == "gateway.recover_after_time":
+            # The cluster also proceeds to immediate recovery, and the default 5 minutes
+            # waiting time does not apply, if neither this setting nor `expected_nodes`
+            # and `expected_data_nodes` are explicitly set.
+            # So, don't consider this setting, unless `expected_nodes` and
+            # `expected_data_nodes` are explicitly set.
+            # https://github.com/crate/crate/blob/30abc0f980/docs/config/cluster.rst?plain=1#L1382-L1395
+
+            expected_nodes = int(flat_settings.get("gateway.expected_nodes", -1) or -1)
+            expected_data_nodes = int(flat_settings.get("gateway.expected_data_nodes", -1) or -1)
+            current_ms = to_milliseconds(str(current_value))
+            if current_ms == 0 and expected_nodes == -1 and expected_data_nodes == -1:
+                continue
+
         # Check if this is a time-related setting
         is_time_setting = any(
             time_term in setting_key.lower()

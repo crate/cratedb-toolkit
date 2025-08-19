@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- Settings: Stop flagging `gateway.recover_after_time` as a difference
+  when both `gateway.expected_nodes` and `gateway.expected_data_nodes` are
+  unset (`-1`).
 
 ## 2025/08/19 v0.0.41
 - I/O: Updated to `influxio-0.6.0`. Thanks, @ZillKhan.
