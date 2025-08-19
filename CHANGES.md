@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Admin: Added XMover - CrateDB Shard Analyzer and Movement Tool.
+  Thanks, @WalBeh.
 
 ## 2025/08/19 v0.0.41
 - I/O: Updated to `influxio-0.6.0`. Thanks, @ZillKhan.
