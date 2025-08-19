@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- I/O: Updated to `influxio-0.6.0`. Thanks, @ZillKhan.
+  - From now on, the target table will be the measurement name when
+    importing ILP files.
+  - The InfluxDB source URL now accepts the `timeout` query parameter
+    to configure the network timeout in seconds when talking to the
+    InfluxDB API.
 
 ## 2025/08/19 v0.0.40
 - I/O: Fixed MongoDB CDC invocation. Thanks, Mỹ Duyên.
