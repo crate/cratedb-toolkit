@@ -30,6 +30,7 @@ changes
 :caption: Diagnostics
 :hidden:
 
+admin/index
 Cluster Information <info/index>
 Cluster Flight Recorder (CFR) <cfr/index>
 ```

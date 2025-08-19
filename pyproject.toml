@@ -110,6 +110,7 @@ dependencies = [
   "python-slugify<9",
   "pyyaml<7",
   "requests>=2.28,<3",
+  "rich<14",
   "sqlalchemy-cratedb>=0.41.0",
   "sqlparse<0.6",
   "tqdm<5",
@@ -263,6 +264,7 @@ scripts.cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 scripts.cratedb-toolkit = "cratedb_toolkit.cli:cli"
 scripts.ctk = "cratedb_toolkit.cli:cli"
 scripts.migr8 = "cratedb_toolkit.io.mongodb.cli:main"
+scripts.xmover = "cratedb_toolkit.admin.xmover.cli:main"
 entry-points.pytest11.cratedb_service = "cratedb_toolkit.testing.pytest"
 
 [tool.setuptools.packages.find]
