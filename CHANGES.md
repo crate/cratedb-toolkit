@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- I/O: Fixed MongoDB CDC invocation. Thanks, Mỹ Duyên.
 
 ## 2025/08/19 v0.0.39
 - OCI: Started producing image `ghcr.io/crate/cratedb-toolkit-ingest`
