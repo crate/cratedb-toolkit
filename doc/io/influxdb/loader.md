@@ -74,8 +74,9 @@ ctk load table \
 ```
 
 :::{note}
-When importing from ILP files, the measurement name from the data file
-will be used as the target table name.
+For ILP imports, the CrateDB connection URL can point to the schema only;
+any table component is ignored. Example:
+`export CRATEDB_CLUSTER_URL="crate://crate@localhost:4200/testdrive"`.
 :::
 
 ### Cloud
@@ -94,14 +95,11 @@ ctk load table \
 
 ### `timeout`
 
-The network timeout value is specified in seconds, the default value
-is 60 seconds. Both details deviate from the standard default setting
-of the underlying [InfluxDB client library][influxdb-client], which
-uses milliseconds, and a default value of 10_000 milliseconds.
+The network timeout is specified in seconds (default: 60). This deviates from
+the underlying [InfluxDB client library][influxdb-client], which uses
+milliseconds and a default of 10_000 ms.
 
-If you need to adjust this setting, add the parameter `timeout` to
-the InfluxDB URL like this:
-
+To adjust the timeout, add a `timeout` query parameter to the InfluxDB URL:
 ```shell
 ctk load table influxdb2://example:token@localhost:8086/testdrive/demo?timeout=300
 ```
