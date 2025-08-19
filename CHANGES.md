@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/08/19 v0.0.40
 - I/O: Fixed MongoDB CDC invocation. Thanks, Mỹ Duyên.
 
 ## 2025/08/19 v0.0.39
