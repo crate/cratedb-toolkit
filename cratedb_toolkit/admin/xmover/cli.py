@@ -4,23 +4,16 @@ Command line interface for XMover - CrateDB Shard Analyzer and Movement Tool
 
 import sys
 import time
-import os
 from typing import Optional
-try:
-    import click
-    from rich.console import Console
-    from rich.table import Table
-    from rich.panel import Panel
-    from rich.text import Text
-    from rich import box
-except ImportError as e:
-    print(f"Missing required dependency: {e}")
-    print("Please install dependencies with: pip install -e .")
-    sys.exit(1)
 
+import click
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from .analyzer import MoveRecommendation, RecoveryMonitor, ShardAnalyzer
 from .database import CrateDBClient
-from .analyzer import ShardAnalyzer, RecoveryMonitor
-
 
 console = Console()
 
@@ -28,11 +21,11 @@ console = Console()
 def format_size(size_gb: float) -> str:
     """Format size in GB with appropriate precision"""
     if size_gb >= 1000:
-        return f"{size_gb/1000:.1f}TB"
+        return f"{size_gb / 1000:.1f}TB"
     elif size_gb >= 1:
         return f"{size_gb:.1f}GB"
     else:
-        return f"{size_gb*1000:.0f}MB"
+        return f"{size_gb * 1000:.0f}MB"
 
 
 def format_percentage(value: float) -> str:
@@ -48,13 +41,13 @@ def format_percentage(value: float) -> str:
 def format_translog_info(recovery_info) -> str:
     """Format translog size information with color coding"""
     tl_bytes = recovery_info.translog_size_bytes
-    
+
     # Only show if significant (>10MB for production)
     if tl_bytes < 10 * 1024 * 1024:  # 10MB for production
         return ""
-    
+
     tl_gb = recovery_info.translog_size_gb
-    
+
     # Color coding based on size
     if tl_gb >= 5.0:
         color = "red"
@@ -62,13 +55,13 @@ def format_translog_info(recovery_info) -> str:
         color = "yellow"
     else:
         color = "green"
-    
+
     # Format size
     if tl_gb >= 1.0:
         size_str = f"{tl_gb:.1f}GB"
     else:
-        size_str = f"{tl_gb*1000:.0f}MB"
-    
+        size_str = f"{tl_gb * 1000:.0f}MB"
+
     return f" [dim]([{color}]TL:{size_str}[/{color}])[/dim]"
 
 
@@ -90,18 +83,18 @@ def main(ctx):
             console.print("[red]Error: Could not connect to CrateDB[/red]")
             console.print("Please check your CRATE_CONNECTION_STRING in .env file")
             sys.exit(1)
-        ctx.obj['client'] = client
+        ctx.obj["client"] = client
     except Exception as e:
         console.print(f"[red]Error connecting to CrateDB: {e}[/red]")
         sys.exit(1)
 
 
 @main.command()
-@click.option('--table', '-t', help='Analyze specific table only')
+@click.option("--table", "-t", help="Analyze specific table only")
 @click.pass_context
 def analyze(ctx, table: Optional[str]):
     """Analyze current shard distribution across nodes and zones"""
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
 
     console.print(Panel.fit("[bold blue]CrateDB Cluster Analysis[/bold blue]"))
@@ -114,27 +107,29 @@ def analyze(ctx, table: Optional[str]):
     summary_table.add_column("Metric", style="cyan")
     summary_table.add_column("Value", style="magenta")
 
-    summary_table.add_row("Nodes", str(overview['nodes']))
-    summary_table.add_row("Availability Zones", str(overview['zones']))
-    summary_table.add_row("Total Shards", str(overview['total_shards']))
-    summary_table.add_row("Primary Shards", str(overview['primary_shards']))
-    summary_table.add_row("Replica Shards", str(overview['replica_shards']))
-    summary_table.add_row("Total Size", format_size(overview['total_size_gb']))
+    summary_table.add_row("Nodes", str(overview["nodes"]))
+    summary_table.add_row("Availability Zones", str(overview["zones"]))
+    summary_table.add_row("Total Shards", str(overview["total_shards"]))
+    summary_table.add_row("Primary Shards", str(overview["primary_shards"]))
+    summary_table.add_row("Replica Shards", str(overview["replica_shards"]))
+    summary_table.add_row("Total Size", format_size(overview["total_size_gb"]))
 
     console.print(summary_table)
     console.print()
 
     # Disk watermarks table
-    if overview.get('watermarks'):
+    if overview.get("watermarks"):
         watermarks_table = Table(title="Disk Allocation Watermarks", box=box.ROUNDED)
         watermarks_table.add_column("Setting", style="cyan")
         watermarks_table.add_column("Value", style="magenta")
 
-        watermarks = overview['watermarks']
-        watermarks_table.add_row("Low Watermark", str(watermarks.get('low', 'Not set')))
-        watermarks_table.add_row("High Watermark", str(watermarks.get('high', 'Not set')))
-        watermarks_table.add_row("Flood Stage", str(watermarks.get('flood_stage', 'Not set')))
-        watermarks_table.add_row("Enable for Single Node", str(watermarks.get('enable_for_single_data_node', 'Not set')))
+        watermarks = overview["watermarks"]
+        watermarks_table.add_row("Low Watermark", str(watermarks.get("low", "Not set")))
+        watermarks_table.add_row("High Watermark", str(watermarks.get("high", "Not set")))
+        watermarks_table.add_row("Flood Stage", str(watermarks.get("flood_stage", "Not set")))
+        watermarks_table.add_row(
+            "Enable for Single Node", str(watermarks.get("enable_for_single_data_node", "Not set"))
+        )
 
         console.print(watermarks_table)
         console.print()
@@ -145,8 +140,8 @@ def analyze(ctx, table: Optional[str]):
     zone_table.add_column("Shards", justify="right", style="magenta")
     zone_table.add_column("Percentage", justify="right", style="green")
 
-    total_shards = overview['total_shards']
-    for zone, count in overview['zone_distribution'].items():
+    total_shards = overview["total_shards"]
+    for zone, count in overview["zone_distribution"].items():
         percentage = (count / total_shards * 100) if total_shards > 0 else 0
         zone_table.add_row(zone, str(count), f"{percentage:.1f}%")
 
@@ -164,20 +159,28 @@ def analyze(ctx, table: Optional[str]):
     node_table.add_column("Until Low WM", justify="right", style="yellow")
     node_table.add_column("Until High WM", justify="right", style="red")
 
-    for node_info in overview['node_health']:
+    for node_info in overview["node_health"]:
         # Format watermark remaining capacity
-        low_wm_remaining = format_size(node_info['remaining_to_low_watermark_gb']) if node_info['remaining_to_low_watermark_gb'] > 0 else "[red]Exceeded[/red]"
-        high_wm_remaining = format_size(node_info['remaining_to_high_watermark_gb']) if node_info['remaining_to_high_watermark_gb'] > 0 else "[red]Exceeded[/red]"
+        low_wm_remaining = (
+            format_size(node_info["remaining_to_low_watermark_gb"])
+            if node_info["remaining_to_low_watermark_gb"] > 0
+            else "[red]Exceeded[/red]"
+        )
+        high_wm_remaining = (
+            format_size(node_info["remaining_to_high_watermark_gb"])
+            if node_info["remaining_to_high_watermark_gb"] > 0
+            else "[red]Exceeded[/red]"
+        )
 
         node_table.add_row(
-            node_info['name'],
-            node_info['zone'],
-            str(node_info['shards']),
-            format_size(node_info['size_gb']),
-            format_percentage(node_info['disk_usage_percent']),
-            format_size(node_info['available_space_gb']),
+            node_info["name"],
+            node_info["zone"],
+            str(node_info["shards"]),
+            format_size(node_info["size_gb"]),
+            format_percentage(node_info["disk_usage_percent"]),
+            format_size(node_info["available_space_gb"]),
             low_wm_remaining,
-            high_wm_remaining
+            high_wm_remaining,
         )
 
     console.print(node_table)
@@ -202,11 +205,11 @@ def analyze(ctx, table: Optional[str]):
 
 
 @main.command()
-@click.option('--table', '-t', help='Find candidates for specific table only')
-@click.option('--min-size', default=40.0, help='Minimum shard size in GB (default: 40)')
-@click.option('--max-size', default=60.0, help='Maximum shard size in GB (default: 60)')
-@click.option('--limit', default=20, help='Maximum number of candidates to show (default: 20)')
-@click.option('--node', help='Only show candidates from this specific source node (e.g., data-hot-4)')
+@click.option("--table", "-t", help="Find candidates for specific table only")
+@click.option("--min-size", default=40.0, help="Minimum shard size in GB (default: 40)")
+@click.option("--max-size", default=60.0, help="Maximum shard size in GB (default: 60)")
+@click.option("--limit", default=20, help="Maximum number of candidates to show (default: 20)")
+@click.option("--node", help="Only show candidates from this specific source node (e.g., data-hot-4)")
 @click.pass_context
 def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float, limit: int, node: Optional[str]):
     """Find shard candidates for movement based on size criteria
@@ -214,7 +217,7 @@ def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float,
     Results are sorted by nodes with least available space first,
     then by shard size (smallest first) for easier moves.
     """
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
 
     console.print(Panel.fit(f"[bold blue]Finding Moveable Shards ({min_size}-{max_size}GB)[/bold blue]"))
@@ -232,7 +235,7 @@ def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float,
     if not candidates:
         if node:
             console.print(f"[yellow]No moveable shards found on node '{node}' in the specified size range.[/yellow]")
-            console.print(f"[dim]Tip: Try different size ranges or remove --node filter to see all candidates[/dim]")
+            console.print("[dim]Tip: Try different size ranges or remove --node filter to see all candidates[/dim]")
         else:
             console.print("[yellow]No moveable shards found in the specified size range.[/yellow]")
         return
@@ -240,7 +243,9 @@ def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float,
     # Show limited results
     shown_candidates = candidates[:limit]
 
-    candidates_table = Table(title=f"Moveable Shard Candidates (showing {len(shown_candidates)} of {len(candidates)})", box=box.ROUNDED)
+    candidates_table = Table(
+        title=f"Moveable Shard Candidates (showing {len(shown_candidates)} of {len(candidates)})", box=box.ROUNDED
+    )
     candidates_table.add_column("Table", style="cyan")
     candidates_table.add_column("Shard ID", justify="right", style="magenta")
     candidates_table.add_column("Type", style="blue")
@@ -263,7 +268,7 @@ def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float,
             shard.zone,
             format_size(shard.size_gb),
             format_size(node_free_space),
-            f"{shard.num_docs:,}"
+            f"{shard.num_docs:,}",
         )
 
     console.print(candidates_table)
@@ -273,26 +278,51 @@ def find_candidates(ctx, table: Optional[str], min_size: float, max_size: float,
 
 
 @main.command()
-@click.option('--table', '-t', help='Generate recommendations for specific table only')
-@click.option('--min-size', default=40.0, help='Minimum shard size in GB (default: 40)')
-@click.option('--max-size', default=60.0, help='Maximum shard size in GB (default: 60)')
-@click.option('--zone-tolerance', default=10.0, help='Zone balance tolerance percentage (default: 10)')
-@click.option('--min-free-space', default=100.0, help='Minimum free space required on target nodes in GB (default: 100)')
-@click.option('--max-moves', default=10, help='Maximum number of move recommendations (default: 10)')
-@click.option('--max-disk-usage', default=90.0, help='Maximum disk usage percentage for target nodes (default: 90)')
-
-@click.option('--validate/--no-validate', default=True, help='Validate move safety (default: True)')
-@click.option('--prioritize-space/--prioritize-zones', default=False, help='Prioritize available space over zone balancing (default: False)')
-@click.option('--dry-run/--execute', default=True, help='Show what would be done without generating SQL commands (default: True)')
-@click.option('--auto-execute', is_flag=True, default=False, help='DANGER: Automatically execute the SQL commands (requires --execute, asks for confirmation)')
-@click.option('--node', help='Only recommend moves from this specific source node (e.g., data-hot-4)')
+@click.option("--table", "-t", help="Generate recommendations for specific table only")
+@click.option("--min-size", default=40.0, help="Minimum shard size in GB (default: 40)")
+@click.option("--max-size", default=60.0, help="Maximum shard size in GB (default: 60)")
+@click.option("--zone-tolerance", default=10.0, help="Zone balance tolerance percentage (default: 10)")
+@click.option(
+    "--min-free-space", default=100.0, help="Minimum free space required on target nodes in GB (default: 100)"
+)
+@click.option("--max-moves", default=10, help="Maximum number of move recommendations (default: 10)")
+@click.option("--max-disk-usage", default=90.0, help="Maximum disk usage percentage for target nodes (default: 90)")
+@click.option("--validate/--no-validate", default=True, help="Validate move safety (default: True)")
+@click.option(
+    "--prioritize-space/--prioritize-zones",
+    default=False,
+    help="Prioritize available space over zone balancing (default: False)",
+)
+@click.option(
+    "--dry-run/--execute", default=True, help="Show what would be done without generating SQL commands (default: True)"
+)
+@click.option(
+    "--auto-execute",
+    is_flag=True,
+    default=False,
+    help="DANGER: Automatically execute the SQL commands (requires --execute, asks for confirmation)",
+)
+@click.option("--node", help="Only recommend moves from this specific source node (e.g., data-hot-4)")
 @click.pass_context
-def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
-              zone_tolerance: float, min_free_space: float, max_moves: int, max_disk_usage: float, validate: bool, prioritize_space: bool, dry_run: bool, auto_execute: bool, node: Optional[str]):
+def recommend(
+    ctx,
+    table: Optional[str],
+    min_size: float,
+    max_size: float,
+    zone_tolerance: float,
+    min_free_space: float,
+    max_moves: int,
+    max_disk_usage: float,
+    validate: bool,
+    prioritize_space: bool,
+    dry_run: bool,
+    auto_execute: bool,
+    node: Optional[str],
+):
     """Generate shard movement recommendations for rebalancing"""
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
-    
+
     # Safety check for auto-execute
     if auto_execute and dry_run:
         console.print("[red]❌ Error: --auto-execute requires --execute flag[/red]")
@@ -300,7 +330,12 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
         return
 
     mode_text = "DRY RUN - Analysis Only" if dry_run else "EXECUTION MODE"
-    console.print(Panel.fit(f"[bold blue]Generating Rebalancing Recommendations[/bold blue] - [bold {'green' if dry_run else 'red'}]{mode_text}[/bold {'green' if dry_run else 'red'}]"))
+    console.print(
+        Panel.fit(
+            f"[bold blue]Generating Rebalancing Recommendations[/bold blue] - "
+            f"[bold {'green' if dry_run else 'red'}]{mode_text}[/bold {'green' if dry_run else 'red'}]"
+        )
+    )
     console.print("[dim]Note: Only analyzing healthy shards (STARTED + 100% recovered) for safe operations[/dim]")
     console.print("[dim]Zone conflict detection: Prevents moves that would violate CrateDB's zone awareness[/dim]")
     if prioritize_space:
@@ -328,21 +363,21 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
         max_recommendations=max_moves,
         prioritize_space=prioritize_space,
         source_node=node,
-        max_disk_usage_percent=max_disk_usage
+        max_disk_usage_percent=max_disk_usage,
     )
 
     if not recommendations:
         if node:
             console.print(f"[yellow]No safe recommendations found for node '{node}'[/yellow]")
-            console.print(f"[dim]This could be due to:[/dim]")
-            console.print(f"[dim]  • Zone conflicts preventing safe moves[/dim]")
+            console.print("[dim]This could be due to:[/dim]")
+            console.print("[dim]  • Zone conflicts preventing safe moves[/dim]")
             console.print(f"[dim]  • Target nodes exceeding {max_disk_usage}% disk usage threshold[/dim]")
             console.print(f"[dim]  • Insufficient free space on target nodes (need {min_free_space}GB)[/dim]")
             console.print(f"[dim]  • No shards in size range {min_size}-{max_size}GB[/dim]")
-            console.print(f"[dim]Suggestions:[/dim]")
-            console.print(f"[dim]  • Try: --max-disk-usage 95 (allow higher disk usage)[/dim]")
-            console.print(f"[dim]  • Try: --min-free-space 50 (reduce space requirements)[/dim]")
-            console.print(f"[dim]  • Try: different size ranges or remove --node filter[/dim]")
+            console.print("[dim]Suggestions:[/dim]")
+            console.print("[dim]  • Try: --max-disk-usage 95 (allow higher disk usage)[/dim]")
+            console.print("[dim]  • Try: --min-free-space 50 (reduce space requirements)[/dim]")
+            console.print("[dim]  • Try: different size ranges or remove --node filter[/dim]")
         else:
             console.print("[green]No rebalancing recommendations needed. Cluster appears well balanced![/green]")
         return
@@ -377,7 +412,7 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
             format_size(target_free_space),
             zone_change,
             format_size(rec.size_gb),
-            rec.reason
+            rec.reason,
         ]
 
         if validate:
@@ -420,14 +455,16 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
             console.print(f"[dim]  Target SQL: {rec.to_sql()}[/dim]")
 
         console.print()
-        console.print(f"[bold]Dry Run Summary:[/bold]")
+        console.print("[bold]Dry Run Summary:[/bold]")
         console.print(f"  • Safe moves that would execute: [green]{safe_moves}[/green]")
         console.print(f"  • Zone conflicts prevented: [yellow]{zone_conflicts}[/yellow]")
         console.print(f"  • Space-related issues: [yellow]{space_issues}[/yellow]")
         if safe_moves > 0:
-            console.print(f"\n[green]✓ Ready to execute {safe_moves} safe moves. Use --execute to generate SQL commands.[/green]")
+            console.print(
+                f"\n[green]✓ Ready to execute {safe_moves} safe moves. Use --execute to generate SQL commands.[/green]"
+            )
         else:
-            console.print(f"\n[yellow]⚠ No safe moves identified. Review cluster balance or adjust parameters.[/yellow]")
+            console.print("\n[yellow]⚠ No safe moves identified. Review cluster balance or adjust parameters.[/yellow]")
     else:
         console.print(Panel.fit("[bold green]Generated SQL Commands[/bold green]"))
         console.print("[dim]# Copy and paste these commands to execute the moves[/dim]")
@@ -445,7 +482,7 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
                     if "Zone conflict" in safety_msg:
                         zone_conflicts += 1
                         console.print(f"-- Move {i}: SKIPPED - {safety_msg}")
-                        console.print(f"--   Tip: Try moving to a different zone or check existing shard distribution")
+                        console.print("--   Tip: Try moving to a different zone or check existing shard distribution")
                     else:
                         console.print(f"-- Move {i}: SKIPPED - {safety_msg}")
                     continue
@@ -462,12 +499,14 @@ def recommend(ctx, table: Optional[str], min_size: float, max_size: float,
     if validate and safe_moves < len(recommendations):
         if zone_conflicts > 0:
             console.print(f"[yellow]Warning: {zone_conflicts} moves skipped due to zone conflicts[/yellow]")
-            console.print(f"[yellow]Tip: Use 'find-candidates' to see current shard distribution across zones[/yellow]")
-        console.print(f"[yellow]Warning: Only {safe_moves} of {len(recommendations)} moves passed safety validation[/yellow]")
+            console.print("[yellow]Tip: Use 'find-candidates' to see current shard distribution across zones[/yellow]")
+        console.print(
+            f"[yellow]Warning: Only {safe_moves} of {len(recommendations)} moves passed safety validation[/yellow]"
+        )
 
 
 @main.command()
-@click.option('--connection-string', help='Override connection string from .env')
+@click.option("--connection-string", help="Override connection string from .env")
 @click.pass_context
 def test_connection(ctx, connection_string: Optional[str]):
     """Test connection to CrateDB cluster"""
@@ -495,12 +534,12 @@ def test_connection(ctx, connection_string: Optional[str]):
 
 
 @main.command()
-@click.option('--table', '-t', help='Check balance for specific table only')
-@click.option('--tolerance', default=10.0, help='Zone balance tolerance percentage (default: 10)')
+@click.option("--table", "-t", help="Check balance for specific table only")
+@click.option("--tolerance", default=10.0, help="Zone balance tolerance percentage (default: 10)")
 @click.pass_context
 def check_balance(ctx, table: Optional[str], tolerance: float):
     """Check zone balance for shards"""
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
 
     console.print(Panel.fit("[bold blue]Zone Balance Check[/bold blue]"))
@@ -514,13 +553,10 @@ def check_balance(ctx, table: Optional[str], tolerance: float):
         return
 
     # Calculate totals and targets
-    total_shards = sum(stats['TOTAL'] for stats in zone_stats.values())
+    total_shards = sum(stats["TOTAL"] for stats in zone_stats.values())
     zones = list(zone_stats.keys())
     target_per_zone = total_shards // len(zones) if zones else 0
-    tolerance_range = (
-        target_per_zone * (1 - tolerance / 100),
-        target_per_zone * (1 + tolerance / 100)
-    )
+    tolerance_range = (target_per_zone * (1 - tolerance / 100), target_per_zone * (1 + tolerance / 100))
 
     balance_table = Table(title=f"Zone Balance Analysis (Target: {target_per_zone} ±{tolerance}%)", box=box.ROUNDED)
     balance_table.add_column("Zone", style="cyan")
@@ -530,7 +566,7 @@ def check_balance(ctx, table: Optional[str], tolerance: float):
     balance_table.add_column("Status", style="bold")
 
     for zone, stats in zone_stats.items():
-        total = stats['TOTAL']
+        total = stats["TOTAL"]
 
         if tolerance_range[0] <= total <= tolerance_range[1]:
             status = "[green]✓ Balanced[/green]"
@@ -539,24 +575,18 @@ def check_balance(ctx, table: Optional[str], tolerance: float):
         else:
             status = f"[red]⚠ Over ({total - target_per_zone:+})[/red]"
 
-        balance_table.add_row(
-            zone,
-            str(stats['PRIMARY']),
-            str(stats['REPLICA']),
-            str(total),
-            status
-        )
+        balance_table.add_row(zone, str(stats["PRIMARY"]), str(stats["REPLICA"]), str(total), status)
 
     console.print(balance_table)
 
 
 @main.command()
-@click.option('--table', '-t', help='Analyze zones for specific table only')
-@click.option('--show-shards/--no-show-shards', default=False, help='Show individual shard details (default: False)')
+@click.option("--table", "-t", help="Analyze zones for specific table only")
+@click.option("--show-shards/--no-show-shards", default=False, help="Show individual shard details (default: False)")
 @click.pass_context
 def zone_analysis(ctx, table: Optional[str], show_shards: bool):
     """Detailed analysis of zone distribution and potential conflicts"""
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
 
     console.print(Panel.fit("[bold blue]Detailed Zone Analysis[/bold blue]"))
     console.print("[dim]Comprehensive zone distribution analysis for CrateDB cluster[/dim]")
@@ -626,23 +656,22 @@ def zone_analysis(ctx, table: Optional[str], show_shards: bool):
             replica_zones_str = ", ".join(sorted(replica_zones)) if replica_zones else "None"
 
             analysis_table.add_row(
-                str(shard_id),
-                primary_zone,
-                replica_zones_str,
-                str(total_copies),
-                " ".join(status_parts)
+                str(shard_id), primary_zone, replica_zones_str, str(total_copies), " ".join(status_parts)
             )
 
             # Show individual shard details if requested
             if show_shards:
                 for shard_copy in shard_copies:
-                    health_indicator = "✓" if shard_copy.routing_state == 'STARTED' else "⚠"
-                    console.print(f"    {health_indicator} {shard_copy.shard_type} on {shard_copy.node_name} ({shard_copy.zone}) - {shard_copy.routing_state}")
+                    health_indicator = "✓" if shard_copy.routing_state == "STARTED" else "⚠"
+                    console.print(
+                        f"    {health_indicator} {shard_copy.shard_type} "
+                        f"on {shard_copy.node_name} ({shard_copy.zone}) - {shard_copy.routing_state}"
+                    )
 
         console.print(analysis_table)
 
     # Summary
-    console.print(f"\n[bold]Zone Analysis Summary:[/bold]")
+    console.print("\n[bold]Zone Analysis Summary:[/bold]")
     console.print(f"  • Tables analyzed: [cyan]{len(tables)}[/cyan]")
     console.print(f"  • Zone conflicts detected: [red]{zone_conflicts}[/red]")
     console.print(f"  • Under-replicated shards: [yellow]{under_replicated}[/yellow]")
@@ -660,131 +689,12 @@ def zone_analysis(ctx, table: Optional[str], show_shards: bool):
         console.print("\n[green]✓ No critical zone distribution issues detected![/green]")
 
 
-# @main.command()
-# @click.argument('node_name')
-# @click.option('--min-free-space', default=100.0, help='Minimum free space required on target nodes in GB (default: 100)')
-# @click.option('--dry-run/--execute', default=True, help='Show decommission plan without generating SQL commands (default: True)')
-# @click.pass_context
-# def decommission(ctx, node_name: str, min_free_space: float, dry_run: bool):
-#     """Plan decommissioning of a node by analyzing required shard moves
-#
-#     NODE_NAME: Name of the node to decommission
-#     """
-#     client = ctx.obj['client']
-#     analyzer = ShardAnalyzer(client)
-#
-#     mode_text = "PLANNING MODE" if dry_run else "EXECUTION MODE"
-#     console.print(Panel.fit(f"[bold blue]Node Decommission Analysis[/bold blue] - [bold {'green' if dry_run else 'red'}]{mode_text}[/bold {'green' if dry_run else 'red'}]"))
-#     console.print(f"[dim]Analyzing decommission plan for node: {node_name}[/dim]")
-#     console.print()
-#
-#     # Generate decommission plan
-#     plan = analyzer.plan_node_decommission(node_name, min_free_space)
-#
-#     if 'error' in plan:
-#         console.print(f"[red]Error: {plan['error']}[/red]")
-#         return
-#
-#     # Display plan summary
-#     summary_table = Table(title=f"Decommission Plan for {node_name}", box=box.ROUNDED)
-#     summary_table.add_column("Metric", style="cyan")
-#     summary_table.add_column("Value", style="magenta")
-#
-#     summary_table.add_row("Node", plan['node'])
-#     summary_table.add_row("Zone", plan['zone'])
-#     summary_table.add_row("Feasible", "[green]✓ Yes[/green]" if plan['feasible'] else "[red]✗ No[/red]")
-#     summary_table.add_row("Shards to Move", str(plan['shards_to_move']))
-#     summary_table.add_row("Moveable Shards", str(plan['moveable_shards']))
-#     summary_table.add_row("Total Data Size", format_size(plan['total_size_gb']))
-#     summary_table.add_row("Estimated Time", f"{plan['estimated_time_hours']:.1f} hours")
-#
-#     console.print(summary_table)
-#     console.print()
-#
-#     # Show warnings if any
-#     if plan['warnings']:
-#         console.print("[bold yellow]⚠ Warnings:[/bold yellow]")
-#         for warning in plan['warnings']:
-#             console.print(f"  • [yellow]{warning}[/yellow]")
-#         console.print()
-#
-#     # Show infeasible moves if any
-#     if plan['infeasible_moves']:
-#         console.print("[bold red]✗ Cannot Move:[/bold red]")
-#         infeasible_table = Table(box=box.ROUNDED)
-#         infeasible_table.add_column("Shard", style="cyan")
-#         infeasible_table.add_column("Size", style="magenta")
-#         infeasible_table.add_column("Reason", style="red")
-#
-#         for move in plan['infeasible_moves']:
-#             infeasible_table.add_row(
-#                 move['shard'],
-#                 format_size(move['size_gb']),
-#                 move['reason']
-#             )
-#         console.print(infeasible_table)
-#         console.print()
-#
-#     # Show move recommendations
-#     if plan['recommendations']:
-#         move_table = Table(title="Required Shard Moves", box=box.ROUNDED)
-#         move_table.add_column("Table", style="cyan")
-#         move_table.add_column("Shard", justify="right", style="magenta")
-#         move_table.add_column("Type", style="blue")
-#         move_table.add_column("Size", style="green")
-#         move_table.add_column("From Zone", style="yellow")
-#         move_table.add_column("To Node", style="cyan")
-#         move_table.add_column("To Zone", style="yellow")
-#
-#         for rec in plan['recommendations']:
-#             move_table.add_row(
-#                 f"{rec.schema_name}.{rec.table_name}",
-#                 str(rec.shard_id),
-#                 rec.shard_type,
-#                 format_size(rec.size_gb),
-#                 rec.from_zone,
-#                 rec.to_node,
-#                 rec.to_zone
-#             )
-#
-#         console.print(move_table)
-#         console.print()
-#
-#         # Generate SQL commands if not in dry-run mode
-#         if not dry_run and plan['feasible']:
-#             console.print(Panel.fit("[bold green]Decommission SQL Commands[/bold green]"))
-#             console.print("[dim]# Execute these commands in order to prepare for node decommission[/dim]")
-#             console.print("[dim]# ALWAYS test in a non-production environment first![/dim]")
-#             console.print("[dim]# Monitor shard health after each move before proceeding[/dim]")
-#             console.print()
-#
-#             for i, rec in enumerate(plan['recommendations'], 1):
-#                 console.print(f"-- Move {i}: {rec.reason}")
-#                 console.print(f"{rec.to_sql()}")
-#                 console.print()
-#
-#             console.print(f"-- After all moves complete, the node {node_name} can be safely removed")
-#             console.print(f"-- Total moves required: {len(plan['recommendations'])}")
-#         elif dry_run:
-#             console.print("[green]✓ Decommission plan ready. Use --execute to generate SQL commands.[/green]")
-#
-#     # Final status
-#     if not plan['feasible']:
-#         console.print(f"[red]⚠ Node {node_name} cannot be safely decommissioned at this time.[/red]")
-#         console.print("[dim]Address the issues above before attempting decommission.[/dim]")
-#     elif plan['shards_to_move'] == 0:
-#         console.print(f"[green]✓ Node {node_name} is ready for immediate decommission (no shards to move).[/green]")
-#     else:
-#         console.print(f"[green]✓ Node {node_name} can be safely decommissioned after moving {len(plan['recommendations'])} shards.[/green]")
-
-
 @main.command()
-@click.argument('schema_table')
-@click.argument('shard_id', type=int)
-@click.argument('from_node')
-@click.argument('to_node')
-@click.option('--max-disk-usage', default=90.0, help='Maximum disk usage percentage for target node (default: 90)')
-
+@click.argument("schema_table")
+@click.argument("shard_id", type=int)
+@click.argument("from_node")
+@click.argument("to_node")
+@click.option("--max-disk-usage", default=90.0, help="Maximum disk usage percentage for target node (default: 90)")
 @click.pass_context
 def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node: str, max_disk_usage: float):
     """Validate a specific shard move before execution
@@ -796,17 +706,17 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
 
     Example: xmover validate-move CUROV.maddoxxFormfactor 4 data-hot-1 data-hot-3
     """
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
 
     # Parse schema and table
-    if '.' not in schema_table:
+    if "." not in schema_table:
         console.print("[red]Error: Schema and table must be in format 'schema.table'[/red]")
         return
 
-    schema_name, table_name = schema_table.split('.', 1)
+    schema_name, table_name = schema_table.split(".", 1)
 
-    console.print(Panel.fit(f"[bold blue]Validating Shard Move[/bold blue]"))
+    console.print(Panel.fit("[bold blue]Validating Shard Move[/bold blue]"))
     console.print(f"[dim]Move: {schema_name}.{table_name}[{shard_id}] from {from_node} to {to_node}[/dim]")
     console.print()
 
@@ -830,16 +740,18 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
     # Find the specific shard
     target_shard = None
     for shard in analyzer.shards:
-        if (shard.schema_name == schema_name and
-            shard.table_name == table_name and
-            shard.shard_id == shard_id and
-            shard.node_name == from_node):
+        if (
+            shard.schema_name == schema_name
+            and shard.table_name == table_name
+            and shard.shard_id == shard_id
+            and shard.node_name == from_node
+        ):
             target_shard = shard
             break
 
     if not target_shard:
         console.print(f"[red]✗ Shard {shard_id} not found on node {from_node}[/red]")
-        console.print(f"[dim]Use 'xmover find-candidates' to see available shards[/dim]")
+        console.print("[dim]Use 'xmover find-candidates' to see available shards[/dim]")
         return
 
     # Create a move recommendation for validation
@@ -853,7 +765,7 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
         to_zone=to_node_info.zone,
         shard_type=target_shard.shard_type,
         size_gb=target_shard.size_gb,
-        reason="Manual validation"
+        reason="Manual validation",
     )
 
     # Display shard details
@@ -890,7 +802,9 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
         console.print(f"{recommendation.to_sql()}")
         console.print()
         console.print("[dim]# Monitor shard health after execution[/dim]")
-        console.print("[dim]# Check with: SELECT * FROM sys.shards WHERE table_name = '{table_name}' AND id = {shard_id};[/dim]")
+        console.print(
+            "[dim]# Check with: SELECT * FROM sys.shards WHERE table_name = '{table_name}' AND id = {shard_id};[/dim]"
+        )
     else:
         console.print("[red]✗ VALIDATION FAILED - Move not safe[/red]")
         console.print(f"[red]✗ {safety_msg}[/red]")
@@ -921,7 +835,7 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
 
 
 @main.command()
-@click.argument('error_message', required=False)
+@click.argument("error_message", required=False)
 @click.pass_context
 def explain_error(ctx, error_message: Optional[str]):
     """Explain CrateDB allocation error messages and provide solutions
@@ -951,7 +865,7 @@ def explain_error(ctx, error_message: Optional[str]):
         console.print("[yellow]No error message provided[/yellow]")
         return
 
-    console.print(f"[dim]Analyzing error message...[/dim]")
+    console.print("[dim]Analyzing error message...[/dim]")
     console.print()
 
     # Common CrateDB allocation error patterns and solutions
@@ -963,9 +877,9 @@ def explain_error(ctx, error_message: Optional[str]):
             "solutions": [
                 "Choose a different target node that doesn't have this shard",
                 "Use 'xmover zone-analysis --show-shards' to see current distribution",
-                "Verify the shard ID and table name are correct"
+                "Verify the shard ID and table name are correct",
             ],
-            "prevention": "Always check current shard locations before moving"
+            "prevention": "Always check current shard locations before moving",
         },
         {
             "pattern": "there are too many copies of the shard allocated to nodes with attribute",
@@ -974,9 +888,9 @@ def explain_error(ctx, error_message: Optional[str]):
             "solutions": [
                 "Move the shard to a different availability zone",
                 "Check zone balance with 'xmover check-balance'",
-                "Ensure target zone doesn't already have copies of this shard"
+                "Ensure target zone doesn't already have copies of this shard",
             ],
-            "prevention": "Use 'xmover recommend' which respects zone constraints"
+            "prevention": "Use 'xmover recommend' which respects zone constraints",
         },
         {
             "pattern": "not enough disk space",
@@ -985,9 +899,9 @@ def explain_error(ctx, error_message: Optional[str]):
             "solutions": [
                 "Free up space on the target node",
                 "Choose a node with more available capacity",
-                "Check available space with 'xmover analyze'"
+                "Check available space with 'xmover analyze'",
             ],
-            "prevention": "Use '--min-free-space' parameter in recommendations"
+            "prevention": "Use '--min-free-space' parameter in recommendations",
         },
         {
             "pattern": "shard recovery limit",
@@ -996,21 +910,22 @@ def explain_error(ctx, error_message: Optional[str]):
             "solutions": [
                 "Wait for current recoveries to complete",
                 "Check recovery status in CrateDB admin UI",
-                "Reduce concurrent recoveries in cluster settings"
+                "Reduce concurrent recoveries in cluster settings",
             ],
-            "prevention": "Move shards gradually, monitor recovery progress"
+            "prevention": "Move shards gradually, monitor recovery progress",
         },
         {
             "pattern": "allocation is disabled",
             "title": "Allocation Disabled",
             "explanation": "Shard allocation is temporarily disabled in the cluster.",
             "solutions": [
-                "Re-enable allocation: PUT /_cluster/settings {\"persistent\":{\"cluster.routing.allocation.enable\":\"all\"}}",
+                "Re-enable allocation: PUT /_cluster/settings "
+                '{"persistent":{"cluster.routing.allocation.enable":"all"}}',
                 "Check if allocation was disabled for maintenance",
-                "Verify cluster health before re-enabling"
+                "Verify cluster health before re-enabling",
             ],
-            "prevention": "Check allocation status before performing moves"
-        }
+            "prevention": "Check allocation status before performing moves",
+        },
     ]
 
     # Find matching patterns
@@ -1031,7 +946,7 @@ def explain_error(ctx, error_message: Optional[str]):
             console.print()
 
             console.print("[green]💡 Solutions:[/green]")
-            for j, solution in enumerate(match['solutions'], 1):
+            for j, solution in enumerate(match["solutions"], 1):
                 console.print(f"  {j}. {solution}")
             console.print()
 
@@ -1041,25 +956,33 @@ def explain_error(ctx, error_message: Optional[str]):
         console.print()
         console.print("[bold]General Troubleshooting Steps:[/bold]")
         console.print("1. Check current shard distribution: [cyan]xmover analyze[/cyan]")
-        console.print("2. Validate the specific move: [cyan]xmover validate-move schema.table shard_id from_node to_node[/cyan]")
+        console.print(
+            "2. Validate the specific move: [cyan]xmover validate-move schema.table shard_id from_node to_node[/cyan]"
+        )
         console.print("3. Check zone conflicts: [cyan]xmover zone-analysis --show-shards[/cyan]")
         console.print("4. Verify node capacity: [cyan]xmover analyze[/cyan]")
         console.print("5. Review CrateDB documentation on shard allocation")
 
     console.print()
     console.print("[dim]💡 Tip: Use 'xmover validate-move' to check moves before execution[/dim]")
-    console.print("[dim]📚 For more help: https://crate.io/docs/crate/reference/en/latest/admin/system-information.html[/dim]")
+    console.print(
+        "[dim]📚 For more help: https://crate.io/docs/crate/reference/en/latest/admin/system-information.html[/dim]"
+    )
 
 
 @main.command()
-@click.option('--table', '-t', help='Monitor recovery for specific table only')
-@click.option('--node', '-n', help='Monitor recovery on specific node only')
-@click.option('--watch', '-w', is_flag=True, help='Continuously monitor (refresh every 10s)')
-@click.option('--refresh-interval', default=10, help='Refresh interval for watch mode (seconds)')
-@click.option('--recovery-type', type=click.Choice(['PEER', 'DISK', 'all']), default='all', help='Filter by recovery type')
-@click.option('--include-transitioning', is_flag=True, help='Include completed recoveries still in transitioning state')
+@click.option("--table", "-t", help="Monitor recovery for specific table only")
+@click.option("--node", "-n", help="Monitor recovery on specific node only")
+@click.option("--watch", "-w", is_flag=True, help="Continuously monitor (refresh every 10s)")
+@click.option("--refresh-interval", default=10, help="Refresh interval for watch mode (seconds)")
+@click.option(
+    "--recovery-type", type=click.Choice(["PEER", "DISK", "all"]), default="all", help="Filter by recovery type"
+)
+@click.option("--include-transitioning", is_flag=True, help="Include completed recoveries still in transitioning state")
 @click.pass_context
-def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: int, recovery_type: str, include_transitioning: bool):
+def monitor_recovery(
+    ctx, table: str, node: str, watch: bool, refresh_interval: int, recovery_type: str, include_transitioning: bool
+):
     """Monitor active shard recovery operations on the cluster
 
     This command monitors ongoing shard recoveries by querying sys.allocations
@@ -1076,11 +999,10 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
         xmover monitor-recovery --recovery-type PEER  # Only PEER recoveries
     """
     try:
-        client = ctx.obj['client']
+        client = ctx.obj["client"]
         recovery_monitor = RecoveryMonitor(client)
 
         if watch:
-
             console.print(f"🔄 Monitoring shard recoveries (refreshing every {refresh_interval}s)")
             console.print("Press Ctrl+C to stop")
             console.print()
@@ -1101,11 +1023,12 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                         table_name=table,
                         node_name=node,
                         recovery_type_filter=recovery_type,
-                        include_transitioning=include_transitioning
+                        include_transitioning=include_transitioning,
                     )
 
                     # Display current time
                     from datetime import datetime
+
                     current_time = datetime.now().strftime("%H:%M:%S")
 
                     # Check for any changes
@@ -1114,7 +1037,9 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                     completed_count = 0
 
                     for recovery in recoveries:
-                        recovery_key = f"{recovery.schema_name}.{recovery.table_name}.{recovery.shard_id}.{recovery.node_name}"
+                        recovery_key = (
+                            f"{recovery.schema_name}.{recovery.table_name}.{recovery.shard_id}.{recovery.node_name}"
+                        )
 
                         # Create complete table name
                         if recovery.schema_name == "doc":
@@ -1131,8 +1056,8 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                         # Check for changes since last update
                         if recovery_key in previous_recoveries:
                             prev = previous_recoveries[recovery_key]
-                            if prev['progress'] != recovery.overall_progress:
-                                diff = recovery.overall_progress - prev['progress']
+                            if prev["progress"] != recovery.overall_progress:
+                                diff = recovery.overall_progress - prev["progress"]
                                 # Create node route display
                                 node_route = ""
                                 if recovery.recovery_type == "PEER" and recovery.source_node_name:
@@ -1142,12 +1067,20 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
 
                                 # Add translog info
                                 translog_info = format_translog_info(recovery)
-                                
+
                                 if diff > 0:
-                                    changes.append(f"[green]📈[/green] {table_display} S{recovery.shard_id} {recovery.overall_progress:.1f}% (+{diff:.1f}%) {recovery.size_gb:.1f}GB{translog_info}{node_route}")
+                                    changes.append(
+                                        f"[green]📈[/green] {table_display} S{recovery.shard_id} "
+                                        f"{recovery.overall_progress:.1f}% (+{diff:.1f}%) "
+                                        f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                    )
                                 else:
-                                    changes.append(f"[yellow]📉[/yellow] {table_display} S{recovery.shard_id} {recovery.overall_progress:.1f}% ({diff:.1f}%) {recovery.size_gb:.1f}GB{translog_info}{node_route}")
-                            elif prev['stage'] != recovery.stage:
+                                    changes.append(
+                                        f"[yellow]📉[/yellow] {table_display} S{recovery.shard_id} "
+                                        f"{recovery.overall_progress:.1f}% ({diff:.1f}%) "
+                                        f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                    )
+                            elif prev["stage"] != recovery.stage:
                                 # Create node route display
                                 node_route = ""
                                 if recovery.recovery_type == "PEER" and recovery.source_node_name:
@@ -1157,11 +1090,19 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
 
                                 # Add translog info
                                 translog_info = format_translog_info(recovery)
-                                
-                                changes.append(f"[blue]🔄[/blue] {table_display} S{recovery.shard_id} {prev['stage']}→{recovery.stage} {recovery.size_gb:.1f}GB{translog_info}{node_route}")
+
+                                changes.append(
+                                    f"[blue]🔄[/blue] {table_display} S{recovery.shard_id} "
+                                    f"{prev['stage']}→{recovery.stage} "
+                                    f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                )
                         else:
                             # New recovery - show based on include_transitioning flag or first run
-                            if first_run or include_transitioning or (recovery.overall_progress < 100.0 or recovery.stage != "DONE"):
+                            if (
+                                first_run
+                                or include_transitioning
+                                or (recovery.overall_progress < 100.0 or recovery.stage != "DONE")
+                            ):
                                 # Create node route display
                                 node_route = ""
                                 if recovery.recovery_type == "PEER" and recovery.source_node_name:
@@ -1172,13 +1113,17 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                                 status_icon = "[cyan]🆕[/cyan]" if not first_run else "[blue]📋[/blue]"
                                 # Add translog info
                                 translog_info = format_translog_info(recovery)
-                                
-                                changes.append(f"{status_icon} {table_display} S{recovery.shard_id} {recovery.stage} {recovery.overall_progress:.1f}% {recovery.size_gb:.1f}GB{translog_info}{node_route}")
+
+                                changes.append(
+                                    f"{status_icon} {table_display} S{recovery.shard_id} "
+                                    f"{recovery.stage} {recovery.overall_progress:.1f}% "
+                                    f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                )
 
                         # Store current state for next comparison
                         previous_recoveries[recovery_key] = {
-                            'progress': recovery.overall_progress,
-                            'stage': recovery.stage
+                            "progress": recovery.overall_progress,
+                            "stage": recovery.stage,
                         }
 
                     # Always show a status line
@@ -1205,7 +1150,7 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                             elif active_count > 0:
                                 console.print(f"{current_time} | {status} (no changes)")
 
-                    previous_timestamp = current_time
+                    previous_timestamp = current_time  # noqa: F841
                     first_run = False
                     time.sleep(refresh_interval)
 
@@ -1217,7 +1162,7 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                     table_name=table,
                     node_name=node,
                     recovery_type_filter=recovery_type,
-                    include_transitioning=include_transitioning
+                    include_transitioning=include_transitioning,
                 )
 
                 if final_recoveries:
@@ -1233,10 +1178,13 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                     console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
                     console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
 
-                    if summary['by_type']:
-                        console.print(f"   By recovery type:")
-                        for rec_type, stats in summary['by_type'].items():
-                            console.print(f"     {rec_type}: {stats['count']} recoveries, {stats['avg_progress']:.1f}% avg progress")
+                    if summary["by_type"]:
+                        console.print("   By recovery type:")
+                        for rec_type, stats in summary["by_type"].items():
+                            console.print(
+                                f"     {rec_type}: {stats['count']} recoveries, "
+                                f"{stats['avg_progress']:.1f}% avg progress"
+                            )
                 else:
                     console.print("\n[green]✅ No active recoveries at exit[/green]")
 
@@ -1248,7 +1196,7 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                 table_name=table,
                 node_name=node,
                 recovery_type_filter=recovery_type,
-                include_transitioning=include_transitioning
+                include_transitioning=include_transitioning,
             )
 
             display_output = recovery_monitor.format_recovery_display(recoveries)
@@ -1259,62 +1207,65 @@ def monitor_recovery(ctx, table: str, node: str, watch: bool, refresh_interval: 
                     console.print("\n[green]✅ No recoveries found (active or transitioning)[/green]")
                 else:
                     console.print("\n[green]✅ No active recoveries found[/green]")
-                    console.print("[dim]💡 Use --include-transitioning to see completed recoveries still transitioning[/dim]")
+                    console.print(
+                        "[dim]💡 Use --include-transitioning to see completed recoveries still transitioning[/dim]"
+                    )
             else:
                 # Show summary
                 summary = recovery_monitor.get_recovery_summary(recoveries)
-                console.print(f"\n📊 [bold]Recovery Summary:[/bold]")
+                console.print("\n📊 [bold]Recovery Summary:[/bold]")
                 console.print(f"   Total recoveries: {summary['total_recoveries']}")
                 console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
                 console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
 
                 # Show breakdown by type
-                if summary['by_type']:
-                    console.print(f"\n   By recovery type:")
-                    for rec_type, stats in summary['by_type'].items():
-                        console.print(f"     {rec_type}: {stats['count']} recoveries, {stats['avg_progress']:.1f}% avg progress")
+                if summary["by_type"]:
+                    console.print("\n   By recovery type:")
+                    for rec_type, stats in summary["by_type"].items():
+                        console.print(
+                            f"     {rec_type}: {stats['count']} recoveries, {stats['avg_progress']:.1f}% avg progress"
+                        )
 
-                console.print(f"\n[dim]💡 Use --watch flag for continuous monitoring[/dim]")
+                console.print("\n[dim]💡 Use --watch flag for continuous monitoring[/dim]")
 
     except Exception as e:
         console.print(f"[red]❌ Error monitoring recoveries: {e}[/red]")
-        if ctx.obj.get('debug'):
+        if ctx.obj.get("debug"):
             raise
 
 
 def _wait_for_recovery_capacity(client, max_concurrent_recoveries: int = 5):
     """Wait until active recovery count is below threshold"""
-    from xmover.analyzer import RecoveryMonitor
     from time import sleep
-    
+
+    from .analyzer import RecoveryMonitor
+
     recovery_monitor = RecoveryMonitor(client)
     wait_time = 0
-    
+
     while True:
         # Check active recoveries (including transitioning)
         recoveries = recovery_monitor.get_cluster_recovery_status(include_transitioning=True)
         active_count = len([r for r in recoveries if r.overall_progress < 100.0 or r.stage != "DONE"])
-        
+        status = f"{active_count}/{max_concurrent_recoveries}"
         if active_count < max_concurrent_recoveries:
             if wait_time > 0:
-                console.print(f"    [green]✓ Recovery capacity available ({active_count}/{max_concurrent_recoveries} active)[/green]")
+                console.print(f"    [green]✓ Recovery capacity available ({status} active)[/green]")
             break
-        else:
-            if wait_time == 0:
-                console.print(f"    [yellow]⏳ Waiting for recovery capacity... ({active_count}/{max_concurrent_recoveries} active)[/yellow]")
-            elif wait_time % 30 == 0:  # Update every 30 seconds
-                console.print(f"    [yellow]⏳ Still waiting... ({active_count}/{max_concurrent_recoveries} active)[/yellow]")
-            
-            sleep(10)  # Check every 10 seconds
-            wait_time += 10
+        if wait_time == 0:
+            console.print(f"    [yellow]⏳ Waiting for recovery capacity... ({status} active)[/yellow]")
+        elif wait_time % 30 == 0:  # Update every 30 seconds
+            console.print(f"    [yellow]⏳ Still waiting... ({status} active)[/yellow]")
+
+        sleep(10)  # Check every 10 seconds
+        wait_time += 10
 
 
 def _execute_recommendations_safely(client, recommendations, validate: bool):
     """Execute recommendations with extensive safety measures"""
-    from time import sleep
-    import sys
-    from xmover.analyzer import ShardAnalyzer
-    
+
+    from .analyzer import ShardAnalyzer
+
     # Filter to only safe recommendations
     safe_recommendations = []
     if validate:
@@ -1325,20 +1276,20 @@ def _execute_recommendations_safely(client, recommendations, validate: bool):
                 safe_recommendations.append(rec)
     else:
         safe_recommendations = recommendations
-    
+
     if not safe_recommendations:
         console.print("[yellow]⚠ No safe recommendations to execute[/yellow]")
         return
-    
-    console.print(f"\n[bold red]🚨 AUTO-EXECUTION MODE 🚨[/bold red]")
+
+    console.print("\n[bold red]🚨 AUTO-EXECUTION MODE 🚨[/bold red]")
     console.print(f"About to execute {len(safe_recommendations)} shard moves automatically:")
     console.print()
-    
+
     # Show what will be executed
     for i, rec in enumerate(safe_recommendations, 1):
         table_display = f"{rec.schema_name}.{rec.table_name}" if rec.schema_name != "doc" else rec.table_name
         console.print(f"  {i}. {table_display} S{rec.shard_id} ({rec.size_gb:.1f}GB) {rec.from_node} → {rec.to_node}")
-    
+
     console.print()
     console.print("[bold yellow]⚠ SAFETY WARNINGS:[/bold yellow]")
     console.print("  • These commands will immediately start shard movements")
@@ -1346,74 +1297,80 @@ def _execute_recommendations_safely(client, recommendations, validate: bool):
     console.print("  • Recovery time depends on shard size and network speed")
     console.print("  • You should monitor progress with: xmover monitor-recovery --watch")
     console.print()
-    
+
     # Double confirmation
     try:
         response1 = input("Type 'EXECUTE' to proceed with automatic execution: ").strip()
         if response1 != "EXECUTE":
             console.print("[yellow]❌ Execution cancelled[/yellow]")
             return
-        
+
         response2 = input(f"Confirm: Execute {len(safe_recommendations)} shard moves? (yes/no): ").strip().lower()
-        if response2 not in ['yes', 'y']:
+        if response2 not in ["yes", "y"]:
             console.print("[yellow]❌ Execution cancelled[/yellow]")
             return
-            
+
     except KeyboardInterrupt:
         console.print("\n[yellow]❌ Execution cancelled by user[/yellow]")
         return
-    
+
     console.print(f"\n🚀 [bold green]Executing {len(safe_recommendations)} shard moves...[/bold green]")
     console.print()
-    
+
     successful_moves = 0
     failed_moves = 0
-    
+
     for i, rec in enumerate(safe_recommendations, 1):
         table_display = f"{rec.schema_name}.{rec.table_name}" if rec.schema_name != "doc" else rec.table_name
         sql_command = rec.to_sql()
-        
-        console.print(f"[{i}/{len(safe_recommendations)}] Executing: {table_display} S{rec.shard_id} ({rec.size_gb:.1f}GB)")
+
+        console.print(
+            f"[{i}/{len(safe_recommendations)}] Executing: {table_display} S{rec.shard_id} ({rec.size_gb:.1f}GB)"
+        )
         console.print(f"    {rec.from_node} → {rec.to_node}")
-        
+
         try:
             # Execute the SQL command
             result = client.execute_query(sql_command)
-            
-            if result.get('rowcount', 0) >= 0:  # Success indicator for ALTER statements
-                console.print(f"    [green]✅ SUCCESS[/green] - Move initiated")
+
+            if result.get("rowcount", 0) >= 0:  # Success indicator for ALTER statements
+                console.print("    [green]✅ SUCCESS[/green] - Move initiated")
                 successful_moves += 1
-                
+
                 # Smart delay: check active recoveries before next move
                 if i < len(safe_recommendations):
                     _wait_for_recovery_capacity(client, max_concurrent_recoveries=5)
             else:
                 console.print(f"    [red]❌ FAILED[/red] - Unexpected result: {result}")
                 failed_moves += 1
-                
+
         except Exception as e:
             console.print(f"    [red]❌ FAILED[/red] - Error: {e}")
             failed_moves += 1
-            
+
             # Ask whether to continue after a failure
             if i < len(safe_recommendations):
                 try:
-                    continue_response = input(f"    Continue with remaining {len(safe_recommendations) - i} moves? (yes/no): ").strip().lower()
-                    if continue_response not in ['yes', 'y']:
+                    continue_response = (
+                        input(f"    Continue with remaining {len(safe_recommendations) - i} moves? (yes/no): ")
+                        .strip()
+                        .lower()
+                    )
+                    if continue_response not in ["yes", "y"]:
                         console.print("[yellow]⏹ Execution stopped by user[/yellow]")
                         break
                 except KeyboardInterrupt:
                     console.print("\n[yellow]⏹ Execution stopped by user[/yellow]")
                     break
-        
+
         console.print()
-    
+
     # Final summary
-    console.print(f"📊 [bold]Execution Summary:[/bold]")
+    console.print("📊 [bold]Execution Summary:[/bold]")
     console.print(f"   Successful moves: [green]{successful_moves}[/green]")
     console.print(f"   Failed moves: [red]{failed_moves}[/red]")
     console.print(f"   Total attempted: {successful_moves + failed_moves}")
-    
+
     if successful_moves > 0:
         console.print()
         console.print("[green]✅ Shard moves initiated successfully![/green]")
@@ -1421,11 +1378,11 @@ def _execute_recommendations_safely(client, recommendations, validate: bool):
         console.print("[dim]   xmover monitor-recovery --watch[/dim]")
         console.print("[dim]💡 Check cluster status with:[/dim]")
         console.print("[dim]   xmover analyze[/dim]")
-    
+
     if failed_moves > 0:
         console.print()
         console.print(f"[yellow]⚠ {failed_moves} moves failed - check cluster status and retry if needed[/yellow]")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
