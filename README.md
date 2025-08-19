@@ -51,20 +51,20 @@ alias ctk="docker run --rm ghcr.io/crate/cratedb-toolkit ctk"
 ctk --version
 ```
 
-
 ## Contribute
 
-Contributions are very much welcome. Please visit the [](#sandbox)
-documentation to learn about how to spin up a sandbox environment on your
-workstation, or create a [ticket][Issues] to report a bug or share an idea
-about a possible feature.
+Contributions are very much welcome. Please visit the [](#sandbox) documentation
+to learn how to spin up a sandbox environment on your workstation, or create
+a [ticket][Issues] to report a bug or propose a feature.
 
 ## Status
 
 Breaking changes should be expected until a 1.0 release, so version pinning is
 strongly recommended, especially when using this software as a library.
-
-
++For example:
++```shell
++pip install "cratedb-toolkit==0.0.38"
++```
 
 
 [Changelog]: https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md
