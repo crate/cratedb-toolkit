@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/08/19 v0.0.39
 - OCI: Started producing image `ghcr.io/crate/cratedb-toolkit-ingest`
 - I/O: Added drivers for ODBC and Oracle to `cratedb-toolkit-ingest`
 - I/O: Updated BSON library to support ARM64
