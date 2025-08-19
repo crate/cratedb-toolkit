@@ -36,6 +36,7 @@ RESET_TABLES = [
     f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_composite"',
     # cratedb_toolkit.io.{influxdb,mongodb}
     '"testdrive"."demo"',
+    '"testdrive"."ndbc"',
 ]
 
 CRATEDB_HTTP_PORT = 44209

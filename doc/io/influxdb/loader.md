@@ -73,6 +73,11 @@ ctk load table \
     "https://github.com/influxdata/influxdb2-sample-data/raw/master/air-sensor-data/air-sensor-data.lp"
 ```
 
+:::{note}
+When importing from ILP files, the measurement name from the data file
+will be used as the target table name.
+:::
+
 ### Cloud
 
 A canonical invocation for copying data from InfluxDB Cloud to CrateDB Cloud.
@@ -85,7 +90,23 @@ ctk load table \
   --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
-## Parameters
+## InfluxDB parameters
+
+### `timeout`
+
+The network timeout value is specified in seconds, the default value
+is 60 seconds. Both details deviate from the standard default setting
+of the underlying [InfluxDB client library][influxdb-client], which
+uses milliseconds, and a default value of 10_000 milliseconds.
+
+If you need to adjust this setting, add the parameter `timeout` to
+the InfluxDB URL like this:
+
+```shell
+ctk load table influxdb2://example:token@localhost:8086/testdrive/demo?timeout=300
+```
+
+## CrateDB parameters
 
 ### `if-exists`
 
@@ -107,4 +128,5 @@ ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
 ```
 
 
+[influxdb-client]: https://github.com/influxdata/influxdb-client-python
 [influxio]: inv:influxio:*:label#index

@@ -166,7 +166,7 @@ optional-dependencies.full = [
 ]
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io]",
-  "influxio>=0.5,<1",
+  "influxio>=0.6,<1",
 ]
 optional-dependencies.io = [
   "cratedb-toolkit[io-base]",
