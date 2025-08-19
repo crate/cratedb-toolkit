@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2025/08/19 v0.0.41
 - I/O: Updated to `influxio-0.6.0`. Thanks, @ZillKhan.
   - The target table is now the measurement name when importing ILP files.
   - The InfluxDB source URL accepts a `timeout` query parameter (seconds) to
