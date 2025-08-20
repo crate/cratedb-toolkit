@@ -4,7 +4,7 @@ Command line interface for XMover - CrateDB Shard Analyzer and Movement Tool
 
 import sys
 import time
-from typing import Any, Dict, List, Optional, cast
+from typing import Dict, List, Optional, cast
 
 import click
 from rich import box
@@ -12,57 +12,14 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .analyzer import MoveRecommendation, RecoveryMonitor, ShardAnalyzer
-from .database import CrateDBClient, ShardInfo
+from cratedb_toolkit.admin.xmover.model import ShardInfo
+
+from .analyzer import MoveRecommendation, ShardAnalyzer
+from .database import CrateDBClient
+from .recovery import RecoveryMonitor, RecoveryOptions
+from .util import format_percentage, format_size
 
 console = Console()
-
-
-def format_size(size_gb: float) -> str:
-    """Format size in GB with appropriate precision"""
-    if size_gb >= 1000:
-        return f"{size_gb / 1000:.1f}TB"
-    elif size_gb >= 1:
-        return f"{size_gb:.1f}GB"
-    else:
-        return f"{size_gb * 1000:.0f}MB"
-
-
-def format_percentage(value: float) -> str:
-    """Format percentage with color coding"""
-    color = "green"
-    if value > 80:
-        color = "red"
-    elif value > 70:
-        color = "yellow"
-    return f"[{color}]{value:.1f}%[/{color}]"
-
-
-def format_translog_info(recovery_info) -> str:
-    """Format translog size information with color coding"""
-    tl_bytes = recovery_info.translog_size_bytes
-
-    # Only show if significant (>10MB for production)
-    if tl_bytes < 10 * 1024 * 1024:  # 10MB for production
-        return ""
-
-    tl_gb = recovery_info.translog_size_gb
-
-    # Color coding based on size
-    if tl_gb >= 5.0:
-        color = "red"
-    elif tl_gb >= 1.0:
-        color = "yellow"
-    else:
-        color = "green"
-
-    # Format size
-    if tl_gb >= 1.0:
-        size_str = f"{tl_gb:.1f}GB"
-    else:
-        size_str = f"{tl_gb * 1000:.0f}MB"
-
-    return f" [dim]([{color}]TL:{size_str}[/{color}])[/dim]"
 
 
 @click.group()
@@ -998,254 +955,28 @@ def monitor_recovery(
         xmover monitor-recovery --watch                # Continuous monitoring
         xmover monitor-recovery --recovery-type PEER  # Only PEER recoveries
     """
-    try:
-        client = ctx.obj["client"]
-        recovery_monitor = RecoveryMonitor(client)
-
-        if watch:
-            console.print(f"🔄 Monitoring shard recoveries (refreshing every {refresh_interval}s)")
-            console.print("Press Ctrl+C to stop")
-            console.print()
-
-            try:
-                # Show header once
-                console.print("📊 Recovery Progress Monitor")
-                console.print("=" * 80)
-
-                # Track previous state for change detection
-                previous_recoveries: Dict[str, Dict[str, Any]] = {}
-                previous_timestamp = None
-                first_run = True
-
-                while True:
-                    # Get current recovery status
-                    recoveries = recovery_monitor.get_cluster_recovery_status(
-                        table_name=table,
-                        node_name=node,
-                        recovery_type_filter=recovery_type,
-                        include_transitioning=include_transitioning,
-                    )
-
-                    # Display current time
-                    from datetime import datetime
-
-                    current_time = datetime.now().strftime("%H:%M:%S")
-
-                    # Check for any changes
-                    changes = []
-                    active_count = 0
-                    completed_count = 0
-
-                    for recovery in recoveries:
-                        recovery_key = (
-                            f"{recovery.schema_name}.{recovery.table_name}.{recovery.shard_id}.{recovery.node_name}"
-                        )
-
-                        # Create complete table name
-                        if recovery.schema_name == "doc":
-                            table_display = recovery.table_name
-                        else:
-                            table_display = f"{recovery.schema_name}.{recovery.table_name}"
-
-                        # Count active vs completed
-                        if recovery.stage == "DONE" and recovery.overall_progress >= 100.0:
-                            completed_count += 1
-                        else:
-                            active_count += 1
-
-                        # Check for changes since last update
-                        if recovery_key in previous_recoveries:
-                            prev = previous_recoveries[recovery_key]
-                            if prev["progress"] != recovery.overall_progress:
-                                diff = recovery.overall_progress - prev["progress"]
-                                # Create node route display
-                                node_route = ""
-                                if recovery.recovery_type == "PEER" and recovery.source_node_name:
-                                    node_route = f" {recovery.source_node_name} → {recovery.node_name}"
-                                elif recovery.recovery_type == "DISK":
-                                    node_route = f" disk → {recovery.node_name}"
-
-                                # Add translog info
-                                translog_info = format_translog_info(recovery)
-
-                                if diff > 0:
-                                    changes.append(
-                                        f"[green]📈[/green] {table_display} S{recovery.shard_id} "
-                                        f"{recovery.overall_progress:.1f}% (+{diff:.1f}%) "
-                                        f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
-                                    )
-                                else:
-                                    changes.append(
-                                        f"[yellow]📉[/yellow] {table_display} S{recovery.shard_id} "
-                                        f"{recovery.overall_progress:.1f}% ({diff:.1f}%) "
-                                        f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
-                                    )
-                            elif prev["stage"] != recovery.stage:
-                                # Create node route display
-                                node_route = ""
-                                if recovery.recovery_type == "PEER" and recovery.source_node_name:
-                                    node_route = f" {recovery.source_node_name} → {recovery.node_name}"
-                                elif recovery.recovery_type == "DISK":
-                                    node_route = f" disk → {recovery.node_name}"
-
-                                # Add translog info
-                                translog_info = format_translog_info(recovery)
-
-                                changes.append(
-                                    f"[blue]🔄[/blue] {table_display} S{recovery.shard_id} "
-                                    f"{prev['stage']}→{recovery.stage} "
-                                    f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
-                                )
-                        else:
-                            # New recovery - show based on include_transitioning flag or first run
-                            if (
-                                first_run
-                                or include_transitioning
-                                or (recovery.overall_progress < 100.0 or recovery.stage != "DONE")
-                            ):
-                                # Create node route display
-                                node_route = ""
-                                if recovery.recovery_type == "PEER" and recovery.source_node_name:
-                                    node_route = f" {recovery.source_node_name} → {recovery.node_name}"
-                                elif recovery.recovery_type == "DISK":
-                                    node_route = f" disk → {recovery.node_name}"
-
-                                status_icon = "[cyan]🆕[/cyan]" if not first_run else "[blue]📋[/blue]"
-                                # Add translog info
-                                translog_info = format_translog_info(recovery)
-
-                                changes.append(
-                                    f"{status_icon} {table_display} S{recovery.shard_id} "
-                                    f"{recovery.stage} {recovery.overall_progress:.1f}% "
-                                    f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
-                                )
-
-                        # Store current state for next comparison
-                        previous_recoveries[recovery_key] = {
-                            "progress": recovery.overall_progress,
-                            "stage": recovery.stage,
-                        }
-
-                    # Always show a status line
-                    if not recoveries:
-                        console.print(f"{current_time} | [green]No recoveries - cluster stable[/green]")
-                        previous_recoveries.clear()
-                    else:
-                        # Build status message
-                        status = ""
-                        if active_count > 0:
-                            status = f"{active_count} active"
-                        if completed_count > 0:
-                            status += f", {completed_count} done" if status else f"{completed_count} done"
-
-                        # Show status line with changes or periodic update
-                        if changes:
-                            console.print(f"{current_time} | {status}")
-                            for change in changes:
-                                console.print(f"         | {change}")
-                        else:
-                            # Show periodic status even without changes
-                            if include_transitioning and completed_count > 0:
-                                console.print(f"{current_time} | {status} (transitioning)")
-                            elif active_count > 0:
-                                console.print(f"{current_time} | {status} (no changes)")
-
-                    previous_timestamp = current_time  # noqa: F841
-                    first_run = False
-                    time.sleep(refresh_interval)
-
-            except KeyboardInterrupt:
-                console.print("\n\n[yellow]⏹  Monitoring stopped by user[/yellow]")
-
-                # Show final summary
-                final_recoveries = recovery_monitor.get_cluster_recovery_status(
-                    table_name=table,
-                    node_name=node,
-                    recovery_type_filter=recovery_type,
-                    include_transitioning=include_transitioning,
-                )
-
-                if final_recoveries:
-                    console.print("\n📊 [bold]Final Recovery Summary:[/bold]")
-                    summary = recovery_monitor.get_recovery_summary(final_recoveries)
-
-                    # Count active vs completed
-                    active_count = len([r for r in final_recoveries if r.overall_progress < 100.0 or r.stage != "DONE"])
-                    completed_count = len(final_recoveries) - active_count
-
-                    console.print(f"   Total recoveries: {summary['total_recoveries']}")
-                    console.print(f"   Active: {active_count}, Completed: {completed_count}")
-                    console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
-                    console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
-
-                    if summary["by_type"]:
-                        console.print("   By recovery type:")
-                        for rec_type, stats in summary["by_type"].items():
-                            console.print(
-                                f"     {rec_type}: {stats['count']} recoveries, "
-                                f"{stats['avg_progress']:.1f}% avg progress"
-                            )
-                else:
-                    console.print("\n[green]✅ No active recoveries at exit[/green]")
-
-                return
-
-        else:
-            # Single status check
-            recoveries = recovery_monitor.get_cluster_recovery_status(
-                table_name=table,
-                node_name=node,
-                recovery_type_filter=recovery_type,
-                include_transitioning=include_transitioning,
-            )
-
-            display_output = recovery_monitor.format_recovery_display(recoveries)
-            console.print(display_output)
-
-            if not recoveries:
-                if include_transitioning:
-                    console.print("\n[green]✅ No recoveries found (active or transitioning)[/green]")
-                else:
-                    console.print("\n[green]✅ No active recoveries found[/green]")
-                    console.print(
-                        "[dim]💡 Use --include-transitioning to see completed recoveries still transitioning[/dim]"
-                    )
-            else:
-                # Show summary
-                summary = recovery_monitor.get_recovery_summary(recoveries)
-                console.print("\n📊 [bold]Recovery Summary:[/bold]")
-                console.print(f"   Total recoveries: {summary['total_recoveries']}")
-                console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
-                console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
-
-                # Show breakdown by type
-                if summary["by_type"]:
-                    console.print("\n   By recovery type:")
-                    for rec_type, stats in summary["by_type"].items():
-                        console.print(
-                            f"     {rec_type}: {stats['count']} recoveries, {stats['avg_progress']:.1f}% avg progress"
-                        )
-
-                console.print("\n[dim]💡 Use --watch flag for continuous monitoring[/dim]")
-
-    except Exception as e:
-        console.print(f"[red]❌ Error monitoring recoveries: {e}[/red]")
-        if ctx.obj.get("debug"):
-            raise
+    recovery_monitor = RecoveryMonitor(
+        client=ctx.obj["client"],
+        options=RecoveryOptions(
+            table=table,
+            node=node,
+            refresh_interval=refresh_interval,
+            recovery_type=recovery_type,
+            include_transitioning=include_transitioning,
+        ),
+    )
+    recovery_monitor.start(watch=watch, debug=ctx.obj.get("debug"))
 
 
 def _wait_for_recovery_capacity(client, max_concurrent_recoveries: int = 5):
     """Wait until active recovery count is below threshold"""
-    from time import sleep
 
-    from .analyzer import RecoveryMonitor
-
-    recovery_monitor = RecoveryMonitor(client)
+    recovery_monitor = RecoveryMonitor(client, RecoveryOptions(include_transitioning=True))
     wait_time = 0
 
     while True:
         # Check active recoveries (including transitioning)
-        recoveries = recovery_monitor.get_cluster_recovery_status(include_transitioning=True)
+        recoveries = recovery_monitor.get_cluster_recovery_status()
         active_count = len([r for r in recoveries if r.overall_progress < 100.0 or r.stage != "DONE"])
         status = f"{active_count}/{max_concurrent_recoveries}"
         if active_count < max_concurrent_recoveries:
@@ -1257,14 +988,12 @@ def _wait_for_recovery_capacity(client, max_concurrent_recoveries: int = 5):
         elif wait_time % 30 == 0:  # Update every 30 seconds
             console.print(f"    [yellow]⏳ Still waiting... ({status} active)[/yellow]")
 
-        sleep(10)  # Check every 10 seconds
+        time.sleep(10)  # Check every 10 seconds
         wait_time += 10
 
 
 def _execute_recommendations_safely(client, recommendations, validate: bool):
     """Execute recommendations with extensive safety measures"""
-
-    from .analyzer import ShardAnalyzer
 
     # Filter to only safe recommendations
     safe_recommendations = []
