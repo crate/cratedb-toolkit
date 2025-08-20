@@ -7,8 +7,14 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from .database import CrateDBClient
-from .model import DistributionStats, NodeInfo, RecommendationConstraints, ShardInfo, ShardMoveRecommendation
+from cratedb_toolkit.admin.xmover.database import CrateDBClient
+from cratedb_toolkit.admin.xmover.model import (
+    DistributionStats,
+    NodeInfo,
+    RecommendationConstraints,
+    ShardInfo,
+    ShardMoveRecommendation,
+)
 
 logger = logging.getLogger(__name__)
 
