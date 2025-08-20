@@ -7,7 +7,7 @@ from rich.table import Table
 
 from cratedb_toolkit.admin.xmover.analyze.shard import ShardAnalyzer
 from cratedb_toolkit.admin.xmover.model import ShardMoveRecommendation, ShardMoveRequest, SizeCriteria
-from cratedb_toolkit.admin.xmover.util import format_percentage, format_size
+from cratedb_toolkit.admin.xmover.util.format import format_percentage, format_size
 
 console = Console()
 
