@@ -5,9 +5,9 @@ from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 
-from cratedb_toolkit.admin.xmover.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.model import RecoveryInfo
-from cratedb_toolkit.admin.xmover.util import format_translog_info
+from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
+from cratedb_toolkit.admin.xmover.util.format import format_translog_info
 
 console = Console()
 

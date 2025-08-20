@@ -6,8 +6,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from cratedb_toolkit.admin.xmover.analyze.shard import ShardAnalyzer
-from cratedb_toolkit.admin.xmover.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.model import ShardInfo
+from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 
 console = Console()
 
