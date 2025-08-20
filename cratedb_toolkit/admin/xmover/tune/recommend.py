@@ -5,11 +5,11 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .analyze.shard import ShardAnalyzer
-from .database import CrateDBClient
-from .model import RecommendationConstraints
-from .recovery import RecoveryMonitor, RecoveryOptions
-from .util import format_size
+from cratedb_toolkit.admin.xmover.analyze.shard import ShardAnalyzer
+from cratedb_toolkit.admin.xmover.database import CrateDBClient
+from cratedb_toolkit.admin.xmover.model import RecommendationConstraints
+from cratedb_toolkit.admin.xmover.tune.recover import RecoveryMonitor, RecoveryOptions
+from cratedb_toolkit.admin.xmover.util import format_size
 
 console = Console()
 
