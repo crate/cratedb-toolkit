@@ -1,5 +1,6 @@
+import dataclasses
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, Optional
 
 
 @dataclass
@@ -99,3 +100,68 @@ class RecoveryInfo:
     def translog_percentage(self) -> float:
         """Translog size as percentage of shard size"""
         return (self.translog_size_bytes / self.size_bytes * 100) if self.size_bytes > 0 else 0
+
+
+@dataclass
+class MoveRecommendation:
+    """Recommendation for moving a shard"""
+
+    table_name: str
+    schema_name: str
+    shard_id: int
+    from_node: str
+    to_node: str
+    from_zone: str
+    to_zone: str
+    shard_type: str
+    size_gb: float
+    reason: str
+
+    def to_sql(self) -> str:
+        """Generate the SQL command for this move"""
+        return (
+            f'ALTER TABLE "{self.schema_name}"."{self.table_name}" '
+            f"REROUTE MOVE SHARD {self.shard_id} "
+            f"FROM '{self.from_node}' TO '{self.to_node}';"
+        )
+
+    @property
+    def safety_score(self) -> float:
+        """Calculate a safety score for this move (0-1, higher is safer)"""
+        score = 1.0
+
+        # Penalize if moving to same zone (not ideal for zone distribution)
+        if self.from_zone == self.to_zone:
+            score -= 0.3
+
+        # Bonus for zone balancing moves
+        if "rebalancing" in self.reason.lower():
+            score += 0.2
+
+        # Ensure score stays in valid range
+        return max(0.0, min(1.0, score))
+
+
+@dataclass
+class DistributionStats:
+    """Statistics about shard distribution"""
+
+    total_shards: int
+    total_size_gb: float
+    zones: Dict[str, int]
+    nodes: Dict[str, int]
+    zone_balance_score: float  # 0-100, higher is better
+    node_balance_score: float  # 0-100, higher is better
+
+
+@dataclasses.dataclass
+class RecommendationConstraints:
+    min_size: float = 40.0
+    max_size: float = 60.0
+    table_name: Optional[str] = None
+    source_node: Optional[str] = None
+    zone_tolerance: float = 10.0
+    min_free_space: float = 100.0
+    max_recommendations: int = 10
+    max_disk_usage: float = 90.0
+    prioritize_space: bool = False
