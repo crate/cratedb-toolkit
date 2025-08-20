@@ -5,7 +5,7 @@ Database connection and query functions for CrateDB
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from dotenv import load_dotenv
@@ -118,7 +118,9 @@ class CrateDBClient:
     def __init__(self, connection_string: Optional[str] = None):
         load_dotenv()
 
-        self.connection_string = connection_string or os.getenv("CRATE_CONNECTION_STRING")
+        self.connection_string: str = (
+            connection_string or os.getenv("CRATE_CONNECTION_STRING") or "http://localhost:4200"
+        )
         if not self.connection_string:
             raise ValueError("CRATE_CONNECTION_STRING not found in environment or provided")
 
@@ -132,7 +134,7 @@ class CrateDBClient:
 
     def execute_query(self, query: str, parameters: Optional[List] = None) -> Dict[str, Any]:
         """Execute a SQL query against CrateDB"""
-        payload = {"stmt": query}
+        payload: Dict[str, Any] = {"stmt": query}
 
         if parameters:
             payload["args"] = parameters
@@ -207,7 +209,7 @@ class CrateDBClient:
         if not for_analysis:
             # For operations, only include healthy shards
             where_conditions.extend(["s.routing_state = 'STARTED'", "s.recovery['files']['percent'] = 100.0"])
-        parameters = []
+        parameters: List[Union[str, int, Dict]] = []
 
         if table_name:
             where_conditions.append("s.table_name = ?")
@@ -297,7 +299,11 @@ class CrateDBClient:
 
         result = self.execute_query(query)
 
-        summary = {"by_zone": {}, "by_node": {}, "totals": {"primary": 0, "replica": 0, "total_size_gb": 0}}
+        summary: Dict[str, Any] = {
+            "by_zone": {},
+            "by_node": {},
+            "totals": {"primary": 0, "replica": 0, "total_size_gb": 0},
+        }
 
         for row in result.get("rows", []):
             zone = row[0] or "unknown"

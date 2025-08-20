@@ -4,7 +4,7 @@ Command line interface for XMover - CrateDB Shard Analyzer and Movement Tool
 
 import sys
 import time
-from typing import Optional
+from typing import Any, Dict, List, Optional, cast
 
 import click
 from rich import box
@@ -13,7 +13,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from .analyzer import MoveRecommendation, RecoveryMonitor, ShardAnalyzer
-from .database import CrateDBClient
+from .database import CrateDBClient, ShardInfo
 
 console = Console()
 
@@ -600,7 +600,7 @@ def zone_analysis(ctx, table: Optional[str], show_shards: bool):
         return
 
     # Organize by table and shard
-    tables = {}
+    tables: Dict[str, Dict[str, List[ShardInfo]]] = {}
     for shard in shards:
         table_key = f"{shard.schema_name}.{shard.table_name}"
         if table_key not in tables:
@@ -850,7 +850,7 @@ def explain_error(ctx, error_message: Optional[str]):
 
     if not error_message:
         console.print("Please paste the CrateDB error message (press Enter twice when done):")
-        lines = []
+        lines: List[str] = []
         while True:
             try:
                 line = input()
@@ -933,7 +933,7 @@ def explain_error(ctx, error_message: Optional[str]):
     error_lower = error_message.lower()
 
     for pattern_info in error_patterns:
-        if pattern_info["pattern"].lower() in error_lower:
+        if cast(str, pattern_info["pattern"]).lower() in error_lower:
             matches.append(pattern_info)
 
     if matches:
@@ -1013,7 +1013,7 @@ def monitor_recovery(
                 console.print("=" * 80)
 
                 # Track previous state for change detection
-                previous_recoveries = {}
+                previous_recoveries: Dict[str, Dict[str, Any]] = {}
                 previous_timestamp = None
                 first_run = True
 
