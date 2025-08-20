@@ -368,7 +368,7 @@ xmover recommend --prioritize-zones --execute
 
 ### Connection String Format
 
-```
+```text
 https://hostname:port
 ```
 
@@ -407,7 +407,7 @@ xmover analyze
 ### Common Issues and Solutions
 
 1. **Zone Conflicts**
-   ```
+   ```text
    Error: "NO(a copy of this shard is already allocated to this node)"
    ```
    - **Cause**: Target node already has a copy of the shard
@@ -415,7 +415,7 @@ xmover analyze
    - **Prevention**: Always use `xmover validate-move` before executing moves
 
 2. **Zone Allocation Limits**
-   ```
+   ```text
    Error: "too many copies of the shard allocated to nodes with attribute [zone]"
    ```
    - **Cause**: CrateDB's zone awareness prevents too many copies in same zone
@@ -423,7 +423,7 @@ xmover analyze
    - **Prevention**: Use `xmover recommend` which respects zone constraints
 
 3. **Insufficient Space**
-   ```
+   ```text
    Error: "not enough disk space"
    ```
    - **Cause**: Target node lacks sufficient free space
@@ -431,7 +431,7 @@ xmover analyze
    - **Check**: `xmover analyze` to see available space per node
 
 4. **High Disk Usage Blocking Moves**
-   ```
+   ```text
    Error: "Target node disk usage too high (85.3%)"
    ```
    - **Cause**: Target node exceeds default 85% disk usage threshold
@@ -465,7 +465,7 @@ XMover uses configurable safety thresholds to prevent risky moves:
 xmover recommend --max-disk-usage 90 --prioritize-space
 
 # For urgent space relief
-xmover validate-move SCHEMA.TABLE SHARD_ID FROM TO --max-disk-usage 95
+xmover validate-move <SCHEMA.TABLE> <SHARD_ID> <FROM> <TO> --max-disk-usage 95
 ```
 
 **When to Adjust Thresholds:**
