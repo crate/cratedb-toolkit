@@ -53,7 +53,7 @@ ctk --version
 
 ## Contribute
 
-Contributions are very much welcome. Please visit the [](#sandbox) documentation
+Contributions are very much welcome. Please visit the [Documentation]
 to learn how to spin up a sandbox environment on your workstation, or create
 a [ticket][Issues] to report a bug or propose a feature.
 
