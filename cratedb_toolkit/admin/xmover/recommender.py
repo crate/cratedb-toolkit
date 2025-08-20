@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .analyzer import ShardAnalyzer
+from .analyze.shard import ShardAnalyzer
 from .database import CrateDBClient
 from .model import RecommendationConstraints
 from .recovery import RecoveryMonitor, RecoveryOptions
