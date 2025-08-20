@@ -25,5 +25,5 @@ SQL commands for shard rebalancing and node decommissioning.
 
 Handbook <handbook>
 Troubleshooting <troubleshooting>
-Query gallery <queries>
+Query Gallery <queries>
 ```
