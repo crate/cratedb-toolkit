@@ -2,12 +2,15 @@
 Shard analysis and rebalancing logic for CrateDB
 """
 
+import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from .database import CrateDBClient, NodeInfo, RecoveryInfo, ShardInfo
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -70,10 +73,10 @@ class ShardAnalyzer:
         self.nodes: List[NodeInfo] = []
         self.shards: List[ShardInfo] = []
 
-        # Initialize session-based caches for performance
-        self._zone_conflict_cache = {}
-        self._node_lookup_cache = {}
-        self._target_nodes_cache = {}
+        # Initialize session-based caches for performance.
+        self._zone_conflict_cache: Dict[Tuple[str, int, str], Union[str, None]] = {}
+        self._node_lookup_cache: Dict[str, Union[NodeInfo, None]] = {}
+        self._target_nodes_cache: Dict[Tuple[float, frozenset[Any], float, float], List[NodeInfo]] = {}
         self._cache_hits = 0
         self._cache_misses = 0
 
@@ -99,8 +102,8 @@ class ShardAnalyzer:
         total_size_gb = sum(s.size_gb for s in shards)
 
         # Count by zone and node
-        zone_counts = defaultdict(int)
-        node_counts = defaultdict(int)
+        zone_counts: Dict[str, int] = defaultdict(int)
+        node_counts: Dict[str, int] = defaultdict(int)
 
         for shard in shards:
             zone_counts[shard.zone] += 1
@@ -171,7 +174,7 @@ class ShardAnalyzer:
             shards = [s for s in shards if s.table_name == table_name]
 
         # Count shards by zone and type
-        zone_stats = defaultdict(lambda: {"PRIMARY": 0, "REPLICA": 0, "TOTAL": 0})
+        zone_stats: Dict[str, Dict] = defaultdict(lambda: {"PRIMARY": 0, "REPLICA": 0, "TOTAL": 0})
 
         for shard in shards:
             shard_type = shard.shard_type
@@ -243,7 +246,7 @@ class ShardAnalyzer:
             source_node: If specified, only generate recommendations for shards on this node
             max_disk_usage_percent: Maximum disk usage percentage for target nodes
         """
-        recommendations = []
+        recommendations: List[MoveRecommendation] = []
 
         # Get moveable shards (only healthy ones for actual operations)
         moveable_shards = self.find_moveable_shards(min_size_gb, max_size_gb, table_name)
@@ -287,7 +290,12 @@ class ShardAnalyzer:
         total_evaluated = 0
 
         for i, shard in enumerate(processing_shards):
+            if shard is None:
+                logger.info(f"Shard not found: {i}")
+                continue
+
             if len(recommendations) >= max_recommendations:
+                logger.info(f"Found {len(recommendations)} recommendations for shard: {shard.shard_id}")
                 break
 
             # Show progress every 50 shards when processing many
@@ -344,6 +352,7 @@ class ShardAnalyzer:
             if not safe_target_nodes:
                 continue  # No safe targets found, skip this shard
 
+            target_node: NodeInfo
             if prioritize_space:
                 # Space priority mode: choose node with most available space
                 target_node = safe_target_nodes[0]  # Already sorted by available space (desc)
@@ -356,7 +365,6 @@ class ShardAnalyzer:
                 # Choose target node with intelligent priority:
                 # 1. If a node has significantly more space (2x) than zone-preferred nodes, prioritize space
                 # 2. Otherwise, prefer zone balancing first, then available space
-                target_node = None
 
                 if preferred_nodes and other_nodes:
                     best_preferred = preferred_nodes[0]  # Most space in preferred zones
@@ -656,7 +664,7 @@ class ShardAnalyzer:
         # Get cluster watermark settings
         watermarks = self.client.get_cluster_watermarks()
 
-        overview = {
+        overview: Dict[str, Any] = {
             "nodes": len(self.nodes),
             "zones": len({node.zone for node in self.nodes}),
             "total_shards": len(self.shards),
