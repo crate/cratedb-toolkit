@@ -5,65 +5,12 @@ Shard analysis and rebalancing logic for CrateDB
 import logging
 import math
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from .database import CrateDBClient
-from .model import NodeInfo, ShardInfo
+from .model import DistributionStats, MoveRecommendation, NodeInfo, RecommendationConstraints, ShardInfo
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class MoveRecommendation:
-    """Recommendation for moving a shard"""
-
-    table_name: str
-    schema_name: str
-    shard_id: int
-    from_node: str
-    to_node: str
-    from_zone: str
-    to_zone: str
-    shard_type: str
-    size_gb: float
-    reason: str
-
-    def to_sql(self) -> str:
-        """Generate the SQL command for this move"""
-        return (
-            f'ALTER TABLE "{self.schema_name}"."{self.table_name}" '
-            f"REROUTE MOVE SHARD {self.shard_id} "
-            f"FROM '{self.from_node}' TO '{self.to_node}';"
-        )
-
-    @property
-    def safety_score(self) -> float:
-        """Calculate a safety score for this move (0-1, higher is safer)"""
-        score = 1.0
-
-        # Penalize if moving to same zone (not ideal for zone distribution)
-        if self.from_zone == self.to_zone:
-            score -= 0.3
-
-        # Bonus for zone balancing moves
-        if "rebalancing" in self.reason.lower():
-            score += 0.2
-
-        # Ensure score stays in valid range
-        return max(0.0, min(1.0, score))
-
-
-@dataclass
-class DistributionStats:
-    """Statistics about shard distribution"""
-
-    total_shards: int
-    total_size_gb: float
-    zones: Dict[str, int]
-    nodes: Dict[str, int]
-    zone_balance_score: float  # 0-100, higher is better
-    node_balance_score: float  # 0-100, higher is better
 
 
 class ShardAnalyzer:
@@ -227,18 +174,7 @@ class ShardAnalyzer:
         available_nodes.sort(key=lambda n: n.available_space_gb, reverse=True)
         return available_nodes
 
-    def generate_rebalancing_recommendations(
-        self,
-        table_name: Optional[str] = None,
-        min_size_gb: float = 40.0,
-        max_size_gb: float = 60.0,
-        zone_tolerance_percent: float = 10.0,
-        min_free_space_gb: float = 100.0,
-        max_recommendations: int = 10,
-        prioritize_space: bool = False,
-        source_node: Optional[str] = None,
-        max_disk_usage_percent: float = 90.0,
-    ) -> List[MoveRecommendation]:
+    def generate_rebalancing_recommendations(self, constraints: RecommendationConstraints) -> List[MoveRecommendation]:
         """Generate recommendations for rebalancing shards
 
         Args:
@@ -250,15 +186,18 @@ class ShardAnalyzer:
         recommendations: List[MoveRecommendation] = []
 
         # Get moveable shards (only healthy ones for actual operations)
-        moveable_shards = self.find_moveable_shards(min_size_gb, max_size_gb, table_name)
+        moveable_shards = self.find_moveable_shards(constraints.min_size, constraints.max_size, constraints.table_name)
 
-        print(f"Analyzing {len(moveable_shards)} candidate shards in size range {min_size_gb}-{max_size_gb}GB...")
+        print(
+            f"Analyzing {len(moveable_shards)} candidate shards "
+            f"in size range {constraints.min_size}-{constraints.max_size}GB..."
+        )
 
         if not moveable_shards:
             return recommendations
 
         # Analyze current zone balance
-        zone_stats = self.check_zone_balance(table_name, zone_tolerance_percent)
+        zone_stats = self.check_zone_balance(constraints.table_name, constraints.zone_tolerance)
 
         # Calculate target distribution
         total_shards = sum(stats["TOTAL"] for stats in zone_stats.values())
@@ -271,8 +210,8 @@ class ShardAnalyzer:
 
         for zone, stats in zone_stats.items():
             current_count = stats["TOTAL"]
-            threshold_high = target_per_zone * (1 + zone_tolerance_percent / 100)
-            threshold_low = target_per_zone * (1 - zone_tolerance_percent / 100)
+            threshold_high = target_per_zone * (1 + constraints.zone_tolerance / 100)
+            threshold_low = target_per_zone * (1 - constraints.zone_tolerance / 100)
 
             if current_count > threshold_high:
                 overloaded_zones.append(zone)
@@ -280,9 +219,9 @@ class ShardAnalyzer:
                 underloaded_zones.append(zone)
 
         # Optimize processing: if filtering by source node, only process those shards
-        if source_node:
-            processing_shards = [s for s in moveable_shards if s.node_name == source_node]
-            print(f"Focusing on {len(processing_shards)} shards from node {source_node}")
+        if constraints.source_node:
+            processing_shards = [s for s in moveable_shards if s.node_name == constraints.source_node]
+            print(f"Focusing on {len(processing_shards)} shards from node {constraints.source_node}")
         else:
             processing_shards = moveable_shards
 
@@ -295,7 +234,7 @@ class ShardAnalyzer:
                 logger.info(f"Shard not found: {i}")
                 continue
 
-            if len(recommendations) >= max_recommendations:
+            if len(recommendations) >= constraints.max_recommendations:
                 logger.info(f"Found {len(recommendations)} recommendations for shard: {shard.shard_id}")
                 break
 
@@ -306,7 +245,7 @@ class ShardAnalyzer:
             total_evaluated += 1
 
             # Skip based on priority mode
-            if not prioritize_space:
+            if not constraints.prioritize_space:
                 # Zone balancing mode: only move shards from overloaded zones
                 if shard.zone not in overloaded_zones:
                     continue
@@ -316,13 +255,13 @@ class ShardAnalyzer:
             target_nodes = self._find_nodes_with_capacity_cached(
                 required_space_gb=shard.size_gb,
                 exclude_nodes={shard.node_name},  # Don't move to same node
-                min_free_space_gb=min_free_space_gb,
-                max_disk_usage_percent=max_disk_usage_percent,
+                min_free_space_gb=constraints.min_free_space,
+                max_disk_usage_percent=constraints.max_disk_usage,
             )
 
             # Quick pre-filter to avoid expensive safety validations
             # Only check nodes in different zones (for zone balancing)
-            if not prioritize_space:
+            if not constraints.prioritize_space:
                 target_nodes = [node for node in target_nodes if node.zone != shard.zone]
 
             # Limit to top 3 candidates to reduce validation overhead
@@ -346,7 +285,7 @@ class ShardAnalyzer:
                 )
 
                 # Check if this move would be safe
-                is_safe, safety_msg = self.validate_move_safety(temp_rec, max_disk_usage_percent)
+                is_safe, safety_msg = self.validate_move_safety(temp_rec, constraints.max_disk_usage)
                 if is_safe:
                     safe_target_nodes.append(candidate_node)
 
@@ -354,7 +293,7 @@ class ShardAnalyzer:
                 continue  # No safe targets found, skip this shard
 
             target_node: NodeInfo
-            if prioritize_space:
+            if constraints.prioritize_space:
                 # Space priority mode: choose node with most available space
                 target_node = safe_target_nodes[0]  # Already sorted by available space (desc)
             else:
@@ -384,7 +323,7 @@ class ShardAnalyzer:
                     continue  # No suitable target found
 
             # Determine the reason for the move
-            if prioritize_space:
+            if constraints.prioritize_space:
                 if shard.zone == target_node.zone:
                     reason = f"Space optimization within {shard.zone}"
                 else:
