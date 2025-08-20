@@ -103,7 +103,18 @@ class RecoveryInfo:
 
 
 @dataclass
-class MoveRecommendation:
+class ShardMoveRequest:
+    """Request for moving a shard"""
+
+    schema_table: str
+    shard_id: int
+    from_node: str
+    to_node: str
+    max_disk_usage: float
+
+
+@dataclass
+class ShardMoveRecommendation:
     """Recommendation for moving a shard"""
 
     table_name: str
@@ -152,6 +163,14 @@ class DistributionStats:
     nodes: Dict[str, int]
     zone_balance_score: float  # 0-100, higher is better
     node_balance_score: float  # 0-100, higher is better
+
+
+@dataclasses.dataclass
+class SizeCriteria:
+    min_size: float = 40.0
+    max_size: float = 60.0
+    table_name: Optional[str] = None
+    source_node: Optional[str] = None
 
 
 @dataclasses.dataclass
