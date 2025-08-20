@@ -19,10 +19,10 @@ from cratedb_toolkit.admin.xmover.model import (
     ShardMoveRequest,
     SizeCriteria,
 )
-from cratedb_toolkit.admin.xmover.recommender import Recommender
+from cratedb_toolkit.admin.xmover.tune.recommend import Recommender
+from cratedb_toolkit.admin.xmover.tune.recover import RecoveryMonitor, RecoveryOptions
 
 from .database import CrateDBClient
-from .recovery import RecoveryMonitor, RecoveryOptions
 
 console = Console()
 
