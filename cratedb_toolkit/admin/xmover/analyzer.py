@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from .database import CrateDBClient
-from .model import DistributionStats, MoveRecommendation, NodeInfo, RecommendationConstraints, ShardInfo
+from .model import DistributionStats, NodeInfo, RecommendationConstraints, ShardInfo, ShardMoveRecommendation
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +174,9 @@ class ShardAnalyzer:
         available_nodes.sort(key=lambda n: n.available_space_gb, reverse=True)
         return available_nodes
 
-    def generate_rebalancing_recommendations(self, constraints: RecommendationConstraints) -> List[MoveRecommendation]:
+    def generate_rebalancing_recommendations(
+        self, constraints: RecommendationConstraints
+    ) -> List[ShardMoveRecommendation]:
         """Generate recommendations for rebalancing shards
 
         Args:
@@ -183,7 +185,7 @@ class ShardAnalyzer:
             source_node: If specified, only generate recommendations for shards on this node
             max_disk_usage_percent: Maximum disk usage percentage for target nodes
         """
-        recommendations: List[MoveRecommendation] = []
+        recommendations: List[ShardMoveRecommendation] = []
 
         # Get moveable shards (only healthy ones for actual operations)
         moveable_shards = self.find_moveable_shards(constraints.min_size, constraints.max_size, constraints.table_name)
@@ -271,7 +273,7 @@ class ShardAnalyzer:
             safe_target_nodes = []
             for candidate_node in target_nodes:
                 # Create a temporary recommendation to test safety
-                temp_rec = MoveRecommendation(
+                temp_rec = ShardMoveRecommendation(
                     table_name=shard.table_name,
                     schema_name=shard.schema_name,
                     shard_id=shard.shard_id,
@@ -333,7 +335,7 @@ class ShardAnalyzer:
                 if shard.zone == target_node.zone:
                     reason = f"Node balancing within {shard.zone}"
 
-            recommendation = MoveRecommendation(
+            recommendation = ShardMoveRecommendation(
                 table_name=shard.table_name,
                 schema_name=shard.schema_name,
                 shard_id=shard.shard_id,
@@ -355,7 +357,7 @@ class ShardAnalyzer:
         return recommendations
 
     def validate_move_safety(
-        self, recommendation: MoveRecommendation, max_disk_usage_percent: float = 90.0
+        self, recommendation: ShardMoveRecommendation, max_disk_usage_percent: float = 90.0
     ) -> Tuple[bool, str]:
         """Validate that a move recommendation is safe to execute"""
         # Find target node (with caching)
@@ -401,7 +403,7 @@ class ShardAnalyzer:
         self._node_lookup_cache[node_name] = target_node
         return target_node
 
-    def _check_zone_conflict_cached(self, recommendation: MoveRecommendation) -> Optional[str]:
+    def _check_zone_conflict_cached(self, recommendation: ShardMoveRecommendation) -> Optional[str]:
         """Check zone conflicts with caching"""
         # Create cache key: table, shard, target zone
         target_zone = self._get_node_zone(recommendation.to_node)
@@ -459,7 +461,7 @@ class ShardAnalyzer:
         self._target_nodes_cache[cache_key] = result
         return result
 
-    def _check_zone_conflict(self, recommendation: MoveRecommendation) -> Optional[str]:
+    def _check_zone_conflict(self, recommendation: ShardMoveRecommendation) -> Optional[str]:
         """Check if moving this shard would create a zone conflict
 
         Performs comprehensive zone safety analysis:
@@ -745,7 +747,7 @@ class ShardAnalyzer:
             safe_targets = []
             for target in potential_targets:
                 # Create a temporary recommendation to test zone safety
-                temp_rec = MoveRecommendation(
+                temp_rec = ShardMoveRecommendation(
                     table_name=shard.table_name,
                     schema_name=shard.schema_name,
                     shard_id=shard.shard_id,
@@ -770,7 +772,7 @@ class ShardAnalyzer:
                 # Choose the target with most available space
                 best_target = safe_targets[0]
                 move_plan.append(
-                    MoveRecommendation(
+                    ShardMoveRecommendation(
                         table_name=shard.table_name,
                         schema_name=shard.schema_name,
                         shard_id=shard.shard_id,
