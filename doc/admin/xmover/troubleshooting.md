@@ -232,7 +232,10 @@ CRATE_SSL_VERIFY=true
 **Step 3: Test Network Access**
 ```bash
 # Test HTTP connectivity
-curl -u username:password https://your-cluster:4200/_sql -d '{"stmt":"SELECT 1"}'
+curl -u 'username:password' \
+  -H 'Content-Type: application/json' \
+  'https://your-cluster:4200/_sql' \
+  -d '{"stmt":"SELECT 1"}'
 ```
 
 #### Prevention
@@ -285,7 +288,7 @@ xmover explain-error "your error message here"
 
 4. **Validate specific moves**
    ```bash
-   xmover validate-move SCHEMA.TABLE SHARD_ID FROM TO
+   xmover validate-move <SCHEMA.TABLE> <SHARD_ID> <FROM> <TO>
    ```
 
 5. **Execute gradually**

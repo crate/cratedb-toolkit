@@ -47,8 +47,15 @@ select node['name'], primary,  sum(size) / 1024^3, count(id)  from sys.shards  g
 ```
 
 ## Nodes available Space
-
 ```sql
+SELECT
+  name,
+  attributes['zone'] AS zone,
+  fs['total']['available'] / power(1024, 3) AS available_gb
+FROM sys.nodes
+ORDER BY name;
+```
+```text
 +------------+--------------------+-----------------------------------------------+
 | name       | attributes['zone'] | (fs[1]['disks']['available'] / 1.073741824E9) |
 +------------+--------------------+-----------------------------------------------+
@@ -87,8 +94,7 @@ SELECT 8 rows in set (0.062 sec)
 
 ## Move REROUTE
 ```sql
-
-alter table "curvo"."bottlefieldData" reroute move shard 21 from 'data-hot-2' to 'data-hot-3';
+ALTER TABLE curvo.bottlefielddata REROUTE MOVE SHARD 21 FROM 'data-hot-2' TO 'data-hot-3';
 ```
 ---
 
