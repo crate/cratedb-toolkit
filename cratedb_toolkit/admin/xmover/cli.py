@@ -10,16 +10,15 @@ from typing import Optional
 import click
 from rich.console import Console
 
-from cratedb_toolkit.admin.xmover.analysis.report import ShardReporter
-from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer
+from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer, ShardReporter
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
-    RecommendationConstraints,
-    ShardMoveRequest,
+    ShardRelocationConstraints,
+    ShardRelocationRequest,
     SizeCriteria,
 )
 from cratedb_toolkit.admin.xmover.operational.candidates import CandidateFinder
-from cratedb_toolkit.admin.xmover.operational.recommend import Recommender
+from cratedb_toolkit.admin.xmover.operational.recommend import ShardRelocationRecommender
 from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.error import explain_cratedb_error
@@ -128,9 +127,9 @@ def recommend(
     auto_execute: bool,
 ):
     """Generate shard movement recommendations for rebalancing"""
-    recommender = Recommender(
-        client=ctx.obj["client"],
-        constraints=RecommendationConstraints(
+    recommender = ShardRelocationRecommender(client=ctx.obj["client"])
+    recommender.execute(
+        constraints=ShardRelocationConstraints(
             table_name=table,
             source_node=node,
             min_size=min_size,
@@ -141,8 +140,10 @@ def recommend(
             max_disk_usage=max_disk_usage,
             prioritize_space=prioritize_space,
         ),
+        auto_execute=auto_execute,
+        validate=validate,
+        dry_run=dry_run,
     )
-    recommender.start(auto_execute=auto_execute, validate=validate, dry_run=dry_run)
 
 
 @main.command()
@@ -212,11 +213,9 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
 
     Example: xmover validate-move CUROV.maddoxxS 4 data-hot-1 data-hot-3
     """
-    client = ctx.obj["client"]
-    analyzer = ShardAnalyzer(client)
-    reporter = ShardReporter(analyzer)
-    reporter.validate_move(
-        request=ShardMoveRequest(
+    recommender = ShardRelocationRecommender(client=ctx.obj["client"])
+    recommender.validate(
+        request=ShardRelocationRequest(
             schema_table=schema_table,
             shard_id=shard_id,
             from_node=from_node,
