@@ -103,7 +103,7 @@ class RecoveryInfo:
 
 
 @dataclass
-class ShardMoveRequest:
+class ShardRelocationRequest:
     """Request for moving a shard"""
 
     schema_table: str
@@ -114,7 +114,7 @@ class ShardMoveRequest:
 
 
 @dataclass
-class ShardMoveRecommendation:
+class ShardRelocationResponse:
     """Recommendation for moving a shard"""
 
     table_name: str
@@ -174,9 +174,9 @@ class SizeCriteria:
 
 
 @dataclasses.dataclass
-class RecommendationConstraints:
-    min_size: float = 40.0
-    max_size: float = 60.0
+class ShardRelocationConstraints:
+    min_size: float = SizeCriteria().min_size
+    max_size: float = SizeCriteria().max_size
     table_name: Optional[str] = None
     source_node: Optional[str] = None
     zone_tolerance: float = 10.0

@@ -6,7 +6,11 @@ from rich.panel import Panel
 from rich.table import Table
 
 from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer
-from cratedb_toolkit.admin.xmover.model import RecommendationConstraints
+from cratedb_toolkit.admin.xmover.model import (
+    ShardRelocationConstraints,
+    ShardRelocationRequest,
+    ShardRelocationResponse,
+)
 from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.format import format_size
@@ -14,14 +18,145 @@ from cratedb_toolkit.admin.xmover.util.format import format_size
 console = Console()
 
 
-class Recommender:
-    def __init__(self, client: CrateDBClient, constraints: RecommendationConstraints):
+class ShardRelocationRecommender:
+    def __init__(self, client: CrateDBClient):
         self.client = client
-        self.constraints = constraints
         self.analyzer = ShardAnalyzer(self.client)
 
-    def start(
+    def validate(self, request: ShardRelocationRequest):
+        # Parse schema and table
+        if "." not in request.schema_table:
+            console.print("[red]Error: Schema and table must be in format 'schema.table'[/red]")
+            return
+
+        schema_name, table_name = request.schema_table.split(".", 1)
+
+        console.print(Panel.fit("[bold blue]Validating Shard Move[/bold blue]"))
+        console.print(
+            f"[dim]Move: {schema_name}.{table_name}[{request.shard_id}] "
+            f"from {request.from_node} to {request.to_node}[/dim]"
+        )
+        console.print()
+
+        # Find the nodes
+        from_node_info = None
+        to_node_info = None
+        for node in self.analyzer.nodes:
+            if node.name == request.from_node:
+                from_node_info = node
+            if node.name == request.to_node:
+                to_node_info = node
+
+        if not from_node_info:
+            console.print(f"[red]✗ Source node '{request.from_node}' not found in cluster[/red]")
+            return
+
+        if not to_node_info:
+            console.print(f"[red]✗ Target node '{request.to_node}' not found in cluster[/red]")
+            return
+
+        # Find the specific shard
+        target_shard = None
+        for shard in self.analyzer.shards:
+            if (
+                shard.schema_name == schema_name
+                and shard.table_name == table_name
+                and shard.shard_id == request.shard_id
+                and shard.node_name == request.from_node
+            ):
+                target_shard = shard
+                break
+
+        if not target_shard:
+            console.print(f"[red]✗ Shard {request.shard_id} not found on node {request.from_node}[/red]")
+            console.print("[dim]Use 'xmover find-candidates' to see available shards[/dim]")
+            return
+
+        # Create a move recommendation for validation
+        recommendation = ShardRelocationResponse(
+            table_name=table_name,
+            schema_name=schema_name,
+            shard_id=request.shard_id,
+            from_node=request.from_node,
+            to_node=request.to_node,
+            from_zone=from_node_info.zone,
+            to_zone=to_node_info.zone,
+            shard_type=target_shard.shard_type,
+            size_gb=target_shard.size_gb,
+            reason="Manual validation",
+        )
+
+        # Display shard details
+        details_table = Table(title="Shard Details", box=box.ROUNDED)
+        details_table.add_column("Property", style="cyan")
+        details_table.add_column("Value", style="magenta")
+
+        details_table.add_row("Table", f"{schema_name}.{table_name}")
+        details_table.add_row("Shard ID", str(request.shard_id))
+        details_table.add_row("Type", target_shard.shard_type)
+        details_table.add_row("Size", format_size(target_shard.size_gb))
+        details_table.add_row("Documents", f"{target_shard.num_docs:,}")
+        details_table.add_row("State", target_shard.state)
+        details_table.add_row("Routing State", target_shard.routing_state)
+        details_table.add_row("From Node", f"{request.from_node} ({from_node_info.zone})")
+        details_table.add_row("To Node", f"{request.to_node} ({to_node_info.zone})")
+        details_table.add_row("Zone Change", "Yes" if from_node_info.zone != to_node_info.zone else "No")
+
+        console.print(details_table)
+        console.print()
+
+        # Perform comprehensive validation
+        is_safe, safety_msg = self.analyzer.validate_move_safety(
+            recommendation, max_disk_usage_percent=request.max_disk_usage
+        )
+
+        if is_safe:
+            console.print("[green]✓ VALIDATION PASSED - Move appears safe[/green]")
+            console.print(f"[green]✓ {safety_msg}[/green]")
+            console.print()
+
+            # Show the SQL command
+            console.print(Panel.fit("[bold green]Ready to Execute[/bold green]"))
+            console.print("[dim]# Copy and paste this command to execute the move[/dim]")
+            console.print()
+            console.print(f"{recommendation.to_sql()}")
+            console.print()
+            console.print("[dim]# Monitor shard health after execution[/dim]")
+            console.print(
+                "[dim]# Check with: SELECT * FROM sys.shards "
+                "WHERE table_name = '{table_name}' AND id = {shard_id};[/dim]"
+            )
+        else:
+            console.print("[red]✗ VALIDATION FAILED - Move not safe[/red]")
+            console.print(f"[red]✗ {safety_msg}[/red]")
+            console.print()
+
+            # Provide troubleshooting guidance
+            if "zone conflict" in safety_msg.lower():
+                console.print("[yellow]💡 Troubleshooting Zone Conflicts:[/yellow]")
+                console.print("  • Check current shard distribution: xmover zone-analysis --show-shards")
+                console.print("  • Try moving to a different zone")
+                console.print("  • Verify cluster has proper zone-awareness configuration")
+            elif "node conflict" in safety_msg.lower():
+                console.print("[yellow]💡 Troubleshooting Node Conflicts:[/yellow]")
+                console.print("  • The target node already has a copy of this shard")
+                console.print("  • Choose a different target node")
+                console.print("  • Check shard distribution: xmover analyze")
+            elif "space" in safety_msg.lower():
+                console.print("[yellow]💡 Troubleshooting Space Issues:[/yellow]")
+                console.print("  • Free up space on the target node")
+                console.print("  • Choose a node with more available capacity")
+                console.print("  • Check node capacity: xmover analyze")
+            elif "usage" in safety_msg.lower():
+                console.print("[yellow]💡 Troubleshooting High Disk Usage:[/yellow]")
+                console.print("  • Wait for target node disk usage to decrease")
+                console.print("  • Choose a node with lower disk usage")
+                console.print("  • Check cluster health: xmover analyze")
+                console.print("  • Consider using --max-disk-usage option for urgent moves")
+
+    def execute(
         self,
+        constraints: ShardRelocationConstraints,
         auto_execute: bool,
         validate: bool,
         dry_run: bool,
@@ -41,17 +176,17 @@ class Recommender:
         )
         console.print("[dim]Note: Only analyzing healthy shards (STARTED + 100% recovered) for safe operations[/dim]")
         console.print("[dim]Zone conflict detection: Prevents moves that would violate CrateDB's zone awareness[/dim]")
-        if self.constraints.prioritize_space:
+        if constraints.prioritize_space:
             console.print("[dim]Mode: Prioritizing available space over zone balancing[/dim]")
         else:
             console.print("[dim]Mode: Prioritizing zone balancing over available space[/dim]")
 
-        if self.constraints.source_node:
-            console.print(f"[dim]Filtering: Only showing moves from source node '{self.constraints.source_node}'[/dim]")
+        if constraints.source_node:
+            console.print(f"[dim]Filtering: Only showing moves from source node '{constraints.source_node}'[/dim]")
 
         console.print(
-            f"[dim]Safety thresholds: Max disk usage {self.constraints.max_disk_usage}%, "
-            f"Min free space {self.constraints.min_free_space}GB[/dim]"
+            f"[dim]Safety thresholds: Max disk usage {constraints.max_disk_usage}%, "
+            f"Min free space {constraints.min_free_space}GB[/dim]"
         )
 
         if dry_run:
@@ -60,24 +195,20 @@ class Recommender:
             console.print("[red]EXECUTION MODE - SQL commands will be generated for actual moves[/red]")
         console.print()
 
-        recommendations = self.analyzer.generate_rebalancing_recommendations(constraints=self.constraints)
+        recommendations = self.analyzer.generate_rebalancing_recommendations(constraints=constraints)
 
         if not recommendations:
-            if self.constraints.source_node:
-                console.print(
-                    f"[yellow]No safe recommendations found for node '{self.constraints.source_node}'[/yellow]"
-                )
+            if constraints.source_node:
+                console.print(f"[yellow]No safe recommendations found for node '{constraints.source_node}'[/yellow]")
                 console.print("[dim]This could be due to:[/dim]")
                 console.print("[dim]  • Zone conflicts preventing safe moves[/dim]")
                 console.print(
-                    f"[dim]  • Target nodes exceeding {self.constraints.max_disk_usage}% disk usage threshold[/dim]"
+                    f"[dim]  • Target nodes exceeding {constraints.max_disk_usage}% disk usage threshold[/dim]"
                 )
                 console.print(
-                    f"[dim]  • Insufficient free space on target nodes (need {self.constraints.min_free_space}GB)[/dim]"
+                    f"[dim]  • Insufficient free space on target nodes (need {constraints.min_free_space}GB)[/dim]"
                 )
-                console.print(
-                    f"[dim]  • No shards in size range {self.constraints.min_size}-{self.constraints.max_size}GB[/dim]"
-                )
+                console.print(f"[dim]  • No shards in size range {constraints.min_size}-{constraints.max_size}GB[/dim]")
                 console.print("[dim]Suggestions:[/dim]")
                 console.print("[dim]  • Try: --max-disk-usage 95 (allow higher disk usage)[/dim]")
                 console.print("[dim]  • Try: --min-free-space 50 (reduce space requirements)[/dim]")
@@ -121,7 +252,7 @@ class Recommender:
 
             if validate:
                 is_safe, safety_msg = self.analyzer.validate_move_safety(
-                    rec, max_disk_usage_percent=self.constraints.max_disk_usage
+                    rec, max_disk_usage_percent=constraints.max_disk_usage
                 )
                 safety_status = "[green]✓ SAFE[/green]" if is_safe else f"[red]✗ {safety_msg}[/red]"
                 row.append(safety_status)
@@ -145,7 +276,7 @@ class Recommender:
             for i, rec in enumerate(recommendations, 1):
                 if validate:
                     is_safe, safety_msg = self.analyzer.validate_move_safety(
-                        rec, max_disk_usage_percent=self.constraints.max_disk_usage
+                        rec, max_disk_usage_percent=constraints.max_disk_usage
                     )
                     if not is_safe:
                         if "zone conflict" in safety_msg.lower():
@@ -189,7 +320,7 @@ class Recommender:
             for i, rec in enumerate(recommendations, 1):
                 if validate:
                     is_safe, safety_msg = self.analyzer.validate_move_safety(
-                        rec, max_disk_usage_percent=self.constraints.max_disk_usage
+                        rec, max_disk_usage_percent=constraints.max_disk_usage
                     )
                     if not is_safe:
                         if "Zone conflict" in safety_msg:
