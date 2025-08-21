@@ -11,7 +11,7 @@ from cratedb_toolkit.admin.xmover.model import (
     ShardRelocationRequest,
     ShardRelocationResponse,
 )
-from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
+from cratedb_toolkit.admin.xmover.operational.monitor import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.format import format_size
 
