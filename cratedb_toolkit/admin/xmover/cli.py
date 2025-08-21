@@ -10,16 +10,17 @@ from typing import Optional
 import click
 from rich.console import Console
 
-from cratedb_toolkit.admin.xmover.analyze.report import ShardReporter
-from cratedb_toolkit.admin.xmover.analyze.shard import ShardAnalyzer
-from cratedb_toolkit.admin.xmover.analyze.zone import ZoneReport
+from cratedb_toolkit.admin.xmover.analysis.report import ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer
+from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
     RecommendationConstraints,
     ShardMoveRequest,
     SizeCriteria,
 )
-from cratedb_toolkit.admin.xmover.tune.recommend import Recommender
-from cratedb_toolkit.admin.xmover.tune.recover import RecoveryMonitor, RecoveryOptions
+from cratedb_toolkit.admin.xmover.operational.candidates import CandidateFinder
+from cratedb_toolkit.admin.xmover.operational.recommend import Recommender
+from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.error import explain_cratedb_error
 
@@ -72,8 +73,8 @@ def find_candidates(ctx, min_size: float, max_size: float, limit: int, table: Op
     """Find shard candidates for movement based on size criteria"""
     client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
-    reporter = ShardReporter(analyzer)
-    reporter.movement_candidates(
+    finder = CandidateFinder(analyzer)
+    finder.movement_candidates(
         criteria=SizeCriteria(
             min_size=min_size,
             max_size=max_size,
@@ -209,7 +210,7 @@ def validate_move(ctx, schema_table: str, shard_id: int, from_node: str, to_node
     FROM_NODE: Source node name
     TO_NODE: Target node name
 
-    Example: xmover validate-move CUROV.maddoxxFormfactor 4 data-hot-1 data-hot-3
+    Example: xmover validate-move CUROV.maddoxxS 4 data-hot-1 data-hot-3
     """
     client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)

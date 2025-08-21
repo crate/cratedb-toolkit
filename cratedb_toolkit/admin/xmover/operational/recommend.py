@@ -5,9 +5,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from cratedb_toolkit.admin.xmover.analyze.shard import ShardAnalyzer
+from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer
 from cratedb_toolkit.admin.xmover.model import RecommendationConstraints
-from cratedb_toolkit.admin.xmover.tune.recover import RecoveryMonitor, RecoveryOptions
+from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.format import format_size
 
