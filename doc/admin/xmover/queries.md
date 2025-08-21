@@ -216,3 +216,34 @@ SELECT
     WHERE current_state != 'STARTED' and table_name = 'dispatchio' and shard_id = 19
     ORDER BY current_state, table_name, shard_id;
 ```
+
+## "BIGDUDES" Focuses on your **biggest storage consumers** and shows how their shards are distributed across nodes.
+
+´´´sql
+WITH largest_tables AS (
+        SELECT
+            schema_name,
+            table_name,
+            SUM(CASE WHEN "primary" = true THEN size ELSE 0 END) as total_primary_size
+        FROM sys.shards
+        WHERE schema_name NOT IN ('sys', 'information_schema', 'pg_catalog')
+        GROUP BY schema_name, table_name
+        ORDER BY total_primary_size DESC
+        LIMIT 10
+    )
+    SELECT
+        s.schema_name,
+        s.table_name,
+        s.node['name'] as node_name,
+        COUNT(CASE WHEN s."primary" = true THEN 1 END) as primary_shards,
+        COUNT(CASE WHEN s."primary" = false THEN 1 END) as replica_shards,
+        COUNT(*) as total_shards,
+        ROUND(SUM(s.size) / 1024.0 / 1024.0 / 1024.0, 2) as total_size_gb,
+        ROUND(SUM(CASE WHEN s."primary" = true THEN s.size ELSE 0 END) / 1024.0 / 1024.0 / 1024.0, 2) as primary_size_gb,
+        ROUND(SUM(CASE WHEN s."primary" = false THEN s.size ELSE 0 END) / 1024.0 / 1024.0 / 1024.0, 2) as replica_size_gb,
+        SUM(s.num_docs) as total_documents
+    FROM sys.shards s
+    INNER JOIN largest_tables lt ON (s.schema_name = lt.schema_name AND s.table_name = lt.table_name)
+    GROUP BY s.schema_name, s.table_name, s.node['name']
+    ORDER BY s.schema_name, s.table_name, s.node['name'];
+```

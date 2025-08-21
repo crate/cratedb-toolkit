@@ -56,6 +56,19 @@ xmover recommend --execute
 xmover recommend --prioritize-space
 ```
 
+### Shard Distribution Analysis
+This view is dedicating a specific focus on large tables.
+```bash
+# Analyze distribution anomalies for top 10 largest tables
+xmover shard-distribution
+
+# Analyze more tables
+xmover shard-distribution --top-tables 20
+
+# Detailed health report for specific table
+xmover shard-distribution --table my_table
+```
+
 ### Zone Analysis
 ```bash
 # Check zone balance
