@@ -7,16 +7,24 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
 from cratedb_toolkit.admin.xmover.model import (
     DistributionStats,
     NodeInfo,
-    RecommendationConstraints,
     ShardInfo,
-    ShardMoveRecommendation,
+    ShardRelocationConstraints,
+    ShardRelocationResponse,
 )
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
+from cratedb_toolkit.admin.xmover.util.format import format_percentage, format_size
 
 logger = logging.getLogger(__name__)
+
+console = Console()
 
 
 class ShardAnalyzer:
@@ -181,8 +189,8 @@ class ShardAnalyzer:
         return available_nodes
 
     def generate_rebalancing_recommendations(
-        self, constraints: RecommendationConstraints
-    ) -> List[ShardMoveRecommendation]:
+        self, constraints: ShardRelocationConstraints
+    ) -> List[ShardRelocationResponse]:
         """Generate recommendations for rebalancing shards
 
         Args:
@@ -191,7 +199,7 @@ class ShardAnalyzer:
             source_node: If specified, only generate recommendations for shards on this node
             max_disk_usage_percent: Maximum disk usage percentage for target nodes
         """
-        recommendations: List[ShardMoveRecommendation] = []
+        recommendations: List[ShardRelocationResponse] = []
 
         # Get moveable shards (only healthy ones for actual operations)
         moveable_shards = self.find_moveable_shards(constraints.min_size, constraints.max_size, constraints.table_name)
@@ -279,7 +287,7 @@ class ShardAnalyzer:
             safe_target_nodes = []
             for candidate_node in target_nodes:
                 # Create a temporary recommendation to test safety
-                temp_rec = ShardMoveRecommendation(
+                temp_rec = ShardRelocationResponse(
                     table_name=shard.table_name,
                     schema_name=shard.schema_name,
                     shard_id=shard.shard_id,
@@ -341,7 +349,7 @@ class ShardAnalyzer:
                 if shard.zone == target_node.zone:
                     reason = f"Node balancing within {shard.zone}"
 
-            recommendation = ShardMoveRecommendation(
+            recommendation = ShardRelocationResponse(
                 table_name=shard.table_name,
                 schema_name=shard.schema_name,
                 shard_id=shard.shard_id,
@@ -363,7 +371,7 @@ class ShardAnalyzer:
         return recommendations
 
     def validate_move_safety(
-        self, recommendation: ShardMoveRecommendation, max_disk_usage_percent: float = 90.0
+        self, recommendation: ShardRelocationResponse, max_disk_usage_percent: float = 90.0
     ) -> Tuple[bool, str]:
         """Validate that a move recommendation is safe to execute"""
         # Find target node (with caching)
@@ -409,7 +417,7 @@ class ShardAnalyzer:
         self._node_lookup_cache[node_name] = target_node
         return target_node
 
-    def _check_zone_conflict_cached(self, recommendation: ShardMoveRecommendation) -> Optional[str]:
+    def _check_zone_conflict_cached(self, recommendation: ShardRelocationResponse) -> Optional[str]:
         """Check zone conflicts with caching"""
         # Create cache key: table, shard, target zone
         target_zone = self._get_node_zone(recommendation.to_node)
@@ -467,7 +475,7 @@ class ShardAnalyzer:
         self._target_nodes_cache[cache_key] = result
         return result
 
-    def _check_zone_conflict(self, recommendation: ShardMoveRecommendation) -> Optional[str]:
+    def _check_zone_conflict(self, recommendation: ShardRelocationResponse) -> Optional[str]:
         """Check if moving this shard would create a zone conflict
 
         Performs comprehensive zone safety analysis:
@@ -753,7 +761,7 @@ class ShardAnalyzer:
             safe_targets = []
             for target in potential_targets:
                 # Create a temporary recommendation to test zone safety
-                temp_rec = ShardMoveRecommendation(
+                temp_rec = ShardRelocationResponse(
                     table_name=shard.table_name,
                     schema_name=shard.schema_name,
                     shard_id=shard.shard_id,
@@ -778,7 +786,7 @@ class ShardAnalyzer:
                 # Choose the target with most available space
                 best_target = safe_targets[0]
                 move_plan.append(
-                    ShardMoveRecommendation(
+                    ShardRelocationResponse(
                         table_name=shard.table_name,
                         schema_name=shard.schema_name,
                         shard_id=shard.shard_id,
@@ -826,3 +834,116 @@ class ShardAnalyzer:
             "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 6 minutes per move
             "message": "Decommission plan generated" if feasible else "Decommission not currently feasible",
         }
+
+
+class ShardReporter:
+    def __init__(self, analyzer: ShardAnalyzer):
+        self.analyzer = analyzer
+
+    def distribution(self, table: str = None):
+        """Analyze current shard distribution across nodes and zones"""
+        console.print(Panel.fit("[bold blue]CrateDB Cluster Analysis[/bold blue]"))
+
+        # Get cluster overview (includes all shards for complete analysis)
+        overview: Dict[str, Any] = self.analyzer.get_cluster_overview()
+
+        # Cluster summary table
+        summary_table = Table(title="Cluster Summary", box=box.ROUNDED)
+        summary_table.add_column("Metric", style="cyan")
+        summary_table.add_column("Value", style="magenta")
+
+        summary_table.add_row("Nodes", str(overview["nodes"]))
+        summary_table.add_row("Availability Zones", str(overview["zones"]))
+        summary_table.add_row("Total Shards", str(overview["total_shards"]))
+        summary_table.add_row("Primary Shards", str(overview["primary_shards"]))
+        summary_table.add_row("Replica Shards", str(overview["replica_shards"]))
+        summary_table.add_row("Total Size", format_size(overview["total_size_gb"]))
+
+        console.print(summary_table)
+        console.print()
+
+        # Disk watermarks table
+        if overview.get("watermarks"):
+            watermarks_table = Table(title="Disk Allocation Watermarks", box=box.ROUNDED)
+            watermarks_table.add_column("Setting", style="cyan")
+            watermarks_table.add_column("Value", style="magenta")
+
+            watermarks = overview["watermarks"]
+            watermarks_table.add_row("Low Watermark", str(watermarks.get("low", "Not set")))
+            watermarks_table.add_row("High Watermark", str(watermarks.get("high", "Not set")))
+            watermarks_table.add_row("Flood Stage", str(watermarks.get("flood_stage", "Not set")))
+            watermarks_table.add_row(
+                "Enable for Single Node", str(watermarks.get("enable_for_single_data_node", "Not set"))
+            )
+
+            console.print(watermarks_table)
+            console.print()
+
+        # Zone distribution table
+        zone_table = Table(title="Zone Distribution", box=box.ROUNDED)
+        zone_table.add_column("Zone", style="cyan")
+        zone_table.add_column("Shards", justify="right", style="magenta")
+        zone_table.add_column("Percentage", justify="right", style="green")
+
+        total_shards = overview["total_shards"]
+        for zone, count in overview["zone_distribution"].items():
+            percentage = (count / total_shards * 100) if total_shards > 0 else 0
+            zone_table.add_row(zone, str(count), f"{percentage:.1f}%")
+
+        console.print(zone_table)
+        console.print()
+
+        # Node health table
+        node_table = Table(title="Node Health", box=box.ROUNDED)
+        node_table.add_column("Node", style="cyan")
+        node_table.add_column("Zone", style="blue")
+        node_table.add_column("Shards", justify="right", style="magenta")
+        node_table.add_column("Size", justify="right", style="green")
+        node_table.add_column("Disk Usage", justify="right")
+        node_table.add_column("Available Space", justify="right", style="green")
+        node_table.add_column("Until Low WM", justify="right", style="yellow")
+        node_table.add_column("Until High WM", justify="right", style="red")
+
+        for node_info in overview["node_health"]:
+            # Format watermark remaining capacity
+            low_wm_remaining = (
+                format_size(node_info["remaining_to_low_watermark_gb"])
+                if node_info["remaining_to_low_watermark_gb"] > 0
+                else "[red]Exceeded[/red]"
+            )
+            high_wm_remaining = (
+                format_size(node_info["remaining_to_high_watermark_gb"])
+                if node_info["remaining_to_high_watermark_gb"] > 0
+                else "[red]Exceeded[/red]"
+            )
+
+            node_table.add_row(
+                node_info["name"],
+                node_info["zone"],
+                str(node_info["shards"]),
+                format_size(node_info["size_gb"]),
+                format_percentage(node_info["disk_usage_percent"]),
+                format_size(node_info["available_space_gb"]),
+                low_wm_remaining,
+                high_wm_remaining,
+            )
+
+        console.print(node_table)
+
+        # Table-specific analysis if requested
+        if table:
+            console.print()
+            console.print(Panel.fit(f"[bold blue]Analysis for table: {table}[/bold blue]"))
+
+            stats = self.analyzer.analyze_distribution(table)
+
+            table_summary = Table(title=f"Table {table} Distribution", box=box.ROUNDED)
+            table_summary.add_column("Metric", style="cyan")
+            table_summary.add_column("Value", style="magenta")
+
+            table_summary.add_row("Total Shards", str(stats.total_shards))
+            table_summary.add_row("Total Size", format_size(stats.total_size_gb))
+            table_summary.add_row("Zone Balance Score", f"{stats.zone_balance_score:.1f}/100")
+            table_summary.add_row("Node Balance Score", f"{stats.node_balance_score:.1f}/100")
+
+            console.print(table_summary)
