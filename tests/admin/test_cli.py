@@ -15,6 +15,7 @@ from cratedb_toolkit.admin.xmover.cli import main as cli
         "recommend",
         "test-connection",
         "zone-analysis",
+        "shard-distribution",
     ],
 )
 def test_xmover_all(cratedb, subcommand):
