@@ -18,8 +18,8 @@ from cratedb_toolkit.admin.xmover.model import (
     SizeCriteria,
 )
 from cratedb_toolkit.admin.xmover.operational.candidates import CandidateFinder
+from cratedb_toolkit.admin.xmover.operational.monitor import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.operational.recommend import ShardRelocationRecommender
-from cratedb_toolkit.admin.xmover.operational.recover import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.error import explain_cratedb_error
 
