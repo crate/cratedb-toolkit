@@ -11,6 +11,7 @@ import click
 from rich.console import Console
 
 from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
     ShardRelocationConstraints,
@@ -183,6 +184,69 @@ def check_balance(ctx, table: Optional[str], tolerance: float):
     client = ctx.obj["client"]
     report = ZoneReport(client=client)
     report.shard_balance(tolerance=tolerance, table=table)
+
+
+@main.command()
+@click.option("--top-tables", default=10, help="Number of largest tables to analyze (default: 10)")
+@click.option("--table", help='Analyze specific table only (e.g., "my_table" or "schema.table")')
+@click.pass_context
+def shard_distribution(ctx, top_tables: int, table: Optional[str]):
+    """Analyze shard distribution anomalies across cluster nodes
+
+    This command analyzes the largest tables in your cluster to detect:
+    • Uneven shard count distribution between nodes
+    • Storage imbalances across nodes
+    • Missing node coverage for tables
+    • Document count imbalances indicating data skew
+
+    Results are ranked by impact and severity to help prioritize fixes.
+
+    Examples:
+        xmover shard-distribution                    # Analyze top 10 tables
+        xmover shard-distribution --top-tables 20   # Analyze top 20 tables
+        xmover shard-distribution --table my_table  # Detailed report for specific table
+    """
+    try:
+        client = ctx.obj["client"]
+        analyzer = DistributionAnalyzer(client)
+
+        if table:
+            # Focused table analysis mode
+            console.print(f"[blue]🔍 Analyzing table: {table}...[/blue]")
+
+            # Find table (handles schema auto-detection)
+            table_identifier = analyzer.find_table_by_name(table)
+            if not table_identifier:
+                console.print(f"[red]❌ Table '{table}' not found[/red]")
+                return
+
+            # Get detailed distribution
+            table_dist = analyzer.get_table_distribution_detailed(table_identifier)
+            if not table_dist:
+                console.print(f"[red]❌ No shard data found for table '{table_identifier}'[/red]")
+                return
+
+            # Display comprehensive health report
+            analyzer.format_table_health_report(table_dist)
+
+        else:
+            # General anomaly detection mode
+            console.print(f"[blue]🔍 Analyzing shard distribution for top {top_tables} tables...[/blue]")
+            console.print()
+
+            # Perform analysis
+            anomalies, tables_analyzed = analyzer.analyze_distribution(top_tables)
+
+            # Display results
+            analyzer.format_distribution_report(anomalies, tables_analyzed)
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Analysis interrupted by user[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error during distribution analysis: {e}[/red]")
+        import traceback
+
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
 
 @main.command()
