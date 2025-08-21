@@ -10,7 +10,7 @@ from typing import Optional
 import click
 from rich.console import Console
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer, ShardReporter, ShardMonitor
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
@@ -60,6 +60,16 @@ def analyze(ctx, table: Optional[str]):
     analyzer = ShardAnalyzer(client)
     reporter = ShardReporter(analyzer)
     reporter.distribution(table=table)
+
+
+@main.command()
+@click.pass_context
+def monitor_shards(ctx):
+    """Monitor shards, pointing out hot ones"""
+    client = ctx.obj["client"]
+    analyzer = ShardAnalyzer(client)
+    monitor = ShardMonitor(analyzer)
+    monitor.monitor_shards()
 
 
 @main.command()
