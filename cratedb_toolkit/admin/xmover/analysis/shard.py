@@ -1,10 +1,11 @@
 """
 Shard analysis and rebalancing logic for CrateDB
 """
-
+import datetime
 import logging
 import math
 from collections import defaultdict
+from time import sleep
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from rich import box
@@ -836,6 +837,72 @@ class ShardAnalyzer:
             "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 6 minutes per move
             "message": "Decommission plan generated" if feasible else "Decommission not currently feasible",
         }
+
+
+class ShardMonitor:
+    def __init__(self, analyzer: ShardAnalyzer):
+        self.analyzer = analyzer
+        self.shard_time_deltas: dict[str, int] = {}
+        self.shard_seq_deltas: dict[str, int] = {}
+
+    def refresh_deltas(self):
+        self.analyzer._refresh_data()
+        shards: list[ShardInfo] = self.analyzer.shards
+        shard_deltas: dict[str, int] = {}
+        shard_seq: dict[str, int] = {}
+        for shard in shards:
+            hot_timestamp = datetime.datetime.fromtimestamp(float(shard.hot_timestamp) / 1000)
+            hot_delta = int((datetime.datetime.now() - hot_timestamp).total_seconds()) if shard.hot_timestamp else None
+            shard_compound_id = f"{shard.node_id}-{shard.shard_id}"
+            shard_deltas[shard_compound_id] = hot_delta
+            shard_seq[shard_compound_id] = shard.seq_stats_max_seq_no
+
+    def monitor_shards(self):
+        console.print(Panel.fit("[bold blue]CrateDB Hot Shard Monitor[/bold blue]"))
+        shards: list[ShardInfo] = self.analyzer.shards
+
+        # Cluster summary table
+        shards_table = Table(title="Hot shards", box=box.ROUNDED)
+        shards_table.add_column("Schema", style="cyan")
+        shards_table.add_column("Table", style="cyan")
+        shards_table.add_column("ID", style="cyan")
+        shards_table.add_column("Node", style="cyan")
+        shards_table.add_column("Primary", style="cyan")
+        shards_table.add_column("Size", style="magenta")
+        shards_table.add_column("Max Seq_no", style="magenta")
+        # shards_table.add_column("Global Checkpoint", style="magenta")
+        # shards_table.add_column("Local Checkpoint", style="magenta")
+        # shards_table.add_column("Hot Timestamp", style="magenta")
+        shards_table.add_column("Hot Delta", style="magenta")
+
+        shard_deltas: dict[str, int] = {}
+        shard_seq: dict[str, int] = {}
+        for shard in shards:
+            hot_timestamp = datetime.datetime.fromtimestamp(float(shard.hot_timestamp) / 1000)
+            hot_delta = int((datetime.datetime.now() - hot_timestamp).total_seconds()) if shard.hot_timestamp else None
+            shard_compound_id = f"{shard.node_id}-{shard.shard_id}"
+            shard_deltas[shard_compound_id] = hot_delta
+            shard_seq[shard_compound_id] = shard.seq_stats_max_seq_no
+
+        sorted_shards: list[ShardInfo] = sorted(shards, key=lambda s: shard_deltas[f"{s.node_id}-{s.shard_id}"])
+
+        for shard in sorted_shards:
+            hot_timestamp = datetime.datetime.fromtimestamp(float(shard.hot_timestamp) / 1000)
+            hot_delta = int((datetime.datetime.now() - hot_timestamp).total_seconds()) if shard.hot_timestamp else None
+            shards_table.add_row(
+                shard.schema_name,
+                shard.table_name,
+                str(shard.shard_id),
+                shard.node_name,
+                str(shard.is_primary),
+                format_size(shard.size_gb),
+                str(shard.seq_stats_max_seq_no),
+                # str(shard.seq_stats_global_checkpoint),
+                # str(shard.seq_stats_local_checkpoint),
+                # str(hot_timestamp) if shard.hot_timestamp else "-",
+                f"{hot_delta} seconds ago" if hot_delta else "-",
+            )
+        console.print(shards_table)
 
 
 class ShardReporter:

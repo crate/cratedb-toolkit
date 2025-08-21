@@ -45,6 +45,10 @@ class ShardInfo:
     num_docs: int
     state: str
     routing_state: str
+    seq_stats_max_seq_no: int
+    seq_stats_global_checkpoint: int
+    seq_stats_local_checkpoint: int
+    hot_timestamp: int
 
     @property
     def shard_type(self) -> str:

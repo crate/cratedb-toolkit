@@ -12,7 +12,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ActiveShardMonitor, ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import ActiveShardMonitor, ShardMonitor, ShardAnalyzer, ShardReporter
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
@@ -62,6 +62,16 @@ def analyze(ctx, table: Optional[str]):
     analyzer = ShardAnalyzer(client)
     reporter = ShardReporter(analyzer)
     reporter.distribution(table=table)
+
+
+@main.command()
+@click.pass_context
+def monitor_shards(ctx):
+    """Monitor shards, pointing out hot ones"""
+    client = ctx.obj["client"]
+    analyzer = ShardAnalyzer(client)
+    monitor = ShardMonitor(analyzer)
+    monitor.monitor_shards()
 
 
 @main.command()
