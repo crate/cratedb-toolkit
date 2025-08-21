@@ -7,6 +7,7 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 import requests
+import urllib3
 from dotenv import load_dotenv
 
 from cratedb_toolkit.admin.xmover.model import NodeInfo, RecoveryInfo, ShardInfo
@@ -29,6 +30,10 @@ class CrateDBClient:
         self.username = os.getenv("CRATE_USERNAME")
         self.password = os.getenv("CRATE_PASSWORD")
         self.ssl_verify = os.getenv("CRATE_SSL_VERIFY", "true").lower() == "true"
+
+        # Suppress SSL warnings when SSL verification is disabled
+        if not self.ssl_verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # Ensure connection string ends with _sql endpoint
         if not self.connection_string.endswith("/_sql"):
