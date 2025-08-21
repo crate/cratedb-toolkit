@@ -5,6 +5,7 @@ This module analyzes shard distribution across nodes to detect imbalances
 and provide recommendations for optimization.
 """
 
+import logging
 import statistics
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
@@ -14,6 +15,8 @@ from rich.console import Console
 from rich.table import Table
 
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
+
+logger = logging.getLogger(__name__)
 
 
 def format_storage_size(size_gb: float) -> str:
@@ -134,7 +137,7 @@ class DistributionAnalyzer:
                   AND s.routing_state = 'STARTED'
                 GROUP BY s.schema_name, s.table_name, s.node['name']
                 ORDER BY s.node['name'] \
-                """
+                """  # noqa: E501
 
         result = self.client.execute_query(query, [schema_name, table_name])
         rows = result.get("rows", [])
@@ -190,7 +193,8 @@ class DistributionAnalyzer:
         rprint(f"• Total Shards: {total_shards} ({total_primary_shards} primary + {total_replica_shards} replica)")
         rprint(f"• Total Documents: {total_documents:,}")
         rprint(
-            f"• Node Coverage: {len(table_nodes)}/{len(cluster_nodes)} nodes ({len(table_nodes) / len(cluster_nodes) * 100:.0f}%)"
+            f"• Node Coverage: {len(table_nodes)}/{len(cluster_nodes)} nodes "
+            f"({len(table_nodes) / len(cluster_nodes) * 100:.0f}%)"
         )
 
         if missing_nodes:
@@ -261,7 +265,8 @@ class DistributionAnalyzer:
         # Storage distribution analysis
         if storage_cv > 0.4:
             rprint(
-                f"• [red]⚠  Storage Imbalance:[/red] Range {format_storage_size(min_storage)}-{format_storage_size(max_storage)} per node (CV: {storage_cv:.2f})"
+                f"• [red]⚠  Storage Imbalance:[/red] Range "
+                f"{format_storage_size(min_storage)}-{format_storage_size(max_storage)} per node (CV: {storage_cv:.2f})"
             )
         else:
             rprint(f"• [green]✓ Storage Balance:[/green] Well distributed (CV: {storage_cv:.2f})")
@@ -306,11 +311,13 @@ class DistributionAnalyzer:
                 for zone in sorted(zone_distribution.keys()):
                     zone_data = zone_distribution[zone]
                     rprint(
-                        f"• {zone}: {zone_data['nodes']} nodes, {zone_data['shards']} shards, {format_storage_size(zone_data['size'])}"
+                        f"• {zone}: {zone_data['nodes']} nodes, "
+                        f"{zone_data['shards']} shards, {format_storage_size(zone_data['size'])}"
                     )
 
         except Exception:
-            pass  # Zone info not available
+            # Zone info not available
+            logger.exception("Zone info not available")
 
         # Health Summary
         rprint("\n[bold]💊 Health Summary[/bold]")
@@ -375,7 +382,7 @@ class DistributionAnalyzer:
                 WHERE s.routing_state = 'STARTED'
                 GROUP BY s.schema_name, s.table_name, s.node['name']
                 ORDER BY s.schema_name, s.table_name, s.node['name'] \
-                """
+                """  # noqa: E501
 
         result = self.client.execute_query(query, [top_n])
 
@@ -534,7 +541,8 @@ class DistributionAnalyzer:
 
             if overloaded_node and underloaded_node:
                 recommendations.append(
-                    f"Rebalance storage from {overloaded_node} ({format_storage_size(max_size)}) to {underloaded_node} ({format_storage_size(min_size)})"
+                    f"Rebalance storage from {overloaded_node} ({format_storage_size(max_size)}) "
+                    f"to {underloaded_node} ({format_storage_size(min_size)})"
                 )
 
         return DistributionAnomaly(
@@ -643,7 +651,7 @@ class DistributionAnalyzer:
             recommendations=recommendations,
         )
 
-    def analyze_distribution(self, top_tables: int = 10) -> List[DistributionAnomaly]:
+    def analyze_distribution(self, top_tables: int = 10) -> Tuple[List[DistributionAnomaly], int]:
         """Analyze shard distribution and return ranked anomalies"""
 
         # Get table distributions
@@ -672,12 +680,13 @@ class DistributionAnalyzer:
 
         if not anomalies:
             rprint(
-                f"[green]✓ No significant shard distribution anomalies detected in top {tables_analyzed} tables![/green]"
+                f"[green]✓ No significant shard distribution anomalies "
+                f"detected in top {tables_analyzed} tables![/green]"
             )
             return
 
         # Show analysis scope
-        unique_tables = set(anomaly.table.full_table_name for anomaly in anomalies)
+        unique_tables = {anomaly.table.full_table_name for anomaly in anomalies}
         rprint(
             f"[blue]📋 Analyzed {tables_analyzed} largest tables, found issues in {len(unique_tables)} tables[/blue]"
         )
@@ -731,7 +740,8 @@ class DistributionAnalyzer:
                         overloaded = [node for node, count in counts.items() if count == max_count]
                         underloaded = [node for node, count in counts.items() if count == min_count]
                         rprint(
-                            f"   [red]⚠  Issue:[/red] {overloaded[0]} has {max_count} shards while {underloaded[0]} has only {min_count} shards"
+                            f"   [red]⚠  Issue:[/red] {overloaded[0]} has {max_count} shards "
+                            f"while {underloaded[0]} has only {min_count} shards"
                         )
 
                 elif anomaly.anomaly_type == "Storage Imbalance":
@@ -742,7 +752,8 @@ class DistributionAnalyzer:
                         overloaded = [node for node, size in sizes.items() if size == max_size][0]
                         underloaded = [node for node, size in sizes.items() if size == min_size][0]
                         rprint(
-                            f"   [red]⚠  Issue:[/red] Storage ranges from {format_storage_size(min_size)} ({underloaded}) to {format_storage_size(max_size)} ({overloaded}) - {max_size / min_size:.1f}x difference"
+                            f"   [red]⚠  Issue:[/red] Storage ranges from {format_storage_size(min_size)} ({underloaded}) "  # noqa: E501
+                            f"to {format_storage_size(max_size)} ({overloaded}) - {max_size / min_size:.1f}x difference"
                         )
 
                 elif anomaly.anomaly_type == "Node Coverage Issue":
@@ -750,11 +761,11 @@ class DistributionAnalyzer:
                         missing_nodes = anomaly.details["nodes_without_shards"]
                         coverage_ratio = anomaly.details["coverage_ratio"]
                         rprint(
-                            f"   [red]⚠  Issue:[/red] Table missing from {len(missing_nodes)} nodes ({coverage_ratio:.0%} cluster coverage)"
+                            f"   [red]⚠  Issue:[/red] Table missing from {len(missing_nodes)} nodes "
+                            f"({coverage_ratio:.0%} cluster coverage)"
                         )
-                        rprint(
-                            f"   [dim]   Missing from: {', '.join(missing_nodes[:3])}{'...' if len(missing_nodes) > 3 else ''}[/dim]"
-                        )
+                        ellipsis = "..." if len(missing_nodes) > 3 else ""
+                        rprint(f"   [dim]   Missing from: {', '.join(missing_nodes[:3])}{ellipsis}[/dim]")
 
                 elif anomaly.anomaly_type == "Document Imbalance":
                     if "document_counts" in anomaly.details:
@@ -763,7 +774,8 @@ class DistributionAnalyzer:
                         max_docs = max(doc_counts.values())
                         ratio = max_docs / min_docs if min_docs > 0 else float("inf")
                         rprint(
-                            f"   [red]⚠  Issue:[/red] Document counts range from {min_docs:,} to {max_docs:,} ({ratio:.1f}x difference)"
+                            f"   [red]⚠  Issue:[/red] Document counts range "
+                            f"from {min_docs:,} to {max_docs:,} ({ratio:.1f}x difference)"
                         )
 
                 # Show recommendations
@@ -772,7 +784,7 @@ class DistributionAnalyzer:
                     rprint(f"     • {rec}")
 
         # Summary statistics
-        unique_tables = set(anomaly.table.full_table_name for anomaly in anomalies)
+        unique_tables = {anomaly.table.full_table_name for anomaly in anomalies}
         rprint("\n[dim]📊 Analysis Summary:[/dim]")
         rprint(f"[dim]• Tables analyzed: {tables_analyzed}[/dim]")
         rprint(f"[dim]• Tables with issues: {len(unique_tables)}[/dim]")
