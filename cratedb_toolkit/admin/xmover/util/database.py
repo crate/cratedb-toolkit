@@ -150,8 +150,7 @@ class CrateDBClient:
             s.routing_state,
             s.seq_no_stats['max_seq_no'],
             s.seq_no_stats['global_checkpoint'],
-            s.seq_no_stats['local_checkpoint'],
-            s.retention_leases['leases'][1]['timestamp']
+            s.seq_no_stats['local_checkpoint']
         FROM sys.shards s
         JOIN sys.nodes n ON s.node['id'] = n.id
         {where_clause}
@@ -179,7 +178,6 @@ class CrateDBClient:
                     seq_stats_max_seq_no=row[12],
                     seq_stats_global_checkpoint=row[13],
                     seq_stats_local_checkpoint=row[14],
-                    hot_timestamp=row[15],
                 )
             )
 
