@@ -7,11 +7,13 @@ import math
 from collections import defaultdict
 from time import sleep
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from unittest import result
 
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.live import Live
 
 from cratedb_toolkit.admin.xmover.model import (
     ActiveShardActivity,
@@ -842,60 +844,65 @@ class ShardAnalyzer:
 class ShardMonitor:
     def __init__(self, analyzer: ShardAnalyzer):
         self.analyzer = analyzer
-        self.shard_time_deltas: dict[str, int] = {}
-        self.shard_seq_deltas: dict[str, int] = {}
-        self.shards: dict[str, ShardInfo] = {}
+        self.reference_shards: dict[str, ShardInfo]
+        self.latest_shards: list[ShardInfo]
+        self.seq_deltas: dict[str, int]
+        self.size_deltas: dict[str, float]
 
     def _get_shard_compound_id(self, shard: ShardInfo) -> str:
         return f"{shard.node_id}-{shard.shard_id}"
-    
-    def refresh_deltas(self, refresh_data: bool=True):
-        if refresh_data:
-            self.analyzer._refresh_data()
 
-        shards: list[ShardInfo] = self.analyzer.shards
+    def calculate_heat_deltas(self, reference_shards: dict[str, ShardInfo], updated_shards: list[ShardInfo]):
+        seq_result: dict[str, int] = {}
+        size_result: dict[str, float] = {}
 
-        refreshed_shards: list[str] = []
-        self.shards = {}
-        for shard in shards:
+        for shard in updated_shards:
             shard_compound_id = self._get_shard_compound_id(shard)
-            refreshed_shards.append(shard_compound_id)
-            self.shards[shard_compound_id] = shard
 
-            hot_timestamp = datetime.datetime.fromtimestamp(float(shard.hot_timestamp) / 1000)
-            hot_delta = int((datetime.datetime.now() - hot_timestamp).total_seconds()) if shard.hot_timestamp else None
-
-            self.shard_time_deltas[shard_compound_id] = hot_delta
-            if not shard_compound_id in self.shard_seq_deltas:
-                self.shard_seq_deltas[shard_compound_id] = shard.seq_stats_max_seq_no
+            if shard_compound_id not in reference_shards:
+                seq_result[shard_compound_id] = 0
+                size_result[shard_compound_id] = shard.size_gb
             else:
-                self.shard_seq_deltas[shard_compound_id] = shard.seq_stats_max_seq_no - self.shard_seq_deltas[shard_compound_id]
+                refreshed_number = shard.seq_stats_max_seq_no
+                reference = reference_shards[shard_compound_id].seq_stats_max_seq_no
 
-        # Forget shards that are not reported
-        to_delete: set[str] = set(self.shard_seq_deltas.keys()).difference(refreshed_shards)
-        for id in to_delete:
-            del(self.shard_seq_deltas[id])
-            del(self.shard_time_deltas[id])
+                if refreshed_number < reference:
+                    refreshed_number += 2 ** 63 - 1
 
-    def filter_shards(self, max_seconds_old: int) -> list[ShardInfo]:
-        """
-        Filter shards not touched in the last `max_seconds_old` seconds
-        """
-        return [self.shards.get(k) for k, v in self.shard_time_deltas.items() if v <= max_seconds_old]
+                seq_result[shard_compound_id] = refreshed_number - reference
+                size_result[shard_compound_id] = shard.size_gb - reference_shards[shard_compound_id].size_gb
+
+        self.seq_deltas = seq_result
+        self.size_deltas = size_result
+
+    def refresh_data(self):
+        self.analyzer._refresh_data()
+        updated_shards: list[ShardInfo] = self.analyzer.shards
+        self.calculate_heat_deltas(self.reference_shards, updated_shards)
+        self.latest_shards = sorted(updated_shards, key=lambda s: self.seq_deltas[self._get_shard_compound_id(s)], reverse=True)
+        self.latest_shards = self.latest_shards[:20]
 
     def monitor_shards(self):
-        max_seconds_old = 300
+        self.reference_shards = {self._get_shard_compound_id(shard): shard for shard in self.analyzer.shards}
+        self.refresh_data()
 
-        self.refresh_deltas(refresh_data=False)
-        sleep(10)
-        self.refresh_deltas()
+        console.print(Panel.fit("[bold blue]The 25 most Hot Shards[/bold blue]"))
+        shards_table = self.display_shards_table_header()
 
-        shards: list[ShardInfo] = self.filter_shards(max_seconds_old)
-        sorted_shards: list[ShardInfo] = sorted(shards, key=lambda s: self.shard_seq_deltas[self._get_shard_compound_id(s)])
+        with Live(self.generate_table(self.latest_shards, self.seq_deltas), refresh_per_second=4, console=console) as live:
+            while True:
+                sleep(10)
+                self.refresh_data()
+                # self.display_shards_table_rows(shards_table, self.latest_shards, self.deltas)
+                live.update(self.generate_table(self.latest_shards, self.seq_deltas))
 
-        console.print(Panel.fit("[bold blue]CrateDB Hot Shard Monitor[/bold blue]"))
+    def generate_table(self, sorted_shards: list[ShardInfo], deltas: dict[str, int]):
+        t = self.display_shards_table_header()
+        self.display_shards_table_rows(t, self.latest_shards, self.seq_deltas)
+        return t
 
         # Cluster summary table
+    def display_shards_table_header(self):
         shards_table = Table(title="Hot shards", box=box.ROUNDED)
         shards_table.add_column("Schema", style="cyan")
         shards_table.add_column("Table", style="cyan")
@@ -903,26 +910,28 @@ class ShardMonitor:
         shards_table.add_column("Node", style="cyan")
         shards_table.add_column("Primary", style="cyan")
         shards_table.add_column("Size", style="magenta")
+        shards_table.add_column("Size Delta", style="magenta")
         shards_table.add_column("Seq Delta", style="magenta")
-        shards_table.add_column("Seconds ago", style="magenta")
+        return shards_table
+
+    def display_shards_table_rows(self, shards_table: Table, sorted_shards: list[ShardInfo], deltas: dict[str, int]):
+        shards_table.rows.clear()
 
         for shard in sorted_shards:
             shard_compound_id = self._get_shard_compound_id(shard)
-            shards_table.add_row(
-                shard.schema_name,
-                shard.table_name,
-                str(shard.shard_id),
-                shard.node_name,
-                str(shard.is_primary),
-                format_size(shard.size_gb),
-                str(self.shard_seq_deltas[shard_compound_id]),
-                str(self.shard_time_deltas[shard_compound_id]),
-            )
+            seq_delta = deltas.get(shard_compound_id, 0)
+            if seq_delta != 0:
+                shards_table.add_row(
+                    shard.schema_name,
+                    shard.table_name,
+                    str(shard.shard_id),
+                    shard.node_name,
+                    str(shard.is_primary),
+                    format_size(shard.size_gb),
+                    format_size(self.size_deltas[shard_compound_id]),
+                    str(seq_delta),
+                )
         console.print(shards_table)
-
-        console.print(Panel.fit("[bold blue]CrateDB Heat per Node[/bold blue]"))
-        
-
 
 
 class ShardReporter:
