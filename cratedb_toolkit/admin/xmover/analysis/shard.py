@@ -861,26 +861,18 @@ class ShardMonitor:
 
         console.print(Panel.fit(f"[bold blue]The {n_shards} Hottest Shards[/bold blue]"))
 
-        go_live = False
-        if go_live:
-            with Live(self.generate_shards_table(self._get_top_shards(self.latest_shards, n_shards), self.seq_deltas), refresh_per_second=4, console=console) as live_shards:
-                while True:
-                    sleep(interval_in_seconds)
-                    self.refresh_data()
-                    live_shards.update(self.generate_shards_table(self._get_top_shards(self.latest_shards, n_shards), self.seq_deltas))
-        else:
-            iterations = 0
-            while True:
-                sleep(interval_in_seconds)
-                self.refresh_data()
-                shards_table = self.generate_shards_table(self._get_top_shards(self.latest_shards, n_shards), self.seq_deltas)
-                console.print(shards_table)
-                nodes_table = self.generate_nodes_table(self._get_nodes_heat_info(self.reference_shards, self.seq_deltas))
-                console.print(nodes_table)
+        iterations = 0
+        while True:
+            sleep(interval_in_seconds)
+            self.refresh_data()
+            shards_table = self.generate_shards_table(self._get_top_shards(self.latest_shards, n_shards), self.seq_deltas)
+            console.print(shards_table)
+            nodes_table = self.generate_nodes_table(self._get_nodes_heat_info(self.reference_shards, self.seq_deltas))
+            console.print(nodes_table)
 
-                iterations += 1
-                if 0 < repeat <= iterations:
-                    break
+            iterations += 1
+            if 0 < repeat <= iterations:
+                break
 
     def generate_nodes_table(self, heat_nodes_info: dict[str, int]):
         table = Table(title="Shard heat by node", box=box.ROUNDED)
@@ -910,8 +902,6 @@ class ShardMonitor:
         shards_table.add_column("Size", style="magenta")
         shards_table.add_column("Size Delta", style="magenta")
         shards_table.add_column("Seq Delta", style="magenta")
-        shards_table.add_column("DEBUG original Seq no.", style="magenta")
-        shards_table.add_column("DEBUG Seq no.", style="magenta")
         return shards_table
 
     def display_shards_table_rows(self, shards_table: Table, sorted_shards: list[ShardInfo], deltas: dict[str, int]):
@@ -929,9 +919,7 @@ class ShardMonitor:
                     str(shard.is_primary),
                     format_size(shard.size_gb),
                     format_size(self.size_deltas[shard_compound_id]),
-                    str(seq_delta),
-                    str(self.reference_shards[shard_compound_id].seq_stats_max_seq_no),
-                    str(shard.seq_stats_max_seq_no)
+                    str(seq_delta)
                 )
         console.print(shards_table)
 
