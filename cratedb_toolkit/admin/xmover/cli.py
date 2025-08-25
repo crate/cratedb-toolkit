@@ -65,13 +65,18 @@ def analyze(ctx, table: Optional[str]):
 
 
 @main.command()
+@click.option("--table", "-t", default=None, help="Analyze specific table only")
+@click.option("--wait-time", "-w", default=10, help="The number of seconds to wait before checking the shards again. The more the wait the more accurate the results will be (default: 10)")
+@click.option("--repeat", "-r", default=1, help="The number of times the shards will be checked. The more times the more accurate the results will be. Use -1 for continuous check (default 1)")
+@click.option("--max-results", "-m", default=40, help="The number of shards that will be displayed (default: 40)")
+@click.option("--sort-by", "-s", default="heat", help="How the shard table is sorted. Valid values are heat, node or table (default: heat)")
 @click.pass_context
-def monitor_shards(ctx):
+def monitor_shards(ctx, table, wait_time, repeat, max_results, sort_by):
     """Monitor shards, pointing out hot ones"""
     client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
     monitor = ShardMonitor(analyzer)
-    monitor.monitor_shards()
+    monitor.monitor_shards(table, wait_time, repeat, max_results, sort_by)
 
 
 @main.command()
