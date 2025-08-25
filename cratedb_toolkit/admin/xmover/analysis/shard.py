@@ -880,25 +880,24 @@ class ShardMonitor:
         updated_shards: list[ShardInfo] = self.analyzer.shards
         self.calculate_heat_deltas(self.reference_shards, updated_shards)
         self.latest_shards = sorted(updated_shards, key=lambda s: self.seq_deltas[self._get_shard_compound_id(s)], reverse=True)
-        self.latest_shards = self.latest_shards[:20]
 
-    def monitor_shards(self):
+    def monitor_shards(self, interval_in_seconds: int = 10, n_shards: int = 25):
         self.reference_shards = {self._get_shard_compound_id(shard): shard for shard in self.analyzer.shards}
         self.refresh_data()
 
-        console.print(Panel.fit("[bold blue]The 25 most Hot Shards[/bold blue]"))
+        console.print(Panel.fit(f"[bold blue]The {n_shards} Hottest Shards[/bold blue]"))
         shards_table = self.display_shards_table_header()
 
-        with Live(self.generate_table(self.latest_shards, self.seq_deltas), refresh_per_second=4, console=console) as live:
+        with Live(self.generate_table(self.latest_shards[:n_shards], self.seq_deltas), refresh_per_second=4, console=console) as live:
             while True:
-                sleep(10)
+                sleep(interval_in_seconds)
                 self.refresh_data()
                 # self.display_shards_table_rows(shards_table, self.latest_shards, self.deltas)
-                live.update(self.generate_table(self.latest_shards, self.seq_deltas))
+                live.update(self.generate_table(self.latest_shards[:n_shards], self.seq_deltas))
 
     def generate_table(self, sorted_shards: list[ShardInfo], deltas: dict[str, int]):
         t = self.display_shards_table_header()
-        self.display_shards_table_rows(t, self.latest_shards, self.seq_deltas)
+        self.display_shards_table_rows(t, sorted_shards, deltas)
         return t
 
         # Cluster summary table
