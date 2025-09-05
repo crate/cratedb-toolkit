@@ -325,6 +325,7 @@ lint.extend-ignore = [
 ]
 
 lint.per-file-ignores."cratedb_toolkit/admin/xmover/analysis/shard.py" = [ "T201" ] # Allow `print`
+lint.per-file-ignores."tests/admin/*" = [ "T201" ]                                  # Allow use of `print`.
 lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]               # Allow `print`
 lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ]         # Allow `module´ imported but unused
 lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
