@@ -13,11 +13,11 @@ from rich.console import Console
 from rich.panel import Panel
 
 from cratedb_toolkit.admin.xmover.analysis.shard import (
+    ActiveShardMonitor,
     ShardAnalyzer,
     ShardHeatReporter,
     ShardHeatSortByChoice,
     ShardReporter,
-    ActiveShardMonitor,
 )
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport

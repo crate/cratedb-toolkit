@@ -873,7 +873,7 @@ class ShardHeatReporter:
         start_time = datetime.now()
         self.refresh_data()
 
-        console.print(Panel.fit("[bold blue]Shard heat analyzer[/bold blue]"))
+        console.print(Panel.fit("[bold blue]CrateDB Shard heat analyzer[/bold blue]"))
 
         while True:
             sleep(interval_in_seconds)
@@ -939,7 +939,7 @@ class ShardHeatReporter:
                 format_size(shard.size_gb),
                 format_size(seq_delta),
                 str(seq_delta),
-                str(seq_delta / elapsed_time_s),
+                "{:.3f}".format(seq_delta / elapsed_time_s),
             )
 
     def _get_shard_compound_id(self, shard: ShardInfo) -> str:

@@ -325,13 +325,13 @@ lint.extend-ignore = [
 ]
 
 lint.per-file-ignores."cratedb_toolkit/admin/xmover/analysis/shard.py" = [ "T201" ] # Allow `print`
-lint.per-file-ignores."tests/admin/*" = [ "T201" ]                                  # Allow use of `print`.
 lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]               # Allow `print`
 lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ]         # Allow `module´ imported but unused
 lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
 lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]           # Allow `print` and `pprint`
 lint.per-file-ignores."tests/*" = [ "S101" ]                                        # Allow use of `assert`, and `print`.
 lint.per-file-ignores."tests/adapter/test_rockset.py" = [ "E402" ]
+lint.per-file-ignores."tests/admin/*" = [ "T201" ]                                  # Allow use of `print`.
 lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 
 [tool.pytest.ini_options]
