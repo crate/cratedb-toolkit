@@ -11,7 +11,12 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ActiveShardMonitor, ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import (
+    ActiveShardMonitor,
+    ShardAnalyzer,
+    ShardReporter,
+    TranslogReporter,
+)
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
@@ -438,6 +443,69 @@ def active_shards(
         console.print("\n[yellow]Monitoring stopped by user[/yellow]")
     except Exception as e:
         console.print(f"[red]Error during active shards monitoring: {e}[/red]")
+        import traceback
+
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
+
+
+@main.command()
+@click.option("--size-mb", default=300, help="Minimum translog uncommitted size in MB (default: 300)")
+@click.option("--cancel", is_flag=True, help="Execute the cancel commands after confirmation")
+@click.pass_context
+def problematic_translogs(ctx, size_mb: int, cancel: bool):
+    """
+    Find and optionally cancel shards with problematic translog sizes.
+
+    This command identifies replica shards with large uncommitted translog sizes
+    that may indicate replication issues. By default, it shows the ALTER commands
+    that would cancel these shards. With --cancel, it executes them after confirmation.
+    """
+    client = ctx.obj["client"]
+    report = TranslogReporter(client=client)
+    alter_commands = report.problematic_translogs(size_mb=size_mb)
+
+    try:
+        if cancel and alter_commands:
+            console.print()
+            console.print("[yellow]⚠️  WARNING: This will cancel the specified shards![/yellow]")
+            console.print("[yellow]This may cause temporary data unavailability for these shards.[/yellow]")
+            console.print()
+
+            if click.confirm("Are you sure you want to execute these ALTER commands?"):
+                console.print()
+                console.print("[bold blue]Executing ALTER commands...[/bold blue]")
+
+                executed = 0
+                failed = 0
+
+                for i, cmd in enumerate(alter_commands, 1):
+                    if cmd.startswith("--"):
+                        console.print(f"[yellow]Skipping command {i} (parse error): {cmd}[/yellow]")
+                        continue
+
+                    try:
+                        console.print(f"[dim]({i}/{len(alter_commands)}) Executing...[/dim]")
+                        client.execute_query(cmd)
+                        console.print(f"[green]✓ Command {i} executed successfully[/green]")
+                        executed += 1
+                    except Exception as e:
+                        console.print(f"[red]✗ Command {i} failed: {e}[/red]")
+                        failed += 1
+
+                    # Small delay between commands to avoid overwhelming the cluster
+                    if i < len(alter_commands):
+                        time.sleep(1)
+
+                console.print()
+                console.print("[bold]Execution Summary:[/bold]")
+                console.print(f"[green]✓ Successful: {executed}[/green]")
+                if failed > 0:
+                    console.print(f"[red]✗ Failed: {failed}[/red]")
+            else:
+                console.print("[yellow]Operation cancelled by user[/yellow]")
+
+    except Exception as e:
+        console.print(f"[red]Error analyzing problematic translogs: {e}[/red]")
         import traceback
 
         console.print(f"[dim]{traceback.format_exc()}[/dim]")

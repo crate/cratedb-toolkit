@@ -246,6 +246,47 @@ xmover monitor-recovery --watch --include-transitioning
 - **DISK**: Rebuilding shard from local data (after restart/disk issues)
 
 
+### `problematic-translogs`
+Find and optionally cancel replica shards with problematic translog sizes.
+
+**Options:**
+- `--size-mb INTEGER`: Minimum translog uncommitted size in MB (default: 300)
+- `--cancel`: Execute the cancel commands after confirmation
+
+**Description:**
+This command identifies replica shards with large uncommitted translog sizes that may indicate replication issues. By default, it shows the ALTER commands that would cancel these shards. With `--cancel`, it executes them after confirmation.
+
+**Examples:**
+```bash
+# Show problematic shards with translog > 300MB (default)
+xmover problematic-translogs
+
+# Show shards with translog > 500MB
+xmover problematic-translogs --size-mb 500
+
+# Execute cancel commands for shards > 1GB after confirmation
+xmover problematic-translogs --size-mb 1000 --cancel
+```
+
+**Sample Output:**
+```
+Found 3 shards with problematic translogs:
+                   Problematic Replica Shards (translog > 300MB)
+╭────────┬───────────────────────────────┬────────────────────────────┬──────────┬────────────┬─────────────╮
+│ Schema │ Table                         │ Partition                  │ Shard ID │ Node       │ Translog MB │
+├────────┼───────────────────────────────┼────────────────────────────┼──────────┼────────────┼─────────────┤
+│ TURVO  │ shipmentFormFieldData         │ none                       │       14 │ data-hot-6 │      7040.9 │
+│ TURVO  │ shipmentFormFieldData_events  │ ("sync_day"=1757376000000) │        3 │ data-hot-2 │       481.2 │
+│ TURVO  │ orderFormFieldData            │ none                       │        5 │ data-hot-1 │       469.5 │
+╰────────┴───────────────────────────────┴────────────────────────────┴──────────┴────────────┴─────────────╯
+Generated ALTER Commands:
+ALTER TABLE "TURVO"."shipmentFormFieldData" REROUTE CANCEL SHARD 14 on 'data-hot-6' WITH (allow_primary=False);
+ALTER TABLE "TURVO"."shipmentFormFieldData_events" partition ("sync_day"=1757376000000) REROUTE CANCEL SHARD 3 on 'data-hot-2' WITH (allow_primary=False);
+ALTER TABLE "TURVO"."orderFormFieldData" REROUTE CANCEL SHARD 5 on 'data-hot-1' WITH (allow_primary=False);
+Total: 3 ALTER commands generated
+```
+
+
 ### `active-shards`
 Monitor the most active shards by tracking checkpoint progression over time.
 This command helps identify which shards are receiving the most write activity

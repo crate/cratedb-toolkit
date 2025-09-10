@@ -838,6 +838,106 @@ class ShardAnalyzer:
         }
 
 
+class TranslogReporter:
+    def __init__(self, client: CrateDBClient):
+        self.client = client
+
+    def problematic_translogs(self, size_mb: int) -> List[str]:
+        """Find and optionally cancel shards with problematic translog sizes."""
+        console.print(Panel.fit("[bold blue]Problematic Translog Analysis[/bold blue]"))
+        console.print(f"[dim]Looking for replica shards with translog uncommitted size > {size_mb}MB[/dim]")
+        console.print()
+
+        # Query to find problematic replica shards
+        query = """
+                SELECT sh.schema_name, \
+                       sh.table_name, \
+                       translate(p.values::text, ':{}', '=()') as partition_values, \
+                       sh.id                                   AS shard_id, \
+                       node['name']                            as node_name, \
+                       sh.translog_stats['uncommitted_size'] / 1024^2 AS translog_uncommitted_mb
+                FROM
+                    sys.shards AS sh
+                    LEFT JOIN information_schema.table_partitions p
+                ON sh.table_name = p.table_name
+                    AND sh.schema_name = p.table_schema
+                    AND sh.partition_ident = p.partition_ident
+                WHERE
+                    sh.state = 'STARTED'
+                  AND sh.translog_stats['uncommitted_size'] \
+                    > ? * 1024^2
+                  AND primary = FALSE
+                ORDER BY
+                    6 DESC \
+                """
+
+        try:
+            result = self.client.execute_query(query, [size_mb])
+            rows = result.get("rows", [])
+
+            if not rows:
+                console.print(f"[green]✓ No replica shards found with translog uncommitted size > {size_mb}MB[/green]")
+                return []
+
+            console.print(f"Found {len(rows)} shards with problematic translogs:")
+            console.print()
+
+            # Display query results table
+            results_table = Table(title=f"Problematic Replica Shards (translog > {size_mb}MB)", box=box.ROUNDED)
+            results_table.add_column("Schema", style="cyan")
+            results_table.add_column("Table", style="blue")
+            results_table.add_column("Partition", style="magenta")
+            results_table.add_column("Shard ID", justify="right", style="yellow")
+            results_table.add_column("Node", style="green")
+            results_table.add_column("Translog MB", justify="right", style="red")
+
+            for row in rows:
+                schema_name, table_name, partition_values, shard_id, node_name, translog_mb = row
+                partition_display = (
+                    partition_values if partition_values and partition_values != "NULL" else "[dim]none[/dim]"
+                )
+                results_table.add_row(
+                    schema_name, table_name, partition_display, str(shard_id), node_name, f"{translog_mb:.1f}"
+                )
+
+            console.print(results_table)
+            console.print()
+            console.print("[bold]Generated ALTER Commands:[/bold]")
+            console.print()
+
+            # Generate ALTER commands
+            alter_commands = []
+            for row in rows:
+                schema_name, table_name, partition_values, shard_id, node_name, translog_mb = row
+
+                # Build the ALTER command based on whether it's partitioned
+                if partition_values and partition_values != "NULL":
+                    # partition_values already formatted like ("sync_day"=1757376000000) from the translate function
+                    alter_cmd = (
+                        f'ALTER TABLE "{schema_name}"."{table_name}" partition {partition_values} '
+                        f"REROUTE CANCEL SHARD {shard_id} on '{node_name}' WITH (allow_primary=False);"
+                    )
+                else:
+                    alter_cmd = (
+                        f'ALTER TABLE "{schema_name}"."{table_name}" '
+                        f"REROUTE CANCEL SHARD {shard_id} on '{node_name}' WITH (allow_primary=False);"
+                    )
+
+                alter_commands.append(alter_cmd)
+                console.print(alter_cmd)
+
+            console.print()
+            console.print(f"[bold]Total: {len(alter_commands)} ALTER commands generated[/bold]")
+            return alter_commands
+
+        except Exception as e:
+            console.print(f"[red]Error analyzing problematic translogs: {e}[/red]")
+            import traceback
+
+            console.print(f"[dim]{traceback.format_exc()}[/dim]")
+            return []
+
+
 class ShardReporter:
     def __init__(self, analyzer: ShardAnalyzer):
         self.analyzer = analyzer
