@@ -12,7 +12,13 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ActiveShardMonitor, ShardMonitor, ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import (
+    ShardAnalyzer,
+    ShardHeatReporter,
+    ShardHeatSortByChoice,
+    ShardReporter,
+    ActiveShardMonitor,
+)
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
@@ -65,18 +71,31 @@ def analyze(ctx, table: Optional[str]):
 
 
 @main.command()
-@click.option("--table", "-t", default=None, help="Analyze specific table only")
-@click.option("--wait-time", "-w", default=10, help="The number of seconds to wait before checking the shards again. The more the wait the more accurate the results will be (default: 10)")
-@click.option("--repeat", "-r", default=1, help="The number of times the shards will be checked. The more times the more accurate the results will be. Use -1 for continuous check (default 1)")
+@click.option("--table", "-t", type=click.STRING, default=None, help="Analyze specific table only")
+@click.option(
+    "--interval", "-i", default=10, help="The number of seconds to wait between shard data captures (default: 10)"
+)
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    help="When set the tool will endlessly check and report.",
+)
 @click.option("--max-results", "-m", default=40, help="The number of shards that will be displayed (default: 40)")
-@click.option("--sort-by", "-s", default="heat", help="How the shard table is sorted. Valid values are heat, node or table (default: heat)")
+@click.option(
+    "--sort-by",
+    "-s",
+    type=click.Choice([option.name for option in ShardHeatSortByChoice]),
+    default="heat",
+    help="How the shard table is sorted. Valid values are heat, node or table (default: heat)",
+)
 @click.pass_context
-def monitor_shards(ctx, table, wait_time, repeat, max_results, sort_by):
+def shard_heat(ctx, table: str | None, interval: int, watch: bool, max_results: int, sort_by):
     """Monitor shards, pointing out hot ones"""
     client = ctx.obj["client"]
     analyzer = ShardAnalyzer(client)
-    monitor = ShardMonitor(analyzer)
-    monitor.monitor_shards(table, wait_time, repeat, max_results, sort_by)
+    reporter = ShardHeatReporter(analyzer)
+    reporter.report(table, interval, watch, max_results, ShardHeatSortByChoice[sort_by])
 
 
 @main.command()

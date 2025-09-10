@@ -48,6 +48,7 @@ class ShardInfo:
     seq_stats_max_seq_no: int
     seq_stats_global_checkpoint: int
     seq_stats_local_checkpoint: int
+    partition_id: str
 
     @property
     def shard_type(self) -> str:
