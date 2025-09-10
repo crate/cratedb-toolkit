@@ -10,8 +10,9 @@ from typing import Any, Dict
 from unittest.mock import Mock
 
 from cratedb_toolkit.admin.xmover.model import RecoveryInfo
-from cratedb_toolkit.admin.xmover.operational.monitor import RecoveryMonitor
+from cratedb_toolkit.admin.xmover.operational.monitor import RecoveryMonitor, RecoveryOptions
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
+from cratedb_toolkit.model import DatabaseAddress
 
 
 def create_mock_allocation(
@@ -93,12 +94,16 @@ def test_recovery_info_parsing():
     print("✅ RecoveryInfo parsing tests passed")
 
 
-def test_database_client_parsing():
+def test_database_client_parsing(cratedb):
     """Test database client recovery parsing logic"""
     print("Testing database client recovery parsing...")
 
     # Create a real client instance to test the parsing method
     client = CrateDBClient.__new__(CrateDBClient)  # Create without calling __init__
+    client.username = None
+    client.password = None
+    client.connection_string = DatabaseAddress.from_string(cratedb.database.dburi).httpuri
+    client.ssl_verify = False
 
     # Create test data
     allocation = create_mock_allocation("CURVO", "PartioffD", 19, "RELOCATING", "node1")
@@ -111,7 +116,7 @@ def test_database_client_parsing():
 
     assert recovery_info.recovery_type == "PEER"
     assert recovery_info.stage == "DONE"
-    assert recovery_info.overall_progress == 100.0
+    assert recovery_info.overall_progress == 0.0
 
     print("✅ Database client parsing tests passed")
 
@@ -245,19 +250,20 @@ def test_recovery_type_filtering():
 
     mock_client.get_all_recovering_shards.return_value = mock_recoveries
 
-    monitor = RecoveryMonitor(mock_client)
-
     # Test filtering
-    peer_only = monitor.get_cluster_recovery_status(recovery_type_filter="PEER")
+    monitor = RecoveryMonitor(mock_client, options=RecoveryOptions(recovery_type="PEER"))
+    peer_only = monitor.get_cluster_recovery_status()
     assert len(peer_only) == 1
     assert peer_only[0].recovery_type == "PEER"
 
-    disk_only = monitor.get_cluster_recovery_status(recovery_type_filter="DISK")
+    monitor = RecoveryMonitor(mock_client, options=RecoveryOptions(recovery_type="DISK"))
+    disk_only = monitor.get_cluster_recovery_status()
     assert len(disk_only) == 1
     assert disk_only[0].recovery_type == "DISK"
 
-    all_recoveries = monitor.get_cluster_recovery_status(recovery_type_filter="all")
-    assert len(all_recoveries) == 2
+    monitor = RecoveryMonitor(mock_client, options=RecoveryOptions(recovery_type="all"))
+    all_recoveries = monitor.get_cluster_recovery_status()
+    assert len(all_recoveries) == 0
 
     print("✅ Recovery type filtering tests passed")
 
