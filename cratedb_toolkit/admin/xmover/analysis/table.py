@@ -576,7 +576,7 @@ class DistributionAnalyzer:
         nodes_with_shards = set(table.node_distributions.keys())
         nodes_without_shards = all_nodes - nodes_with_shards
 
-        # Only flag as anomaly if we have missing nodes and the table is significant
+        # Only flag as an anomaly if we have missing nodes and the table is significant
         if not nodes_without_shards or table.total_primary_size_gb < 10.0:
             return None
 

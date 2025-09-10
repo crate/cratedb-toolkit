@@ -5,6 +5,7 @@ Tests for distribution analyzer functionality
 from unittest.mock import Mock, patch
 
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer, DistributionAnomaly, TableDistribution
+from cratedb_toolkit.admin.xmover.model import NodeInfo
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 
 
@@ -41,14 +42,16 @@ class TestDistributionAnalyzer:
         """Test fetching table distribution data"""
 
         # Mock query results
-        mock_results = [
-            # schema, table, node, primary_shards, replica_shards, total_shards, total_size, primary_size, replica_size, docs  # noqa: E501, ERA001
-            ["doc", "large_table", "node1", 5, 2, 7, 100.5, 80.2, 20.3, 1000000],
-            ["doc", "large_table", "node2", 4, 3, 7, 95.1, 75.8, 19.3, 950000],
-            ["doc", "large_table", "node3", 6, 1, 7, 110.2, 85.9, 24.3, 1100000],
-            ["custom", "another_table", "node1", 3, 2, 5, 50.1, 40.2, 9.9, 500000],
-            ["custom", "another_table", "node2", 2, 3, 5, 45.8, 35.1, 10.7, 480000],
-        ]
+        mock_results = {
+            "rows": [
+                # schema, table, node, primary_shards, replica_shards, total_shards, total_size, primary_size, replica_size, docs  # noqa: E501, ERA001
+                ["doc", "large_table", "node1", 5, 2, 7, 100.5, 80.2, 20.3, 1000000],
+                ["doc", "large_table", "node2", 4, 3, 7, 95.1, 75.8, 19.3, 950000],
+                ["doc", "large_table", "node3", 6, 1, 7, 110.2, 85.9, 24.3, 1100000],
+                ["custom", "another_table", "node1", 3, 2, 5, 50.1, 40.2, 9.9, 500000],
+                ["custom", "another_table", "node2", 2, 3, 5, 45.8, 35.1, 10.7, 480000],
+            ]
+        }
 
         self.mock_client.execute_query.return_value = mock_results
 
@@ -152,7 +155,48 @@ class TestDistributionAnalyzer:
         """Test node coverage issue detection"""
 
         # Mock nodes_info to simulate cluster with 4 nodes
-        mock_nodes = [Mock(name="node1"), Mock(name="node2"), Mock(name="node3"), Mock(name="node4")]
+        mock_nodes = [
+            NodeInfo(
+                id="node1",
+                name="node1",
+                zone=None,
+                heap_used=None,
+                heap_max=None,
+                fs_total=None,
+                fs_used=None,
+                fs_available=None,
+            ),
+            NodeInfo(
+                id="node2",
+                name="node2",
+                zone=None,
+                heap_used=None,
+                heap_max=None,
+                fs_total=None,
+                fs_used=None,
+                fs_available=None,
+            ),
+            NodeInfo(
+                id="node3",
+                name="node3",
+                zone=None,
+                heap_used=None,
+                heap_max=None,
+                fs_total=None,
+                fs_used=None,
+                fs_available=None,
+            ),
+            NodeInfo(
+                id="node4",
+                name="node4",
+                zone=None,
+                heap_used=None,
+                heap_max=None,
+                fs_total=None,
+                fs_used=None,
+                fs_available=None,
+            ),
+        ]
         self.mock_client.get_nodes_info.return_value = mock_nodes
 
         # Table with limited coverage (only on 2 out of 4 nodes)
