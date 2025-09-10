@@ -24,9 +24,9 @@ class RecoveryOptions:
 class RecoveryMonitor:
     """Monitor shard recovery operations"""
 
-    def __init__(self, client: CrateDBClient, options: RecoveryOptions):
+    def __init__(self, client: CrateDBClient, options: Optional[RecoveryOptions] = None):
         self.client = client
-        self.options = options
+        self.options = options or RecoveryOptions()
 
     def get_cluster_recovery_status(self) -> List[RecoveryInfo]:
         """Get comprehensive recovery status with minimal cluster impact"""
