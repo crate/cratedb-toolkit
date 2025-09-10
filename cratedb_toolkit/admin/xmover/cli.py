@@ -12,7 +12,13 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ActiveShardMonitor, ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import (
+    ActiveShardMonitor,
+    ShardAnalyzer,
+    ShardHeatReporter,
+    ShardHeatSortByChoice,
+    ShardReporter,
+)
 from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
@@ -62,6 +68,34 @@ def analyze(ctx, table: Optional[str]):
     analyzer = ShardAnalyzer(client)
     reporter = ShardReporter(analyzer)
     reporter.distribution(table=table)
+
+
+@main.command()
+@click.option("--table", "-t", type=click.STRING, default=None, help="Analyze specific table only")
+@click.option(
+    "--interval", "-i", default=10, help="The number of seconds to wait between shard data captures (default: 10)"
+)
+@click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    help="When set the tool will endlessly check and report.",
+)
+@click.option("--max-results", "-m", default=40, help="The number of shards that will be displayed (default: 40)")
+@click.option(
+    "--sort-by",
+    "-s",
+    type=click.Choice([option.name for option in ShardHeatSortByChoice]),
+    default="heat",
+    help="How the shard table is sorted. Valid values are heat, node or table (default: heat)",
+)
+@click.pass_context
+def shard_heat(ctx, table: str | None, interval: int, watch: bool, max_results: int, sort_by):
+    """Monitor shards, pointing out hot ones"""
+    client = ctx.obj["client"]
+    analyzer = ShardAnalyzer(client)
+    reporter = ShardHeatReporter(analyzer)
+    reporter.report(table, interval, watch, max_results, ShardHeatSortByChoice[sort_by])
 
 
 @main.command()
