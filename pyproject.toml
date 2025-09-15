@@ -249,7 +249,7 @@ optional-dependencies.test-mongodb = [
 ]
 optional-dependencies.testing = [
   "pytest<9",
-  "pytest-cov<7",
+  "pytest-cov<8",
   "pytest-mock<4",
   "testcontainers<4.13",
 ]
