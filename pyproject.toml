@@ -137,7 +137,7 @@ optional-dependencies.datasets = [
 ]
 optional-dependencies.develop = [
   "black[jupyter]<26",
-  "mypy<1.18",
+  "mypy<1.19",
   "poethepoet<1",
   "pyproject-fmt<3",
   "ruff<0.14",
