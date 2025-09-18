@@ -24,7 +24,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "300"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "No replica shards found" in result.output
         assert "300MB" in result.output
 
@@ -40,7 +40,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "300"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Found 2 shards with problematic translogs" in result.output
         # Check that the query results table is shown
         assert "Problematic Replica Shards" in result.output
@@ -65,7 +65,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "400"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Found 1 shards with problematic translogs" in result.output
         # Check that the query results table is shown
         assert "Problematic Replica Shards" in result.output
@@ -89,7 +89,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "200"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Found 3 shards with problematic translogs" in result.output
         # Check that the query results table is shown
         assert "Problematic Replica Shards" in result.output
@@ -141,7 +141,7 @@ class TestXMoverProblematicTranslogs:
         ):
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Operation cancelled by user" in result.output
         # Should only be called once for the initial query, not for execution
         assert self.mock_client.execute_query.call_count == 1
@@ -157,7 +157,7 @@ class TestXMoverProblematicTranslogs:
         ), patch("time.sleep"):  # Mock sleep to speed up test
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Executing ALTER commands" in result.output
         assert "Command 1 executed successfully" in result.output
         assert "Successful: 1" in result.output
@@ -178,7 +178,7 @@ class TestXMoverProblematicTranslogs:
         ), patch("time.sleep"):
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Command 1 failed: Shard not found" in result.output
         assert "Failed: 1" in result.output
         assert "Successful: 0" in result.output
@@ -191,7 +191,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Error analyzing problematic translogs" in result.output
         assert "Connection failed" in result.output
 
@@ -203,7 +203,7 @@ class TestXMoverProblematicTranslogs:
         with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs"])
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "300MB" in result.output
 
         # Verify query was called with default value
