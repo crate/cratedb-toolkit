@@ -135,7 +135,8 @@ class ZoneReport:
                         health_indicator = "✓" if shard_copy.routing_state == "STARTED" else "⚠"
                         console.print(
                             f"    {health_indicator} {shard_copy.shard_type} "
-                            f"on {shard_copy.node_name} ({shard_copy.zone}) - {shard_copy.routing_state}"
+                            f"on {shard_copy.node_name} ({shard_copy.zone}) - "
+                            f"{shard_copy.state}/{shard_copy.routing_state}"
                         )
 
             console.print(analysis_table)

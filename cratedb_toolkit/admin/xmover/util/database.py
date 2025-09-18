@@ -39,6 +39,8 @@ class CrateDBClient:
         if not self.connection_string.endswith("/_sql"):
             self.connection_string = self.connection_string.rstrip("/") + "/_sql"
 
+        self.session = requests.Session()
+
     def execute_query(self, query: str, parameters: Optional[List] = None) -> Dict[str, Any]:
         """Execute a SQL query against CrateDB"""
         payload: Dict[str, Any] = {"stmt": query}
@@ -51,11 +53,18 @@ class CrateDBClient:
             auth = (self.username, self.password)
 
         try:
-            response = requests.post(
+            response = self.session.post(
                 self.connection_string, json=payload, auth=auth, verify=self.ssl_verify, timeout=30
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            # CrateDB may include an "error" field even with 200 OK
+            if isinstance(data, dict) and "error" in data and data["error"]:
+                # Best-effort message extraction
+                err = data["error"]
+                msg = err.get("message") if isinstance(err, dict) else str(err)
+                raise Exception(f"CrateDB error: {msg}")
+            return data
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to execute query: {e}") from e
 
@@ -335,13 +344,13 @@ class CrateDBClient:
             s."primary",
             s.translog_stats['size'] as translog_size
         FROM sys.shards s
-        WHERE s.table_name = ? AND s.id = ?
+        WHERE s.schema_name = ? AND s.table_name = ? AND s.id = ?
         AND (s.state = 'RECOVERING' OR s.routing_state IN ('INITIALIZING', 'RELOCATING'))
         ORDER BY s.schema_name
         LIMIT 1
         """
 
-        result = self.execute_query(query, [table_name, shard_id])
+        result = self.execute_query(query, [schema_name, table_name, shard_id])
 
         if not result.get("rows"):
             return None

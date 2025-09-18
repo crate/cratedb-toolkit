@@ -14,6 +14,7 @@ from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 
+from cratedb_toolkit.admin.xmover.model import NodeInfo
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,9 @@ class DistributionAnalyzer:
 
             try:
                 choice = input("\nSelect table (enter number): ").strip()
+                if not choice:
+                    rprint("[yellow]No selection made[/yellow]")
+                    return None
                 idx = int(choice) - 1
                 if 0 <= idx < len(rows):
                     schema, table = rows[idx]
@@ -292,14 +296,9 @@ class DistributionAnalyzer:
             zone_distribution = {}
             for node_name, node_data in table_dist.node_distributions.items():
                 # Try to get zone info for each node
-                node_info = next((n for n in all_nodes_info if n.name == node_name), None)
-                if (
-                    node_info
-                    and hasattr(node_info, "attributes")
-                    and node_info.attributes
-                    and "zone" in node_info.attributes
-                ):
-                    zone = node_info.attributes["zone"]
+                node_info: Optional[NodeInfo] = next((n for n in all_nodes_info if n.name == node_name), None)
+                if node_info and node_info.zone:
+                    zone = node_info.zone
                     if zone not in zone_distribution:
                         zone_distribution[zone] = {"nodes": 0, "shards": 0, "size": 0}
                     zone_distribution[zone]["nodes"] += 1

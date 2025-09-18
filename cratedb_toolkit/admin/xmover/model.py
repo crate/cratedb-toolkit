@@ -1,4 +1,3 @@
-import dataclasses
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -149,6 +148,12 @@ class ShardRelocationResponse:
         if "rebalancing" in self.reason.lower():
             score += 0.2
 
+        # Consider shard size - smaller shards are safer to move
+        if self.size_gb < 10:
+            score += 0.1
+        elif self.size_gb > 100:
+            score -= 0.2
+
         # Ensure score stays in valid range
         return max(0.0, min(1.0, score))
 
@@ -165,7 +170,7 @@ class DistributionStats:
     node_balance_score: float  # 0-100, higher is better
 
 
-@dataclasses.dataclass
+@dataclass
 class SizeCriteria:
     min_size: float = 40.0
     max_size: float = 60.0
@@ -173,7 +178,7 @@ class SizeCriteria:
     source_node: Optional[str] = None
 
 
-@dataclasses.dataclass
+@dataclass
 class ShardRelocationConstraints:
     min_size: float = SizeCriteria().min_size
     max_size: float = SizeCriteria().max_size

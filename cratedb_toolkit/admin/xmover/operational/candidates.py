@@ -14,7 +14,7 @@ class CandidateFinder:
     def __init__(self, analyzer: ShardAnalyzer):
         self.analyzer = analyzer
 
-    def movement_candidates(self, criteria: SizeCriteria, limit: int):
+    def movement_candidates(self, criteria: SizeCriteria, limit: int) -> int:
         """
         Find shard candidates for movement based on size criteria
 
@@ -23,7 +23,7 @@ class CandidateFinder:
         """
 
         console.print(
-            Panel.fit(f"[bold blue]Finding Moveable Shards ({criteria.min_size}-{criteria.max_size}GB)[/bold blue]")
+            Panel.fit(f"[bold blue]Finding Movable Shards ({criteria.min_size}-{criteria.max_size}GB)[/bold blue]")
         )
 
         if criteria.source_node:
@@ -45,7 +45,7 @@ class CandidateFinder:
                 console.print("[dim]Tip: Try different size ranges or remove --node filter to see all candidates[/dim]")
             else:
                 console.print("[yellow]No moveable shards found in the specified size range.[/yellow]")
-            return
+            return 0
 
         # Show limited results
         shown_candidates = candidates[:limit]
@@ -82,3 +82,5 @@ class CandidateFinder:
 
         if len(candidates) > limit:
             console.print(f"\n[dim]... and {len(candidates) - limit} more candidates[/dim]")
+
+        return len(candidates)

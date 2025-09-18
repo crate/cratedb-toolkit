@@ -38,7 +38,7 @@ class ShardAnalyzer:
         self.shards: List[ShardInfo] = []
 
         # Initialize session-based caches for performance.
-        self._zone_conflict_cache: Dict[Tuple[str, int, str], Union[str, None]] = {}
+        self._zone_conflict_cache: Dict[Tuple[str, str, int, str], Union[str, None]] = {}
         self._node_lookup_cache: Dict[str, Union[NodeInfo, None]] = {}
         self._target_nodes_cache: Dict[Tuple[float, frozenset[Any], float, float], List[NodeInfo]] = {}
         self._cache_hits = 0
@@ -183,8 +183,6 @@ class ShardAnalyzer:
             free_space_gb = node.available_space_gb
             if free_space_gb >= (required_space_gb + min_free_space_gb):
                 available_nodes.append(node)
-            else:
-                continue
 
         # Sort by available space (most space first) - prioritize nodes with more free space
         available_nodes.sort(key=lambda n: n.available_space_gb, reverse=True)
@@ -206,7 +204,7 @@ class ShardAnalyzer:
         # Get moveable shards (only healthy ones for actual operations)
         moveable_shards = self.find_moveable_shards(constraints.min_size, constraints.max_size, constraints.table_name)
 
-        print(
+        logger.info(
             f"Analyzing {len(moveable_shards)} candidate shards "
             f"in size range {constraints.min_size}-{constraints.max_size}GB..."
         )
@@ -239,12 +237,11 @@ class ShardAnalyzer:
         # Optimize processing: if filtering by source node, only process those shards
         if constraints.source_node:
             processing_shards = [s for s in moveable_shards if s.node_name == constraints.source_node]
-            print(f"Focusing on {len(processing_shards)} shards from node {constraints.source_node}")
+            logger.info(f"Focusing on {len(processing_shards)} shards from node {constraints.source_node}")
         else:
             processing_shards = moveable_shards
 
         # Generate move recommendations
-        safe_recommendations = 0  # noqa: F841
         total_evaluated = 0
 
         for i, shard in enumerate(processing_shards):
@@ -368,12 +365,12 @@ class ShardAnalyzer:
 
         if len(processing_shards) > 100:
             print()  # New line after progress dots
-        print(f"Generated {len(recommendations)} move recommendations (evaluated {total_evaluated} shards)")
-        print(f"Performance: {self.get_cache_stats()}")
+        logger.info(f"Generated {len(recommendations)} move recommendations (evaluated {total_evaluated} shards)")
+        logger.info(f"Performance: {self.get_cache_stats()}")
         return recommendations
 
     def validate_move_safety(
-        self, recommendation: ShardRelocationResponse, max_disk_usage_percent: float = 90.0
+        self, recommendation: ShardRelocationResponse, max_disk_usage_percent: float = 90.0, buffer_gb: float = 50.0
     ) -> Tuple[bool, str]:
         """Validate that a move recommendation is safe to execute"""
         # Find target node (with caching)
@@ -388,7 +385,7 @@ class ShardAnalyzer:
             return False, zone_conflict
 
         # Check available space
-        required_space_gb = recommendation.size_gb + 50  # 50GB buffer
+        required_space_gb = recommendation.size_gb + buffer_gb
         if target_node.available_space_gb < required_space_gb:
             return (
                 False,
@@ -423,7 +420,7 @@ class ShardAnalyzer:
         """Check zone conflicts with caching"""
         # Create cache key: table, shard, target zone
         target_zone = self._get_node_zone(recommendation.to_node)
-        cache_key = (recommendation.table_name, recommendation.shard_id, target_zone)
+        cache_key = (recommendation.schema_name, recommendation.table_name, recommendation.shard_id, target_zone)
 
         if cache_key in self._zone_conflict_cache:
             self._cache_hits += 1
@@ -813,11 +810,14 @@ class ShardAnalyzer:
         # Determine feasibility
         feasible = len(infeasible_moves) == 0
 
+        # Safety margin for cluster capacity after decommission
+        capacity_safety_margin = 1.2  # 20 % buffer
+
         # Add capacity warnings
         if feasible:
-            # Check if remaining cluster capacity is sufficient after decommission
+            # Check if the remaining cluster capacity is sufficient after decommission
             remaining_capacity = sum(n.available_space_gb for n in self.nodes if n.name != node_name)
-            if remaining_capacity < total_size_gb * 1.2:  # 20% safety margin
+            if remaining_capacity < total_size_gb * capacity_safety_margin:
                 warnings.append(
                     f"Low remaining capacity after decommission. "
                     f"Only {remaining_capacity:.1f}GB available for {total_size_gb:.1f}GB of data"
@@ -833,7 +833,7 @@ class ShardAnalyzer:
             "recommendations": move_plan,
             "infeasible_moves": infeasible_moves,
             "warnings": warnings,
-            "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 6 minutes per move
+            "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 0.1 hours (6 minutes) per move
             "message": "Decommission plan generated" if feasible else "Decommission not currently feasible",
         }
 

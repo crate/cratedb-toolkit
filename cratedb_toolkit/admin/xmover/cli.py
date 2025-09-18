@@ -4,7 +4,6 @@ XMover - CrateDB Shard Analyzer and Movement Tool
 Command Line Interface.
 """
 
-import sys
 import time
 from typing import Optional
 
@@ -46,11 +45,11 @@ def main(ctx):
         if not client.test_connection():
             console.print("[red]Error: Could not connect to CrateDB[/red]")
             console.print("Please check your CRATE_CONNECTION_STRING in .env file")
-            sys.exit(1)
+            raise click.Abort()
         ctx.obj["client"] = client
     except Exception as e:
         console.print(f"[red]Error connecting to CrateDB: {e}[/red]")
-        sys.exit(1)
+        raise click.Abort() from e
 
 
 @main.command()
@@ -170,11 +169,11 @@ def test_connection(ctx, connection_string: Optional[str]):
                 console.print(f"  • {node.name} (zone: {node.zone})")
         else:
             console.print("[red]✗ Connection failed[/red]")
-            sys.exit(1)
+            raise click.Abort()
 
     except Exception as e:
         console.print(f"[red]✗ Connection error: {e}[/red]")
-        sys.exit(1)
+        raise click.Abort() from e
 
 
 @main.command()
@@ -525,13 +524,14 @@ def monitor_recovery(
         xmover monitor-recovery --watch                # Continuous monitoring
         xmover monitor-recovery --recovery-type PEER  # Only PEER recoveries
     """
+    effective_recovery_type = None if recovery_type == "all" else recovery_type
     recovery_monitor = RecoveryMonitor(
         client=ctx.obj["client"],
         options=RecoveryOptions(
             table=table,
             node=node,
             refresh_interval=refresh_interval,
-            recovery_type=recovery_type,
+            recovery_type=effective_recovery_type,
             include_transitioning=include_transitioning,
         ),
     )

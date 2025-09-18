@@ -69,7 +69,7 @@ ORDER BY name;
 +------------+--------------------+-----------------------------------------------+
 ```
 
-## List biggest SHARDS on a particular Nodes
+## List biggest shards on a particular node
 
 ```sql
 select node['name'], table_name, schema_name, id,  sum(size) / 1024^3 from sys.shards
@@ -219,7 +219,7 @@ SELECT
 
 ## "BIGDUDES" Focuses on your **biggest storage consumers** and shows how their shards are distributed across nodes.
 
-´´´sql
+```sql
 WITH largest_tables AS (
         SELECT
             schema_name,

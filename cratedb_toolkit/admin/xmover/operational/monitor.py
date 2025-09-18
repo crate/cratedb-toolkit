@@ -37,7 +37,7 @@ class RecoveryMonitor:
         )
 
         # Apply recovery type filter
-        if self.options.recovery_type is not None:
+        if self.options.recovery_type is not None and self.options.recovery_type.lower() != "all":
             recoveries = [r for r in recoveries if r.recovery_type.upper() == self.options.recovery_type.upper()]
 
         return recoveries
@@ -178,7 +178,6 @@ class RecoveryMonitor:
 
                     # Track previous state for change detection
                     previous_recoveries: Dict[str, Dict[str, Any]] = {}
-                    previous_timestamp = None
                     first_run = True
 
                     while True:
@@ -307,7 +306,6 @@ class RecoveryMonitor:
                                 elif active_count > 0:
                                     console.print(f"{current_time} | {status} (no changes)")
 
-                        previous_timestamp = current_time  # noqa: F841
                         first_run = False
                         time.sleep(self.options.refresh_interval)
 
