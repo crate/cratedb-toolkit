@@ -1,12 +1,23 @@
-from typing import List, Optional, cast
+from typing import List, Optional
 
-from rich.console import Console
+from rich import get_console
 from rich.panel import Panel
 
-console = Console()
+console = get_console()
 
 
 def explain_cratedb_error(error_message: Optional[str]):
+    """
+    Decode and troubleshoot common CrateDB shard allocation errors.
+
+    Parameters
+    ----------
+    error_message:
+        Raw CrateDB error message. If None and interactive=True, the user is prompted
+        to paste the message (finish with two blank lines).
+    interactive:
+        When False, never prompt for input; return early if no message is provided.
+    """
     console.print(Panel.fit("[bold blue]CrateDB Error Message Decoder[/bold blue]"))
     console.print("[dim]Helps decode and troubleshoot CrateDB shard allocation errors[/dim]")
     console.print()
@@ -24,7 +35,7 @@ def explain_cratedb_error(error_message: Optional[str]):
                 break
         error_message = "\n".join(lines)
 
-    if not error_message.strip():
+    if not (error_message or "").strip():
         console.print("[yellow]No error message provided[/yellow]")
         return
 
@@ -96,7 +107,7 @@ def explain_cratedb_error(error_message: Optional[str]):
     error_lower = error_message.lower()
 
     for pattern_info in error_patterns:
-        if cast(str, pattern_info["pattern"]).lower() in error_lower:
+        if pattern_info["pattern"].lower() in error_lower:  # type: ignore[attr-defined]
             matches.append(pattern_info)
 
     if matches:

@@ -57,7 +57,7 @@ xmover recommend --prioritize-space
 ```
 
 ### Shard Distribution Analysis
-This view is dedicating a specific focus on large tables.
+This view focuses on large tables.
 ```bash
 # Analyze distribution anomalies for top 10 largest tables
 xmover shard-distribution
@@ -128,11 +128,12 @@ Generates intelligent shard movement recommendations for cluster rebalancing.
 - `--zone-tolerance`: Zone balance tolerance percentage (default: 10)
 - `--min-free-space`: Minimum free space required on target nodes in GB (default: 100)
 - `--max-moves`: Maximum number of move recommendations (default: 10)
-- `--max-disk-usage`: Maximum disk usage percentage for target nodes (default: 85)
+- `--max-disk-usage`: Maximum disk usage percentage for target nodes (default: 90)
 - `--validate/--no-validate`: Validate move safety (default: True)
 - `--prioritize-space/--prioritize-zones`: Prioritize available space over zone balancing (default: False)
 - `--dry-run/--execute`: Show what would be done without generating SQL commands (default: True)
 - `--node`: Only recommend moves from this specific source node (e.g., data-hot-4)
+- `--auto-execute`: Automatically execute the SQL commands (requires `--execute`, asks for confirmation) (default: False)
 
 **Examples:**
 ```bash

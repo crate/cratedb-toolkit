@@ -263,7 +263,7 @@ def test_recovery_type_filtering():
 
     monitor = RecoveryMonitor(mock_client, options=RecoveryOptions(recovery_type="all"))
     all_recoveries = monitor.get_cluster_recovery_status()
-    assert len(all_recoveries) == 0
+    assert len(all_recoveries) == 2
 
     print("✅ Recovery type filtering tests passed")
 
