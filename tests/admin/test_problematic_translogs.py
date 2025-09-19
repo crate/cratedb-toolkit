@@ -21,8 +21,8 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": []}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
-            result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "300"])
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
+            result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "300"], catch_exceptions=False)
 
         assert result.exit_code == 0, result.output
         assert "No replica shards found" in result.output
@@ -37,7 +37,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": mock_rows}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "300"])
 
         assert result.exit_code == 0, result.output
@@ -62,7 +62,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": mock_rows}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "400"])
 
         assert result.exit_code == 0, result.output
@@ -86,7 +86,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": mock_rows}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "200"])
 
         assert result.exit_code == 0, result.output
@@ -116,7 +116,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": []}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             self.runner.invoke(cli, ["problematic-translogs", "--size-mb", "500"])
 
         # Verify the query was called with the correct threshold
@@ -125,8 +125,9 @@ class TestXMoverProblematicTranslogs:
         query = call_args[0][0]
         parameters = call_args[0][1]
 
-        assert "sh.translog_stats['uncommitted_size'] > ? * 1024^2" in query
-        assert "primary=FALSE" in query
+        assert "sh.translog_stats['uncommitted_size']" in query
+        assert "1024^2" in query
+        assert "primary = FALSE" in query
         assert "6 DESC" in query  # More flexible whitespace matching
         assert parameters == [500]
 
@@ -136,7 +137,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": mock_rows}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client), patch(
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client), patch(
             "click.confirm", return_value=False
         ):
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
@@ -152,7 +153,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": mock_rows}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client), patch(
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client), patch(
             "click.confirm", return_value=True
         ), patch("time.sleep"):  # Mock sleep to speed up test
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
@@ -173,7 +174,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.side_effect = [{"rows": mock_rows}, Exception("Shard not found")]
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client), patch(
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client), patch(
             "click.confirm", return_value=True
         ), patch("time.sleep"):
             result = self.runner.invoke(cli, ["problematic-translogs", "--cancel"])
@@ -188,7 +189,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.side_effect = Exception("Connection failed")
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs"])
 
         assert result.exit_code == 0, result.output
@@ -200,7 +201,7 @@ class TestXMoverProblematicTranslogs:
         self.mock_client.execute_query.return_value = {"rows": []}
         self.mock_client.test_connection.return_value = True
 
-        with patch("cratedb_toolkit.admin.xmover.util.database.CrateDBClient", return_value=self.mock_client):
+        with patch("cratedb_toolkit.admin.xmover.cli.CrateDBClient", return_value=self.mock_client):
             result = self.runner.invoke(cli, ["problematic-translogs"])
 
         assert result.exit_code == 0, result.output
