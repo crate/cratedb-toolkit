@@ -1,7 +1,9 @@
 """
 XMover - CrateDB Shard Analyzer and Movement Tool
 
-Command Line Interface.
+A tool for analyzing CrateDB shard distribution across
+nodes and availability zones, and for generating safe
+SQL commands for shard rebalancing.
 """
 
 import time
@@ -33,28 +35,25 @@ from cratedb_toolkit.admin.xmover.util.error import explain_cratedb_error
 console = Console()
 
 
-@click.group()
+@click.group(help=__doc__)
 @click.version_option()
 @click.pass_context
 def main(ctx):
-    """XMover - CrateDB Shard Analyzer and Movement Tool
-
-    A tool for analyzing CrateDB shard distribution across nodes and availability zones,
-    and generating safe SQL commands for shard rebalancing.
-    """
     ctx.ensure_object(dict)
 
-    # Test connection on startup
-    try:
-        client = CrateDBClient()
-        if not client.test_connection():
-            console.print("[red]Error: Could not connect to CrateDB[/red]")
-            console.print("Please check your CRATE_CONNECTION_STRING in .env file")
-            raise click.Abort()
-        ctx.obj["client"] = client
-    except Exception as e:
-        console.print(f"[red]Error connecting to CrateDB: {e}[/red]")
-        raise click.Abort() from e
+    # Test connection on startup.
+    client = CrateDBClient()
+    if not client.test_connection():
+        console.print("[red]Error: Failed connecting to CrateDB[/red]")
+        console.print(
+            "Please check your database connection string, "
+            "i.e. the CRATE_CONNECTION_STRING environment variable, "
+            "possibly stored within an .env file"
+        )
+        raise click.Abort()
+
+    # Propagate the client handle.
+    ctx.obj["client"] = client
 
 
 @main.command()
