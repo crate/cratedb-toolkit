@@ -7,15 +7,17 @@ from cratedb_toolkit.admin.xmover.cli import main as cli
 @pytest.mark.parametrize(
     "subcommand",
     [
+        "active-shards",
         "analyze",
         "check-balance",
         "explain-error",
         "find-candidates",
         "monitor-recovery",
+        "problematic-translogs",
         "recommend",
+        "shard-distribution",
         "test-connection",
         "zone-analysis",
-        "shard-distribution",
     ],
 )
 def test_xmover_all(cratedb, subcommand):
