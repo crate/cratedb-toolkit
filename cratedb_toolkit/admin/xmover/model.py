@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Tuple
+
+TableStatsType = Dict[Tuple[str, str], Dict[str, Any]]
 
 
 @dataclass
