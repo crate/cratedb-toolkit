@@ -541,11 +541,8 @@ class CrateDBClient:
             s.routing_state,
             s.node['name'] as node_name,
             s.node['id'] as node_id,
-            s."primary",
-            a.current_state,
-            a.explanation
+            s."primary"
         FROM sys.shards s
-        LEFT JOIN sys.allocations a ON (s.table_name = a.table_name AND s.id = a.shard_id)
         LEFT JOIN information_schema.table_partitions p
             ON s.table_name = p.table_name
             AND s.schema_name = p.table_schema
@@ -569,8 +566,6 @@ class CrateDBClient:
                     "node_name": row[6],
                     "node_id": row[7],
                     "primary": row[8],
-                    "current_state": row[9],
-                    "explanation": row[10],
                 }
             )
 
