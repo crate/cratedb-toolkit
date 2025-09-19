@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Tuple
+
+TableStatsType = Dict[Tuple[str, str], Dict[str, Any]]
 
 
 @dataclass
@@ -56,6 +58,7 @@ class RecoveryInfo:
 
     schema_name: str
     table_name: str
+    partition_values: Optional[str]  # Partition values for partitioned tables
     shard_id: int
     node_name: str
     node_id: str

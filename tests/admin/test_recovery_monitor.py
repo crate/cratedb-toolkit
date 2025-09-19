@@ -71,6 +71,7 @@ def test_recovery_info_parsing():
     recovery = RecoveryInfo(
         schema_name="CURVO",
         table_name="PartioffD",
+        partition_values="NULL",
         shard_id=19,
         node_name="data-hot-1",
         node_id="ZH6fBanGSjanGqeSh-sw0A",
@@ -134,6 +135,7 @@ def test_recovery_monitor_formatting():
         RecoveryInfo(
             schema_name="CURVO",
             table_name="PartioffD",
+            partition_values="NULL",
             shard_id=19,
             node_name="data-hot-1",
             node_id="node1",
@@ -150,6 +152,7 @@ def test_recovery_monitor_formatting():
         RecoveryInfo(
             schema_name="CURVO",
             table_name="orderTracking",
+            partition_values="NULL",
             shard_id=7,
             node_name="data-hot-2",
             node_id="node2",
@@ -217,6 +220,7 @@ def test_recovery_type_filtering():
         RecoveryInfo(
             schema_name="test",
             table_name="table1",
+            partition_values="NULL",
             shard_id=1,
             node_name="node1",
             node_id="n1",
@@ -233,6 +237,7 @@ def test_recovery_type_filtering():
         RecoveryInfo(
             schema_name="test",
             table_name="table2",
+            partition_values="NULL",
             shard_id=2,
             node_name="node2",
             node_id="n2",
