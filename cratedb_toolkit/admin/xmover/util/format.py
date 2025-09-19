@@ -41,3 +41,18 @@ def format_translog_info(recovery_info) -> str:
 
     size_str = format_size(tl_gb)
     return f" [dim]([{color}]TL:{size_str}[/{color}])[/dim]"
+
+
+def format_table_display_with_partition(schema_name: str, table_name: str, partition_values: str = None) -> str:
+    """Format table display with partition values if available"""
+    # Create base table name
+    if schema_name and schema_name != "doc":
+        base_display = f"{schema_name}.{table_name}"
+    else:
+        base_display = table_name
+
+    # Add partition values if available
+    if partition_values:
+        return f"{base_display} {partition_values}"
+    else:
+        return base_display

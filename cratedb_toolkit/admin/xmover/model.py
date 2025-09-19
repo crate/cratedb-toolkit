@@ -56,6 +56,7 @@ class RecoveryInfo:
 
     schema_name: str
     table_name: str
+    partition_values: Optional[str]  # Partition values for partitioned tables
     shard_id: int
     node_name: str
     node_id: str
