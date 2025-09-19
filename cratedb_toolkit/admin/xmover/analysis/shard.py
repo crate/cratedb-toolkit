@@ -614,6 +614,78 @@ class ShardAnalyzer:
             # If we can't check, err on the side of caution
             return f"Cannot verify zone safety: {str(e)}"
 
+    def get_shard_size_overview(self) -> Dict[str, Any]:
+        """Get shard size distribution analysis"""
+        # Only analyze STARTED shards
+        started_shards = [s for s in self.shards if s.state == "STARTED"]
+
+        # Define size buckets (in GB)
+        size_buckets = {
+            "<1GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0},
+            "1GB-5GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0},
+            "5GB-10GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0},
+            "10GB-50GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0},
+            ">=50GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0},
+        }
+
+        if not started_shards:
+            return {
+                "total_shards": 0,
+                "total_size_gb": 0.0,
+                "avg_shard_size_gb": 0.0,
+                "size_buckets": size_buckets,
+                "large_shards_count": 0,
+                "very_small_shards_percentage": 0.0,
+            }
+
+        total_shards = len(started_shards)
+        total_size_gb = sum(s.size_gb for s in started_shards)
+        avg_size_gb = total_size_gb / total_shards if total_shards > 0 else 0.0
+
+        # Categorize shards by size
+        large_shards_count = 0  # >50GB shards
+        very_small_shards = 0  # <1GB shards (for percentage calculation)
+
+        for shard in started_shards:
+            size_gb = shard.size_gb
+
+            if size_gb >= 50:
+                size_buckets[">=50GB"]["count"] += 1
+                size_buckets[">=50GB"]["total_size"] += size_gb
+                large_shards_count += 1
+            elif size_gb >= 10:
+                size_buckets["10GB-50GB"]["count"] += 1
+                size_buckets["10GB-50GB"]["total_size"] += size_gb
+            elif size_gb >= 5:
+                size_buckets["5GB-10GB"]["count"] += 1
+                size_buckets["5GB-10GB"]["total_size"] += size_gb
+            elif size_gb >= 1:
+                size_buckets["1GB-5GB"]["count"] += 1
+                size_buckets["1GB-5GB"]["total_size"] += size_gb
+            else:
+                size_buckets["<1GB"]["count"] += 1
+                size_buckets["<1GB"]["total_size"] += size_gb
+                very_small_shards += 1
+
+        # Calculate the average size for each bucket
+        for _, bucket_data in size_buckets.items():
+            if bucket_data["count"] > 0:
+                bucket_data["avg_size_gb"] = bucket_data["total_size"] / bucket_data["count"]
+            else:
+                bucket_data["avg_size_gb"] = 0.0
+
+        # Calculate the percentage of very small shards (<1GB)
+        very_small_percentage = (very_small_shards / total_shards * 100) if total_shards > 0 else 0.0
+
+        return {
+            "total_shards": total_shards,
+            "total_size_gb": total_size_gb,
+            "avg_shard_size_gb": avg_size_gb,
+            "size_buckets": size_buckets,
+            "large_shards_count": large_shards_count,
+            "very_small_shards_percentage": very_small_percentage,
+        }
+
     def get_cluster_overview(self) -> Dict[str, Any]:
         """Get a comprehensive overview of the cluster"""
         # Get cluster watermark settings
@@ -1031,6 +1103,81 @@ class ShardReporter:
             )
 
         console.print(node_table)
+
+        console.print()
+
+        # Shard Size Overview
+        size_overview = self.analyzer.get_shard_size_overview()
+
+        size_table = Table(title="Shard Size Distribution", box=box.ROUNDED)
+        size_table.add_column("Size Range", style="cyan")
+        size_table.add_column("Count", justify="right", style="magenta")
+        size_table.add_column("Percentage", justify="right", style="green")
+        size_table.add_column("Avg Size", justify="right", style="blue")
+        size_table.add_column("Total Size", justify="right", style="yellow")
+
+        total_shards = size_overview["total_shards"]
+
+        # Define color coding thresholds
+        large_shards_threshold = 0  # warn if ANY shards >=50GB (red flag)
+        small_shards_percentage_threshold = 40  # warn if >40% of shards are small (<1GB)
+
+        for bucket_name, bucket_data in size_overview["size_buckets"].items():
+            count = bucket_data["count"]
+            avg_size = bucket_data["avg_size_gb"]
+            total_size = bucket_data["total_size"]
+            percentage = (count / total_shards * 100) if total_shards > 0 else 0
+
+            # Apply color coding
+            count_str = str(count)
+            percentage_str = f"{percentage:.1f}%"
+
+            # Color code large shards (>=50GB) - ANY large shard is a red flag
+            if bucket_name == ">=50GB" and count > large_shards_threshold:
+                count_str = f"[red]{count}[/red]"
+                percentage_str = f"[red]{percentage:.1f}%[/red]"
+
+            # Color code if too many very small shards (<1GB)
+            if bucket_name == "<1GB" and percentage > small_shards_percentage_threshold:
+                count_str = f"[yellow]{count}[/yellow]"
+                percentage_str = f"[yellow]{percentage:.1f}%[/yellow]"
+
+            size_table.add_row(
+                bucket_name,
+                count_str,
+                percentage_str,
+                f"{avg_size:.2f}GB" if avg_size > 0 else "0GB",
+                format_size(total_size),
+            )
+
+        console.print(size_table)
+
+        # Add warnings if thresholds are exceeded
+        warnings = []
+        if size_overview["large_shards_count"] > large_shards_threshold:
+            warnings.append(
+                f"[red]🔥 CRITICAL: {size_overview['large_shards_count']} "
+                f"large shards (>=50GB) detected - IMMEDIATE ACTION REQUIRED![/red]"
+            )
+            warnings.append("[red]   Large shards cause slow recovery, memory pressure, and performance issues[/red]")
+
+        # Calculate the percentage of very small shards (<1GB)
+        very_small_count = size_overview["size_buckets"]["<1GB"]["count"]
+        very_small_percentage = (very_small_count / total_shards * 100) if total_shards > 0 else 0
+
+        if very_small_percentage > small_shards_percentage_threshold:
+            warnings.append(
+                f"[yellow]⚠️  {very_small_percentage:.1f}% of shards are very small (<1GB) - "
+                f"consider optimizing shard allocation[/yellow]"
+            )
+            warnings.append("[yellow]   Too many small shards create metadata overhead and reduce efficiency[/yellow]")
+
+        if warnings:
+            console.print()
+            for warning in warnings:
+                console.print(warning)
+
+        console.print()
 
         # Table-specific analysis if requested
         if table:

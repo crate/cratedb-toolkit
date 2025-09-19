@@ -334,6 +334,7 @@ class CrateDBClient:
         SELECT
             s.table_name,
             s.schema_name,
+            translate(p.values::text, ':{}', '=()') as partition_values,
             s.id as shard_id,
             s.node['name'] as node_name,
             s.node['id'] as node_id,
@@ -344,6 +345,10 @@ class CrateDBClient:
             s."primary",
             s.translog_stats['size'] as translog_size
         FROM sys.shards s
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
         WHERE s.schema_name = ? AND s.table_name = ? AND s.id = ?
         AND (s.state = 'RECOVERING' OR s.routing_state IN ('INITIALIZING', 'RELOCATING'))
         ORDER BY s.schema_name
@@ -359,15 +364,16 @@ class CrateDBClient:
         return {
             "table_name": row[0],
             "schema_name": row[1],
-            "shard_id": row[2],
-            "node_name": row[3],
-            "node_id": row[4],
-            "routing_state": row[5],
-            "state": row[6],
-            "recovery": row[7],
-            "size": row[8],
-            "primary": row[9],
-            "translog_size": row[10] or 0,
+            "partition_values": row[2],
+            "shard_id": row[3],
+            "node_name": row[4],
+            "node_id": row[5],
+            "routing_state": row[6],
+            "state": row[7],
+            "recovery": row[8],
+            "size": row[9],
+            "primary": row[10],
+            "translog_size": row[11] or 0,
         }
 
     def get_all_recovering_shards(
@@ -442,6 +448,7 @@ class CrateDBClient:
         return RecoveryInfo(
             schema_name=shard_detail["schema_name"],
             table_name=shard_detail["table_name"],
+            partition_values=shard_detail.get("partition_values"),
             shard_id=shard_detail["shard_id"],
             node_name=shard_detail["node_name"],
             node_id=shard_detail["node_id"],
@@ -505,6 +512,69 @@ class CrateDBClient:
             and recovery_info.files_percent >= 100.0
             and recovery_info.bytes_percent >= 100.0
         )
+
+    def get_problematic_shards(
+        self, table_name: Optional[str] = None, node_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get shards that need attention but aren't actively recovering"""
+
+        where_conditions = ["s.state != 'STARTED'"]
+        parameters = []
+
+        if table_name:
+            where_conditions.append("s.table_name = ?")
+            parameters.append(table_name)
+
+        if node_name:
+            where_conditions.append("s.node['name'] = ?")
+            parameters.append(node_name)
+
+        where_clause = f"WHERE {' AND '.join(where_conditions)}"
+
+        query = f"""
+        SELECT
+            s.schema_name,
+            s.table_name,
+            translate(p.values::text, ':{{}}', '=()') as partition_values,
+            s.id as shard_id,
+            s.state,
+            s.routing_state,
+            s.node['name'] as node_name,
+            s.node['id'] as node_id,
+            s."primary",
+            a.current_state,
+            a.explanation
+        FROM sys.shards s
+        LEFT JOIN sys.allocations a ON (s.table_name = a.table_name AND s.id = a.shard_id)
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
+        {where_clause}
+        ORDER BY s.state, s.table_name, s.id
+        """  # noqa: S608
+
+        result = self.execute_query(query, parameters)
+
+        problematic_shards = []
+        for row in result.get("rows", []):
+            problematic_shards.append(
+                {
+                    "schema_name": row[0] or "doc",
+                    "table_name": row[1],
+                    "partition_values": row[2],
+                    "shard_id": row[3],
+                    "state": row[4],
+                    "routing_state": row[5],
+                    "node_name": row[6],
+                    "node_id": row[7],
+                    "primary": row[8],
+                    "current_state": row[9],
+                    "explanation": row[10],
+                }
+            )
+
+        return problematic_shards
 
     def get_active_shards_snapshot(self, min_checkpoint_delta: int = 1000) -> List[ActiveShardSnapshot]:
         """Get a snapshot of all started shards for activity monitoring
