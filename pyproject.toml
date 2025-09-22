@@ -226,7 +226,7 @@ optional-dependencies.release-cfr = [
   "pyinstaller<7",
 ]
 optional-dependencies.service = [
-  "fastapi<0.117",
+  "fastapi<0.118",
   "uvicorn<0.36",
 ]
 optional-dependencies.settings = [
