@@ -1,4 +1,3 @@
-import dataclasses
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -149,6 +148,12 @@ class ShardRelocationResponse:
         if "rebalancing" in self.reason.lower():
             score += 0.2
 
+        # Consider shard size - smaller shards are safer to move
+        if self.size_gb < 10:
+            score += 0.1
+        elif self.size_gb > 100:
+            score -= 0.2
+
         # Ensure score stays in valid range
         return max(0.0, min(1.0, score))
 
@@ -165,7 +170,7 @@ class DistributionStats:
     node_balance_score: float  # 0-100, higher is better
 
 
-@dataclasses.dataclass
+@dataclass
 class SizeCriteria:
     min_size: float = 40.0
     max_size: float = 60.0
@@ -173,7 +178,7 @@ class SizeCriteria:
     source_node: Optional[str] = None
 
 
-@dataclasses.dataclass
+@dataclass
 class ShardRelocationConstraints:
     min_size: float = SizeCriteria().min_size
     max_size: float = SizeCriteria().max_size
@@ -184,3 +189,67 @@ class ShardRelocationConstraints:
     max_recommendations: int = 10
     max_disk_usage: float = 90.0
     prioritize_space: bool = False
+
+
+@dataclass
+class ActiveShardSnapshot:
+    """Snapshot of active shard checkpoint data for tracking activity"""
+
+    schema_name: str
+    table_name: str
+    shard_id: int
+    node_name: str
+    is_primary: bool
+    partition_ident: str
+    local_checkpoint: int
+    global_checkpoint: int
+    translog_uncommitted_bytes: int
+    timestamp: float  # Unix timestamp when snapshot was taken
+
+    @property
+    def checkpoint_delta(self) -> int:
+        """Current checkpoint delta (local - global)"""
+        return self.local_checkpoint - self.global_checkpoint
+
+    @property
+    def translog_uncommitted_mb(self) -> float:
+        """Translog uncommitted size in MB"""
+        return self.translog_uncommitted_bytes / (1024 * 1024)
+
+    @property
+    def shard_identifier(self) -> str:
+        """Unique identifier for this shard including partition"""
+        shard_type = "P" if self.is_primary else "R"
+        partition = f":{self.partition_ident}" if self.partition_ident else ""
+        return f"{self.schema_name}.{self.table_name}:{self.shard_id}:{self.node_name}:{shard_type}{partition}"
+
+
+@dataclass
+class ActiveShardActivity:
+    """Activity comparison between two snapshots of the same shard"""
+
+    schema_name: str
+    table_name: str
+    shard_id: int
+    node_name: str
+    is_primary: bool
+    partition_ident: str
+    local_checkpoint_delta: int  # Change in local checkpoint between snapshots
+    snapshot1: ActiveShardSnapshot
+    snapshot2: ActiveShardSnapshot
+    time_diff_seconds: float
+
+    @property
+    def activity_rate(self) -> float:
+        """Activity rate as checkpoint changes per second"""
+        if self.time_diff_seconds > 0:
+            return self.local_checkpoint_delta / self.time_diff_seconds
+        return 0.0
+
+    @property
+    def shard_type(self) -> str:
+        return "PRIMARY" if self.is_primary else "REPLICA"
+
+    @property
+    def table_identifier(self) -> str:
+        return f"{self.schema_name}.{self.table_name}"
