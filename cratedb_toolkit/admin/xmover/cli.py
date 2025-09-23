@@ -1,16 +1,25 @@
 """
 XMover - CrateDB Shard Analyzer and Movement Tool
 
-Command Line Interface.
+A tool for analyzing CrateDB shard distribution across
+nodes and availability zones, and for generating safe
+SQL commands for shard rebalancing.
 """
 
-import sys
+import time
 from typing import Optional
 
 import click
 from rich.console import Console
+from rich.panel import Panel
 
-from cratedb_toolkit.admin.xmover.analysis.shard import ShardAnalyzer, ShardReporter
+from cratedb_toolkit.admin.xmover.analysis.shard import (
+    ActiveShardMonitor,
+    ShardAnalyzer,
+    ShardReporter,
+    TranslogReporter,
+)
+from cratedb_toolkit.admin.xmover.analysis.table import DistributionAnalyzer
 from cratedb_toolkit.admin.xmover.analysis.zone import ZoneReport
 from cratedb_toolkit.admin.xmover.model import (
     ShardRelocationConstraints,
@@ -26,28 +35,25 @@ from cratedb_toolkit.admin.xmover.util.error import explain_cratedb_error
 console = Console()
 
 
-@click.group()
+@click.group(help=__doc__)
 @click.version_option()
 @click.pass_context
 def main(ctx):
-    """XMover - CrateDB Shard Analyzer and Movement Tool
-
-    A tool for analyzing CrateDB shard distribution across nodes and availability zones,
-    and generating safe SQL commands for shard rebalancing.
-    """
     ctx.ensure_object(dict)
 
-    # Test connection on startup
-    try:
-        client = CrateDBClient()
-        if not client.test_connection():
-            console.print("[red]Error: Could not connect to CrateDB[/red]")
-            console.print("Please check your CRATE_CONNECTION_STRING in .env file")
-            sys.exit(1)
-        ctx.obj["client"] = client
-    except Exception as e:
-        console.print(f"[red]Error connecting to CrateDB: {e}[/red]")
-        sys.exit(1)
+    # Test connection on startup.
+    client = CrateDBClient()
+    if not client.test_connection():
+        console.print("[red]Error: Failed connecting to CrateDB[/red]")
+        console.print(
+            "Please check your database connection string, "
+            "i.e. the CRATE_CONNECTION_STRING environment variable, "
+            "possibly stored within an .env file"
+        )
+        raise click.Abort()
+
+    # Propagate the client handle.
+    ctx.obj["client"] = client
 
 
 @main.command()
@@ -167,11 +173,11 @@ def test_connection(ctx, connection_string: Optional[str]):
                 console.print(f"  • {node.name} (zone: {node.zone})")
         else:
             console.print("[red]✗ Connection failed[/red]")
-            sys.exit(1)
+            raise click.Abort()
 
     except Exception as e:
         console.print(f"[red]✗ Connection error: {e}[/red]")
-        sys.exit(1)
+        raise click.Abort() from e
 
 
 @main.command()
@@ -183,6 +189,325 @@ def check_balance(ctx, table: Optional[str], tolerance: float):
     client = ctx.obj["client"]
     report = ZoneReport(client=client)
     report.shard_balance(tolerance=tolerance, table=table)
+
+
+@main.command()
+@click.option("--top-tables", default=10, help="Number of largest tables to analyze (default: 10)")
+@click.option("--table", help='Analyze specific table only (e.g., "my_table" or "schema.table")')
+@click.pass_context
+def shard_distribution(ctx, top_tables: int, table: Optional[str]):
+    """Analyze shard distribution anomalies across cluster nodes
+
+    This command analyzes the largest tables in your cluster to detect:
+    • Uneven shard count distribution between nodes
+    • Storage imbalances across nodes
+    • Missing node coverage for tables
+    • Document count imbalances indicating data skew
+
+    Results are ranked by impact and severity to help prioritize fixes.
+
+    Examples:
+        xmover shard-distribution                    # Analyze top 10 tables
+        xmover shard-distribution --top-tables 20   # Analyze top 20 tables
+        xmover shard-distribution --table my_table  # Detailed report for specific table
+    """
+    try:
+        client = ctx.obj["client"]
+        analyzer = DistributionAnalyzer(client)
+
+        if table:
+            # Focused table analysis mode
+            console.print(f"[blue]🔍 Analyzing table: {table}...[/blue]")
+
+            # Find table (handles schema auto-detection)
+            table_identifier = analyzer.find_table_by_name(table)
+            if not table_identifier:
+                console.print(f"[red]❌ Table '{table}' not found[/red]")
+                return
+
+            # Get detailed distribution
+            table_dist = analyzer.get_table_distribution_detailed(table_identifier)
+            if not table_dist:
+                console.print(f"[red]❌ No shard data found for table '{table_identifier}'[/red]")
+                return
+
+            # Display comprehensive health report
+            analyzer.format_table_health_report(table_dist)
+
+        else:
+            # General anomaly detection mode
+            console.print(f"[blue]🔍 Analyzing shard distribution for top {top_tables} tables...[/blue]")
+            console.print()
+
+            # Perform analysis
+            anomalies, tables_analyzed = analyzer.analyze_distribution(top_tables)
+
+            # Display results
+            analyzer.format_distribution_report(anomalies, tables_analyzed)
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Analysis interrupted by user[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error during distribution analysis: {e}[/red]")
+        import traceback
+
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
+
+
+@main.command()
+@click.option("--count", default=10, help="Number of most active shards to show (default: 10)")
+@click.option("--interval", default=30, help="Observation interval in seconds (default: 30)")
+@click.option(
+    "--min-checkpoint-delta",
+    default=1000,
+    help="Minimum checkpoint progression between snapshots to show shard (default: 1000)",
+)
+@click.option("--table", "-t", help="Monitor specific table only")
+@click.option("--node", "-n", help="Monitor specific node only")
+@click.option("--watch", "-w", is_flag=True, help="Continuously monitor (refresh every interval)")
+@click.option("--exclude-system", is_flag=True, help="Exclude system tables (gc.*, information_schema.*)")
+@click.option("--min-rate", type=float, help="Minimum activity rate (changes/sec) to show")
+@click.option("--show-replicas/--hide-replicas", default=True, help="Show replica shards (default: True)")
+@click.pass_context
+def active_shards(
+    ctx,
+    count: int,
+    interval: int,
+    min_checkpoint_delta: int,
+    table: Optional[str],
+    node: Optional[str],
+    watch: bool,
+    exclude_system: bool,
+    min_rate: Optional[float],
+    show_replicas: bool,
+):
+    """Monitor most active shards by checkpoint progression
+
+    This command takes two snapshots of ALL started shards separated by the
+    observation interval, then shows the shards with the highest checkpoint
+    progression (activity) between the snapshots.
+
+    Unlike other commands, this tracks ALL shards and filters based on actual
+    activity between snapshots, not current state. This captures shards that
+    become active during the observation period.
+
+    Useful for identifying which shards are receiving the most write activity
+    in your cluster and understanding write patterns.
+
+    Examples:
+        xmover active-shards --count 20 --interval 60        # Top 20 over 60 seconds
+        xmover active-shards --watch --interval 30           # Continuous monitoring
+        xmover active-shards --table my_table --watch        # Monitor specific table
+        xmover active-shards --node data-hot-1 --count 5     # Top 5 on specific node
+        xmover active-shards --min-checkpoint-delta 500      # Lower activity threshold
+        xmover active-shards --exclude-system --min-rate 50  # Skip system tables, min 50/sec
+        xmover active-shards --hide-replicas --count 20      # Only primary shards
+    """
+    client = ctx.obj["client"]
+    monitor = ActiveShardMonitor(client)
+
+    def get_filtered_snapshot():
+        """Get snapshot with optional filtering"""
+        snapshots = client.get_active_shards_snapshot(min_checkpoint_delta=min_checkpoint_delta)
+
+        # Apply table filter if specified
+        if table:
+            snapshots = [s for s in snapshots if s.table_name == table or f"{s.schema_name}.{s.table_name}" == table]
+
+        # Apply node filter if specified
+        if node:
+            snapshots = [s for s in snapshots if s.node_name == node]
+
+        # Exclude system tables if requested
+        if exclude_system:
+            snapshots = [
+                s
+                for s in snapshots
+                if not (
+                    s.schema_name.startswith("gc.")
+                    or s.schema_name == "information_schema"
+                    or s.schema_name == "sys"
+                    or s.table_name.endswith("_events")
+                    or s.table_name.endswith("_log")
+                )
+            ]
+
+        return snapshots
+
+    def run_single_analysis():
+        """Run a single analysis cycle"""
+        if not watch:
+            console.print(Panel.fit("[bold blue]Active Shards Monitor[/bold blue]"))
+
+        # Show configuration - simplified for watch mode
+        if watch:
+            config_parts = [f"{interval}s interval", f"threshold: {min_checkpoint_delta:,}", f"top {count}"]
+            if table:
+                config_parts.append(f"table: {table}")
+            if node:
+                config_parts.append(f"node: {node}")
+            console.print(f"[dim]{' | '.join(config_parts)}[/dim]")
+        else:
+            config_info = [
+                f"Observation interval: {interval}s",
+                f"Min checkpoint delta: {min_checkpoint_delta:,}",
+                f"Show count: {count}",
+            ]
+            if table:
+                config_info.append(f"Table filter: {table}")
+            if node:
+                config_info.append(f"Node filter: {node}")
+            if exclude_system:
+                config_info.append("Excluding system tables")
+            if min_rate:
+                config_info.append(f"Min rate: {min_rate}/sec")
+            if not show_replicas:
+                config_info.append("Primary shards only")
+
+            console.print("[dim]" + " | ".join(config_info) + "[/dim]")
+        console.print()
+
+        # Take first snapshot
+        if not watch:
+            console.print("📷 Taking first snapshot...")
+        snapshot1 = get_filtered_snapshot()
+
+        if not snapshot1:
+            console.print("[yellow]No started shards found matching criteria[/yellow]")
+            return
+
+        if not watch:
+            console.print(f"   Tracking {len(snapshot1)} started shards for activity")
+            console.print(f"⏱️  Waiting {interval} seconds for activity...")
+
+        # Wait for observation interval
+        if watch:
+            # Simplified countdown for watch mode
+            for remaining in range(interval, 0, -1):
+                if remaining % 5 == 0 or remaining <= 3:  # Show fewer updates
+                    console.print(f"[dim]⏱️  {remaining}s...[/dim]", end="\r")
+                time.sleep(1)
+            console.print(" " * 15, end="\r")  # Clear countdown
+        else:
+            time.sleep(interval)
+
+        # Take second snapshot
+        if not watch:
+            console.print("📷 Taking second snapshot...")
+        snapshot2 = get_filtered_snapshot()
+
+        if not snapshot2:
+            console.print("[yellow]No started shards found in second snapshot[/yellow]")
+            return
+
+        if not watch:
+            console.print(f"   Tracking {len(snapshot2)} started shards for activity")
+
+        # Compare snapshots and show results
+        activities = monitor.compare_snapshots(snapshot1, snapshot2, min_activity_threshold=min_checkpoint_delta)
+
+        # Apply additional filters
+        if not show_replicas:
+            activities = [a for a in activities if a.is_primary]
+
+        if min_rate:
+            activities = [a for a in activities if a.activity_rate >= min_rate]
+
+        if not activities:
+            console.print(
+                f"[green]✅ No shards exceeded activity threshold ({min_checkpoint_delta:,} checkpoint changes)[/green]"
+            )
+            if min_rate:
+                console.print(f"[dim]Also filtered by minimum rate: {min_rate}/sec[/dim]")
+        else:
+            if not watch:
+                overlap_count = len({s.shard_identifier for s in snapshot1} & {s.shard_identifier for s in snapshot2})
+                console.print(f"[dim]Analyzed {overlap_count} shards present in both snapshots[/dim]")
+            console.print(monitor.format_activity_display(activities, show_count=count, watch_mode=watch))
+
+    try:
+        if watch:
+            console.print("[dim]Press Ctrl+C to stop monitoring[/dim]")
+            console.print()
+
+            while True:
+                run_single_analysis()
+                if watch:
+                    console.print(f"\n[dim]━━━ Next update in {interval}s ━━━[/dim]\n")
+                time.sleep(interval)
+        else:
+            run_single_analysis()
+
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Monitoring stopped by user[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error during active shards monitoring: {e}[/red]")
+        import traceback
+
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
+
+
+@main.command()
+@click.option("--size-mb", default=300, help="Minimum translog uncommitted size in MB (default: 300)")
+@click.option("--cancel", is_flag=True, help="Execute the cancel commands after confirmation")
+@click.pass_context
+def problematic_translogs(ctx, size_mb: int, cancel: bool):
+    """
+    Find and optionally cancel shards with problematic translog sizes.
+
+    This command identifies replica shards with large uncommitted translog sizes
+    that may indicate replication issues. By default, it shows the ALTER commands
+    that would cancel these shards. With --cancel, it executes them after confirmation.
+    """
+    client = ctx.obj["client"]
+    report = TranslogReporter(client=client)
+    alter_commands = report.problematic_translogs(size_mb=size_mb)
+
+    try:
+        if cancel and alter_commands:
+            console.print()
+            console.print("[yellow]⚠️  WARNING: This will cancel the specified shards![/yellow]")
+            console.print("[yellow]This may cause temporary data unavailability for these shards.[/yellow]")
+            console.print()
+
+            if click.confirm("Are you sure you want to execute these ALTER commands?"):
+                console.print()
+                console.print("[bold blue]Executing ALTER commands...[/bold blue]")
+
+                executed = 0
+                failed = 0
+
+                for i, cmd in enumerate(alter_commands, 1):
+                    if cmd.startswith("--"):
+                        console.print(f"[yellow]Skipping command {i} (parse error): {cmd}[/yellow]")
+                        continue
+
+                    try:
+                        console.print(f"[dim]({i}/{len(alter_commands)}) Executing...[/dim]")
+                        client.execute_query(cmd)
+                        console.print(f"[green]✓ Command {i} executed successfully[/green]")
+                        executed += 1
+                    except Exception as e:
+                        console.print(f"[red]✗ Command {i} failed: {e}[/red]")
+                        failed += 1
+
+                    # Small delay between commands to avoid overwhelming the cluster
+                    if i < len(alter_commands):
+                        time.sleep(1)
+
+                console.print()
+                console.print("[bold]Execution Summary:[/bold]")
+                console.print(f"[green]✓ Successful: {executed}[/green]")
+                if failed > 0:
+                    console.print(f"[red]✗ Failed: {failed}[/red]")
+            else:
+                console.print("[yellow]Operation cancelled by user[/yellow]")
+
+    except Exception as e:
+        console.print(f"[red]Error analyzing problematic translogs: {e}[/red]")
+        import traceback
+
+        console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
 
 @main.command()
@@ -266,13 +591,14 @@ def monitor_recovery(
         xmover monitor-recovery --watch                # Continuous monitoring
         xmover monitor-recovery --recovery-type PEER  # Only PEER recoveries
     """
+    effective_recovery_type = None if recovery_type == "all" else recovery_type
     recovery_monitor = RecoveryMonitor(
         client=ctx.obj["client"],
         options=RecoveryOptions(
             table=table,
             node=node,
             refresh_interval=refresh_interval,
-            recovery_type=recovery_type,
+            recovery_type=effective_recovery_type,
             include_transitioning=include_transitioning,
         ),
     )

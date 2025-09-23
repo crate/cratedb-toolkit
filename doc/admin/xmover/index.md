@@ -11,6 +11,7 @@ SQL commands for shard rebalancing and node decommissioning.
 ## Features
 
 - **Cluster Analysis**: Complete overview of shard distribution across nodes and zones
+- **Shard Distribution Analysis**: Detect and rank distribution anomalies across the largest tables
 - **Shard Movement Recommendations**: Intelligent suggestions for rebalancing with safety validation
 - **Recovery Monitoring**: Track ongoing shard recovery operations with progress details
 - **Zone Conflict Detection**: Prevents moves that would violate CrateDB's zone awareness

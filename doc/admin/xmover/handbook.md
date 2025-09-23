@@ -56,6 +56,19 @@ xmover recommend --execute
 xmover recommend --prioritize-space
 ```
 
+### Shard Distribution Analysis
+This view focuses on large tables.
+```bash
+# Analyze distribution anomalies for top 10 largest tables
+xmover shard-distribution
+
+# Analyze more tables
+xmover shard-distribution --top-tables 20
+
+# Detailed health report for specific table
+xmover shard-distribution --table my_table
+```
+
 ### Zone Analysis
 ```bash
 # Check zone balance
@@ -115,11 +128,12 @@ Generates intelligent shard movement recommendations for cluster rebalancing.
 - `--zone-tolerance`: Zone balance tolerance percentage (default: 10)
 - `--min-free-space`: Minimum free space required on target nodes in GB (default: 100)
 - `--max-moves`: Maximum number of move recommendations (default: 10)
-- `--max-disk-usage`: Maximum disk usage percentage for target nodes (default: 85)
+- `--max-disk-usage`: Maximum disk usage percentage for target nodes (default: 90)
 - `--validate/--no-validate`: Validate move safety (default: True)
 - `--prioritize-space/--prioritize-zones`: Prioritize available space over zone balancing (default: False)
 - `--dry-run/--execute`: Show what would be done without generating SQL commands (default: True)
 - `--node`: Only recommend moves from this specific source node (e.g., data-hot-4)
+- `--auto-execute`: Automatically execute the SQL commands (requires `--execute`, asks for confirmation) (default: False)
 
 **Examples:**
 ```bash
@@ -230,6 +244,173 @@ xmover monitor-recovery --watch --include-transitioning
 **Recovery Types:**
 - **PEER**: Copying shard data from another node (replication/relocation)
 - **DISK**: Rebuilding shard from local data (after restart/disk issues)
+
+
+### `problematic-translogs`
+Find and optionally cancel replica shards with problematic translog sizes.
+
+**Options:**
+- `--size-mb INTEGER`: Minimum translog uncommitted size in MB (default: 300)
+- `--cancel`: Execute the cancel commands after confirmation
+
+**Description:**
+This command identifies replica shards with large uncommitted translog sizes that may indicate replication issues. By default, it shows the ALTER commands that would cancel these shards. With `--cancel`, it executes them after confirmation.
+
+**Examples:**
+```bash
+# Show problematic shards with translog > 300MB (default)
+xmover problematic-translogs
+
+# Show shards with translog > 500MB
+xmover problematic-translogs --size-mb 500
+
+# Execute cancel commands for shards > 1GB after confirmation
+xmover problematic-translogs --size-mb 1000 --cancel
+```
+
+**Sample Output:**
+```
+Found 3 shards with problematic translogs:
+                   Problematic Replica Shards (translog > 300MB)
+╭────────┬───────────────────────────────┬────────────────────────────┬──────────┬────────────┬─────────────╮
+│ Schema │ Table                         │ Partition                  │ Shard ID │ Node       │ Translog MB │
+├────────┼───────────────────────────────┼────────────────────────────┼──────────┼────────────┼─────────────┤
+│ TURVO  │ shipmentFormFieldData         │ none                       │       14 │ data-hot-6 │      7040.9 │
+│ TURVO  │ shipmentFormFieldData_events  │ ("sync_day"=1757376000000) │        3 │ data-hot-2 │       481.2 │
+│ TURVO  │ orderFormFieldData            │ none                       │        5 │ data-hot-1 │       469.5 │
+╰────────┴───────────────────────────────┴────────────────────────────┴──────────┴────────────┴─────────────╯
+Generated ALTER Commands:
+ALTER TABLE "TURVO"."shipmentFormFieldData" REROUTE CANCEL SHARD 14 on 'data-hot-6' WITH (allow_primary=False);
+ALTER TABLE "TURVO"."shipmentFormFieldData_events" partition ("sync_day"=1757376000000) REROUTE CANCEL SHARD 3 on 'data-hot-2' WITH (allow_primary=False);
+ALTER TABLE "TURVO"."orderFormFieldData" REROUTE CANCEL SHARD 5 on 'data-hot-1' WITH (allow_primary=False);
+Total: 3 ALTER commands generated
+```
+
+
+### `active-shards`
+Monitor the most active shards by tracking checkpoint progression over time.
+This command helps identify which shards are receiving the most write activity
+by measuring local checkpoint progression between two snapshots.
+
+**Options:**
+- `--count`: Number of most active shards to show (default: 10)
+- `--interval`: Observation interval in seconds (default: 30)
+- `--min-checkpoint-delta`: Minimum checkpoint progression between snapshots to show shard (default: 1000)
+- `--table, -t`: Monitor specific table only
+- `--node, -n`: Monitor specific node only
+- `--watch, -w`: Continuously monitor (refresh every interval)
+- `--exclude-system`: Exclude system tables (gc.*, information_schema.*, *_events, *_log)
+- `--min-rate`: Minimum activity rate (changes/sec) to show
+- `--show-replicas/--hide-replicas`: Show replica shards (default: True)
+
+**How it works:**
+1. **Takes snapshot of ALL started shards** (not just currently active ones)
+2. **Waits for observation interval** (configurable, default: 30 seconds)
+3. **Takes second snapshot** of all started shards
+4. **Compares snapshots** to find shards with checkpoint progression ≥ threshold
+5. **Shows ranked results** with activity trends and insights
+
+**Enhanced output features:**
+- **Checkpoint visibility**: Shows actual `local_checkpoint` values (CP Start → CP End → Delta)
+- **Partition awareness**: Separate tracking for partitioned tables (different partition_ident values)
+- **Activity trends**: 🔥 HOT (≥100/s), 📈 HIGH (≥50/s), 📊 MED (≥10/s), 📉 LOW (<10/s)
+- **Smart insights**: Identifies concentration patterns and load distribution (non-watch mode)
+- **Flexible filtering**: Exclude system tables, set minimum rates, hide replicas
+- **Context information**: Total activity, average rates, observation period
+- **Clean watch mode**: Streamlined output without legend/insights for continuous monitoring
+
+This approach captures shards that become active during the observation period, providing a complete view of cluster write patterns and identifying hot spots. The enhanced filtering helps focus on business-critical activity patterns.
+
+**Sample output (single run):**
+```
+🔥 Most Active Shards (3 shown, 30s observation period)
+Total checkpoint activity: 190,314 changes, Average rate: 2,109.0/sec
+   Rank | Schema.Table           | Shard | Partition      | Node       | Type | Checkpoint Δ | Rate/sec | Trend
+   -----------------------------------------------------------------------------------------------------------
+   1    | gc.scheduled_jobs_log  | 0     | -              | data-hot-8 | P    | 113,744      | 3,791.5  | 🔥 HOT
+   2    | TURVO.events           | 0     | 04732dpl6osj8d | data-hot-0 | P    | 45,837       | 1,527.9  | 🔥 HOT
+   3    | doc.user_actions       | 1     | 04732dpk70rj6d | data-hot-2 | P    | 30,733       | 1,024.4  | 🔥 HOT
+Legend:
+  • Checkpoint Δ: Write operations during observation period
+  • Partition: partition_ident (truncated if >14 chars, '-' if none)
+Insights:
+  • 3 HOT shards (≥100 changes/sec) - consider load balancing
+  • All active shards are PRIMARY - normal write pattern
+```
+
+**Sample output (watch mode - cleaner):**
+```
+30s interval | threshold: 1,000 | top 5
+🔥 Most Active Shards (3 shown, 30s observation period)
+Total checkpoint activity: 190,314 changes, Average rate: 2,109.0/sec
+   Rank | Schema.Table           | Shard | Partition      | Node       | Type | Checkpoint Δ | Rate/sec | Trend
+   -----------------------------------------------------------------------------------------------------------
+   1    | gc.scheduled_jobs_log  | 0     | -              | data-hot-8 | P    | 113,744      | 3,791.5  | 🔥 HOT
+   2    | TURVO.events           | 0     | 04732dpl6osj8d | data-hot-0 | P    | 45,837       | 1,527.9  | 🔥 HOT
+   3    | doc.user_actions       | 1     | 04732dpk70rj6d | data-hot-2 | P    | 30,733       | 1,024.4  | 🔥 HOT
+━━━ Next update in 30s ━━━
+```
+
+#### Examples
+```bash
+# Show top 10 most active shards over 30 seconds
+xmover active-shards
+
+# Top 20 shards with 60-second observation period
+xmover active-shards --count 20 --interval 60
+
+# Continuous monitoring with 30-second intervals
+xmover active-shards --watch --interval 30
+
+# Monitor specific table activity
+xmover active-shards --table my_table --watch
+
+# Monitor specific node with custom threshold
+xmover active-shards --node data-hot-1 --min-checkpoint-delta 500
+
+# Exclude system tables and event logs for business data focus
+xmover active-shards --exclude-system --count 20
+
+# Only show high-activity shards (≥50 changes/sec)
+xmover active-shards --min-rate 50 --count 15
+
+# Focus on primary shards only
+xmover active-shards --hide-replicas --count 20
+```
+
+#### Monitoring Active Shards and Write Patterns
+
+Identify which shards are receiving the most write activity:
+
+1. Quick snapshot of most active shards:
+```bash
+# Show top 10 most active shards over 30 seconds
+xmover active-shards
+
+# Longer observation period for more accurate results
+xmover active-shards --count 15 --interval 60
+```
+
+2. Continuous monitoring for real-time insights:
+```bash
+# Continuous monitoring with 30-second intervals
+xmover active-shards --watch --interval 30
+
+# Monitor specific table for focused analysis
+xmover active-shards --table critical_table --watch
+```
+
+3. Integration with rebalancing workflow:
+```bash
+# Identify hot shards first
+xmover active-shards --count 20 --interval 60
+
+# Move hot shards away from overloaded nodes
+xmover recommend --table hot_table --prioritize-space --execute
+
+# Monitor the impact
+xmover active-shards --table hot_table --watch
+```
 
 ### `test-connection`
 Tests the connection to CrateDB and displays basic cluster information.

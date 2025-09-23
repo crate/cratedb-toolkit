@@ -123,8 +123,8 @@ class ShardRelocationRecommender:
             console.print()
             console.print("[dim]# Monitor shard health after execution[/dim]")
             console.print(
-                "[dim]# Check with: SELECT * FROM sys.shards "
-                "WHERE table_name = '{table_name}' AND id = {shard_id};[/dim]"
+                "[dim]# Check with: SELECT * FROM sys.shards "  # noqa: S608
+                f"WHERE table_name = '{table_name}' AND id = {request.shard_id};[/dim]"
             )
         else:
             console.print("[red]✗ VALIDATION FAILED - Move not safe[/red]")
@@ -323,7 +323,7 @@ class ShardRelocationRecommender:
                         rec, max_disk_usage_percent=constraints.max_disk_usage
                     )
                     if not is_safe:
-                        if "Zone conflict" in safety_msg:
+                        if "zone conflict" in safety_msg.lower():
                             zone_conflicts += 1
                             console.print(f"-- Move {i}: SKIPPED - {safety_msg}")
                             console.print(
@@ -340,7 +340,7 @@ class ShardRelocationRecommender:
 
             # Auto-execution if requested
             if auto_execute:
-                self._execute_recommendations_safely(recommendations, validate)
+                self._execute_recommendations_safely(constraints, recommendations, validate)
 
         if validate and safe_moves < len(recommendations):
             if zone_conflicts > 0:
@@ -352,14 +352,16 @@ class ShardRelocationRecommender:
                 f"[yellow]Warning: Only {safe_moves} of {len(recommendations)} moves passed safety validation[/yellow]"
             )
 
-    def _execute_recommendations_safely(self, recommendations, validate: bool):
+    def _execute_recommendations_safely(self, constraints, recommendations, validate: bool):
         """Execute recommendations with extensive safety measures"""
 
         # Filter to only safe recommendations
         safe_recommendations = []
         if validate:
             for rec in recommendations:
-                is_safe, safety_msg = self.analyzer.validate_move_safety(rec, max_disk_usage_percent=95.0)
+                is_safe, safety_msg = self.analyzer.validate_move_safety(
+                    rec, max_disk_usage_percent=constraints.max_disk_usage
+                )
                 if is_safe:
                     safe_recommendations.append(rec)
         else:
@@ -423,7 +425,8 @@ class ShardRelocationRecommender:
                 # Execute the SQL command
                 result = self.client.execute_query(sql_command)
 
-                if result.get("rowcount", 0) >= 0:  # Success indicator for ALTER statements
+                # ALTER TABLE REROUTE commands don't return rowcount, check for no error instead.
+                if "error" not in result:
                     console.print("    [green]✅ SUCCESS[/green] - Move initiated")
                     successful_moves += 1
 
@@ -482,7 +485,8 @@ class ShardRelocationRecommender:
         while True:
             # Check active recoveries (including transitioning)
             recoveries = recovery_monitor.get_cluster_recovery_status()
-            active_count = len([r for r in recoveries if r.overall_progress < 100.0 or r.stage != "DONE"])
+            # Count recoveries that are actively running (not completed)
+            active_count = len([r for r in recoveries if r.overall_progress < 100.0])
             status = f"{active_count}/{max_concurrent_recoveries}"
             if active_count < max_concurrent_recoveries:
                 if wait_time > 0:

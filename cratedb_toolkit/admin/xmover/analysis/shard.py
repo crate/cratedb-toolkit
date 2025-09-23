@@ -13,11 +13,14 @@ from rich.panel import Panel
 from rich.table import Table
 
 from cratedb_toolkit.admin.xmover.model import (
+    ActiveShardActivity,
+    ActiveShardSnapshot,
     DistributionStats,
     NodeInfo,
     ShardInfo,
     ShardRelocationConstraints,
     ShardRelocationResponse,
+    TableStatsType,
 )
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
 from cratedb_toolkit.admin.xmover.util.format import format_percentage, format_size
@@ -36,7 +39,7 @@ class ShardAnalyzer:
         self.shards: List[ShardInfo] = []
 
         # Initialize session-based caches for performance.
-        self._zone_conflict_cache: Dict[Tuple[str, int, str], Union[str, None]] = {}
+        self._zone_conflict_cache: Dict[Tuple[str, str, int, str], Union[str, None]] = {}
         self._node_lookup_cache: Dict[str, Union[NodeInfo, None]] = {}
         self._target_nodes_cache: Dict[Tuple[float, frozenset[Any], float, float], List[NodeInfo]] = {}
         self._cache_hits = 0
@@ -181,8 +184,6 @@ class ShardAnalyzer:
             free_space_gb = node.available_space_gb
             if free_space_gb >= (required_space_gb + min_free_space_gb):
                 available_nodes.append(node)
-            else:
-                continue
 
         # Sort by available space (most space first) - prioritize nodes with more free space
         available_nodes.sort(key=lambda n: n.available_space_gb, reverse=True)
@@ -204,7 +205,7 @@ class ShardAnalyzer:
         # Get moveable shards (only healthy ones for actual operations)
         moveable_shards = self.find_moveable_shards(constraints.min_size, constraints.max_size, constraints.table_name)
 
-        print(
+        logger.info(
             f"Analyzing {len(moveable_shards)} candidate shards "
             f"in size range {constraints.min_size}-{constraints.max_size}GB..."
         )
@@ -237,12 +238,11 @@ class ShardAnalyzer:
         # Optimize processing: if filtering by source node, only process those shards
         if constraints.source_node:
             processing_shards = [s for s in moveable_shards if s.node_name == constraints.source_node]
-            print(f"Focusing on {len(processing_shards)} shards from node {constraints.source_node}")
+            logger.info(f"Focusing on {len(processing_shards)} shards from node {constraints.source_node}")
         else:
             processing_shards = moveable_shards
 
         # Generate move recommendations
-        safe_recommendations = 0  # noqa: F841
         total_evaluated = 0
 
         for i, shard in enumerate(processing_shards):
@@ -366,12 +366,12 @@ class ShardAnalyzer:
 
         if len(processing_shards) > 100:
             print()  # New line after progress dots
-        print(f"Generated {len(recommendations)} move recommendations (evaluated {total_evaluated} shards)")
-        print(f"Performance: {self.get_cache_stats()}")
+        logger.info(f"Generated {len(recommendations)} move recommendations (evaluated {total_evaluated} shards)")
+        logger.info(f"Performance: {self.get_cache_stats()}")
         return recommendations
 
     def validate_move_safety(
-        self, recommendation: ShardRelocationResponse, max_disk_usage_percent: float = 90.0
+        self, recommendation: ShardRelocationResponse, max_disk_usage_percent: float = 90.0, buffer_gb: float = 50.0
     ) -> Tuple[bool, str]:
         """Validate that a move recommendation is safe to execute"""
         # Find target node (with caching)
@@ -386,7 +386,7 @@ class ShardAnalyzer:
             return False, zone_conflict
 
         # Check available space
-        required_space_gb = recommendation.size_gb + 50  # 50GB buffer
+        required_space_gb = recommendation.size_gb + buffer_gb
         if target_node.available_space_gb < required_space_gb:
             return (
                 False,
@@ -421,7 +421,7 @@ class ShardAnalyzer:
         """Check zone conflicts with caching"""
         # Create cache key: table, shard, target zone
         target_zone = self._get_node_zone(recommendation.to_node)
-        cache_key = (recommendation.table_name, recommendation.shard_id, target_zone)
+        cache_key = (recommendation.schema_name, recommendation.table_name, recommendation.shard_id, target_zone)
 
         if cache_key in self._zone_conflict_cache:
             self._cache_hits += 1
@@ -614,6 +614,200 @@ class ShardAnalyzer:
         except Exception as e:
             # If we can't check, err on the side of caution
             return f"Cannot verify zone safety: {str(e)}"
+
+    def get_shard_size_overview(self) -> Dict[str, Any]:
+        """Get shard size distribution analysis"""
+        # Only analyze STARTED shards
+        started_shards = [s for s in self.shards if s.state == "STARTED"]
+
+        # Define size buckets (in GB)
+        size_buckets = {
+            "<1GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0, "max_size": 0.0},
+            "1GB-5GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0, "max_size": 0.0},
+            "5GB-10GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0, "max_size": 0.0},
+            "10GB-50GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0, "max_size": 0.0},
+            ">=50GB": {"count": 0, "total_size": 0.0, "avg_size_gb": 0.0, "max_size": 0.0},
+        }
+
+        if not started_shards:
+            return {
+                "total_shards": 0,
+                "total_size_gb": 0.0,
+                "avg_shard_size_gb": 0.0,
+                "size_buckets": size_buckets,
+                "large_shards_count": 0,
+                "very_small_shards_percentage": 0.0,
+            }
+
+        total_shards = len(started_shards)
+        total_size_gb = sum(s.size_gb for s in started_shards)
+        avg_size_gb = total_size_gb / total_shards if total_shards > 0 else 0.0
+
+        # Categorize shards by size
+        large_shards_count = 0  # >50GB shards
+        very_small_shards = 0  # <1GB shards (for percentage calculation)
+
+        for shard in started_shards:
+            size_gb = shard.size_gb
+
+            if size_gb >= 50:
+                size_buckets[">=50GB"]["count"] += 1
+                size_buckets[">=50GB"]["total_size"] += size_gb
+                size_buckets[">=50GB"]["max_size"] = max(size_buckets[">=50GB"]["max_size"], size_gb)
+                large_shards_count += 1
+            elif size_gb >= 10:
+                size_buckets["10GB-50GB"]["count"] += 1
+                size_buckets["10GB-50GB"]["total_size"] += size_gb
+                size_buckets["10GB-50GB"]["max_size"] = max(size_buckets["10GB-50GB"]["max_size"], size_gb)
+            elif size_gb >= 5:
+                size_buckets["5GB-10GB"]["count"] += 1
+                size_buckets["5GB-10GB"]["total_size"] += size_gb
+                size_buckets["5GB-10GB"]["max_size"] = max(size_buckets["5GB-10GB"]["max_size"], size_gb)
+            elif size_gb >= 1:
+                size_buckets["1GB-5GB"]["count"] += 1
+                size_buckets["1GB-5GB"]["total_size"] += size_gb
+                size_buckets["1GB-5GB"]["max_size"] = max(size_buckets["1GB-5GB"]["max_size"], size_gb)
+            else:
+                size_buckets["<1GB"]["count"] += 1
+                size_buckets["<1GB"]["total_size"] += size_gb
+                size_buckets["<1GB"]["max_size"] = max(size_buckets["<1GB"]["max_size"], size_gb)
+                very_small_shards += 1
+
+        # Calculate the average size for each bucket
+        for _, bucket_data in size_buckets.items():
+            if bucket_data["count"] > 0:
+                bucket_data["avg_size_gb"] = bucket_data["total_size"] / bucket_data["count"]
+            else:
+                bucket_data["avg_size_gb"] = 0.0
+
+        # Calculate the percentage of very small shards (<1GB)
+        very_small_percentage = (very_small_shards / total_shards * 100) if total_shards > 0 else 0.0
+
+        return {
+            "total_shards": total_shards,
+            "total_size_gb": total_size_gb,
+            "avg_shard_size_gb": avg_size_gb,
+            "size_buckets": size_buckets,
+            "large_shards_count": large_shards_count,
+            "very_small_shards_percentage": very_small_percentage,
+        }
+
+    def get_large_shards_details(self) -> List[Dict[str, Any]]:
+        """Get detailed information about large shards (>=50GB) including partition values"""
+        # Optimized query to fetch only large shards directly from database
+        query = """
+        SELECT
+            s.schema_name,
+            s.table_name,
+            translate(p.values::text, ':{}', '=()') as partition_values,
+            s.id as shard_id,
+            s.size / 1024^3 as size_gb,
+            s."primary" as is_primary,
+            s.node['name'] as node_name,
+            s.node['id'] as node_id
+        FROM sys.shards s
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
+        WHERE s.state = 'STARTED'
+            AND s.size >= 50 * 1024^3  -- 50GB in bytes
+        ORDER BY s.size DESC
+        """
+
+        result = self.client.execute_query(query)
+
+        large_shards = []
+        for row in result.get("rows", []):
+            # Get zone information from our nodes data
+            node_id = row[7]
+            zone = next((node.zone for node in self.nodes if node.id == node_id), "unknown")
+
+            large_shards.append(
+                {
+                    "schema_name": row[0] or "doc",
+                    "table_name": row[1],
+                    "partition_values": row[2],
+                    "shard_id": row[3],
+                    "size_gb": float(row[4]) if row[4] else 0.0,
+                    "is_primary": row[5] or False,
+                    "node_name": row[6],
+                    "zone": zone,
+                }
+            )
+
+        return large_shards
+
+    def get_small_shards_details(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get detailed information about the smallest shards, grouped by table/partition"""
+        # Query to get all shards, ordered by size ascending to get the smallest
+        query = """
+        SELECT
+            s.schema_name,
+            s.table_name,
+            translate(p.values::text, ':{}', '=()') as partition_values,
+            s.id as shard_id,
+            s.size / 1024^3 as size_gb,
+            s."primary" as is_primary,
+            s.node['name'] as node_name,
+            s.node['id'] as node_id
+        FROM sys.shards s
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
+        WHERE s.state = 'STARTED'
+        ORDER BY s.size ASC
+        """
+
+        result = self.client.execute_query(query)
+
+        # Group by table/partition to get aggregated stats
+        table_partition_stats: TableStatsType = {}
+        for row in result.get("rows", []):
+            # Get zone information from our nodes data
+            node_id = row[7]
+
+            # FIXME: `zone` does not get used.
+            zone = next((node.zone for node in self.nodes if node.id == node_id), "unknown")  # noqa: F841
+
+            # Create table key with schema
+            schema_name = row[0] or "doc"
+            table_name = row[1]
+            table_display = table_name
+            if schema_name and schema_name != "doc":
+                table_display = f"{schema_name}.{table_name}"
+
+            # Create partition key
+            partition_key = row[2] or "N/A"
+
+            # Create combined key
+            key = (table_display, partition_key)
+
+            if key not in table_partition_stats:
+                table_partition_stats[key] = {"sizes": [], "primary_count": 0, "replica_count": 0, "total_size": 0.0}
+
+            # Aggregate stats
+            stats = table_partition_stats[key]
+            size_gb = float(row[4]) if row[4] else 0.0
+            stats["sizes"].append(size_gb)
+            stats["total_size"] += size_gb
+            if row[5]:  # is_primary
+                stats["primary_count"] += 1
+            else:
+                stats["replica_count"] += 1
+
+        # Sort by average size ascending (smallest first) and return top tables/partitions
+        sorted_stats: List[Dict[str, Any]] = []
+        for (table_name, partition_key), stats in table_partition_stats.items():
+            avg_size = sum(stats["sizes"]) / len(stats["sizes"]) if stats["sizes"] else 0
+            sorted_stats.append(
+                {"table_name": table_name, "partition_key": partition_key, "stats": stats, "avg_size": avg_size}
+            )
+
+        # Sort by average size and take the top 'limit' entries
+        sorted_stats.sort(key=lambda x: x["avg_size"])
+        return sorted_stats[:limit]
 
     def get_cluster_overview(self) -> Dict[str, Any]:
         """Get a comprehensive overview of the cluster"""
@@ -811,11 +1005,14 @@ class ShardAnalyzer:
         # Determine feasibility
         feasible = len(infeasible_moves) == 0
 
+        # Safety margin for cluster capacity after decommission
+        capacity_safety_margin = 1.2  # 20 % buffer
+
         # Add capacity warnings
         if feasible:
-            # Check if remaining cluster capacity is sufficient after decommission
+            # Check if the remaining cluster capacity is sufficient after decommission
             remaining_capacity = sum(n.available_space_gb for n in self.nodes if n.name != node_name)
-            if remaining_capacity < total_size_gb * 1.2:  # 20% safety margin
+            if remaining_capacity < total_size_gb * capacity_safety_margin:
                 warnings.append(
                     f"Low remaining capacity after decommission. "
                     f"Only {remaining_capacity:.1f}GB available for {total_size_gb:.1f}GB of data"
@@ -831,9 +1028,109 @@ class ShardAnalyzer:
             "recommendations": move_plan,
             "infeasible_moves": infeasible_moves,
             "warnings": warnings,
-            "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 6 minutes per move
+            "estimated_time_hours": len(move_plan) * 0.1,  # Rough estimate: 0.1 hours (6 minutes) per move
             "message": "Decommission plan generated" if feasible else "Decommission not currently feasible",
         }
+
+
+class TranslogReporter:
+    def __init__(self, client: CrateDBClient):
+        self.client = client
+
+    def problematic_translogs(self, size_mb: int) -> List[str]:
+        """Find and optionally cancel shards with problematic translog sizes."""
+        console.print(Panel.fit("[bold blue]Problematic Translog Analysis[/bold blue]"))
+        console.print(f"[dim]Looking for replica shards with translog uncommitted size > {size_mb}MB[/dim]")
+        console.print()
+
+        # Query to find problematic replica shards
+        query = """
+                SELECT sh.schema_name, \
+                       sh.table_name, \
+                       translate(p.values::text, ':{}', '=()') as partition_values, \
+                       sh.id                                   AS shard_id, \
+                       node['name']                            as node_name, \
+                       sh.translog_stats['uncommitted_size'] / 1024^2 AS translog_uncommitted_mb
+                FROM
+                    sys.shards AS sh
+                    LEFT JOIN information_schema.table_partitions p
+                ON sh.table_name = p.table_name
+                    AND sh.schema_name = p.table_schema
+                    AND sh.partition_ident = p.partition_ident
+                WHERE
+                    sh.state = 'STARTED'
+                  AND sh.translog_stats['uncommitted_size'] \
+                    > ? * 1024^2
+                  AND primary = FALSE
+                ORDER BY
+                    6 DESC \
+                """
+
+        try:
+            result = self.client.execute_query(query, [size_mb])
+            rows = result.get("rows", [])
+
+            if not rows:
+                console.print(f"[green]✓ No replica shards found with translog uncommitted size > {size_mb}MB[/green]")
+                return []
+
+            console.print(f"Found {len(rows)} shards with problematic translogs:")
+            console.print()
+
+            # Display query results table
+            results_table = Table(title=f"Problematic Replica Shards (translog > {size_mb}MB)", box=box.ROUNDED)
+            results_table.add_column("Schema", style="cyan")
+            results_table.add_column("Table", style="blue")
+            results_table.add_column("Partition", style="magenta")
+            results_table.add_column("Shard ID", justify="right", style="yellow")
+            results_table.add_column("Node", style="green")
+            results_table.add_column("Translog MB", justify="right", style="red")
+
+            for row in rows:
+                schema_name, table_name, partition_values, shard_id, node_name, translog_mb = row
+                partition_display = (
+                    partition_values if partition_values and partition_values != "NULL" else "[dim]none[/dim]"
+                )
+                results_table.add_row(
+                    schema_name, table_name, partition_display, str(shard_id), node_name, f"{translog_mb:.1f}"
+                )
+
+            console.print(results_table)
+            console.print()
+            console.print("[bold]Generated ALTER Commands:[/bold]")
+            console.print()
+
+            # Generate ALTER commands
+            alter_commands = []
+            for row in rows:
+                schema_name, table_name, partition_values, shard_id, node_name, translog_mb = row
+
+                # Build the ALTER command based on whether it's partitioned
+                if partition_values and partition_values != "NULL":
+                    # partition_values already formatted like ("sync_day"=1757376000000) from the translate function
+                    alter_cmd = (
+                        f'ALTER TABLE "{schema_name}"."{table_name}" partition {partition_values} '
+                        f"REROUTE CANCEL SHARD {shard_id} on '{node_name}' WITH (allow_primary=False);"
+                    )
+                else:
+                    alter_cmd = (
+                        f'ALTER TABLE "{schema_name}"."{table_name}" '
+                        f"REROUTE CANCEL SHARD {shard_id} on '{node_name}' WITH (allow_primary=False);"
+                    )
+
+                alter_commands.append(alter_cmd)
+                console.print(alter_cmd)
+
+            console.print()
+            console.print(f"[bold]Total: {len(alter_commands)} ALTER commands generated[/bold]")
+            return alter_commands
+
+        except Exception as e:
+            console.print(f"[red]Error analyzing problematic translogs: {e}[/red]")
+            import traceback
+
+            console.print(f"[dim]{traceback.format_exc()}[/dim]")
+            return []
 
 
 class ShardReporter:
@@ -930,20 +1227,428 @@ class ShardReporter:
 
         console.print(node_table)
 
+        console.print()
+
+        # Shard Size Overview
+        size_overview = self.analyzer.get_shard_size_overview()
+
+        size_table = Table(title="Shard Size Distribution", box=box.ROUNDED)
+        size_table.add_column("Size Range", style="cyan")
+        size_table.add_column("Count", justify="right", style="magenta")
+        size_table.add_column("Percentage", justify="right", style="green")
+        size_table.add_column("Avg Size", justify="right", style="blue")
+        size_table.add_column("Max Size", justify="right", style="red")
+        size_table.add_column("Total Size", justify="right", style="yellow")
+
+        total_shards = size_overview["total_shards"]
+
+        # Define color coding thresholds
+        large_shards_threshold = 0  # warn if ANY shards >=50GB (red flag)
+        small_shards_percentage_threshold = 40  # warn if >40% of shards are small (<1GB)
+
+        for bucket_name, bucket_data in size_overview["size_buckets"].items():
+            count = bucket_data["count"]
+            avg_size = bucket_data["avg_size_gb"]
+            total_size = bucket_data["total_size"]
+            percentage = (count / total_shards * 100) if total_shards > 0 else 0
+
+            # Apply color coding
+            count_str = str(count)
+            percentage_str = f"{percentage:.1f}%"
+
+            # Color code large shards (>=50GB) - ANY large shard is a red flag
+            if bucket_name == ">=50GB" and count > large_shards_threshold:
+                count_str = f"[red]{count}[/red]"
+                percentage_str = f"[red]{percentage:.1f}%[/red]"
+
+            # Color code if too many very small shards (<1GB)
+            if bucket_name == "<1GB" and percentage > small_shards_percentage_threshold:
+                count_str = f"[yellow]{count}[/yellow]"
+                percentage_str = f"[yellow]{percentage:.1f}%[/yellow]"
+
+            size_table.add_row(
+                bucket_name,
+                count_str,
+                percentage_str,
+                f"{avg_size:.2f}GB" if avg_size > 0 else "0GB",
+                f"{bucket_data['max_size']:.2f}GB" if bucket_data["max_size"] > 0 else "0GB",
+                format_size(total_size),
+            )
+
+        console.print(size_table)
+
+        # Add warnings if thresholds are exceeded
+        warnings = []
+        if size_overview["large_shards_count"] > large_shards_threshold:
+            warnings.append(
+                f"[red]🔥 CRITICAL: {size_overview['large_shards_count']} "
+                f"large shards (>=50GB) detected - IMMEDIATE ACTION REQUIRED![/red]"
+            )
+            warnings.append("[red]   Large shards cause slow recovery, memory pressure, and performance issues[/red]")
+
+        # Calculate the percentage of very small shards (<1GB)
+        very_small_count = size_overview["size_buckets"]["<1GB"]["count"]
+        very_small_percentage = (very_small_count / total_shards * 100) if total_shards > 0 else 0
+
+        if very_small_percentage > small_shards_percentage_threshold:
+            warnings.append(
+                f"[yellow]⚠️  {very_small_percentage:.1f}% of shards are very small (<1GB) - "
+                f"consider optimizing shard allocation[/yellow]"
+            )
+            warnings.append("[yellow]   Too many small shards create metadata overhead and reduce efficiency[/yellow]")
+
+        if warnings:
+            console.print()
+            for warning in warnings:
+                console.print(warning)
+
+        # Show compact table/partition breakdown of large shards if any exist
+        if size_overview["large_shards_count"] > 0:
+            console.print()
+            large_shards_details = self.analyzer.get_large_shards_details()
+
+            # Aggregate by table/partition
+            table_partition_stats: TableStatsType = {}
+            for shard in large_shards_details:
+                # Create table key with schema
+                table_display = shard["table_name"]
+                if shard["schema_name"] and shard["schema_name"] != "doc":
+                    table_display = f"{shard['schema_name']}.{shard['table_name']}"
+
+                # Create partition key
+                partition_key = shard["partition_values"] or "N/A"
+
+                # Create combined key
+                key = (table_display, partition_key)
+
+                if key not in table_partition_stats:
+                    table_partition_stats[key] = {
+                        "sizes": [],
+                        "primary_count": 0,
+                        "replica_count": 0,
+                        "total_size": 0.0,
+                    }
+
+                # Aggregate stats
+                stats = table_partition_stats[key]
+                stats["sizes"].append(shard["size_gb"])
+                stats["total_size"] += shard["size_gb"]
+                if shard["is_primary"]:
+                    stats["primary_count"] += 1
+                else:
+                    stats["replica_count"] += 1
+
+            # Create compact table
+            large_shards_table = Table(title="Large Shards Breakdown by Table/Partition (>=50GB)", box=box.ROUNDED)
+            large_shards_table.add_column("Table", style="cyan")
+            large_shards_table.add_column("Partition", style="blue")
+            large_shards_table.add_column("Shards", justify="right", style="magenta")
+            large_shards_table.add_column("P/R", justify="center", style="yellow")
+            large_shards_table.add_column("Min Size", justify="right", style="green")
+            large_shards_table.add_column("Avg Size", justify="right", style="red")
+            large_shards_table.add_column("Max Size", justify="right", style="red")
+            large_shards_table.add_column("Total Size", justify="right", style="red")
+
+            # Sort by total size descending (most problematic first)
+            sorted_stats = sorted(table_partition_stats.items(), key=lambda x: x[1]["total_size"], reverse=True)
+
+            for (table_name, partition_key), stats in sorted_stats:
+                # Format partition display
+                partition_display = partition_key
+                if partition_display != "N/A" and len(partition_display) > 25:
+                    partition_display = partition_display[:22] + "..."
+
+                # Calculate size stats
+                sizes = stats["sizes"]
+                min_size = min(sizes)
+                avg_size = sum(sizes) / len(sizes)
+                max_size = max(sizes)
+                total_size = stats["total_size"]
+                total_shards = len(sizes)
+
+                # Format primary/replica ratio
+                p_r_display = f"{stats['primary_count']}P/{stats['replica_count']}R"
+
+                large_shards_table.add_row(
+                    table_name,
+                    partition_display,
+                    str(total_shards),
+                    p_r_display,
+                    f"{min_size:.1f}GB",
+                    f"{avg_size:.1f}GB",
+                    f"{max_size:.1f}GB",
+                    f"{total_size:.1f}GB",
+                )
+
+            console.print(large_shards_table)
+
+            # Add summary stats
+            total_primary = sum(stats["primary_count"] for stats in table_partition_stats.values())
+            total_replica = sum(stats["replica_count"] for stats in table_partition_stats.values())
+            affected_table_partitions = len(table_partition_stats)
+
+            console.print()
+            console.print(
+                f"[dim]📊 Summary: {total_primary} primary, {total_replica} replica shards "
+                f"across {affected_table_partitions} table/partition(s)[/dim]"
+            )
+
+        # Show compact table/partition breakdown of smallest shards (top 10)
+        console.print()
+        small_shards_details = self.analyzer.get_small_shards_details(limit=10)
+
+        if small_shards_details:
+            # Create compact table
+            small_shards_table = Table(title="Smallest Shards Breakdown by Table/Partition (Top 10)", box=box.ROUNDED)
+            small_shards_table.add_column("Table", style="cyan")
+            small_shards_table.add_column("Partition", style="blue")
+            small_shards_table.add_column("Shards", justify="right", style="magenta")
+            small_shards_table.add_column("P/R", justify="center", style="yellow")
+            small_shards_table.add_column("Min Size", justify="right", style="green")
+            small_shards_table.add_column("Avg Size", justify="right", style="red")
+            small_shards_table.add_column("Max Size", justify="right", style="red")
+            small_shards_table.add_column("Total Size", justify="right", style="red")
+
+            for entry in small_shards_details:
+                table_name = entry["table_name"]
+                partition_key = entry["partition_key"]
+                stats = entry["stats"]
+
+                # Format partition display
+                partition_display = partition_key
+                if partition_display != "N/A" and len(partition_display) > 25:
+                    partition_display = partition_display[:22] + "..."
+
+                # Calculate size stats
+                sizes = stats["sizes"]
+                min_size = min(sizes)
+                avg_size = sum(sizes) / len(sizes)
+                max_size = max(sizes)
+                total_size = stats["total_size"]
+                total_shards = len(sizes)
+
+                # Format primary/replica ratio
+                p_r_display = f"{stats['primary_count']}P/{stats['replica_count']}R"
+
+                small_shards_table.add_row(
+                    table_name,
+                    partition_display,
+                    str(total_shards),
+                    p_r_display,
+                    f"{min_size:.1f}GB",
+                    f"{avg_size:.1f}GB",
+                    f"{max_size:.1f}GB",
+                    f"{total_size:.1f}GB",
+                )
+
+            console.print(small_shards_table)
+
+            # Add summary stats for smallest shards
+            total_small_primary = sum(entry["stats"]["primary_count"] for entry in small_shards_details)
+            total_small_replica = sum(entry["stats"]["replica_count"] for entry in small_shards_details)
+            small_table_partitions = len(small_shards_details)
+
+            console.print()
+            console.print(
+                f"[dim]📊 Summary: {total_small_primary} primary, "
+                f"{total_small_replica} replica shards across {small_table_partitions} table/partition(s) "
+                f"with smallest average sizes[/dim]"
+            )
+
+        console.print()
+
         # Table-specific analysis if requested
         if table:
             console.print()
             console.print(Panel.fit(f"[bold blue]Analysis for table: {table}[/bold blue]"))
 
-            stats = self.analyzer.analyze_distribution(table)
+            distribution_stats = self.analyzer.analyze_distribution(table)
 
             table_summary = Table(title=f"Table {table} Distribution", box=box.ROUNDED)
             table_summary.add_column("Metric", style="cyan")
             table_summary.add_column("Value", style="magenta")
 
-            table_summary.add_row("Total Shards", str(stats.total_shards))
-            table_summary.add_row("Total Size", format_size(stats.total_size_gb))
-            table_summary.add_row("Zone Balance Score", f"{stats.zone_balance_score:.1f}/100")
-            table_summary.add_row("Node Balance Score", f"{stats.node_balance_score:.1f}/100")
+            table_summary.add_row("Total Shards", str(distribution_stats.total_shards))
+            table_summary.add_row("Total Size", format_size(distribution_stats.total_size_gb))
+            table_summary.add_row("Zone Balance Score", f"{distribution_stats.zone_balance_score:.1f}/100")
+            table_summary.add_row("Node Balance Score", f"{distribution_stats.node_balance_score:.1f}/100")
 
             console.print(table_summary)
+
+
+class ActiveShardMonitor:
+    """Monitor active shard checkpoint progression over time"""
+
+    def __init__(self, client: CrateDBClient):
+        self.client = client
+
+    def compare_snapshots(
+        self,
+        snapshot1: List[ActiveShardSnapshot],
+        snapshot2: List[ActiveShardSnapshot],
+        min_activity_threshold: int = 0,
+    ) -> List["ActiveShardActivity"]:
+        """Compare two snapshots and return activity data for shards present in both
+
+        Args:
+            snapshot1: First snapshot (baseline)
+            snapshot2: Second snapshot (comparison)
+            min_activity_threshold: Minimum checkpoint delta to consider active (default: 0)
+        """
+
+        # Create lookup dict for snapshot1
+        snapshot1_dict = {snap.shard_identifier: snap for snap in snapshot1}
+
+        activities = []
+
+        for snap2 in snapshot2:
+            snap1 = snapshot1_dict.get(snap2.shard_identifier)
+            if snap1:
+                # Calculate local checkpoint delta
+                local_checkpoint_delta = snap2.local_checkpoint - snap1.local_checkpoint
+                time_diff = snap2.timestamp - snap1.timestamp
+
+                # Filter based on actual activity between snapshots
+                if local_checkpoint_delta >= min_activity_threshold:
+                    activity = ActiveShardActivity(
+                        schema_name=snap2.schema_name,
+                        table_name=snap2.table_name,
+                        shard_id=snap2.shard_id,
+                        node_name=snap2.node_name,
+                        is_primary=snap2.is_primary,
+                        partition_ident=snap2.partition_ident,
+                        local_checkpoint_delta=local_checkpoint_delta,
+                        snapshot1=snap1,
+                        snapshot2=snap2,
+                        time_diff_seconds=time_diff,
+                    )
+                    activities.append(activity)
+
+        # Sort by activity (highest checkpoint delta first)
+        activities.sort(key=lambda x: x.local_checkpoint_delta, reverse=True)
+
+        return activities
+
+    def format_activity_display(
+        self, activities: List["ActiveShardActivity"], show_count: int = 10, watch_mode: bool = False
+    ) -> str:
+        """Format activity data for console display"""
+        if not activities:
+            return "✅ No active shards with significant checkpoint progression found"
+
+        # Limit to requested count
+        activities = activities[:show_count]
+
+        # Calculate observation period for context
+        if activities:
+            observation_period = activities[0].time_diff_seconds
+            output = [
+                f"\n🔥 Most Active Shards ({len(activities)} shown, {observation_period:.0f}s observation period)"
+            ]
+        else:
+            output = [f"\n🔥 Most Active Shards ({len(activities)} shown, sorted by checkpoint activity)"]
+
+        output.append("")
+
+        # Add activity rate context
+        if activities:
+            total_activity = sum(a.local_checkpoint_delta for a in activities)
+            avg_rate = sum(a.activity_rate for a in activities) / len(activities)
+            output.append(
+                f"[dim]Total checkpoint activity: {total_activity:,} changes, Average rate: {avg_rate:.1f}/sec[/dim]"
+            )
+            output.append("")
+
+        # Create table headers
+        headers = ["Rank", "Schema.Table", "Shard", "Partition", "Node", "Type", "Checkpoint Δ", "Rate/sec", "Trend"]
+
+        # Calculate column widths
+        col_widths = [len(h) for h in headers]
+
+        # Prepare rows
+        rows = []
+        for i, activity in enumerate(activities, 1):
+            # Format values
+            rank = str(i)
+            table_id = activity.table_identifier
+            shard_id = str(activity.shard_id)
+            partition = (
+                activity.partition_ident[:14] + "..."
+                if len(activity.partition_ident) > 14
+                else activity.partition_ident or "-"
+            )
+            node = activity.node_name
+            shard_type = "P" if activity.is_primary else "R"
+            checkpoint_delta = f"{activity.local_checkpoint_delta:,}"
+            rate = f"{activity.activity_rate:.1f}" if activity.activity_rate >= 0.1 else "<0.1"
+
+            # Calculate activity trend indicator
+            if activity.activity_rate >= 100:
+                trend = "🔥 HOT"
+            elif activity.activity_rate >= 50:
+                trend = "📈 HIGH"
+            elif activity.activity_rate >= 10:
+                trend = "📊 MED"
+            else:
+                trend = "📉 LOW"
+
+            row = [rank, table_id, shard_id, partition, node, shard_type, checkpoint_delta, rate, trend]
+            rows.append(row)
+
+            # Update column widths
+            for j, cell in enumerate(row):
+                col_widths[j] = max(col_widths[j], len(cell))
+
+        # Format table
+        header_row = "   " + " | ".join(h.ljust(w) for h, w in zip(headers, col_widths))
+        output.append(header_row)
+        output.append("   " + "-" * (len(header_row) - 3))
+
+        # Data rows
+        for row in rows:
+            data_row = "   " + " | ".join(cell.ljust(w) for cell, w in zip(row, col_widths))
+            output.append(data_row)
+
+        # Only show legend and insights in non-watch mode
+        if not watch_mode:
+            output.append("")
+            output.append("Legend:")
+            output.append("  • Checkpoint Δ: Write operations during observation period")
+            output.append("  • Rate/sec: Checkpoint changes per second")
+            output.append("  • Partition: partition_ident (truncated if >14 chars, '-' if none)")
+            output.append("  • Type: P=Primary, R=Replica")
+            output.append("  • Trend: 🔥 HOT (≥100/s), 📈 HIGH (≥50/s), 📊 MED (≥10/s), 📉 LOW (<10/s)")
+
+            # Add insights about activity patterns
+            if activities:
+                output.append("")
+                output.append("Insights:")
+
+                # Count by trend
+                hot_count = len([a for a in activities if a.activity_rate >= 100])
+                high_count = len([a for a in activities if 50 <= a.activity_rate < 100])
+                med_count = len([a for a in activities if 10 <= a.activity_rate < 50])
+                low_count = len([a for a in activities if a.activity_rate < 10])
+
+                if hot_count > 0:
+                    output.append(f"  • {hot_count} HOT shards (≥100 changes/sec) - consider load balancing")
+                if high_count > 0:
+                    output.append(f"  • {high_count} HIGH activity shards - monitor capacity")
+                if med_count > 0:
+                    output.append(f"  • {med_count} MEDIUM activity shards - normal operation")
+                if low_count > 0:
+                    output.append(f"  • {low_count} LOW activity shards - occasional writes")
+
+                # Identify patterns
+                primary_activities = [a for a in activities if a.is_primary]
+                if len(primary_activities) == len(activities):
+                    output.append("  • All active shards are PRIMARY - normal write pattern")
+                elif len(primary_activities) < len(activities) * 0.5:
+                    output.append("  • Many REPLICA shards active - possible recovery/replication activity")
+
+                # Node concentration
+                nodes = {a.node_name for a in activities}
+                if len(nodes) <= 2:
+                    output.append(f"  • Activity concentrated on {len(nodes)} node(s) - consider redistribution")
+
+        return "\n".join(output)

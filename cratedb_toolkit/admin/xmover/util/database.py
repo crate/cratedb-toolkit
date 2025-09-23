@@ -10,7 +10,7 @@ import requests
 import urllib3
 from dotenv import load_dotenv
 
-from cratedb_toolkit.admin.xmover.model import NodeInfo, RecoveryInfo, ShardInfo
+from cratedb_toolkit.admin.xmover.model import ActiveShardSnapshot, NodeInfo, RecoveryInfo, ShardInfo
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,8 @@ class CrateDBClient:
         if not self.connection_string.endswith("/_sql"):
             self.connection_string = self.connection_string.rstrip("/") + "/_sql"
 
+        self.session = requests.Session()
+
     def execute_query(self, query: str, parameters: Optional[List] = None) -> Dict[str, Any]:
         """Execute a SQL query against CrateDB"""
         payload: Dict[str, Any] = {"stmt": query}
@@ -51,11 +53,18 @@ class CrateDBClient:
             auth = (self.username, self.password)
 
         try:
-            response = requests.post(
+            response = self.session.post(
                 self.connection_string, json=payload, auth=auth, verify=self.ssl_verify, timeout=30
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            # CrateDB may include an "error" field even with 200 OK
+            if isinstance(data, dict) and "error" in data and data["error"]:
+                # Best-effort message extraction
+                err = data["error"]
+                msg = err.get("message") if isinstance(err, dict) else str(err)
+                raise Exception(f"CrateDB error: {msg}")
+            return data
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to execute query: {e}") from e
 
@@ -325,6 +334,7 @@ class CrateDBClient:
         SELECT
             s.table_name,
             s.schema_name,
+            translate(p.values::text, ':{}', '=()') as partition_values,
             s.id as shard_id,
             s.node['name'] as node_name,
             s.node['id'] as node_id,
@@ -335,13 +345,17 @@ class CrateDBClient:
             s."primary",
             s.translog_stats['size'] as translog_size
         FROM sys.shards s
-        WHERE s.table_name = ? AND s.id = ?
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
+        WHERE s.schema_name = ? AND s.table_name = ? AND s.id = ?
         AND (s.state = 'RECOVERING' OR s.routing_state IN ('INITIALIZING', 'RELOCATING'))
         ORDER BY s.schema_name
         LIMIT 1
         """
 
-        result = self.execute_query(query, [table_name, shard_id])
+        result = self.execute_query(query, [schema_name, table_name, shard_id])
 
         if not result.get("rows"):
             return None
@@ -350,15 +364,16 @@ class CrateDBClient:
         return {
             "table_name": row[0],
             "schema_name": row[1],
-            "shard_id": row[2],
-            "node_name": row[3],
-            "node_id": row[4],
-            "routing_state": row[5],
-            "state": row[6],
-            "recovery": row[7],
-            "size": row[8],
-            "primary": row[9],
-            "translog_size": row[10] or 0,
+            "partition_values": row[2],
+            "shard_id": row[3],
+            "node_name": row[4],
+            "node_id": row[5],
+            "routing_state": row[6],
+            "state": row[7],
+            "recovery": row[8],
+            "size": row[9],
+            "primary": row[10],
+            "translog_size": row[11] or 0,
         }
 
     def get_all_recovering_shards(
@@ -433,6 +448,7 @@ class CrateDBClient:
         return RecoveryInfo(
             schema_name=shard_detail["schema_name"],
             table_name=shard_detail["table_name"],
+            partition_values=shard_detail.get("partition_values"),
             shard_id=shard_detail["shard_id"],
             node_name=shard_detail["node_name"],
             node_id=shard_detail["node_id"],
@@ -496,3 +512,118 @@ class CrateDBClient:
             and recovery_info.files_percent >= 100.0
             and recovery_info.bytes_percent >= 100.0
         )
+
+    def get_problematic_shards(
+        self, table_name: Optional[str] = None, node_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get shards that need attention but aren't actively recovering"""
+
+        where_conditions = ["s.state != 'STARTED'"]
+        parameters = []
+
+        if table_name:
+            where_conditions.append("s.table_name = ?")
+            parameters.append(table_name)
+
+        if node_name:
+            where_conditions.append("s.node['name'] = ?")
+            parameters.append(node_name)
+
+        where_clause = f"WHERE {' AND '.join(where_conditions)}"
+
+        query = f"""
+        SELECT
+            s.schema_name,
+            s.table_name,
+            translate(p.values::text, ':{{}}', '=()') as partition_values,
+            s.id as shard_id,
+            s.state,
+            s.routing_state,
+            s.node['name'] as node_name,
+            s.node['id'] as node_id,
+            s."primary"
+        FROM sys.shards s
+        LEFT JOIN information_schema.table_partitions p
+            ON s.table_name = p.table_name
+            AND s.schema_name = p.table_schema
+            AND s.partition_ident = p.partition_ident
+        {where_clause}
+        ORDER BY s.state, s.table_name, s.id
+        """  # noqa: S608
+
+        result = self.execute_query(query, parameters)
+
+        problematic_shards = []
+        for row in result.get("rows", []):
+            problematic_shards.append(
+                {
+                    "schema_name": row[0] or "doc",
+                    "table_name": row[1],
+                    "partition_values": row[2],
+                    "shard_id": row[3],
+                    "state": row[4],
+                    "routing_state": row[5],
+                    "node_name": row[6],
+                    "node_id": row[7],
+                    "primary": row[8],
+                }
+            )
+
+        return problematic_shards
+
+    def get_active_shards_snapshot(self, min_checkpoint_delta: int = 1000) -> List[ActiveShardSnapshot]:
+        """Get a snapshot of all started shards for activity monitoring
+
+        Note: This captures ALL started shards regardless of current activity level.
+        The min_checkpoint_delta parameter is kept for backwards compatibility but
+        filtering is now done during snapshot comparison to catch shards that
+        become active between observations.
+
+        Args:
+            min_checkpoint_delta: Kept for compatibility - filtering now done in comparison
+
+        Returns:
+            List of ActiveShardSnapshot objects for all started shards
+        """
+        import time
+
+        query = """
+                SELECT sh.schema_name, \
+                       sh.table_name, \
+                       sh.id                                 AS shard_id, \
+                       sh."primary", \
+                       node['name']                          as node_name, \
+                       sh.partition_ident, \
+                       sh.translog_stats['uncommitted_size'] AS translog_uncommitted_bytes, \
+                       sh.seq_no_stats['local_checkpoint']   AS local_checkpoint, \
+                       sh.seq_no_stats['global_checkpoint']  AS global_checkpoint
+                FROM sys.shards AS sh
+                WHERE sh.state = 'STARTED'
+                ORDER BY sh.schema_name, sh.table_name, sh.id, sh.node['name'] \
+                """
+
+        try:
+            result = self.execute_query(query)
+            snapshots = []
+            current_time = time.time()
+
+            for row in result.get("rows", []):
+                snapshot = ActiveShardSnapshot(
+                    schema_name=row[0],
+                    table_name=row[1],
+                    shard_id=row[2],
+                    is_primary=row[3],
+                    node_name=row[4],
+                    partition_ident=row[5] or "",
+                    translog_uncommitted_bytes=row[6] or 0,
+                    local_checkpoint=row[7] or 0,
+                    global_checkpoint=row[8] or 0,
+                    timestamp=current_time,
+                )
+                snapshots.append(snapshot)
+
+            return snapshots
+
+        except Exception as e:
+            logger.error(f"Error getting active shards snapshot: {e}")
+            return []

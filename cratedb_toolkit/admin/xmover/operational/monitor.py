@@ -7,7 +7,7 @@ from rich.console import Console
 
 from cratedb_toolkit.admin.xmover.model import RecoveryInfo
 from cratedb_toolkit.admin.xmover.util.database import CrateDBClient
-from cratedb_toolkit.admin.xmover.util.format import format_translog_info
+from cratedb_toolkit.admin.xmover.util.format import format_table_display_with_partition, format_translog_info
 
 console = Console()
 
@@ -24,9 +24,9 @@ class RecoveryOptions:
 class RecoveryMonitor:
     """Monitor shard recovery operations"""
 
-    def __init__(self, client: CrateDBClient, options: RecoveryOptions):
+    def __init__(self, client: CrateDBClient, options: Optional[RecoveryOptions] = None):
         self.client = client
-        self.options = options
+        self.options = options or RecoveryOptions()
 
     def get_cluster_recovery_status(self) -> List[RecoveryInfo]:
         """Get comprehensive recovery status with minimal cluster impact"""
@@ -37,10 +37,14 @@ class RecoveryMonitor:
         )
 
         # Apply recovery type filter
-        if self.options.recovery_type is not None:
+        if self.options.recovery_type is not None and self.options.recovery_type.lower() != "all":
             recoveries = [r for r in recoveries if r.recovery_type.upper() == self.options.recovery_type.upper()]
 
         return recoveries
+
+    def get_problematic_shards(self) -> List[Dict[str, Any]]:
+        """Get shards that need attention but aren't actively recovering"""
+        return self.client.get_problematic_shards(self.options.table, self.options.node)
 
     def get_recovery_summary(self, recoveries: List[RecoveryInfo]) -> Dict[str, Any]:
         """Generate a summary of recovery operations"""
@@ -126,18 +130,22 @@ class RecoveryMonitor:
             return "   No recoveries of this type"
 
         # Table headers
-        headers = ["Table", "Shard", "Node", "Type", "Stage", "Progress", "Size(GB)", "Time(s)"]
+        headers = ["Table", "Shard", "Node", "Recovery", "Stage", "Progress", "Size(GB)", "Time(s)"]
 
         # Calculate column widths
         col_widths = [len(h) for h in headers]
 
         rows = []
         for recovery in recoveries:
+            # Format table name with partition values if available
+            table_display = f"{recovery.schema_name}.{recovery.table_name}"
+            if recovery.partition_values:
+                table_display = f"{table_display} {recovery.partition_values}"
             row = [
-                f"{recovery.schema_name}.{recovery.table_name}",
+                table_display,
                 str(recovery.shard_id),
                 recovery.node_name,
-                recovery.shard_type,
+                recovery.recovery_type,
                 recovery.stage,
                 f"{recovery.overall_progress:.1f}%",
                 f"{recovery.size_gb:.1f}",
@@ -178,7 +186,6 @@ class RecoveryMonitor:
 
                     # Track previous state for change detection
                     previous_recoveries: Dict[str, Dict[str, Any]] = {}
-                    previous_timestamp = None
                     first_run = True
 
                     while True:
@@ -199,10 +206,9 @@ class RecoveryMonitor:
                             )
 
                             # Create complete table name
-                            if recovery.schema_name == "doc":
-                                table_display = recovery.table_name
-                            else:
-                                table_display = f"{recovery.schema_name}.{recovery.table_name}"
+                            table_display = format_table_display_with_partition(
+                                recovery.schema_name, recovery.table_name, recovery.partition_values
+                            )
 
                             # Count active vs completed
                             if recovery.stage == "DONE" and recovery.overall_progress >= 100.0:
@@ -226,16 +232,22 @@ class RecoveryMonitor:
                                     translog_info = format_translog_info(recovery)
 
                                     if diff > 0:
+                                        table_display = format_table_display_with_partition(
+                                            recovery.schema_name, recovery.table_name, recovery.partition_values
+                                        )
                                         changes.append(
                                             f"[green]📈[/green] {table_display} S{recovery.shard_id} "
-                                            f"{recovery.overall_progress:.1f}% (+{diff:.1f}%) "
-                                            f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                            f"{recovery.recovery_type} {recovery.overall_progress:.1f}% "
+                                            f"(+{diff:.1f}%) {recovery.size_gb:.1f}GB{translog_info}{node_route}"
                                         )
                                     else:
+                                        table_display = format_table_display_with_partition(
+                                            recovery.schema_name, recovery.table_name, recovery.partition_values
+                                        )
                                         changes.append(
                                             f"[yellow]📉[/yellow] {table_display} S{recovery.shard_id} "
-                                            f"{recovery.overall_progress:.1f}% ({diff:.1f}%) "
-                                            f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
+                                            f"{recovery.recovery_type} {recovery.overall_progress:.1f}% "
+                                            f"({diff:.1f}%) {recovery.size_gb:.1f}GB{translog_info}{node_route}"
                                         )
                                 elif prev["stage"] != recovery.stage:
                                     # Create node route display
@@ -247,10 +259,12 @@ class RecoveryMonitor:
 
                                     # Add translog info
                                     translog_info = format_translog_info(recovery)
-
+                                    table_display = format_table_display_with_partition(
+                                        recovery.schema_name, recovery.table_name, recovery.partition_values
+                                    )
                                     changes.append(
                                         f"[blue]🔄[/blue] {table_display} S{recovery.shard_id} "
-                                        f"{prev['stage']}→{recovery.stage} "
+                                        f"{recovery.recovery_type} {prev['stage']}→{recovery.stage} "
                                         f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
                                     )
                             else:
@@ -268,12 +282,15 @@ class RecoveryMonitor:
                                         node_route = f" disk → {recovery.node_name}"
 
                                     status_icon = "[cyan]🆕[/cyan]" if not first_run else "[blue]📋[/blue]"
+
                                     # Add translog info
                                     translog_info = format_translog_info(recovery)
-
+                                    table_display = format_table_display_with_partition(
+                                        recovery.schema_name, recovery.table_name, recovery.partition_values
+                                    )
                                     changes.append(
                                         f"{status_icon} {table_display} S{recovery.shard_id} "
-                                        f"{recovery.stage} {recovery.overall_progress:.1f}% "
+                                        f"{recovery.recovery_type} {recovery.stage} {recovery.overall_progress:.1f}% "
                                         f"{recovery.size_gb:.1f}GB{translog_info}{node_route}"
                                     )
 
@@ -283,31 +300,82 @@ class RecoveryMonitor:
                                 "stage": recovery.stage,
                             }
 
-                        # Always show a status line
-                        if not recoveries:
-                            console.print(f"{current_time} | [green]No recoveries - cluster stable[/green]")
+                        # Get problematic shards for comprehensive status
+                        problematic_shards = self.get_problematic_shards()
+
+                        # Filter out shards that are already being recovered
+                        non_recovering_shards = []
+                        if problematic_shards:
+                            for shard in problematic_shards:
+                                # Check if this shard is already in our recoveries list
+                                is_recovering = any(
+                                    r.shard_id == shard["shard_id"]
+                                    and r.table_name == shard["table_name"]
+                                    and r.schema_name == shard["schema_name"]
+                                    for r in recoveries
+                                )
+                                if not is_recovering:
+                                    non_recovering_shards.append(shard)
+
+                        # Always show a comprehensive status line
+                        if not recoveries and not non_recovering_shards:
+                            console.print(f"{current_time} | [green]No issues - cluster stable[/green]")
+                            previous_recoveries.clear()
+                        elif not recoveries and non_recovering_shards:
+                            console.print(
+                                f"{current_time} | [yellow]{len(non_recovering_shards)} shards "
+                                f"need attention (not recovering)[/yellow]"
+                            )
+                            # Show first few problematic shards
+                            for shard in non_recovering_shards[:5]:
+                                table_display = format_table_display_with_partition(
+                                    shard["schema_name"], shard["table_name"], shard.get("partition_values")
+                                )
+                                primary_indicator = "P" if shard.get("primary") else "R"
+                                console.print(
+                                    f"         | [red]⚠[/red] {table_display} "
+                                    f"S{shard['shard_id']}{primary_indicator} {shard['state']}"
+                                )
+                            if len(non_recovering_shards) > 5:
+                                console.print(f"         | [dim]... and {len(non_recovering_shards) - 5} more[/dim]")
                             previous_recoveries.clear()
                         else:
-                            # Build status message
-                            status = ""
+                            # Build status message for active recoveries
+                            status_parts = []
                             if active_count > 0:
-                                status = f"{active_count} active"
+                                status_parts.append(f"{active_count} recovering")
                             if completed_count > 0:
-                                status += f", {completed_count} done" if status else f"{completed_count} done"
+                                status_parts.append(f"{completed_count} done")
+                            if non_recovering_shards:
+                                status_parts.append(f"[yellow]{len(non_recovering_shards)} awaiting recovery[/yellow]")
+
+                            status = " | ".join(status_parts)
 
                             # Show status line with changes or periodic update
                             if changes:
                                 console.print(f"{current_time} | {status}")
                                 for change in changes:
                                     console.print(f"         | {change}")
+                            # Show some problematic shards if there are any
+                            if non_recovering_shards and len(changes) < 3:  # Don't overwhelm the output
+                                for shard in non_recovering_shards[:2]:
+                                    table_display = format_table_display_with_partition(
+                                        shard["schema_name"], shard["table_name"], shard.get("partition_values")
+                                    )
+                                    primary_indicator = "P" if shard.get("primary") else "R"
+                                    console.print(
+                                        f"         | [red]⚠[/red] {table_display} "
+                                        f"S{shard['shard_id']}{primary_indicator} {shard['state']}"
+                                    )
                             else:
                                 # Show periodic status even without changes
                                 if self.options.include_transitioning and completed_count > 0:
                                     console.print(f"{current_time} | {status} (transitioning)")
                                 elif active_count > 0:
                                     console.print(f"{current_time} | {status} (no changes)")
+                                elif non_recovering_shards:
+                                    console.print(f"{current_time} | {status} (issues persist)")
 
-                        previous_timestamp = current_time  # noqa: F841
                         first_run = False
                         time.sleep(self.options.refresh_interval)
 
@@ -317,30 +385,63 @@ class RecoveryMonitor:
                     # Show final summary
                     final_recoveries = self.get_cluster_recovery_status()
 
-                    if final_recoveries:
-                        console.print("\n📊 [bold]Final Recovery Summary:[/bold]")
-                        summary = self.get_recovery_summary(final_recoveries)
+                    final_problematic_shards = self.get_problematic_shards()
 
-                        # Count active vs completed
-                        active_count = len(
-                            [r for r in final_recoveries if r.overall_progress < 100.0 or r.stage != "DONE"]
-                        )
-                        completed_count = len(final_recoveries) - active_count
+                    # Filter out shards that are already being recovered
+                    final_non_recovering_shards = []
+                    if final_problematic_shards:
+                        for shard in final_problematic_shards:
+                            is_recovering = any(
+                                r.shard_id == shard["shard_id"]
+                                and r.table_name == shard["table_name"]
+                                and r.schema_name == shard["schema_name"]
+                                for r in final_recoveries
+                            )
+                            if not is_recovering:
+                                final_non_recovering_shards.append(shard)
 
-                        console.print(f"   Total recoveries: {summary['total_recoveries']}")
-                        console.print(f"   Active: {active_count}, Completed: {completed_count}")
-                        console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
-                        console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
+                    if final_recoveries or final_non_recovering_shards:
+                        console.print("\n📊 [bold]Final Cluster Status Summary:[/bold]")
 
-                        if summary["by_type"]:
-                            console.print("   By recovery type:")
-                            for rec_type, stats in summary["by_type"].items():
-                                console.print(
-                                    f"     {rec_type}: {stats['count']} recoveries, "
-                                    f"{stats['avg_progress']:.1f}% avg progress"
-                                )
+                        if final_recoveries:
+                            summary = self.get_recovery_summary(final_recoveries)
+                            # Count active vs completed
+                            active_count = len(
+                                [r for r in final_recoveries if r.overall_progress < 100.0 or r.stage != "DONE"]
+                            )
+                            completed_count = len(final_recoveries) - active_count
+
+                            console.print(f"   Total recoveries: {summary['total_recoveries']}")
+                            console.print(f"   Active: {active_count}, Completed: {completed_count}")
+                            console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
+                            console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
+
+                            if summary["by_type"]:
+                                console.print("   By recovery type:")
+                                for rec_type, stats in summary["by_type"].items():
+                                    console.print(
+                                        f"     {rec_type}: {stats['count']} recoveries, "
+                                        f"{stats['avg_progress']:.1f}% avg progress"
+                                    )
+
+                        if final_non_recovering_shards:
+                            console.print(
+                                f"   [yellow]Problematic shards needing attention: "
+                                f"{len(final_non_recovering_shards)}[/yellow]"
+                            )
+                            # Group by state for summary
+                            by_state = {}
+                            for shard in final_non_recovering_shards:
+                                state = shard["state"]
+                                if state not in by_state:
+                                    by_state[state] = 0
+                                by_state[state] += 1
+
+                            for state, count in by_state.items():
+                                console.print(f"     {state}: {count} shards")
                     else:
                         console.print("\n[green]✅ No active recoveries at exit[/green]")
+                        console.print("\n[green]✅ Cluster stable - no issues detected[/green]")
 
                     return
 
@@ -351,20 +452,66 @@ class RecoveryMonitor:
                 display_output = self.format_recovery_display(recoveries)
                 console.print(display_output)
 
-                if not recoveries:
+                # Get problematic shards for comprehensive status
+                problematic_shards = self.get_problematic_shards()
+
+                # Filter out shards that are already being recovered
+                non_recovering_shards = []
+                if problematic_shards:
+                    for shard in problematic_shards:
+                        is_recovering = any(
+                            r.shard_id == shard["shard_id"]
+                            and r.table_name == shard["table_name"]
+                            and r.schema_name == shard["schema_name"]
+                            for r in recoveries
+                        )
+                        if not is_recovering:
+                            non_recovering_shards.append(shard)
+
+                if not recoveries and not non_recovering_shards:
                     if self.options.include_transitioning:
-                        console.print("\n[green]✅ No recoveries found (active or transitioning)[/green]")
+                        console.print("\n[green]✅ No issues found - cluster stable[/green]")
                     else:
                         console.print("\n[green]✅ No active recoveries found[/green]")
                         console.print(
                             "[dim]💡 Use --include-transitioning to see completed recoveries still transitioning[/dim]"
                         )
+
+                elif not recoveries and non_recovering_shards:
+                    console.print(
+                        f"\n[yellow]⚠️ {len(non_recovering_shards)} shards need attention (not recovering)[/yellow]"
+                    )
+                    # Group by state for summary
+                    by_state = {}
+                    for shard in non_recovering_shards:
+                        state = shard["state"]
+                        if state not in by_state:
+                            by_state[state] = 0
+                        by_state[state] += 1
+
+                    for state, count in by_state.items():
+                        console.print(f"   {state}: {count} shards")
+
+                    # Show first few examples
+                    console.print("\nExamples:")
+                    for shard in non_recovering_shards[:5]:
+                        table_display = format_table_display_with_partition(
+                            shard["schema_name"], shard["table_name"], shard.get("partition_values")
+                        )
+                        primary_indicator = "P" if shard.get("primary") else "R"
+                        console.print(
+                            f"   [red]⚠[/red] {table_display} S{shard['shard_id']}{primary_indicator} {shard['state']}"
+                        )
+
+                    if len(non_recovering_shards) > 5:
+                        console.print(f"   [dim]... and {len(non_recovering_shards) - 5} more[/dim]")
+
                 else:
-                    # Show summary
+                    # Show recovery summary
                     summary = self.get_recovery_summary(recoveries)
-                    console.print("\n📊 [bold]Recovery Summary:[/bold]")
-                    console.print(f"   Total recoveries: {summary['total_recoveries']}")
-                    console.print(f"   Total size: {summary['total_size_gb']:.1f} GB")
+                    console.print("\n📊 [bold]Cluster Status Summary:[/bold]")
+                    console.print(f"   Active recoveries: {summary['total_recoveries']}")
+                    console.print(f"   Total recovery size: {summary['total_size_gb']:.1f} GB")
                     console.print(f"   Average progress: {summary['avg_progress']:.1f}%")
 
                     # Show breakdown by type
@@ -375,6 +522,21 @@ class RecoveryMonitor:
                                 f"     {rec_type}: {stats['count']} recoveries, "
                                 f"{stats['avg_progress']:.1f}% avg progress"
                             )
+
+                    # Show problematic shards if any
+                    if non_recovering_shards:
+                        console.print(
+                            f"\n   [yellow]Problematic shards needing attention: {len(non_recovering_shards)}[/yellow]"
+                        )
+                        by_state = {}
+                        for shard in non_recovering_shards:
+                            state = shard["state"]
+                            if state not in by_state:
+                                by_state[state] = 0
+                            by_state[state] += 1
+
+                        for state, count in by_state.items():
+                            console.print(f"     {state}: {count} shards")
 
                     console.print("\n[dim]💡 Use --watch flag for continuous monitoring[/dim]")
 
