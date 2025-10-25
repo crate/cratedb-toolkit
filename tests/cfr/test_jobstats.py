@@ -3,7 +3,10 @@ import json
 from click.testing import CliRunner
 
 from cratedb_toolkit.cfr.cli import cli
+from cratedb_toolkit.testing import pytest
 from tests.conftest import TESTDRIVE_EXT_SCHEMA
+
+pytestmark = pytest.mark.cfr
 
 
 def test_cfr_jobstats_collect_self(cratedb, caplog):

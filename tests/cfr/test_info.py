@@ -1,6 +1,9 @@
 from click.testing import CliRunner
 
 from cratedb_toolkit.cfr.cli import cli
+from cratedb_toolkit.testing import pytest
+
+pytestmark = pytest.mark.cfr
 
 
 def test_cfr_info_record(cratedb, caplog):
