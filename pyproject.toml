@@ -233,6 +233,7 @@ optional-dependencies.settings = [
   "cratedb-toolkit[docs-api]",
 ]
 optional-dependencies.test = [
+  "azure-storage-blob<12.27",                          # Testcontainers: "ContainerClient" has no attribute "_format_url"
   "cratedb-toolkit[testing]",
   "httpx<0.29",
   "ipywidgets<9",
