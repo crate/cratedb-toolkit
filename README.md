@@ -69,10 +69,10 @@ a [ticket][Issues] to report a bug or propose a feature.
 
 Breaking changes should be expected until a 1.0 release, so version pinning is
 strongly recommended, especially when using this software as a library.
-+For example:
-+```shell
-+pip install "cratedb-toolkit==0.0.38"
-+```
+For example:
+```shell
+pip install 'cratedb-toolkit[full]==0.0.38'
+```
 
 
 [Changelog]: https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md
