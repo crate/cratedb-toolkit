@@ -175,7 +175,7 @@ optional-dependencies.io = [
 optional-dependencies.io-base = [
   "cr8",
   "dask[dataframe]>=2020",
-  "fsspec[s3,http]",
+  "fsspec[http,s3]",
   "pandas>=1,<2.3",
   "polars<1.34",
   "universal-pathlib<0.3",
