@@ -75,9 +75,9 @@ jobs:
       run: |
 
         # Install package in editable mode.
-        uv pip install --editable=.[mongodb,test-mongodb,develop]
+        uv pip install --editable=.[mongodb,test-mongodb]
 
-    - name: Run linter and software tests
+    - name: Run software tests
       run: |
         pytest -m mongodb
 
