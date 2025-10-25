@@ -1,14 +1,12 @@
 # CrateDB Toolkit
 
-[![Tests](https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml/badge.svg)](https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml)
-[![Test coverage](https://img.shields.io/codecov/c/gh/crate/cratedb-toolkit.svg)](https://codecov.io/gh/crate/cratedb-toolkit/)
 [![Python versions](https://img.shields.io/pypi/pyversions/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
-
-[![License](https://img.shields.io/github/license/crate/cratedb-toolkit.svg)](https://github.com/crate/cratedb-toolkit/blob/main/LICENSE)
-[![Status](https://img.shields.io/pypi/status/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
-[![PyPI](https://img.shields.io/pypi/v/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
 [![Downloads](https://pepy.tech/badge/cratedb-toolkit/month)](https://pepy.tech/project/cratedb-toolkit/)
 
+[![License](https://img.shields.io/github/license/crate/cratedb-toolkit.svg)](https://github.com/crate/cratedb-toolkit/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
+[![Status](https://img.shields.io/pypi/status/cratedb-toolkit.svg)](https://pypi.org/project/cratedb-toolkit/)
+[![Test coverage](https://img.shields.io/codecov/c/gh/crate/cratedb-toolkit.svg)](https://codecov.io/gh/crate/cratedb-toolkit/)
 
 » [Documentation]
 | [Changelog]
@@ -18,6 +16,16 @@
 | [Source code]
 | [License]
 | [CrateDB]
+
+[![ci-main][ci-main-badge]][ci-main-workflow]
+[![ci-cloud][ci-cloud-badge]][ci-cloud-workflow]
+[![ci-dynamodb][ci-dynamodb-badge]][ci-dynamodb-workflow]
+[![ci-influxdb][ci-influxdb-badge]][ci-influxdb-workflow]
+
+[![ci-kinesis][ci-kinesis-badge]][ci-kinesis-workflow]
+[![ci-mongodb][ci-mongodb-badge]][ci-mongodb-workflow]
+[![ci-postgresql][ci-postgresql-badge]][ci-postgresql-workflow]
+[![ci-pymongo][ci-pymongo-badge]][ci-pymongo-workflow]
 
 
 ## About
@@ -78,3 +86,20 @@ strongly recommended, especially when using this software as a library.
 [PyPI]: https://pypi.org/project/cratedb-toolkit/
 [Source code]: https://github.com/crate/cratedb-toolkit
 [UX]: https://en.wikipedia.org/wiki/User_experience
+
+[ci-main-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml/badge.svg
+[ci-main-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/main.yml
+[ci-cloud-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/cratedb-cloud.yml/badge.svg
+[ci-cloud-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/cratedb-cloud.yml
+[ci-dynamodb-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/dynamodb.yml/badge.svg
+[ci-dynamodb-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/dynamodb.yml
+[ci-influxdb-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/influxdb.yml/badge.svg
+[ci-influxdb-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/influxdb.yml
+[ci-kinesis-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/kinesis.yml/badge.svg
+[ci-kinesis-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/kinesis.yml
+[ci-mongodb-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/mongodb.yml/badge.svg
+[ci-mongodb-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/mongodb.yml
+[ci-postgresql-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml/badge.svg
+[ci-postgresql-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml
+[ci-pymongo-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/pymongo.yml/badge.svg
+[ci-pymongo-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/pymongo.yml
