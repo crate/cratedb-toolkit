@@ -79,9 +79,9 @@ jobs:
       run: |
 
         # Install package in editable mode.
-        uv pip install --editable=.[influxdb,test,develop]
+        uv pip install --editable=.[influxdb,test]
 
-    - name: Run linter and software tests
+    - name: Run software tests
       run: |
         pytest -m influxdb
 

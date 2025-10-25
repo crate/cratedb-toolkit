@@ -80,9 +80,9 @@ jobs:
     - name: Set up project
       run: |
         # Install package in editable mode.
-        uv pip install --editable=.[pymongo,test,develop]
+        uv pip install --editable=.[pymongo,test]
 
-    - name: Run linter and software tests
+    - name: Run software tests
       run: |
         pytest -m pymongo
 

@@ -1,9 +1,9 @@
 import json
 
+import pytest
 from click.testing import CliRunner
 
 from cratedb_toolkit.cfr.cli import cli
-from cratedb_toolkit.testing import pytest
 from tests.conftest import TESTDRIVE_EXT_SCHEMA
 
 pytestmark = pytest.mark.cfr
