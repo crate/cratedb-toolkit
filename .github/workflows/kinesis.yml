@@ -39,7 +39,7 @@ jobs:
         os: ["ubuntu-latest"]
         python-version: [
           "3.11",
-          "3.14",
+          "3.13",
         ]
 
     env:
