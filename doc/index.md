@@ -1,20 +1,9 @@
 (index)=
 # CrateDB Toolkit
 
-[![CI][badge-tests]][project-tests]
-[![Coverage Status][badge-coverage]][project-codecov]
-[![Documentation][badge-documentation]][project-documentation]
-[![License][badge-license]][project-license]
-[![Downloads per month][badge-downloads-per-month]][project-downloads]
-
-[![Supported Python versions][badge-python-versions]][project-pypi]
-[![Status][badge-status]][project-pypi]
-[![Package version][badge-package-version]][project-pypi]
-
 ```{include} readme.md
-:start-line: 12
+:start-line: 1
 ```
-
 
 ```{toctree}
 :maxdepth: 3
