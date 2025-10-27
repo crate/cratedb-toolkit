@@ -124,7 +124,7 @@ optional-dependencies.all = [
 ]
 optional-dependencies.cfr = [
   "duckdb<1.4",
-  "marimo<0.16",
+  "marimo<0.18",
   "matplotlib<3.11",
   "numpy<2.3",
   "pandas<2.3",
