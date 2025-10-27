@@ -110,6 +110,7 @@ dependencies = [
   "python-slugify<9",
   "pyyaml<7",
   "requests>=2.28,<3",
+  "rich<14",
   "sqlalchemy-cratedb>=0.41.0",
   "sqlparse<0.6",
   "tqdm<5",
@@ -264,6 +265,7 @@ scripts.cratedb-retention = "cratedb_toolkit.retention.cli:cli"
 scripts.cratedb-toolkit = "cratedb_toolkit.cli:cli"
 scripts.ctk = "cratedb_toolkit.cli:cli"
 scripts.migr8 = "cratedb_toolkit.io.mongodb.cli:main"
+scripts.xmover = "cratedb_toolkit.admin.xmover.cli:main"
 entry-points.pytest11.cratedb_service = "cratedb_toolkit.testing.pytest"
 
 [tool.setuptools.packages.find]
@@ -321,11 +323,12 @@ lint.extend-ignore = [
   "S108",
 ]
 
-lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]       # Allow `print`
-lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ] # Allow `module´ imported but unused
+lint.per-file-ignores."cratedb_toolkit/admin/xmover/analysis/shard.py" = [ "T201" ] # Allow `print`
+lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]               # Allow `print`
+lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ]         # Allow `module´ imported but unused
 lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
-lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]   # Allow `print` and `pprint`
-lint.per-file-ignores."tests/*" = [ "S101" ]                                # Allow use of `assert`, and `print`.
+lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]           # Allow `print` and `pprint`
+lint.per-file-ignores."tests/*" = [ "S101" ]                                        # Allow use of `assert`, and `print`.
 lint.per-file-ignores."tests/adapter/test_rockset.py" = [ "E402" ]
 lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 

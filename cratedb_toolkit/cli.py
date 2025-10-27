@@ -4,6 +4,7 @@ from click_aliases import ClickAliasedGroup
 from cratedb_toolkit.util.cli import boot_click
 
 from .adapter.rockset.cli import cli as rockset_cli
+from .admin.xmover.cli import main as admin_xmover_cli
 from .cfr.cli import cli as cfr_cli
 from .cluster.cli import cli as cloud_cli
 from .cmd.tail.cli import cli as tail_cli
@@ -27,6 +28,7 @@ def cli(ctx: click.Context, verbose: bool, debug: bool):
     return boot_click(ctx, verbose, debug)
 
 
+cli.add_command(admin_xmover_cli, name="xmover")
 cli.add_command(info_cli, name="info")
 cli.add_command(cfr_cli, name="cfr")
 cli.add_command(cloud_cli, name="cluster")
