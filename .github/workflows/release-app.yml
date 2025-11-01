@@ -72,14 +72,14 @@ jobs:
 
     - name: Upload artifact to Workflow Artifacts (Linux and macOS)
       if: runner.os != 'Windows'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: "cratedb-cfr-${{ steps.artifact-suffix.outputs.lowercase }}"
         path: dist/cratedb-cfr
 
     - name: Upload artifact to Workflow Artifacts (Windows)
       if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: "cratedb-cfr-${{ steps.artifact-suffix.outputs.lowercase }}"
         path: dist/cratedb-cfr.exe
