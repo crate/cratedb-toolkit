@@ -100,7 +100,7 @@ dependencies = [
   "colorlog",
   "crash",
   "cratedb-sqlparse==0.0.16",
-  "croud>=1.13,<1.15",
+  "croud>=1.13,<1.16",
   "importlib-metadata; python_version<'3.8'",
   "importlib-resources; python_version<'3.9'",
   "keyrings-cryptfile<2",
