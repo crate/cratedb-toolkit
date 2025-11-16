@@ -124,13 +124,14 @@ def collection_factory(cratedb: DatabaseAdapter):
                 """A generator that validates documents and handles _ids."""
                 for document in documents:
                     common.validate_is_document_type("document", document)
-                    if not isinstance(document, RawBSONDocument):
-                        if "_id" in document:
-                            identifier = ObjectId(document["_id"])
-                            del document["_id"]
-                        else:
-                            identifier = ObjectId()
-                        inserted_ids.append(identifier)
+                    if "_id" in document:
+                        identifier = ObjectId(document["_id"])
+                        if isinstance(document, RawBSONDocument):
+                            document = document.decode()
+                        del document["_id"]
+                    else:
+                        identifier = ObjectId()
+                    inserted_ids.append(identifier)
                     yield document
 
             logger.debug("Converting documents")
