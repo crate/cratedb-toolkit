@@ -127,9 +127,9 @@ def collection_factory(cratedb: DatabaseAdapter):
                     if not isinstance(document, RawBSONDocument):
                         if "_id" in document:
                             identifier = ObjectId(document["_id"])
+                            del document["_id"]
                         else:
                             identifier = ObjectId()
-                            document["_id"] = str(identifier)  # type: ignore[index]
                         inserted_ids.append(identifier)
                     yield document
 
