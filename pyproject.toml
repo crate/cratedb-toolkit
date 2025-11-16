@@ -166,18 +166,20 @@ optional-dependencies.full = [
   "cratedb-toolkit[cfr,datasets,docs-api,io,mcp,service]",
 ]
 optional-dependencies.influxdb = [
-  "cratedb-toolkit[io]",
+  "cratedb-toolkit[io-base]",
   "influxio>=0.6,<1",
+  "sqlalchemy>=2",
 ]
 optional-dependencies.io = [
   "cratedb-toolkit[io-base]",
+  "pandas>=1,<2.3",
   "sqlalchemy>=2",
 ]
 optional-dependencies.io-base = [
   "cr8",
   "dask[dataframe]>=2020",
   "fsspec[http,s3]",
-  "pandas>=1,<2.3",
+  "pandas>=1,<2.4",
   "polars<1.34",
   "universal-pathlib<0.4",
 ]
