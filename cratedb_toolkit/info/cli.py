@@ -6,6 +6,7 @@ import click
 
 from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.info.core import InfoContainer, JobInfoContainer, LogContainer
+from cratedb_toolkit.info.job import TableTraffic
 from cratedb_toolkit.util.app import make_cli
 from cratedb_toolkit.util.cli import make_command
 from cratedb_toolkit.util.data import jd
@@ -83,6 +84,18 @@ def job_information(ctx: click.Context):
     dc = DatabaseCluster.from_options(ctx.meta["address"])
     sample = JobInfoContainer(adapter=dc.adapter, scrub=scrub)
     jd(sample.to_dict())
+
+
+@make_command(cli, "table-traffic", "Display information about table use.")
+@click.pass_context
+def table_traffic(ctx: click.Context):
+    """
+    Display ad hoc job information.
+    """
+    scrub = ctx.meta.get("scrub", False)
+    dc = DatabaseCluster.from_options(ctx.meta["address"])
+    traffic = TableTraffic(adapter=dc.adapter)
+    traffic.render()
 
 
 @make_command(cli, "serve", help_serve)
