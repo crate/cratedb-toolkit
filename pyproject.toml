@@ -147,6 +147,7 @@ optional-dependencies.develop = [
 optional-dependencies.docs = [
   "furo",
   "myst-parser[linkify]>=0.18,<5",
+  "sphinx<8",
   "sphinx-autobuild==2021.3.14",   # Newer versions stopped "watching" appropriately?
   "sphinx-copybutton",
   "sphinx-design-elements<1",
