@@ -52,7 +52,7 @@ jobs:
       with:
         activate-environment: 'true'
         enable-cache: true
-        python-version: '3.13'
+        python-version: '3.14'
 
     - name: Set up project
       run: |
