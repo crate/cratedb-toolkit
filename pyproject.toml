@@ -192,7 +192,7 @@ optional-dependencies.io-ingestr = [
   "sqlalchemy>=1,<2",
 ]
 optional-dependencies.io-recipe = [
-  "tikray>=0.2,<0.3",
+  "tikray>=0.2,<0.4",
 ]
 optional-dependencies.kinesis = [
   "aiobotocore<3.1",
