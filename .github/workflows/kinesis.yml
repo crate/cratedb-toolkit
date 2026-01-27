@@ -39,7 +39,7 @@ jobs:
         os: ["ubuntu-latest"]
         python-version: [
           "3.10",
-          # "3.11",  # Stopped working on 2026-01-22, see https://github.com/crate/cratedb-toolkit/issues/605.
+          "3.11",
           "3.12",
           "3.13",
         ]
