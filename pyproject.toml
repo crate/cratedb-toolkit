@@ -212,7 +212,7 @@ optional-dependencies.mongodb = [
   "pymongo>=3.10.1,<4.10",
   "python-bsonjs<0.8",
   "rich>=3.3.2,<15",
-  "undatum<1.1",
+  "undatum<1.2",
 ]
 optional-dependencies.pymongo = [
   "jessiql==1.0.0rc1",
