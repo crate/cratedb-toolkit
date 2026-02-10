@@ -124,12 +124,12 @@ optional-dependencies.all = [
 ]
 optional-dependencies.cfr = [
   "duckdb<2",
-  "marimo<0.18",
+  "marimo<0.20",
   "matplotlib<3.11",
-  "numpy<2.3",
-  "pandas<2.3",
-  "polars<1.37",
-  "pyarrow<23",
+  "numpy<2.5",
+  "pandas<2.4",
+  "polars<1.39",
+  "pyarrow<24",
   "queryanonymizer<1.2",
 ]
 optional-dependencies.datasets = [
@@ -173,7 +173,7 @@ optional-dependencies.influxdb = [
 ]
 optional-dependencies.io = [
   "cratedb-toolkit[io-base]",
-  "pandas>=1,<2.3",
+  "pandas>=1,<2.4",
   "sqlalchemy>=2",
 ]
 optional-dependencies.io-base = [
