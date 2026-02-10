@@ -6,6 +6,7 @@
   unset (`-1`).
 - Dependencies: Validated on CI with Python 3.14
 - Dependencies: Permitted installation of pyarrow 22
+- Dependencies: Permitted installation of duckdb 1.x
 - PyMongo adapter: Adapted to CrateDB 6.2+ which disallows writes to `_id` columns
 
 ## 2025/08/19 v0.0.41
