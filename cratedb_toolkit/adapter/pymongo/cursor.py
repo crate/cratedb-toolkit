@@ -215,7 +215,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
             else:
                 raise StopIteration
 
-        __next__ = next
+        __next__ = next  # noqa: A003
 
         def __enter__(self) -> Cursor[_DocumentType]:
             return self
