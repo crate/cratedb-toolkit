@@ -5,8 +5,9 @@
   when both `gateway.expected_nodes` and `gateway.expected_data_nodes` are
   unset (`-1`).
 - Dependencies: Validated on CI with Python 3.14
-- Dependencies: Permitted installation of pyarrow 22
+- Dependencies: Permitted installation of pyarrow 23
 - Dependencies: Permitted installation of duckdb 1.x
+- Dependencies: Permitted installation of pandas 2.3
 - PyMongo adapter: Adapted to CrateDB 6.2+ which disallows writes to `_id` columns
 - CI: Validated against InfluxDB 2.8
 
