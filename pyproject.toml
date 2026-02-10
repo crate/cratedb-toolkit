@@ -115,7 +115,7 @@ dependencies = [
   "sqlparse<0.6",
   "tqdm<5",
   "typing-extensions<5; python_version<='3.7'",
-  "vasuki==0.7.2",
+  "vasuki<0.8",
   "verlib2<0.4",
   "yarl<1.23",
 ]
@@ -134,24 +134,24 @@ optional-dependencies.cfr = [
 ]
 optional-dependencies.datasets = [
   "datasets<5",
-  "kaggle<1.8",
+  "kaggle<1.9",
 ]
 optional-dependencies.develop = [
-  "black[jupyter]<26",
-  "mypy<1.19",
+  "black[jupyter]<27",
+  "mypy<1.20",
   "poethepoet<1",
   "pyproject-fmt<3",
-  "ruff<0.15",
+  "ruff<0.16",
   "validate-pyproject<1",
 ]
 optional-dependencies.docs = [
   "furo",
-  "myst-parser[linkify]>=0.18,<5",
+  "myst-parser[linkify]>=0.18,<6",
   "sphinx<8",
-  "sphinx-autobuild==2021.3.14",   # Newer versions stopped "watching" appropriately?
+  "sphinx-autobuild",
   "sphinx-copybutton",
   "sphinx-design-elements<1",
-  "sphinxcontrib-mermaid<2",
+  "sphinxcontrib-mermaid<3",
   "sphinxext-opengraph<1",
 ]
 optional-dependencies.docs-api = [
@@ -181,7 +181,7 @@ optional-dependencies.io-base = [
   "dask[dataframe]>=2020",
   "fsspec[http,s3]",
   "pandas>=1,<3.1",
-  "polars<1.37",
+  "polars<1.39",
   "universal-pathlib<0.4",
 ]
 optional-dependencies.io-ingestr = [
@@ -203,13 +203,13 @@ optional-dependencies.kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.mcp = [
-  "mcp<1.5; python_version>='3.10'",
+  "mcp<1.27; python_version>='3.10'",
 ]
 optional-dependencies.mongodb = [
   "commons-codec[mongodb]>=0.0.22",
   "cratedb-toolkit[io,io-recipe]",
   "orjson>=3.3.1,<4",
-  "pymongo>=3.10.1,<4.10",
+  "pymongo>=3.10.1,<4.17",
   "python-bsonjs<0.8",
   "rich>=3.3.2,<15",
   "undatum<1.2",
@@ -232,7 +232,7 @@ optional-dependencies.release-cfr = [
 ]
 optional-dependencies.service = [
   "fastapi<0.129",
-  "uvicorn<0.40",
+  "uvicorn<0.41",
 ]
 optional-dependencies.settings = [
   "cratedb-toolkit[docs-api]",
@@ -258,7 +258,7 @@ optional-dependencies.testing = [
   "pytest<9",
   "pytest-cov<8",
   "pytest-mock<4",
-  "testcontainers<4.14",
+  "testcontainers<4.15",
 ]
 urls.Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
 urls.Documentation = "https://cratedb-toolkit.readthedocs.io/"
