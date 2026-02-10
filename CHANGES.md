@@ -8,6 +8,7 @@
 - Dependencies: Permitted installation of pyarrow 22
 - Dependencies: Permitted installation of duckdb 1.x
 - PyMongo adapter: Adapted to CrateDB 6.2+ which disallows writes to `_id` columns
+- CI: Validated against InfluxDB 2.8
 
 ## 2025/08/19 v0.0.41
 - I/O: Updated to `influxio-0.6.0`. Thanks, @ZillKhan.
