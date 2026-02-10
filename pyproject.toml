@@ -27,7 +27,6 @@ maintainers = [
   { name = "Niklas Schmidtmer", email = "niklas@crate.io" },
   { name = "Walter Behmann", email = "walter@crate.io" },
 ]
-
 authors = [
   { name = "The CrateDB Developers" },
 ]
@@ -243,7 +242,7 @@ optional-dependencies.test = [
   "httpx<0.29",
   "ipywidgets<9",
   "markdown-it-py<4",
-  "minio<7.2.21",  # Temporary, until newer `testcontainers` release.
+  "minio<7.2.21",                                      # Temporary, until newer `testcontainers` release.
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",
@@ -272,20 +271,18 @@ scripts.ctk = "cratedb_toolkit.cli:cli"
 scripts.migr8 = "cratedb_toolkit.io.mongodb.cli:main"
 entry-points.pytest11.cratedb_service = "cratedb_toolkit.testing.pytest"
 
-[tool.setuptools.packages.find]
-namespaces = false
+[tool.setuptools]
+packages.find.namespaces = false
 
 [tool.black]
 line-length = 120
 
 [tool.ruff]
 line-length = 120
-
 extend-exclude = [
   "amqp-to-mqtt.py",
   "workbench.py",
 ]
-
 lint.select = [
   # Builtins
   "A",
@@ -313,7 +310,6 @@ lint.select = [
   # flake8-2020
   "YTT",
 ]
-
 lint.extend-ignore = [
   # Module `xxx` shadows a Python standard-library module
   "A005",
@@ -326,31 +322,27 @@ lint.extend-ignore = [
   # Probable insecure usage of temporary file or directory
   "S108",
 ]
-
-lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]       # Allow `print`
-lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ] # Allow `module´ imported but unused
+lint.per-file-ignores."cratedb_toolkit/retention/cli.py" = [ "T201" ]  # Allow `print`
+lint.per-file-ignores."cratedb_toolkit/sqlalchemy/__init__.py" = [ "F401" ]  # Allow `module´ imported but unused
 lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
-lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]   # Allow `print` and `pprint`
-lint.per-file-ignores."tests/*" = [ "S101" ]                                # Allow use of `assert`, and `print`.
+lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]  # Allow `print` and `pprint`
+lint.per-file-ignores."tests/*" = [ "S101" ]  # Allow use of `assert`, and `print`.
 lint.per-file-ignores."tests/adapter/test_rockset.py" = [ "E402" ]
 lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 
-[tool.pytest.ini_options]
-addopts = """
-  -rfEXs -p pytester --strict-markers --verbosity=3
-  --cov=. --cov-report=term-missing --cov-report=xml
-  """
-minversion = "2.0"
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
-log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
-testpaths = [
+[tool.pytest]
+ini_options.addopts = "-rfEXs -p pytester --strict-markers --verbosity=3 --cov=. --cov-report=term-missing --cov-report=xml"
+ini_options.minversion = "2.0"
+ini_options.log_level = "DEBUG"
+ini_options.log_cli_level = "DEBUG"
+ini_options.log_format = "%(asctime)-15s [%(name)-36s] %(levelname)-8s: %(message)s"
+ini_options.testpaths = [
   "examples",
   "cratedb_toolkit",
   "tests",
 ]
-xfail_strict = true
-markers = [
+ini_options.xfail_strict = true
+ini_options.markers = [
   "cfr",
   "examples",
   "dynamodb",
@@ -364,16 +356,14 @@ markers = [
   "slow",
 ]
 
-[tool.coverage.run]
-branch = false
-omit = [
+[tool.coverage]
+run.branch = false
+run.omit = [
   "tests/*",
 ]
-source = [ "cratedb_toolkit" ]
-
-[tool.coverage.report]
-fail_under = 0
-show_missing = true
+run.source = [ "cratedb_toolkit" ]
+report.fail_under = 0
+report.show_missing = true
 
 [tool.mypy]
 packages = [ "cratedb_toolkit" ]
@@ -386,59 +376,49 @@ implicit_optional = true
 install_types = true
 non_interactive = true
 
-[tool.versioningit.vcs]
-method = "git-archive"
-default-tag = "v0.0.0"
-describe-subst = "$Format:%(describe:tags,match=v*)$"
-
 # ===================
 # Tasks configuration
 # ===================
-
-[tool.poe.tasks]
-
-check = [
+[tool.poe]
+tasks.check = [
   "lint",
   "test",
 ]
-
-docs-autobuild = [
+tasks.docs-autobuild = [
   { cmd = "sphinx-autobuild --open-browser --watch influxio doc doc/_build" },
 ]
-docs-html = [
+tasks.docs-html = [
   { cmd = "sphinx-build -W --keep-going doc doc/_build" },
 ]
-docs-linkcheck = [
+tasks.docs-linkcheck = [
   { cmd = "sphinx-build -W --keep-going -b linkcheck doc doc/_build" },
 ]
-
-format = [
+tasks.format = [
   # Format project metadata.
   { cmd = "pyproject-fmt --keep-full-version pyproject.toml" },
-
   # Format code.
   # Configure Ruff not to auto-fix a few items that are useful in workbench mode.
   # e.g.: unused imports (F401), unused variables (F841), `print` statements (T201), commented-out code (ERA001)
   { cmd = "ruff format" },
   { cmd = "ruff check --fix --ignore=ERA --ignore=F401 --ignore=F841 --ignore=T20 --ignore=ERA001" },
-
   # Format examples.
   # Use `black` for the files in `examples/*`, because it knows how to treat Jupyter files well.
   { cmd = "black examples" },
 ]
-
-lint = [
+tasks.lint = [
   { cmd = "ruff format --check" },
   { cmd = "ruff check" },
   { cmd = "validate-pyproject pyproject.toml" },
   { cmd = "mypy" },
 ]
-
-release = [
+tasks.release = [
   { cmd = "python -m build" },
   { cmd = "twine upload --skip-existing dist/*" },
 ]
+tasks.test = { cmd = "pytest -m 'not postgresql'" }
+tasks.build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }
 
-test = { cmd = "pytest -m 'not postgresql'" }
-
-build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }
+[tool.versioningit]
+vcs.method = "git-archive"
+vcs.default-tag = "v0.0.0"
+vcs.describe-subst = "$Format:%(describe:tags,match=v*)$"
