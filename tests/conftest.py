@@ -58,7 +58,7 @@ class CrateDBFixture(PytestTestcontainerAdapter):
         from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer
 
         # TODO: Make image name configurable.
-        self.container = CrateDBContainer("crate/crate:nightly")
+        self.container = CrateDBContainer("crate/crate:nightly-6.2.0-2026-01-12-00-02")
         self.container.start()
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
@@ -122,7 +122,7 @@ def cratedb_custom_service():
     """
     Provide a CrateDB service instance to the test suite.
     """
-    db = CrateDBTestAdapter(crate_version="nightly")
+    db = CrateDBTestAdapter(crate_version="6.0.5")
     db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
     db.reset(tables=RESET_TABLES)
     yield db
