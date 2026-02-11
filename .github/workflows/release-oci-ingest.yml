@@ -83,7 +83,6 @@ jobs:
   build-and-publish:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: ${{ ! (startsWith(github.actor, 'dependabot') || github.event.pull_request.head.repo.fork ) }}
 
     steps:
       - name: Acquire sources
@@ -140,7 +139,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: true
+          push: ${{ ! (startsWith(github.actor, 'dependabot') || github.event.pull_request.head.repo.fork ) }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           sbom: true
