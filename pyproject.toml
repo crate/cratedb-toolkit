@@ -242,7 +242,7 @@ optional-dependencies.test = [
   "cratedb-toolkit[testing]",
   "httpx<0.29",
   "ipywidgets<9",
-  "markdown-it-py<4",
+  "markdown-it-py<5",
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",
