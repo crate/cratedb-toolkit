@@ -235,6 +235,7 @@ optional-dependencies.service = [
 ]
 optional-dependencies.settings = [
   "cratedb-toolkit[docs-api]",
+  "docutils<0.21",
 ]
 optional-dependencies.test = [
   "azure-storage-blob<12.27",                          # Testcontainers: "ContainerClient" has no attribute "_format_url"
@@ -246,7 +247,7 @@ optional-dependencies.test = [
   "pydantic-core<3",
   "responses<0.26",
   "testcontainers[azurite,localstack,minio,postgres]",
-  "types-docutils>=0.20.0.20240106,<0.21.0.20250708",
+  "types-docutils<0.21",
 ]
 optional-dependencies.test-mongodb = [
   "cratedb-toolkit[test]",
