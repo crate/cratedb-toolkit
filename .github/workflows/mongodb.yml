@@ -38,10 +38,19 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: [
-          "3.9",
           "3.14",
         ]
-        mongodb-version: ["4", "5", "6", "7"]
+        mongodb-version: [
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+        ]
+        include:
+          - os: "ubuntu-latest"
+            python-version: "3.9"
+            mongodb-version: "8"
 
     env:
       OS: ${{ matrix.os }}
