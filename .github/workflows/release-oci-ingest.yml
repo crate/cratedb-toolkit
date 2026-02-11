@@ -40,6 +40,9 @@ jobs:
     steps:
       - name: Acquire sources
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Install Python
         uses: actions/setup-python@v6
