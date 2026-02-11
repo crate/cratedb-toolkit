@@ -247,7 +247,7 @@ optional-dependencies.test = [
   "pydantic-core<3",
   "responses<0.26",
   "testcontainers[azurite,localstack,minio,postgres]",
-  "types-docutils<0.21",
+  "types-docutils<0.23",
 ]
 optional-dependencies.test-mongodb = [
   "cratedb-toolkit[test]",
