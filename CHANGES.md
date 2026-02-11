@@ -4,11 +4,11 @@
 - Settings: Stop flagging `gateway.recover_after_time` as a difference
   when both `gateway.expected_nodes` and `gateway.expected_data_nodes` are
   unset (`-1`).
-- Dependencies: Validated on CI with Python 3.14
+- PyMongo adapter: Adapted to CrateDB 6.2+ which disallows writes to `_id` columns
 - Dependencies: Permitted installation of pyarrow 23
 - Dependencies: Permitted installation of duckdb 1.x
 - Dependencies: Permitted installation of pandas 3.0
-- PyMongo adapter: Adapted to CrateDB 6.2+ which disallows writes to `_id` columns
+- CI: Validated against Python 3.14
 - CI: Validated against InfluxDB 2.8
 - CI: Validated against MongoDB 8
 
