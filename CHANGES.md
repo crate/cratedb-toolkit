@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/02/11 v0.0.42
 - Settings: Stop flagging `gateway.recover_after_time` as a difference
   when both `gateway.expected_nodes` and `gateway.expected_data_nodes` are
   unset (`-1`).
