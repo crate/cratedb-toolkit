@@ -27,7 +27,7 @@
         <dependency>
             <groupId>com.rockset</groupId>
             <artifactId>rockset-java</artifactId>
-            <version>0.10.3</version>
+            <version>0.13.0</version>
         </dependency>
     </dependencies>
 
