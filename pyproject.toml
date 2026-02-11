@@ -133,7 +133,7 @@ optional-dependencies.cfr = [
 ]
 optional-dependencies.datasets = [
   "datasets<5",
-  "kaggle<1.9",
+  "kaggle<2.1",
 ]
 optional-dependencies.develop = [
   "black[jupyter]<27",
