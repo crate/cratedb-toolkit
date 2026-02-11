@@ -242,7 +242,6 @@ optional-dependencies.test = [
   "httpx<0.29",
   "ipywidgets<9",
   "markdown-it-py<4",
-  "minio<7.2.21",                                      # Temporary, until newer `testcontainers` release.
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.26",
