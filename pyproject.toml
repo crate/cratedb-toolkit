@@ -146,7 +146,7 @@ optional-dependencies.develop = [
 optional-dependencies.docs = [
   "furo",
   "myst-parser[linkify]>=0.18,<6",
-  "sphinx<8",
+  "sphinx<10",
   "sphinx-autobuild",
   "sphinx-copybutton",
   "sphinx-design-elements<1",
