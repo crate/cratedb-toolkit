@@ -319,6 +319,7 @@ class DatabaseAdapter:
         account: str,
         key: str,
         container: str,
+        base_path: str = "",
         drop: bool = False,
     ):
         """
@@ -334,11 +335,11 @@ class DatabaseAdapter:
             TYPE
                 {typename}
             WITH (
-                protocol   = '{protocol}',
-                endpoint   = '{endpoint}',
+                endpoint   = '{protocol}://{endpoint}/{account}',
                 account    = '{account}',
                 key        = '{key}',
-                container  = '{container}'
+                container  = '{container}',
+                base_path  = '{base_path}'
             );
         """
         self.run_sql(sql)
