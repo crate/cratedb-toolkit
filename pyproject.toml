@@ -254,7 +254,7 @@ optional-dependencies.test-mongodb = [
   "testcontainers[mongodb]",
 ]
 optional-dependencies.testing = [
-  "pytest<9",
+  "pytest<10",
   "pytest-cov<8",
   "pytest-mock<4",
   "testcontainers<4.15",
