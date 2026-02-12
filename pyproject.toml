@@ -188,7 +188,7 @@ optional-dependencies.io-ingestr = [
   "dlt>=1.10,<1.22",
   "dlt-cratedb>=0.0.1",
   "ingestr>=0.13.61,<0.15",
-  "sqlalchemy>=1,<2",
+  "sqlalchemy>=2,<3",
 ]
 optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.4",
@@ -219,7 +219,7 @@ optional-dependencies.pymongo = [
   "pandas<2.2",
   "pymongo<4.9",
   "setuptools<81",
-  "sqlalchemy<2",
+  "sqlalchemy<3",
 ]
 optional-dependencies.release = [
   "build<2",
