@@ -2,11 +2,14 @@
 name: "Release: OCI to GHCR (ingest)"
 
 on:
-  pull_request: ~
   push:
     tags:
       - '*.*.*'
 
+  # Run on pull requests.
+  # pull_request:
+
+  # Run each night.
   schedule:
     - cron: '50 04 * * *'  # every day at 04:50 am
 
