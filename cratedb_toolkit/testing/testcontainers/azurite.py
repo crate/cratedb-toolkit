@@ -38,7 +38,7 @@ class ExtendedAzuriteContainer(ExtendedDockerContainer, AzuriteContainer):
         Provide Docker-internal full endpoint address `<host>:<port>` of the service.
         For example, `172.17.0.4:10000`.
         """
-        return f"{self.get_real_host_ip()}:{self._BLOB_SERVICE_PORT}"
+        return f"{self.get_real_host_ip()}:{self.blob_service_port}"
 
     def get_container_endpoint(self, container_name: str):
         container = self.get_container(container_name)
@@ -50,7 +50,7 @@ class ExtendedAzuriteContainer(ExtendedDockerContainer, AzuriteContainer):
         Client handle to communicate with the service.
         """
         connection_string = self.get_connection_string()
-        return BlobServiceClient.from_connection_string(connection_string, api_version="2019-12-12")
+        return BlobServiceClient.from_connection_string(connection_string, api_version="2020-12-06")
 
     def create_container(self, container_name: str) -> ContainerClient:
         """

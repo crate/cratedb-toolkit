@@ -317,7 +317,6 @@ def test_run_snapshot_aws_s3(
     assert_snapshot_shape(object_names)
 
 
-@pytest.mark.skip(reason="CrateDB does not support custom endpoints for Azure Blob Storage")
 def test_run_snapshot_azure_blob(caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, azurite):
     """
     Verify the "SNAPSHOT" strategy using an object storage with Azure Blob Storage API.
@@ -338,8 +337,8 @@ def test_run_snapshot_azure_blob(caplog, store, database, sensor_readings, senso
         typename="azure",
         protocol="http",
         endpoint=storage_endpoint,
-        account=azurite._AZURITE_ACCOUNT_NAME,
-        key=azurite._AZURITE_ACCOUNT_KEY,
+        account=azurite.account_name,
+        key=azurite.account_key,
         container="cratedb-cold-storage",
         drop=True,
     )
@@ -361,7 +360,7 @@ def test_run_snapshot_azure_blob(caplog, store, database, sensor_readings, senso
 
     # Verify that the AZ blob container has been populated correctly, and that the snapshot has the right shape.
     blob_names = azurite.list_blob_names(container_name="cratedb-cold-storage")
-    assert_snapshot_shape(blob_names)
+    assert_snapshot_shape(blob_names, flavor="azure")
 
 
 def test_run_snapshot_fs(caplog, cratedb, store, database, sensor_readings, sensor_readings_snapshot_policy):
@@ -411,11 +410,22 @@ def test_run_snapshot_fs(caplog, cratedb, store, database, sensor_readings, sens
     assert_snapshot_shape(file_names)
 
 
-def assert_snapshot_shape(file_names: t.List[str]):
+def assert_snapshot_shape(file_names: t.List[str], flavor: t.Optional[str] = None) -> None:
     """
     Strip random fragments from snapshot file names, and compare against reference.
     ['index-0', 'index.latest', 'meta-HaxVcmMiRMyhT2o_rVFqUw.dat', 'snap-HaxVcmMiRMyhT2o_rVFqUw.dat', 'indices/']
     """  # noqa: ERA001, E501
-    assert len(file_names) >= 5
+
+    assert len(file_names) >= 5, "Wrong number of file names in blob storage"
+
+    reference = ["index", "index.latest", "indices", "meta", "snap"]
+
     base_names = sorted([name.split("-")[0].replace("/", "") for name in file_names])
-    assert base_names == ["index", "index.latest", "indices", "meta", "snap"]
+
+    if flavor == "azure":
+        reference.remove("indices")
+        indices = [item for item in base_names if item.startswith("indices")]
+        assert len(indices) >= 10, "Wrong number of `indices` file names in Azure blob storage container"
+        base_names = [item for item in base_names if not item.startswith("indices")]
+
+    assert base_names == reference

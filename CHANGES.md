@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Retention: Validated integration with Azure blob storage using Azurite
 
 ## 2026/02/11 v0.0.42
 - Settings: Stop flagging `gateway.recover_after_time` as a difference
