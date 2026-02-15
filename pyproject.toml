@@ -176,6 +176,7 @@ optional-dependencies.io = [
   "sqlalchemy>=2",
 ]
 optional-dependencies.io-base = [
+  "connectorx<0.5",
   "cr8",
   "dask[dataframe]>=2020",
   "fsspec[http,s3]",

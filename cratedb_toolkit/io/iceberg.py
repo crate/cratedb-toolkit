@@ -1,6 +1,7 @@
 import dataclasses
 import logging
 
+import pandas as pd
 import polars as pl
 import sqlalchemy as sa
 from boltons.urlutils import URL
@@ -105,3 +106,40 @@ def from_iceberg(source_url, cratedb_url, progress: bool = False):
     # Note: This was much slower.
     # table.to_polars().collect(streaming=True) \  # noqa: ERA001
     #     .write_database(table_name=table_address.fullname, connection=engine, if_table_exists="replace")
+
+
+def to_iceberg(cratedb_url, target_url, progress: bool = False):
+    """
+    Synopsis
+    --------
+    ctk save table \
+        --cluster-url="crate://crate@localhost:4200/demo/taxi_dataset" \
+        "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
+    """
+
+    cratedb_address = DatabaseAddress.from_string(cratedb_url)
+    cratedb_url, cratedb_table = cratedb_address.decode()
+    if cratedb_table.table is None:
+        raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
+    logger.info(f"Source address: {cratedb_address}")
+
+    iceberg_address = IcebergAddress.from_url(target_url)
+    logger.info(
+        f"Iceberg address: Path: {iceberg_address.path}, "
+        f"catalog: {iceberg_address.catalog}, namespace: {iceberg_address.namespace}, table: {iceberg_address.table}"
+    )
+
+    # Prepare namespace.
+    catalog = iceberg_address.load_catalog()
+    catalog.create_namespace_if_not_exists(iceberg_address.namespace)
+    catalog.close()
+
+    # Invoke copy operation.
+    logger.info("Running Iceberg copy")
+    engine = sa.create_engine(str(cratedb_url))
+    with engine.connect() as connection:
+        pd.read_sql_table(table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection).to_iceberg(
+            iceberg_address.namespace + "." + iceberg_address.table,
+            catalog_name=iceberg_address.catalog,
+            catalog_properties=iceberg_address.catalog_properties,
+        )

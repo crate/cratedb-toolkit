@@ -20,7 +20,7 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.io.iceberg import from_iceberg
+from cratedb_toolkit.io.iceberg import from_iceberg, to_iceberg
 from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
@@ -396,6 +396,14 @@ class ManagedCluster(ClusterBase):
 
         return self
 
+    def save_table(
+        self, source: TableAddress, target: InputOutputResource, transformation: t.Union[Path, None] = None
+    ) -> "ManagedCluster":
+        """
+        Export data from a database table on a managed CrateDB Server.
+        """
+        raise NotImplementedError("Not implemented for CrateDB Cloud yet")
+
     @property
     def adapter(self) -> DatabaseAdapter:
         """
@@ -620,6 +628,29 @@ class StandaloneCluster(ClusterBase):
 
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
+
+        return self
+
+    def save_table(
+        self, source: TableAddress, target: InputOutputResource, transformation: t.Union[Path, None] = None
+    ) -> "StandaloneCluster":
+        """
+        Export data from a database table on a standalone CrateDB Server.
+
+        Synopsis
+        --------
+        export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
+
+        ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
+        ctk load table mongodb://localhost:27017/testdrive/demo
+        """
+        source_url = self.address.dburi
+        target_url_obj = URL(target.url)
+
+        if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
+            return to_iceberg(source_url, target.url)
+        else:
+            raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
 
         return self
 
