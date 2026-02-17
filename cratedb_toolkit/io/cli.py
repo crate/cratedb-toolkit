@@ -86,11 +86,13 @@ def cli_save(ctx: click.Context, verbose: bool, debug: bool):
 @option_cluster_id
 @option_cluster_name
 @option_cluster_url
-@click.option("--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema where to import the data")
-@click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table where to import the data")
-@click.option("--format", "format_", type=str, required=False, help="File format of the import resource")
-@click.option("--compression", type=str, required=False, help="Compression format of the import resource")
-@click.option("--transformation", type=Path, required=False, help="Path to Zyp transformation file")
+@click.option(
+    "--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema from which to export the data"
+)
+@click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table from which to export the data")
+@click.option("--format", "format_", type=str, required=False, help="File format of the export resource")
+@click.option("--compression", type=str, required=False, help="Compression format of the export resource")
+@click.option("--transformation", type=Path, required=False, help="Path to Tikray transformation file")
 @click.pass_context
 def save_table(
     ctx: click.Context,
