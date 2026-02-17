@@ -20,7 +20,6 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.io.iceberg import from_iceberg, to_iceberg
 from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
@@ -617,7 +616,10 @@ class StandaloneCluster(ClusterBase):
                     self._load_table_result = False
 
         elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
-            return from_iceberg(str(source_url_obj), target_url)
+            from cratedb_toolkit.io.iceberg import from_iceberg
+
+            if from_iceberg(str(source_url_obj), target_url):
+                self._load_table_result = True
 
         elif ingestr_select(source_url):
             if ingestr_copy(source_url, self.address, progress=True):
@@ -648,7 +650,9 @@ class StandaloneCluster(ClusterBase):
         target_url_obj = URL(target.url)
 
         if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
-            return to_iceberg(source_url, target.url)
+            from cratedb_toolkit.io.iceberg import to_iceberg
+
+            to_iceberg(source_url, target.url)
         else:
             raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
 
