@@ -116,7 +116,7 @@ def save_table(
     source = TableAddress(schema=schema, table=table)
     target = InputOutputResource(url=url, format=format_, compression=compression)
 
-    # Dispatch "load table" operation.
+    # Dispatch "save table" operation.
     cluster = DatabaseCluster.create(
         cluster_id=cluster_id,
         cluster_name=cluster_name,

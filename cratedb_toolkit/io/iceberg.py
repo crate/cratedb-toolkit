@@ -1,3 +1,10 @@
+"""
+Apache Iceberg integration for CrateDB Toolkit.
+
+This module provides functionality to transfer data between Iceberg tables
+and CrateDB databases, supporting both import and export operations.
+"""
+
 import dataclasses
 import logging
 import tempfile
@@ -44,7 +51,7 @@ class IcebergAddress:
             if iceberg_url.scheme.endswith("+iceberg"):
                 iceberg_url.scheme = iceberg_url.scheme.replace("+iceberg", "")
             u2 = copy(iceberg_url)
-            u2._query = ""
+            u2.query_params.clear()
             location = str(u2)
         return cls(
             url=iceberg_url,
@@ -55,6 +62,11 @@ class IcebergAddress:
         )
 
     def load_catalog(self) -> Catalog:
+        """
+        Load the Iceberg catalog with appropriate configuration.
+        """
+        # TODO: Consider accepting catalog configuration as parameters
+        #       to support different catalog types (Hive, REST, etc.).
         return load_catalog(self.catalog, **self.catalog_properties)
 
     @property
@@ -69,29 +81,34 @@ class IcebergAddress:
 
     @property
     def storage_options(self):
-        return {
+        opts = {
             "s3.endpoint": self.url.query_params.get("s3.endpoint"),
             "s3.region": self.url.query_params.get("s3.region"),
             "s3.access-key-id": self.url.query_params.get("s3.access-key-id"),
             "s3.secret-access-key": self.url.query_params.get("s3.secret-access-key"),
         }
+        return {k: v for k, v in opts.items() if v is not None}
 
     @property
     def identifier(self):
+        """
+        Return the catalog-table identifier tuple.
+        """
         return (self.namespace, self.table)
 
     def load_table(self) -> pl.LazyFrame:
         """
-        Load a table from a catalog, or by scanning the filesystem.
+        Load the Iceberg table as a Polars LazyFrame.
+
+        Either load a table from a catalog, or by scanning the filesystem.
         """
         if self.catalog is not None:
             catalog = self.load_catalog()
             return catalog.load_table(self.identifier).to_polars()
-        else:
-            return pl.scan_iceberg(self.location, storage_options=self.storage_options)
+        return pl.scan_iceberg(self.location, storage_options=self.storage_options)
 
 
-def from_iceberg(source_url, cratedb_url, progress: bool = False):
+def from_iceberg(source_url, target_url, progress: bool = False):
     """
     Scan an Iceberg table from local filesystem or object store, and load into CrateDB.
     https://docs.pola.rs/api/python/stable/reference/api/polars.scan_iceberg.html
@@ -121,11 +138,11 @@ def from_iceberg(source_url, cratedb_url, progress: bool = False):
     # Display parameters.
     logger.info(f"Iceberg address: Path: {iceberg_address.location}")
 
-    cratedb_address = DatabaseAddress.from_string(cratedb_url)
+    cratedb_address = DatabaseAddress.from_string(target_url)
     cratedb_url, cratedb_table = cratedb_address.decode()
     if cratedb_table.table is None:
         raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
-    logger.info(f"Target address: {cratedb_address}")
+    logger.info("Target address: %s", cratedb_address)
 
     # Invoke copy operation.
     logger.info("Running Iceberg copy")
@@ -139,7 +156,7 @@ def from_iceberg(source_url, cratedb_url, progress: bool = False):
     # https://github.com/pola-rs/polars/issues/7852
     # Note: This code also uses the most efficient `insert_bulk` method with CrateDB.
     # https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
-    table.collect(streaming=True).to_pandas().to_sql(
+    table.collect(engine="streaming").to_pandas().to_sql(
         name=cratedb_table.table,
         schema=cratedb_table.schema,
         con=engine,
@@ -149,12 +166,17 @@ def from_iceberg(source_url, cratedb_url, progress: bool = False):
         method=insert_bulk,
     )
 
-    # Note: This was much slower.
-    # table.to_polars().collect(streaming=True) \  # noqa: ERA001
-    #     .write_database(table_name=table_address.fullname, connection=engine, if_table_exists="replace")
+    # Note: This variant was much slower.
+    """
+    table.to_polars().collect(streaming=True).write_database(
+        table_name=cratedb_table.fullname, connection=engine, if_table_exists="replace"
+    )
+    """
+
+    return True
 
 
-def to_iceberg(cratedb_url, target_url, progress: bool = False):
+def to_iceberg(source_url, target_url, progress: bool = False):
     """
     Synopsis
     --------
@@ -167,7 +189,7 @@ def to_iceberg(cratedb_url, target_url, progress: bool = False):
         "s3+iceberg://bucket1/?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
     """  # noqa:E501
 
-    cratedb_address = DatabaseAddress.from_string(cratedb_url)
+    cratedb_address = DatabaseAddress.from_string(source_url)
     cratedb_url, cratedb_table = cratedb_address.decode()
     if cratedb_table.table is None:
         raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
@@ -197,3 +219,5 @@ def to_iceberg(cratedb_url, target_url, progress: bool = False):
             catalog_properties=catalog_properties,
             append=False,  # TODO: Make available via parameter.
         )
+
+    return True
