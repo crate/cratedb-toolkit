@@ -129,7 +129,7 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     # Load from REST catalog on AWS S3.
     ctk load table \
         "s3+iceberg://bucket1/?catalog-uri=http://localhost:5001&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny3"
+        --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny"
 
     """  # noqa:E501
 

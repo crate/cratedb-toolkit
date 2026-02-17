@@ -643,8 +643,8 @@ class StandaloneCluster(ClusterBase):
         --------
         export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 
-        ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
-        ctk load table mongodb://localhost:27017/testdrive/demo
+        ctk save table \
+          "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
         """
         source_url = self.address.dburi
         target_url_obj = URL(target.url)
