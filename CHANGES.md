@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/02/18 v0.0.43
 - Retention: Validated integration with Azure blob storage using Azurite
 - Fixed missing `pandas` package that prevented installation/execution without extras
 
