@@ -9,6 +9,7 @@ import dataclasses
 import logging
 import tempfile
 from copy import copy
+from typing import Optional
 
 import pandas as pd
 import polars as pl
@@ -23,7 +24,7 @@ from cratedb_toolkit.util.data import asbool
 logger = logging.getLogger(__name__)
 
 
-CHUNK_SIZE = 75_000  # TODO: Make configurable.
+DEFAULT_BATCH_SIZE = 75_000
 
 
 @dataclasses.dataclass
@@ -33,6 +34,7 @@ class IcebergAddress:
     catalog: str
     namespace: str
     table: str
+    batch_size: Optional[int] = None
 
     def __post_init__(self):
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -60,6 +62,7 @@ class IcebergAddress:
             catalog=iceberg_url.query_params.get("catalog"),
             namespace=iceberg_url.query_params.get("namespace"),
             table=iceberg_url.query_params.get("table"),
+            batch_size=int(iceberg_url.query_params.get("batch-size", DEFAULT_BATCH_SIZE)),
         )
 
     def load_catalog(self) -> Catalog:
@@ -147,26 +150,26 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     logger.info("Target address: %s", cratedb_address)
 
     # Invoke copy operation.
-    logger.info("Running Iceberg copy")
+    chunksize = iceberg_address.batch_size
+    logger.info(f"Running Iceberg copy with chunksize={chunksize}")
     engine = sa.create_engine(str(cratedb_url))
-
-    pl.Config.set_streaming_chunk_size(CHUNK_SIZE)
-    table = iceberg_address.load_table()
 
     # This conversion to pandas is zero-copy,
     # so we can utilize their SQL utils for free.
     # https://github.com/pola-rs/polars/issues/7852
     # Note: This code also uses the most efficient `insert_bulk` method with CrateDB.
     # https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
-    table.collect(engine="streaming").to_pandas().to_sql(
-        name=cratedb_table.table,
-        schema=cratedb_table.schema,
-        con=engine,
-        if_exists=if_exists,
-        index=False,
-        chunksize=CHUNK_SIZE,  # TODO: Make configurable.
-        method=insert_bulk,
-    )
+    with pl.Config(streaming_chunk_size=chunksize):
+        table = iceberg_address.load_table()
+        table.collect(engine="streaming").to_pandas().to_sql(
+            name=cratedb_table.table,
+            schema=cratedb_table.schema,
+            con=engine,
+            if_exists=if_exists,
+            index=False,
+            chunksize=chunksize,
+            method=insert_bulk,
+        )
 
     # Note: This variant was much slower.
     """
@@ -222,14 +225,15 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     catalog.close()
 
     # Invoke copy operation.
-    logger.info("Running Iceberg copy")
+    chunksize = int(URL(source_url).query_params.get("batch-size", DEFAULT_BATCH_SIZE))
+    logger.info(f"Running Iceberg copy with chunksize={chunksize}")
     catalog_properties = {}
     catalog_properties.update(iceberg_address.catalog_properties)
     catalog_properties.update(iceberg_address.storage_options)
     engine = sa.create_engine(str(cratedb_url))
     with engine.connect() as connection:
         for chunk in pd.read_sql_table(
-            table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection, chunksize=CHUNK_SIZE
+            table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection, chunksize=chunksize
         ):
             chunk.to_iceberg(
                 table_identifier=iceberg_identifier,
