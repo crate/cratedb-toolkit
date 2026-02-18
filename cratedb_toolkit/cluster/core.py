@@ -395,9 +395,7 @@ class ManagedCluster(ClusterBase):
 
         return self
 
-    def save_table(
-        self, source: TableAddress, target: InputOutputResource, transformation: t.Union[Path, None] = None
-    ) -> "ManagedCluster":
+    def save_table(self, target: InputOutputResource, transformation: t.Union[Path, None] = None) -> "ManagedCluster":
         """
         Export data from a database table on a managed CrateDB Server.
         """
@@ -620,6 +618,9 @@ class StandaloneCluster(ClusterBase):
 
             if from_iceberg(str(source_url_obj), target_url):
                 self._load_table_result = True
+            else:
+                logger.error("Data loading failed or incomplete")
+                self._load_table_result = False
 
         elif ingestr_select(source_url):
             if ingestr_copy(source_url, self.address, progress=True):
@@ -634,7 +635,7 @@ class StandaloneCluster(ClusterBase):
         return self
 
     def save_table(
-        self, source: TableAddress, target: InputOutputResource, transformation: t.Union[Path, None] = None
+        self, target: InputOutputResource, transformation: t.Union[Path, None] = None
     ) -> "StandaloneCluster":
         """
         Export data from a database table on a standalone CrateDB Server.

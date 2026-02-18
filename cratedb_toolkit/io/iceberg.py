@@ -23,7 +23,7 @@ from cratedb_toolkit.util.data import asbool
 logger = logging.getLogger(__name__)
 
 
-CHUNK_SIZE = 75_000
+CHUNK_SIZE = 75_000  # TODO: Make configurable.
 
 
 @dataclasses.dataclass
@@ -132,7 +132,7 @@ def from_iceberg(source_url, target_url, progress: bool = False):
         "s3+iceberg://bucket1/?catalog-uri=http://localhost:5001&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
         --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny"
 
-    """  # noqa:E501
+    """  # noqa: E501
 
     iceberg_address = IcebergAddress.from_url(source_url)
 
@@ -203,15 +203,22 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     logger.info(f"Source address: {cratedb_address}")
 
     iceberg_address = IcebergAddress.from_url(target_url)
+    if not iceberg_address.namespace:
+        raise ValueError("Iceberg table namespace is missing or empty")
+    if not iceberg_address.table:
+        raise ValueError("Iceberg table name is missing or empty")
+    iceberg_identifier = iceberg_address.namespace + "." + iceberg_address.table
     iceberg_append = asbool(URL(target_url).query_params.get("append")) or False
     logger.info(
         f"Iceberg address: Path: {iceberg_address.location}, "
         f"catalog: {iceberg_address.catalog}, namespace: {iceberg_address.namespace}, table: {iceberg_address.table}"
     )
 
-    # Prepare namespace.
+    # Prepare namespace and optionally drop table when `append=false`.
     catalog = iceberg_address.load_catalog()
     catalog.create_namespace_if_not_exists(iceberg_address.namespace)
+    if catalog.table_exists(iceberg_identifier) and not iceberg_append:
+        catalog.drop_table(iceberg_identifier)
     catalog.close()
 
     # Invoke copy operation.
@@ -221,11 +228,14 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     catalog_properties.update(iceberg_address.storage_options)
     engine = sa.create_engine(str(cratedb_url))
     with engine.connect() as connection:
-        pd.read_sql_table(table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection).to_iceberg(
-            iceberg_address.namespace + "." + iceberg_address.table,
-            catalog_name=iceberg_address.catalog,
-            catalog_properties=catalog_properties,
-            append=iceberg_append,
-        )
+        for chunk in pd.read_sql_table(
+            table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection, chunksize=CHUNK_SIZE
+        ):
+            chunk.to_iceberg(
+                table_identifier=iceberg_identifier,
+                catalog_name=iceberg_address.catalog,
+                catalog_properties=catalog_properties,
+                append=True,
+            )
 
     return True
