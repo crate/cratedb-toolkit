@@ -387,7 +387,7 @@ tasks.check = [
   "test",
 ]
 tasks.docs-autobuild = [
-  { cmd = "sphinx-autobuild --open-browser --watch influxio doc doc/_build" },
+  { cmd = "sphinx-autobuild --open-browser doc doc/_build" },
 ]
 tasks.docs-html = [
   { cmd = "sphinx-build -W --keep-going doc doc/_build" },
