@@ -24,7 +24,6 @@ import typing as t
 from pathlib import Path
 
 import orjsonl
-import pandas as pd
 from sqlalchemy_cratedb import insert_bulk
 from tqdm.contrib.logging import logging_redirect_tqdm
 
@@ -232,6 +231,8 @@ class SystemTableImporter:
             self._load(path_schema, path_data)
 
     def _load(self, path_schema: Path, path_data: Path):
+        import pandas as pd
+
         table_count = 0
         for tablename in tqdm(self.table_names()):
             tablename_restored = f"{ExportSettings.TABLE_FILENAME_PREFIX}{tablename}"
