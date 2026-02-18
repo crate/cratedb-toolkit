@@ -15,7 +15,11 @@ if not hasattr(pd.DataFrame, "to_iceberg"):
 
 @pytest.fixture
 def example_iceberg(tmp_path) -> Path:
-    from pyiceberg.catalog import load_catalog  # noqa: E402
+    """
+    A pytest fixture that creates a dummy Apache Iceberg table for testing.
+    It returns the path to the metadata file of the latest snapshot.
+    """
+    from pyiceberg.catalog import load_catalog
 
     catalog_properties = {
         "uri": f"sqlite:///{tmp_path}/pyiceberg_catalog.db",
@@ -49,7 +53,7 @@ def find_iceberg_data_metadata_location(table_path: Path) -> Path:
     return files[-1]
 
 
-def test_load_iceberg_table(cratedb, example_iceberg):
+def test_load_iceberg_table_filesystem(cratedb, example_iceberg):
     """
     Verify loading data from an Iceberg table into CrateDB.
     """
@@ -62,7 +66,7 @@ def test_load_iceberg_table(cratedb, example_iceberg):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": target_url})
     result = runner.invoke(
         cli,
-        args=f"load table {source_url}",
+        args=["load", "table", source_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -74,7 +78,7 @@ def test_load_iceberg_table(cratedb, example_iceberg):
     assert db.count_records("testdrive.demo") == 5, "Table `testdrive.demo` does not include expected amount of records"
 
 
-def test_save_iceberg_table(cratedb, tmp_path):
+def test_save_iceberg_table_success(cratedb, tmp_path):
     """
     Verify saving data from CrateDB into an Iceberg table.
     """
@@ -87,7 +91,7 @@ def test_save_iceberg_table(cratedb, tmp_path):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": source_url})
     result = runner.invoke(
         cli,
-        args=f"save table {target_url}",
+        args=["save", "table", target_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -107,3 +111,45 @@ def test_save_iceberg_table(cratedb, tmp_path):
         "region",
     ]
     assert table.collect().height >= 1600, "Iceberg table does not include expected amount of records"
+
+
+def test_save_iceberg_table_namespace_missing(cratedb, tmp_path):
+    """
+    Verify failure when saving data from CrateDB into an Iceberg table with incomplete configuration information.
+    """
+
+    # Source and target URLs.
+    source_url = f"{cratedb.get_connection_url()}/sys/summits"
+    target_url = f"file+iceberg://{tmp_path}/?table=summits"
+
+    # Run transfer command.
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": source_url})
+
+    with pytest.raises(ValueError) as exc_info:
+        runner.invoke(
+            cli,
+            args=["save", "table", target_url],
+            catch_exceptions=False,
+        )
+    assert exc_info.match("Iceberg table namespace is missing or empty")
+
+
+def test_save_iceberg_table_name_missing(cratedb, tmp_path):
+    """
+    Verify failure when saving data from CrateDB into an Iceberg table with incomplete configuration information.
+    """
+
+    # Source and target URLs.
+    source_url = f"{cratedb.get_connection_url()}/sys/summits"
+    target_url = f"file+iceberg://{tmp_path}/?namespace=sys"
+
+    # Run transfer command.
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": source_url})
+
+    with pytest.raises(ValueError) as exc_info:
+        runner.invoke(
+            cli,
+            args=["save", "table", target_url],
+            catch_exceptions=False,
+        )
+    assert exc_info.match("Iceberg table name is missing or empty")

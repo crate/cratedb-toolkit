@@ -86,10 +86,6 @@ def cli_save(ctx: click.Context, verbose: bool, debug: bool):
 @option_cluster_id
 @option_cluster_name
 @option_cluster_url
-@click.option(
-    "--schema", envvar="CRATEDB_SCHEMA", type=str, required=False, help="Schema from which to export the data"
-)
-@click.option("--table", envvar="CRATEDB_TABLE", type=str, required=False, help="Table from which to export the data")
 @click.option("--format", "format_", type=str, required=False, help="File format of the export resource")
 @click.option("--compression", type=str, required=False, help="Compression format of the export resource")
 @click.option("--transformation", type=Path, required=False, help="Path to Tikray transformation file")
@@ -100,8 +96,6 @@ def save_table(
     cluster_id: str,
     cluster_name: str,
     cluster_url: str,
-    schema: str,
-    table: str,
     format_: str,
     compression: str,
     transformation: t.Union[Path, None],
@@ -115,7 +109,6 @@ def save_table(
         transformation = None
 
     # Encapsulate source and target parameters.
-    source = TableAddress(schema=schema, table=table)
     target = InputOutputResource(url=url, format=format_, compression=compression)
 
     # Dispatch "save table" operation.
@@ -124,4 +117,4 @@ def save_table(
         cluster_name=cluster_name,
         cluster_url=cluster_url,
     )
-    cluster.save_table(source=source, target=target, transformation=transformation)
+    cluster.save_table(target=target, transformation=transformation)
