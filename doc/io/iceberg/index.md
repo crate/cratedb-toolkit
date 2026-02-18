@@ -68,7 +68,7 @@ ctk save table \
 
 ### Cloud
 
-A canonical invocation for copying data from InfluxDB Cloud to CrateDB Cloud.
+A canonical invocation for copying data from an Iceberg table on AWS S3 to CrateDB Cloud.
 Please note the `ssl=true` query parameter on the CrateDB cluster URL.
 
 ```shell
@@ -77,11 +77,30 @@ ctk load table \
     --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
-## Parameters
+## Options
+
+### Generic parameters
+
+#### `batch-size`
+
+The source URL accepts the `batch-size` option to configure pagination.
+You will need to find an optimal value based on the shape of your data.
+The default value is `75000`.
+
+:::{rubric} Example usage
+:::
+```shell
+ctk load table "file+iceberg://./var/lib/iceberg/?batch-size=200000"
+```
+```shell
+ctk save table --cluster-url="crate://?batch-size=200000"
+```
+
+### CrateDB parameters
 
 Both parameters apply to target pipeline elements, controlling overwrite behaviour.
 
-### CrateDB `if-exists`
+#### `if-exists`
 
 The target table will be created automatically, if it does not exist. If it
 does exist, the `if-exists` URL query parameter can be used to configure this
@@ -100,7 +119,9 @@ export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/testdrive/demo?if
 ctk load table ...
 ```
 
-### Iceberg `append`
+### Iceberg parameters
+
+#### `append`
 
 By default, the target Iceberg table will be overwritten. If you set `append`
 to a truthy value, save operations will append to an existing table.
