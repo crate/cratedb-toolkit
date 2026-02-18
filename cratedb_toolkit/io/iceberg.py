@@ -18,6 +18,7 @@ from pyiceberg.catalog import Catalog, load_catalog
 from sqlalchemy_cratedb import insert_bulk
 
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util.data import asbool
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,7 @@ def from_iceberg(source_url, target_url, progress: bool = False):
 
     cratedb_address = DatabaseAddress.from_string(target_url)
     cratedb_url, cratedb_table = cratedb_address.decode()
+    if_exists = URL(target_url).query_params.get("if-exists") or "fail"
     if cratedb_table.table is None:
         raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
     logger.info("Target address: %s", cratedb_address)
@@ -160,7 +162,7 @@ def from_iceberg(source_url, target_url, progress: bool = False):
         name=cratedb_table.table,
         schema=cratedb_table.schema,
         con=engine,
-        if_exists="replace",  # TODO: Make available via parameter.
+        if_exists=if_exists,
         index=False,
         chunksize=CHUNK_SIZE,  # TODO: Make configurable.
         method=insert_bulk,
@@ -178,12 +180,17 @@ def from_iceberg(source_url, target_url, progress: bool = False):
 
 def to_iceberg(source_url, target_url, progress: bool = False):
     """
+    Export a table from CrateDB into an Iceberg table.
+
     Synopsis
     --------
+
+    # Save to filesystem.
     ctk save table \
         --cluster-url="crate://crate@localhost:4200/demo/taxi_dataset" \
         "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
 
+    # Save to AWS S3.
     ctk save table \
         --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny" \
         "s3+iceberg://bucket1/?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
@@ -196,6 +203,7 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     logger.info(f"Source address: {cratedb_address}")
 
     iceberg_address = IcebergAddress.from_url(target_url)
+    iceberg_append = asbool(URL(target_url).query_params.get("append")) or False
     logger.info(
         f"Iceberg address: Path: {iceberg_address.location}, "
         f"catalog: {iceberg_address.catalog}, namespace: {iceberg_address.namespace}, table: {iceberg_address.table}"
@@ -217,7 +225,7 @@ def to_iceberg(source_url, target_url, progress: bool = False):
             iceberg_address.namespace + "." + iceberg_address.table,
             catalog_name=iceberg_address.catalog,
             catalog_properties=catalog_properties,
-            append=False,  # TODO: Make available via parameter.
+            append=iceberg_append,
         )
 
     return True
