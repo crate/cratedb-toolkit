@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Retention: Validated integration with Azure blob storage using Azurite
+- Fixed missing `pandas` package that prevented installation/execution without extras
 
 ## 2026/02/11 v0.0.42
 - Settings: Stop flagging `gateway.recover_after_time` as a difference
