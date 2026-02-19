@@ -29,6 +29,10 @@ DEFAULT_BATCH_SIZE = 75_000
 
 @dataclasses.dataclass
 class IcebergAddress:
+    """
+    Represent an Apache Iceberg location and provide loader methods.
+    """
+
     url: URL
     location: str
     catalog: str
@@ -45,6 +49,16 @@ class IcebergAddress:
 
     @classmethod
     def from_url(cls, url: str):
+        """
+        Parse an Iceberg location and return an IcebergAddress object.
+
+        Examples:
+
+        file+iceberg://./var/lib/iceberg/demo/taxi-tiny/metadata/00003-dd9223cb
+        s3+iceberg://bucket1/demo/taxi-tiny/metadata/00003-dd9223cb
+        s3+iceberg://bucket1/?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo
+        s3+iceberg://bucket1/?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret...
+        """
         iceberg_url = URL(url)
         if iceberg_url.scheme.startswith("file"):
             if iceberg_url.host == ".":
@@ -75,6 +89,10 @@ class IcebergAddress:
 
     @property
     def catalog_properties(self):
+        """
+        Provide Iceberg catalog properties.
+        https://py.iceberg.apache.org/reference/pyiceberg/catalog/
+        """
         return {
             "uri": self.url.query_params.get(
                 "catalog-uri", f"sqlite:///{self.temporary_catalog_location}/pyiceberg_catalog.db"
@@ -92,6 +110,10 @@ class IcebergAddress:
             "s3.secret-access-key": self.url.query_params.get("s3.secret-access-key"),
         }
         return {k: v for k, v in opts.items() if v is not None}
+        """
+        Provide Iceberg storage properties.
+        https://py.iceberg.apache.org/configuration/#fileio
+        """
 
     @property
     def identifier(self):
@@ -114,28 +136,16 @@ class IcebergAddress:
 
 def from_iceberg(source_url, target_url, progress: bool = False):
     """
-    Scan an Iceberg table from local filesystem or object store, and load into CrateDB.
-    https://docs.pola.rs/api/python/stable/reference/api/polars.scan_iceberg.html
+    Scan an Apache Iceberg table from local filesystem or object store, and load into CrateDB.
+    Documentation: https://cratedb-toolkit.readthedocs.io/io/iceberg/#load
 
-    Synopsis
-    --------
+    See also: https://docs.pola.rs/api/python/stable/reference/api/polars.scan_iceberg.html
 
-    # Load from metadata file on filesystem.
+    # Synopsis: Load from metadata file on filesystem.
     ctk load table \
-        "file+iceberg://./var/lib/iceberg/demo/taxi_dataset/metadata/00001-79d5b044-8bce-46dd-b21c-83679a01c986.metadata.json" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi_dataset"
-
-    # Load from metadata file on AWS S3.
-    ctk load table \
-        "s3+iceberg://bucket1/demo/taxi-tiny/metadata/00003-dd9223cb-6d11-474b-8d09-3182d45862f4.metadata.json?s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny"
-
-    # Load from REST catalog on AWS S3.
-    ctk load table \
-        "s3+iceberg://bucket1/?catalog-uri=http://localhost:5001&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny"
-
-    """  # noqa: E501
+        "file+iceberg://./iceberg/demo/taxi/metadata/00001-79d5b044-8bce-46dd-b21c-83679a01c986.metadata.json" \
+        --cluster-url="crate://crate@localhost:4200/demo/taxi"
+    """
 
     iceberg_address = IcebergAddress.from_url(source_url)
 
@@ -183,21 +193,14 @@ def from_iceberg(source_url, target_url, progress: bool = False):
 
 def to_iceberg(source_url, target_url, progress: bool = False):
     """
-    Export a table from CrateDB into an Iceberg table.
+    Export a table from CrateDB into an Apache Iceberg table.
+    Documentation: https://cratedb-toolkit.readthedocs.io/io/iceberg/#save
 
-    Synopsis
-    --------
-
-    # Save to filesystem.
+    # Synopsis: Save to filesystem.
     ctk save table \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi_dataset" \
-        "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
-
-    # Save to AWS S3.
-    ctk save table \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi-tiny" \
-        "s3+iceberg://bucket1/?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
-    """  # noqa:E501
+        --cluster-url="crate://crate@localhost:4200/demo/taxi" \
+        "file+iceberg://./iceberg/?catalog=default&namespace=demo&table=taxi"
+    """
 
     cratedb_address = DatabaseAddress.from_string(source_url)
     cratedb_url, cratedb_table = cratedb_address.decode()
