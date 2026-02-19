@@ -103,7 +103,7 @@ class IcebergAddress:
         }
         prefixes = ["dynamodb.", "gcp.", "glue."]
         opts.update(self.collect_properties(self.url.query_params, prefixes))
-        return opts
+        return {k: v for k, v in opts.items() if v is not None}
 
     @property
     def storage_options(self):
@@ -187,12 +187,12 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     #       user-specified `if_exists`, but subsequent batches must use "append".
     with pl.Config(streaming_chunk_size=chunksize):
         table = iceberg_address.load_table()
-        for batch in table.collect_batches(engine="streaming", chunk_size=chunksize):
+        for i, batch in enumerate(table.collect_batches(engine="streaming", chunk_size=chunksize)):
             batch.to_pandas().to_sql(
                 name=cratedb_table.table,
                 schema=cratedb_table.schema,
                 con=engine,
-                if_exists=if_exists,
+                if_exists=if_exists if i == 0 else "append",
                 index=False,
                 chunksize=chunksize,
                 method=insert_bulk,
