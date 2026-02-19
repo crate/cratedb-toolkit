@@ -21,7 +21,7 @@ ctk save table {file,s3,abfs,gs,hdfs}+iceberg://...
 ## Install
 
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io]'
+uv tool install --upgrade 'cratedb-toolkit[iceberg]'
 ```
 
 :::{tip}

@@ -163,7 +163,11 @@ optional-dependencies.dynamodb = [
   "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,datasets,docs-api,io,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io,io-opentable,mcp,service]",
+]
+optional-dependencies.iceberg = [
+  "cratedb-toolkit[io]",
+  "pyiceberg[adlfs,bigquery,dynamodb,gcsfs,glue,hive,pyarrow,s3fs]<0.12",
 ]
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io-base]",
@@ -171,9 +175,7 @@ optional-dependencies.influxdb = [
   "sqlalchemy>=2",
 ]
 optional-dependencies.io = [
-  "connectorx<0.5",
   "cratedb-toolkit[io-base]",
-  "pyiceberg[adlfs,bigquery,dynamodb,gcsfs,glue,hive,pyarrow,s3fs]<0.12",
   "sqlalchemy>=2",
 ]
 optional-dependencies.io-base = [
@@ -190,6 +192,9 @@ optional-dependencies.io-ingestr = [
   "dlt-cratedb>=0.0.1",
   "ingestr>=0.13.61,<0.15",
   "sqlalchemy>=1,<2",
+]
+optional-dependencies.io-opentable = [
+  "cratedb-toolkit[iceberg]",
 ]
 optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.4",
