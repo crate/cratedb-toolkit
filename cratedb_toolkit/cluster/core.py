@@ -657,7 +657,7 @@ class StandaloneCluster(ClusterBase):
             from cratedb_toolkit.io.iceberg import to_iceberg
 
             if not to_iceberg(source_url, target.url):
-                raise IOError("Data loading failed or incomplete")
+                raise OperationFailed("Data loading failed or incomplete")
 
         else:
             raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
