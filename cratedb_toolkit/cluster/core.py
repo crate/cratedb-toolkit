@@ -653,7 +653,12 @@ class StandaloneCluster(ClusterBase):
         if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
             from cratedb_toolkit.io.iceberg import to_iceberg
 
-            to_iceberg(source_url, target.url)
+            if to_iceberg(source_url, target.url):
+                self._load_table_result = True
+            else:
+                logger.error("Data loading failed or incomplete")
+                self._load_table_result = False
+
         else:
             raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
 
