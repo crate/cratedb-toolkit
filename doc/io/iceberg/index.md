@@ -6,17 +6,17 @@
 
 Import and export data into/from [Apache Iceberg] tables, for humans and machines.
 
-Iceberg works with the concept of a [FileIO] which is a pluggable module for
-reading, writing, and deleting files. It supports different backends like
-S3, HDFS, Azure Data Lake, Google Cloud Storage, Alibaba Cloud Object Storage,
-and Hugging Face.
-
 ## Synopsis
 
-- Load from Iceberg table: `ctk load table file+iceberg://...`,
-  `ctk load table s3+iceberg://...`
+Load from Iceberg table:
+```shell
+ctk load table {file,s3,abfs,gs,hdfs}+iceberg://...
+```
 
-- Export to Iceberg table: `ctk save table file+iceberg://...`
+Export to Iceberg table:
+```shell
+ctk save table {file,s3,abfs,gs,hdfs}+iceberg://...
+```
 
 ## Install
 
@@ -31,6 +31,14 @@ other operating systems.
 :::
 
 ## Usage
+
+Iceberg works with the concept of a [FileIO] which is a pluggable module for
+reading, writing, and deleting files. It supports different backends like
+S3, HDFS, Azure Data Lake, Google Cloud Storage, Alibaba Cloud Object Storage,
+and Hugging Face.
+
+Please look up available configuration parameters in the reference documentation,
+otherwise derive your ETL commands from the examples shared below.
 
 ### Load
 
@@ -48,18 +56,55 @@ ctk load table \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
-Load from REST catalog and AWS S3 storage.
+Use REST catalog and AWS S3 storage.
 ```shell
 ctk load table \
     "s3+iceberg://bucket1/?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
-Query data in CrateDB.
+Use catalog in Apache Hive.
+```shell
+ctk load table "s3+iceberg://bucket1/?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret&..."
+```
+
+Use catalog in AWS Glue.
+```shell
+ctk load table "s3+iceberg://bucket1/?catalog-type=glue&glue.id=foo&glue.profile-name=bar&glue.region=region&glue.access-key-id=key&glue.secret-access-key=secret&..."
+```
+
+Use catalog in Google BigQuery.
+```shell
+ctk load table "s3+iceberg://bucket1/?catalog-type=bigquery&gcp.bigquery.project-id=foo&..."
+```
+
+Use catalog in DynamoDB.
+```shell
+ctk load table "s3+iceberg://bucket1/?catalog-type=dynamodb&dynamodb.profile-name=foo&dynamodb.region=bar&dynamodb.access-key-id=key&dynamodb.secret-access-key=secret&..."
+```
+
+Load data from Azure Data Lake Storage.
+```shell
+ctk load table "abfs+iceberg://container/path/?adls.account-name=devstoreaccount1&adls.account-key=foo&..."
+```
+
+Load data from Google Cloud Storage.
+```shell
+ctk load table "gs+iceberg://bucket?gcs.project-id=..."
+```
+
+Load data from HDFS Storage.
+```shell
+ctk load table "hdfs+iceberg://path?hdfs.host=https://10.0.19.25/&hdfs.port=9000&hdfs.user=&hdfs.kerberos_ticket="
+```
+
+:::{tip}
+After loading your data into CrateDB, query it.
 ```shell
 ctk shell --command 'SELECT * FROM demo."taxi-tiny";'
 ctk show table 'demo."taxi-tiny"'
 ```
+:::
 
 ### Save
 
@@ -76,6 +121,8 @@ ctk save table \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
     "s3+iceberg://bucket1/?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
 ```
+
+For other target URLs, see "Source" section.
 
 ### Cloud
 
@@ -141,7 +188,16 @@ to a truthy value, save operations will append to an existing table.
 ctk save table "file+iceberg://./var/lib/iceberg/?...&append=true"
 ```
 
+#### PyIceberg
+
+The PyIceberg I/O adapters accept a plethora of options that can be used 1:1.
+For a list of all available options, please consult the [FileIO] documentation.
+For I/O adapters not part of the documentation yet, please consult the source
+code about [catalog options] and [storage options].
+
 
 [Apache Iceberg]: https://iceberg.apache.org/
+[catalog options]: https://github.com/apache/iceberg-python/tree/main/pyiceberg/catalog
 [FileIO]: https://py.iceberg.apache.org/configuration/#fileio
+[storage options]: https://github.com/apache/iceberg-python/tree/main/pyiceberg/io
 [uv]: https://docs.astral.sh/uv/

@@ -9,7 +9,7 @@ import dataclasses
 import logging
 import tempfile
 from copy import copy
-from typing import Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 import polars as pl
@@ -83,37 +83,45 @@ class IcebergAddress:
         """
         Load the Iceberg catalog with appropriate configuration.
         """
-        # TODO: Consider accepting catalog configuration as parameters
-        #       to support different catalog types (Hive, REST, etc.).
         return load_catalog(self.catalog, **self.catalog_properties)
 
     @property
     def catalog_properties(self):
         """
         Provide Iceberg catalog properties.
+        https://py.iceberg.apache.org/configuration/#catalogs
         https://py.iceberg.apache.org/reference/pyiceberg/catalog/
         """
-        return {
+        opts = {
             "uri": self.url.query_params.get(
                 "catalog-uri", f"sqlite:///{self.temporary_catalog_location}/pyiceberg_catalog.db"
             ),
+            "credential": self.url.query_params.get("catalog-credential"),
             "token": self.url.query_params.get("catalog-token"),
+            "type": self.url.query_params.get("catalog-type"),
             "warehouse": self.location,  # TODO: Is the `file://` prefix faster when accessing the local filesystem?
         }
+        prefixes = ["dynamodb.", "gcp.", "glue."]
+        opts.update(self.collect_properties(self.url.query_params, prefixes))
+        return opts
 
     @property
     def storage_options(self):
-        opts = {
-            "s3.endpoint": self.url.query_params.get("s3.endpoint"),
-            "s3.region": self.url.query_params.get("s3.region"),
-            "s3.access-key-id": self.url.query_params.get("s3.access-key-id"),
-            "s3.secret-access-key": self.url.query_params.get("s3.secret-access-key"),
-        }
-        return {k: v for k, v in opts.items() if v is not None}
         """
         Provide Iceberg storage properties.
         https://py.iceberg.apache.org/configuration/#fileio
         """
+        prefixes = ["adls.", "gcs.", "hdfs.", "hf.", "s3."]
+        return self.collect_properties(self.url.query_params, prefixes)
+
+    @staticmethod
+    def collect_properties(query_params: Dict, prefixes: List) -> Dict[str, str]:
+        opts = {}
+        for name, value in query_params.items():
+            for prefix in prefixes:
+                if name.startswith(prefix) and value is not None:
+                    opts[name] = value
+        return opts
 
     @property
     def identifier(self):
