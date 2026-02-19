@@ -38,7 +38,7 @@ class IcebergAddress:
     catalog: str
     namespace: str
     table: str
-    batch_size: Optional[int] = None
+    batch_size: Optional[int] = DEFAULT_BATCH_SIZE
 
     def __post_init__(self):
         self.tmpdir = tempfile.TemporaryDirectory()
