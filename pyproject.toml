@@ -245,7 +245,7 @@ optional-dependencies.test = [
   "markdown-it-py<5",
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
-  "responses<0.26",
+  "responses<0.27",
   "testcontainers[azurite,localstack,minio,postgres]",
   "types-docutils<0.21",
 ]
