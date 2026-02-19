@@ -17,3 +17,7 @@
 
 - Auth!
   https://github.com/apache/iceberg/issues/13550
+
+- Can the postgresql catalog implementation be used with CrateDB?
+
+- Verify with other catalogs: https://py.iceberg.apache.org/configuration/#common-integrations-examples
