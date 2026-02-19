@@ -4,7 +4,12 @@
 
 ## About
 
-Import and export data into/from Iceberg tables, for humans and machines.
+Import and export data into/from [Apache Iceberg] tables, for humans and machines.
+
+Iceberg works with the concept of a [FileIO] which is a pluggable module for
+reading, writing, and deleting files. It supports different backends like
+S3, HDFS, Azure Data Lake, Google Cloud Storage, Alibaba Cloud Object Storage,
+and Hugging Face.
 
 ## Synopsis
 
@@ -16,8 +21,14 @@ Import and export data into/from Iceberg tables, for humans and machines.
 ## Install
 
 ```shell
-pip install --upgrade 'cratedb-toolkit[io]'
+uv tool install --upgrade 'cratedb-toolkit[io]'
 ```
+
+:::{tip}
+For speedy installations, we recommend using the [uv] package manager.
+Install it using `brew install uv` on macOS or `pipx install uv` on
+other operating systems.
+:::
 
 ## Usage
 
@@ -37,7 +48,7 @@ ctk load table \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
-Load from REST catalog on AWS S3.
+Load from REST catalog and AWS S3 storage.
 ```shell
 ctk load table \
     "s3+iceberg://bucket1/?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
@@ -98,11 +109,9 @@ ctk save table --cluster-url="crate://?batch-size=200000"
 
 ### CrateDB parameters
 
-Both parameters apply to target pipeline elements, controlling overwrite behaviour.
-
 #### `if-exists`
 
-The target table will be created automatically, if it does not exist. If it
+The target CrateDB table will be created automatically, if it does not exist. If it
 does exist, the `if-exists` URL query parameter can be used to configure this
 behavior. The default value is `fail`, the possible values are:
 
@@ -129,5 +138,10 @@ to a truthy value, save operations will append to an existing table.
 :::{rubric} Example usage
 :::
 ```shell
-ctk save table "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi-tiny&append=true"
+ctk save table "file+iceberg://./var/lib/iceberg/?...&append=true"
 ```
+
+
+[Apache Iceberg]: https://iceberg.apache.org/
+[FileIO]: https://py.iceberg.apache.org/configuration/#fileio
+[uv]: https://docs.astral.sh/uv/
