@@ -172,14 +172,19 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     logger.info(f"Running Iceberg copy with chunksize={chunksize}")
     engine = sa.create_engine(str(cratedb_url))
 
-    # This conversion to pandas is zero-copy,
-    # so we can utilize their SQL utils for free.
-    # https://github.com/pola-rs/polars/issues/7852
+    # Note: The conversion to pandas is zero-copy,
+    #       so we can utilize their SQL utils for free.
+    #       https://github.com/pola-rs/polars/issues/7852
     # Note: This code also uses the most efficient `insert_bulk` method with CrateDB.
-    # https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
+    #       https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
     # Note: `collect_batches()` is marked as unstable and slower than native sinks;
-    # consider native Polars sinks (e.g., write_database) as a faster alternative if available.
-    # https://github.com/crate/cratedb-toolkit/pull/444#discussion_r2825382887
+    #       consider native Polars sinks (e.g., write_database) as a faster alternative if available.
+    #       https://github.com/crate/cratedb-toolkit/pull/444#discussion_r2825382887
+    # Note: This variant appeared to be much slower, let's revisit and investigate why?
+    #       table.to_polars().collect(streaming=True).write_database(
+    #         table_name=cratedb_table.fullname, connection=engine, if_table_exists="replace"  # noqa: ERA001
+    # Note: When `collect_batches` yields more than one batch, the first batch must use the
+    #       user-specified `if_exists`, but subsequent batches must use "append".
     with pl.Config(streaming_chunk_size=chunksize):
         table = iceberg_address.load_table()
         for batch in table.collect_batches(engine="streaming", chunk_size=chunksize):
@@ -192,14 +197,6 @@ def from_iceberg(source_url, target_url, progress: bool = False):
                 chunksize=chunksize,
                 method=insert_bulk,
             )
-
-    # Note: This variant was much slower.
-    """
-    table.to_polars().collect(streaming=True).write_database(
-        table_name=cratedb_table.fullname, connection=engine, if_table_exists="replace"
-    )
-    """
-
     return True
 
 

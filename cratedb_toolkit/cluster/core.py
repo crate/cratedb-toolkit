@@ -640,6 +640,9 @@ class StandaloneCluster(ClusterBase):
         """
         Export data from a database table on a standalone CrateDB Server.
 
+        Note: The `transformation` parameter is not respected yet, but required by contract.
+              In this spirit, it is reserved for later use.
+
         Synopsis
         --------
         export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
@@ -653,11 +656,8 @@ class StandaloneCluster(ClusterBase):
         if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
             from cratedb_toolkit.io.iceberg import to_iceberg
 
-            if to_iceberg(source_url, target.url):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
+            if not to_iceberg(source_url, target.url):
+                raise IOError("Data loading failed or incomplete")
 
         else:
             raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
