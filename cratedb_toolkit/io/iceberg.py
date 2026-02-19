@@ -8,17 +8,13 @@ and CrateDB databases, supporting both import and export operations.
 import dataclasses
 import logging
 import tempfile
-from copy import copy
 from typing import Dict, List, Optional
 
-import pandas as pd
 import polars as pl
-import sqlalchemy as sa
 from boltons.urlutils import URL
 from pyiceberg.catalog import Catalog, load_catalog
-from sqlalchemy_cratedb import insert_bulk
 
-from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.io.util import parse_uri, polars_to_cratedb, read_cratedb
 from cratedb_toolkit.util.data import asbool
 
 logger = logging.getLogger(__name__)
@@ -59,24 +55,14 @@ class IcebergAddress:
         s3+iceberg://bucket1/?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo
         s3+iceberg://bucket1/?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret...
         """
-        iceberg_url = URL(url)
-        if iceberg_url.scheme.startswith("file"):
-            if iceberg_url.host == ".":
-                iceberg_url.path = iceberg_url.path.lstrip("/")
-            location = iceberg_url.path
-        else:
-            if iceberg_url.scheme.endswith("+iceberg"):
-                iceberg_url.scheme = iceberg_url.scheme.replace("+iceberg", "")
-            u2 = copy(iceberg_url)
-            u2.query_params.clear()
-            location = str(u2)
+        url_obj, location = parse_uri(url, "iceberg")
         return cls(
-            url=iceberg_url,
+            url=url_obj,
             location=location,
-            catalog=iceberg_url.query_params.get("catalog"),
-            namespace=iceberg_url.query_params.get("namespace"),
-            table=iceberg_url.query_params.get("table"),
-            batch_size=int(iceberg_url.query_params.get("batch-size", DEFAULT_BATCH_SIZE)),
+            catalog=url_obj.query_params.get("catalog"),
+            namespace=url_obj.query_params.get("namespace"),
+            table=url_obj.query_params.get("table"),
+            batch_size=int(url_obj.query_params.get("batch-size", DEFAULT_BATCH_SIZE)),
         )
 
     def load_catalog(self) -> Catalog:
@@ -116,6 +102,9 @@ class IcebergAddress:
 
     @staticmethod
     def collect_properties(query_params: Dict, prefixes: List) -> Dict[str, str]:
+        """
+        Collect parameters from URL query string.
+        """
         opts = {}
         for name, value in query_params.items():
             for prefix in prefixes:
@@ -154,50 +143,13 @@ def from_iceberg(source_url, target_url, progress: bool = False):
         "file+iceberg://./iceberg/demo/taxi/metadata/00001-79d5b044-8bce-46dd-b21c-83679a01c986.metadata.json" \
         --cluster-url="crate://crate@localhost:4200/demo/taxi"
     """
-
-    iceberg_address = IcebergAddress.from_url(source_url)
-
-    # Display parameters.
-    logger.info(f"Iceberg address: Path: {iceberg_address.location}")
-
-    cratedb_address = DatabaseAddress.from_string(target_url)
-    cratedb_url, cratedb_table = cratedb_address.decode()
-    if_exists = URL(target_url).query_params.get("if-exists") or "fail"
-    if cratedb_table.table is None:
-        raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
-    logger.info("Target address: %s", cratedb_address)
-
-    # Invoke copy operation.
-    chunksize = iceberg_address.batch_size
-    logger.info(f"Running Iceberg copy with chunksize={chunksize}")
-    engine = sa.create_engine(str(cratedb_url))
-
-    # Note: The conversion to pandas is zero-copy,
-    #       so we can utilize their SQL utils for free.
-    #       https://github.com/pola-rs/polars/issues/7852
-    # Note: This code also uses the most efficient `insert_bulk` method with CrateDB.
-    #       https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
-    # Note: `collect_batches()` is marked as unstable and slower than native sinks;
-    #       consider native Polars sinks (e.g., write_database) as a faster alternative if available.
-    #       https://github.com/crate/cratedb-toolkit/pull/444#discussion_r2825382887
-    # Note: This variant appeared to be much slower, let's revisit and investigate why?
-    #       table.to_polars().collect(streaming=True).write_database(
-    #         table_name=cratedb_table.fullname, connection=engine, if_table_exists="replace"  # noqa: ERA001
-    # Note: When `collect_batches` yields more than one batch, the first batch must use the
-    #       user-specified `if_exists`, but subsequent batches must use "append".
-    with pl.Config(streaming_chunk_size=chunksize):
-        table = iceberg_address.load_table()
-        for i, batch in enumerate(table.collect_batches(engine="streaming", chunk_size=chunksize)):
-            batch.to_pandas().to_sql(
-                name=cratedb_table.table,
-                schema=cratedb_table.schema,
-                con=engine,
-                if_exists=if_exists if i == 0 else "append",
-                index=False,
-                chunksize=chunksize,
-                method=insert_bulk,
-            )
-    return True
+    source = IcebergAddress.from_url(source_url)
+    logger.info(f"Iceberg address: {source.location}")
+    return polars_to_cratedb(
+        frame=source.load_table(),
+        target_url=target_url,
+        chunk_size=source.batch_size,
+    )
 
 
 def to_iceberg(source_url, target_url, progress: bool = False):
@@ -205,18 +157,15 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     Export a table from CrateDB into an Apache Iceberg table.
     Documentation: https://cratedb-toolkit.readthedocs.io/io/iceberg/#save
 
+    See also: https://pandas.pydata.org/docs/dev/reference/api/pandas.DataFrame.to_iceberg.html
+
     # Synopsis: Save to filesystem.
     ctk save table \
         --cluster-url="crate://crate@localhost:4200/demo/taxi" \
         "file+iceberg://./iceberg/?catalog=default&namespace=demo&table=taxi"
     """
 
-    cratedb_address = DatabaseAddress.from_string(source_url)
-    cratedb_url, cratedb_table = cratedb_address.decode()
-    if cratedb_table.table is None:
-        raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
-    logger.info(f"Source address: {cratedb_address}")
-
+    # Decode Iceberg target address.
     iceberg_address = IcebergAddress.from_url(target_url)
     if not iceberg_address.namespace:
         raise ValueError("Iceberg table namespace is missing or empty")
@@ -229,29 +178,27 @@ def to_iceberg(source_url, target_url, progress: bool = False):
         f"catalog: {iceberg_address.catalog}, namespace: {iceberg_address.namespace}, table: {iceberg_address.table}"
     )
 
-    # Prepare namespace and optionally drop table when `append=false`.
+    # Prepare Iceberg namespace and optionally drop table when `append=false`.
     catalog = iceberg_address.load_catalog()
     catalog.create_namespace_if_not_exists(iceberg_address.namespace)
     if catalog.table_exists(iceberg_identifier) and not iceberg_append:
         catalog.drop_table(iceberg_identifier)
     catalog.close()
 
-    # Invoke copy operation.
-    chunksize = int(URL(source_url).query_params.get("batch-size", DEFAULT_BATCH_SIZE))
-    logger.info(f"Running Iceberg copy with chunksize={chunksize}")
+    # Prepare Iceberg catalog and storage options.
     catalog_properties = {}
     catalog_properties.update(iceberg_address.catalog_properties)
     catalog_properties.update(iceberg_address.storage_options)
-    engine = sa.create_engine(str(cratedb_url))
-    with engine.connect() as connection:
-        for chunk in pd.read_sql_table(
-            table_name=cratedb_table.table, schema=cratedb_table.schema, con=connection, chunksize=chunksize
-        ):
-            chunk.to_iceberg(
-                table_identifier=iceberg_identifier,
-                catalog_name=iceberg_address.catalog,
-                catalog_properties=catalog_properties,
-                append=True,
-            )
 
+    # Invoke copy operation.
+    for chunk in read_cratedb(source_url, default_batch_size=DEFAULT_BATCH_SIZE):
+        # TODO: Q: Why not use Polars here?
+        #       A: Its `write_iceberg` method is currently very slim, as of version 1.38.
+        #       https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_iceberg.html
+        chunk.to_iceberg(
+            table_identifier=iceberg_identifier,
+            catalog_name=iceberg_address.catalog,
+            catalog_properties=catalog_properties,
+            append=True,
+        )
     return True
