@@ -177,17 +177,21 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     # https://github.com/pola-rs/polars/issues/7852
     # Note: This code also uses the most efficient `insert_bulk` method with CrateDB.
     # https://cratedb.com/docs/sqlalchemy-cratedb/dataframe.html#efficient-insert-operations-with-pandas
+    # Note: `collect_batches()` is marked as unstable and slower than native sinks;
+    # consider native Polars sinks (e.g., write_database) as a faster alternative if available.
+    # https://github.com/crate/cratedb-toolkit/pull/444#discussion_r2825382887
     with pl.Config(streaming_chunk_size=chunksize):
         table = iceberg_address.load_table()
-        table.collect(engine="streaming").to_pandas().to_sql(
-            name=cratedb_table.table,
-            schema=cratedb_table.schema,
-            con=engine,
-            if_exists=if_exists,
-            index=False,
-            chunksize=chunksize,
-            method=insert_bulk,
-        )
+        for batch in table.collect_batches(engine="streaming", chunk_size=chunksize):
+            batch.to_pandas().to_sql(
+                name=cratedb_table.table,
+                schema=cratedb_table.schema,
+                con=engine,
+                if_exists=if_exists,
+                index=False,
+                chunksize=chunksize,
+                method=insert_bulk,
+            )
 
     # Note: This variant was much slower.
     """
