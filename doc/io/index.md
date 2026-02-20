@@ -83,6 +83,7 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 
 AWS DMS <dms/index>
 DynamoDB <dynamodb/index>
+Iceberg <iceberg/index>
 InfluxDB <influxdb/index>
 Ingestr <ingestr/index>
 MongoDB <mongodb/index>

@@ -395,6 +395,12 @@ class ManagedCluster(ClusterBase):
 
         return self
 
+    def save_table(self, target: InputOutputResource, transformation: t.Union[Path, None] = None) -> "ManagedCluster":
+        """
+        Export data from a database table on a managed CrateDB Server.
+        """
+        raise NotImplementedError("Not implemented for CrateDB Cloud yet")
+
     @property
     def adapter(self) -> DatabaseAdapter:
         """
@@ -607,6 +613,15 @@ class StandaloneCluster(ClusterBase):
                     logger.error("Data loading failed or incomplete")
                     self._load_table_result = False
 
+        elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
+            from cratedb_toolkit.io.iceberg import from_iceberg
+
+            if from_iceberg(str(source_url_obj), target_url):
+                self._load_table_result = True
+            else:
+                logger.error("Data loading failed or incomplete")
+                self._load_table_result = False
+
         elif ingestr_select(source_url):
             if ingestr_copy(source_url, self.address, progress=True):
                 self._load_table_result = True
@@ -616,6 +631,36 @@ class StandaloneCluster(ClusterBase):
 
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
+
+        return self
+
+    def save_table(
+        self, target: InputOutputResource, transformation: t.Union[Path, None] = None
+    ) -> "StandaloneCluster":
+        """
+        Export data from a database table on a standalone CrateDB Server.
+
+        Note: The `transformation` parameter is not respected yet, but required by contract.
+              In this spirit, it is reserved for later use.
+
+        Synopsis
+        --------
+        export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
+
+        ctk save table \
+          "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
+        """
+        source_url = self.address.dburi
+        target_url_obj = URL(target.url)
+
+        if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
+            from cratedb_toolkit.io.iceberg import to_iceberg
+
+            if not to_iceberg(source_url, target.url):
+                raise OperationFailed("Data export failed or incomplete")
+
+        else:
+            raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
 
         return self
 
