@@ -110,6 +110,7 @@ class IcebergAddress:
             for prefix in prefixes:
                 if name.startswith(prefix) and value is not None:
                     opts[name] = value
+                    break
         return opts
 
     @property
