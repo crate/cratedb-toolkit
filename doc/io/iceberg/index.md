@@ -59,50 +59,50 @@ ctk load table \
 Use REST catalog and AWS S3 storage.
 ```shell
 ctk load table \
-    "s3+iceberg://bucket1/?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
+    "s3+iceberg://bucket1?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Use catalog in Apache Hive.
 ```shell
-ctk load table "s3+iceberg://bucket1/?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret&..."
+ctk load table "s3+iceberg://bucket1?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret&..."
 ```
 
 Use catalog in AWS Glue.
 ```shell
-ctk load table "s3+iceberg://bucket1/?catalog-type=glue&glue.id=foo&glue.profile-name=bar&glue.region=region&glue.access-key-id=key&glue.secret-access-key=secret&..."
+ctk load table "s3+iceberg://bucket1?catalog-type=glue&glue.id=foo&glue.profile-name=bar&glue.region=region&glue.access-key-id=key&glue.secret-access-key=secret&..."
 ```
 
 Use catalog in Google BigQuery.
 ```shell
-ctk load table "s3+iceberg://bucket1/?catalog-type=bigquery&gcp.bigquery.project-id=foo&..."
+ctk load table "s3+iceberg://bucket1?catalog-type=bigquery&gcp.bigquery.project-id=foo&..."
 ```
 
 Use catalog in DynamoDB.
 ```shell
-ctk load table "s3+iceberg://bucket1/?catalog-type=dynamodb&dynamodb.profile-name=foo&dynamodb.region=bar&dynamodb.access-key-id=key&dynamodb.secret-access-key=secret&..."
+ctk load table "s3+iceberg://bucket1?catalog-type=dynamodb&dynamodb.profile-name=foo&dynamodb.region=bar&dynamodb.access-key-id=key&dynamodb.secret-access-key=secret&..."
 ```
 
 Load data from Azure Data Lake Storage.
 ```shell
-ctk load table "abfs+iceberg://container/path/?adls.account-name=devstoreaccount1&adls.account-key=foo&..."
+ctk load table "abfs+iceberg://container/path?adls.account-name=devstoreaccount1&adls.account-key=foo&..."
 ```
 
 Load data from Google Cloud Storage.
 ```shell
-ctk load table "gs+iceberg://bucket?gcs.project-id=..."
+ctk load table "gs+iceberg://bucket1/demo/taxi-tiny?gcs.project-id=..."
 ```
 
 Load data from HDFS Storage.
 ```shell
-ctk load table "hdfs+iceberg://path?hdfs.host=https://10.0.19.25/&hdfs.port=9000&hdfs.user=&hdfs.kerberos_ticket="
+ctk load table "hdfs+iceberg://path?hdfs.host=10.0.19.25&hdfs.port=9000&hdfs.user=<user>&hdfs.kerberos_ticket=<ticket>"
 ```
 
 :::{tip}
 After loading your data into CrateDB, query it.
 ```shell
-ctk shell --command 'SELECT * FROM demo."taxi-tiny";'
-ctk show table 'demo."taxi-tiny"'
+ctk shell --command 'SELECT * FROM "demo"."taxi-tiny";'
+ctk show table '"demo"."taxi-tiny"'
 ```
 :::
 
@@ -119,10 +119,10 @@ Save to AWS S3.
 ```shell
 ctk save table \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
-    "s3+iceberg://bucket1/?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
+    "s3+iceberg://bucket1?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
 ```
 
-For other target URLs, see "Source" section.
+For other target URLs, see "Load" section.
 
 ### Cloud
 
@@ -131,7 +131,7 @@ Please note the `ssl=true` query parameter on the CrateDB cluster URL.
 
 ```shell
 ctk load table \
-    "s3+iceberg://bucket1/?catalog-uri=https://iceberg-catalog:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
+    "s3+iceberg://bucket1?catalog-uri=https://iceberg-catalog:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
     --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
