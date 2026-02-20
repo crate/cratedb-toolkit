@@ -82,6 +82,7 @@ ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
 :hidden:
 
 AWS DMS <dms/index>
+DeltaLake <deltalake/index>
 DynamoDB <dynamodb/index>
 Iceberg <iceberg/index>
 InfluxDB <influxdb/index>
