@@ -62,8 +62,19 @@ class IcebergAddress:
             catalog=url_obj.query_params.get("catalog"),
             namespace=url_obj.query_params.get("namespace"),
             table=url_obj.query_params.get("table"),
-            batch_size=int(url_obj.query_params.get("batch-size", DEFAULT_BATCH_SIZE)),
+            batch_size=(
+                DEFAULT_BATCH_SIZE
+                if url_obj.query_params.get("batch-size") is None
+                else cls._parse_batch_size(url_obj.query_params.get("batch-size"))
+            ),
         )
+
+    @staticmethod
+    def _parse_batch_size(value: str) -> int:
+        try:
+            return int(value)
+        except ValueError as ex:
+            raise ValueError("Invalid Iceberg URL parameter `batch-size`: expected integer") from ex
 
     def load_catalog(self) -> Catalog:
         """
@@ -180,11 +191,10 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     )
 
     # Prepare Iceberg namespace and optionally drop table when `append=false`.
-    catalog = iceberg_address.load_catalog()
-    catalog.create_namespace_if_not_exists(iceberg_address.namespace)
-    if catalog.table_exists(iceberg_identifier) and not iceberg_append:
-        catalog.drop_table(iceberg_identifier)
-    catalog.close()
+    with iceberg_address.load_catalog() as catalog:
+        catalog.create_namespace_if_not_exists(iceberg_address.namespace)
+        if catalog.table_exists(iceberg_identifier) and not iceberg_append:
+            catalog.drop_table(iceberg_identifier)
 
     # Prepare Iceberg catalog and storage options.
     catalog_properties = {}

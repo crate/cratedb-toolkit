@@ -399,7 +399,7 @@ class ManagedCluster(ClusterBase):
         """
         Export data from a database table on a managed CrateDB Server.
         """
-        raise NotImplementedError("Not implemented for CrateDB Cloud yet")
+        raise OperationFailed("Exporting tables from CrateDB Cloud is not implemented yet")
 
     @property
     def adapter(self) -> DatabaseAdapter:

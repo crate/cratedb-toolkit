@@ -25,8 +25,8 @@ def example_iceberg(tmp_path) -> Path:
         "uri": f"sqlite:///{tmp_path}/pyiceberg_catalog.db",
         "warehouse": str(tmp_path),
     }
-    catalog = load_catalog("default", **catalog_properties)
-    catalog.create_namespace_if_not_exists("demo")
+    with load_catalog("default", **catalog_properties) as catalog:
+        catalog.create_namespace_if_not_exists("demo")
 
     dff = DataFrameFactory()
     df = dff.make_mixed()
@@ -38,7 +38,6 @@ def example_iceberg(tmp_path) -> Path:
     table = catalog.load_table("demo.mixed")
     metadata_location = find_iceberg_data_metadata_location(Path(table.location()))
 
-    catalog.close()
     return metadata_location
 
 
