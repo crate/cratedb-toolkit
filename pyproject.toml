@@ -167,7 +167,7 @@ optional-dependencies.full = [
 ]
 optional-dependencies.iceberg = [
   "cratedb-toolkit[io]",
-  "pyiceberg[adlfs,bigquery,dynamodb,gcsfs,glue,hive,pyarrow,s3fs]<0.12",
+  "pyiceberg[adlfs,bigquery,dynamodb,gcsfs,glue,hive,pyarrow,s3fs]>=0.10,<0.12",
 ]
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io-base]",
