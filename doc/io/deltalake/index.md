@@ -132,10 +132,14 @@ The default value is `75000`.
 :::{rubric} Example usage
 :::
 ```shell
-ctk load table "file+deltalake://./var/lib/delta/?batch-size=200000"
+ctk load table \
+    "file+deltalake://./var/lib/delta/?batch-size=200000" \
+    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 ```shell
-ctk save table --cluster-url="crate://?batch-size=200000"
+ctk save table \
+    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
+    "file+deltalake://./var/lib/delta/"
 ```
 
 ### CrateDB parameters
@@ -163,9 +167,11 @@ ctk load table ...
 
 #### `mode`
 
-By default, the target Delta Lake table must not exist. If it exists, and you want
-to overwrite it, use `mode=overwrite`. On the other hand, `mode=append` will append
-to an existing table.
+The Delta Lake URL supports three modes of operations when used as a data sink.
+
+:`mode="error"` (default): raise an error if the table exists.
+:`mode="append"`: add the DataFrame’s rows to the existing table.
+:`mode="overwrite"`: replace the table contents with the DataFrame.
 
 :::{rubric} Example usage
 :::

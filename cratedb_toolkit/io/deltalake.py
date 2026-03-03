@@ -10,6 +10,7 @@ https://github.com/delta-io/delta-rs
 """
 
 import dataclasses
+import datetime as dt
 import logging
 from typing import Dict, List, Optional, Union
 
@@ -35,7 +36,7 @@ class DeltaLakeAddress:
     catalog: Optional[str] = None
     database: Optional[str] = None
     table: Optional[str] = None
-    version: Optional[Union[int, str]] = None
+    version: Optional[Union[int, str, dt.datetime]] = None
     batch_size: Optional[int] = DEFAULT_BATCH_SIZE
 
     @classmethod
@@ -70,7 +71,7 @@ class DeltaLakeAddress:
         https://delta-io.github.io/delta-rs/usage/loading-table/
         https://delta-io.github.io/delta-rs/integrations/object-storage/lakefs/#example
         """
-        prefixes = ["aws_", "azure_", "google_", "delta_", "endpoint", "access_key_id", "secret_access_key"]
+        prefixes = ["aws_", "azure_", "google_", "delta_"]
         return self.collect_properties(self.url.query_params, prefixes)
 
     @staticmethod
@@ -130,6 +131,14 @@ def to_deltalake(source_url, target_url, progress: bool = False):
     # Decode DeltaLake target address.
     deltalake_address = DeltaLakeAddress.from_url(target_url)
     deltalake_mode = deltalake_address.url.query_params.get("mode", "error")
+
+    supported_modes = {"error", "append", "overwrite"}
+    if deltalake_mode not in supported_modes:
+        raise ValueError(
+            f"Unsupported Delta Lake mode for chunked export: {deltalake_mode!r}. "
+            f"Supported modes: {sorted(supported_modes)}"
+        )
+
     logger.info(f"DeltaLake address: {deltalake_address.location}")
 
     # Invoke copy operation.

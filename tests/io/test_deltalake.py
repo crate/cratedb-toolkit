@@ -92,10 +92,7 @@ def test_load_deltalake_table_filesystem_version_integer_invalid(cratedb, exampl
             args=["load", "table", source_url],
             catch_exceptions=False,
         )
-    assert exc_info.match(
-        "Kernel error: Generic delta kernel error: "
-        "LogSegment end version 0 not the same as the specified end version 99"
-    )
+    assert exc_info.match("LogSegment end version 0 not the same as the specified end version 99")
 
 
 def test_save_deltalake_table_filesystem(cratedb, tmp_path):
