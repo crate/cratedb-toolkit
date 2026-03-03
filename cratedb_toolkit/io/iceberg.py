@@ -143,8 +143,8 @@ class IcebergAddress:
         Either load a table from a catalog, or by scanning the filesystem.
         """
         if self.catalog is not None:
-            catalog = self.load_catalog()
-            return catalog.load_table(self.identifier).to_polars()
+            with self.load_catalog() as catalog:
+                return catalog.load_table(self.identifier).to_polars()
         return pl.scan_iceberg(self.location, storage_options=self.storage_options)
 
 

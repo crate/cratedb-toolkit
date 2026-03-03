@@ -19,7 +19,11 @@ def example_iceberg(tmp_path) -> Path:
     A pytest fixture that creates a dummy Apache Iceberg table for testing.
     It returns the path to the metadata file of the latest snapshot.
     """
-    from pyiceberg.catalog import load_catalog
+    pyiceberg_catalog = pytest.importorskip(
+        "pyiceberg.catalog",
+        reason="Skipping Iceberg tests because 'pyiceberg' package is not installed",
+    )
+    load_catalog = pyiceberg_catalog.load_catalog
 
     catalog_properties = {
         "uri": f"sqlite:///{tmp_path}/pyiceberg_catalog.db",
