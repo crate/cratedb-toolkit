@@ -45,7 +45,7 @@ otherwise derive your ETL commands from the examples shared below.
 Load from metadata file on filesystem.
 ```shell
 ctk load table \
-    "file+iceberg://./var/lib/iceberg/demo/taxi-tiny/metadata/00003-dd9223cb-6d11-474b-8d09-3182d45862f4.metadata.json" \
+    "file+iceberg://./var/lib/iceberg/demo/taxi-tiny/metadata/00001-07cdcc42-bfd8-406f-8ad0-6528e7382c24.metadata.json" \
     --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
@@ -148,10 +148,14 @@ The default value is `75000`.
 :::{rubric} Example usage
 :::
 ```shell
-ctk load table "file+iceberg://./var/lib/iceberg/?batch-size=200000"
+ctk load table \
+    "file+iceberg://./var/lib/iceberg/?batch-size=200000" \
+    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 ```shell
-ctk save table --cluster-url="crate://?batch-size=200000"
+ctk save table \
+    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
+    "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi-tiny"
 ```
 
 ### CrateDB parameters

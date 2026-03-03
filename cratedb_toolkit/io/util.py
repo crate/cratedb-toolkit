@@ -64,19 +64,20 @@ def polars_to_cratedb(frame: pl.LazyFrame, target_url, chunk_size: int) -> bool:
     #         table_name=cratedb_table.fullname, connection=engine, if_table_exists="replace"  # noqa: ERA001
     # Note: When `collect_batches` yields more than one batch, the first batch must use the
     #       user-specified `if_exists`, but subsequent batches must use "append".
-    with pl.Config(streaming_chunk_size=chunk_size):
-        for i, batch in enumerate(frame.collect_batches(engine="streaming", chunk_size=chunk_size)):
-            batch.to_pandas().to_sql(
-                name=cratedb_table.table,
-                schema=cratedb_table.schema,
-                con=engine,
-                if_exists=if_exists if i == 0 else "append",
-                index=False,
-                chunksize=chunk_size,
-                method=insert_bulk,
-            )
-
-    engine.dispose()
+    try:
+        with pl.Config(streaming_chunk_size=chunk_size):
+            for i, batch in enumerate(frame.collect_batches(engine="streaming", chunk_size=chunk_size)):
+                batch.to_pandas().to_sql(
+                    name=cratedb_table.table,
+                    schema=cratedb_table.schema,
+                    con=engine,
+                    if_exists=if_exists if i == 0 else "append",
+                    index=False,
+                    chunksize=chunk_size,
+                    method=insert_bulk,
+                )
+    finally:
+        engine.dispose()
     return True
 
 
@@ -87,14 +88,17 @@ def pandas_from_cratedb(
     Read from a CrateDB table into pandas data frames, yielding batches/chunks.
     """
     engine = sa.create_engine(source_url)
-    with engine.connect() as connection:
-        for chunk in pd.read_sql_table(
-            table_name=table,
-            schema=schema,
-            con=connection,
-            chunksize=chunk_size,
-        ):
-            yield chunk
+    try:
+        with engine.connect() as connection:
+            for chunk in pd.read_sql_table(
+                table_name=table,
+                schema=schema,
+                con=connection,
+                chunksize=chunk_size,
+            ):
+                yield chunk
+    finally:
+        engine.dispose()
 
 
 def read_cratedb(url: str, default_batch_size: int) -> t.Generator[pd.DataFrame, None, None]:
@@ -105,7 +109,7 @@ def read_cratedb(url: str, default_batch_size: int) -> t.Generator[pd.DataFrame,
     cratedb_url, cratedb_table = cratedb_address.decode()
     if cratedb_table.table is None:
         raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
-    batch_size = int(URL(url).query_params.get("batch-size", default_batch_size))
+    batch_size = int(cratedb_url.query_params.pop("batch-size", default_batch_size))
     logger.info(f"Source: Address={cratedb_address}, Batch Size={batch_size}")
 
     for chunk in pandas_from_cratedb(
