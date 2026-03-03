@@ -28,17 +28,17 @@ def example_iceberg(tmp_path) -> Path:
     with load_catalog("default", **catalog_properties) as catalog:
         catalog.create_namespace_if_not_exists("demo")
 
-    dff = DataFrameFactory()
-    df = dff.make_mixed()
-    df.to_iceberg(
-        "demo.mixed",
-        catalog_name="default",
-        catalog_properties=catalog_properties,
-    )
-    table = catalog.load_table("demo.mixed")
-    metadata_location = find_iceberg_data_metadata_location(Path(table.location()))
+        dff = DataFrameFactory()
+        df = dff.make_mixed()
+        df.to_iceberg(
+            "demo.mixed",
+            catalog_name="default",
+            catalog_properties=catalog_properties,
+        )
+        table = catalog.load_table("demo.mixed")
+        metadata_location = find_iceberg_data_metadata_location(Path(table.location()))
 
-    return metadata_location
+        return metadata_location
 
 
 def find_iceberg_data_metadata_location(table_path: Path) -> Path:

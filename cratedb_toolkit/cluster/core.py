@@ -660,7 +660,7 @@ class StandaloneCluster(ClusterBase):
                 raise OperationFailed("Data export failed or incomplete")
 
         else:
-            raise NotImplementedError(f"Exporting resource not implemented yet: {target_url_obj}")
+            raise OperationFailed(f"Exporting resource not implemented yet: {target_url_obj}")
 
         return self
 

@@ -41,7 +41,9 @@ class IcebergAddress:
         self.temporary_catalog_location = self.tmpdir.name
 
     def __del__(self):
-        self.tmpdir.cleanup()
+        tmpdir = getattr(self, "tmpdir", None)
+        if tmpdir is not None:
+            tmpdir.cleanup()
 
     @classmethod
     def from_url(cls, url: str):
@@ -72,9 +74,12 @@ class IcebergAddress:
     @staticmethod
     def _parse_batch_size(value: str) -> int:
         try:
-            return int(value)
+            parsed = int(value)
         except ValueError as ex:
             raise ValueError("Invalid Iceberg URL parameter `batch-size`: expected integer") from ex
+        if parsed <= 0:
+            raise ValueError("Invalid Iceberg URL parameter `batch-size`: expected integer > 0")
+        return parsed
 
     def load_catalog(self) -> Catalog:
         """
