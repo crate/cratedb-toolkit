@@ -135,6 +135,10 @@ optional-dependencies.datasets = [
   "datasets<5",
   "kaggle<2.1",
 ]
+optional-dependencies.deltalake = [
+  "cratedb-toolkit[io]",
+  "polars[deltalake]<1.39",
+]
 optional-dependencies.develop = [
   "black[jupyter]<27",
   "mypy<1.20",
@@ -194,7 +198,7 @@ optional-dependencies.io-ingestr = [
   "sqlalchemy>=1,<2",
 ]
 optional-dependencies.io-opentable = [
-  "cratedb-toolkit[iceberg]",
+  "cratedb-toolkit[deltalake,iceberg]",
 ]
 optional-dependencies.io-recipe = [
   "tikray>=0.2,<0.4",

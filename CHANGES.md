@@ -2,6 +2,7 @@
 
 ## Unreleased
 - I/O: Added adapter for Apache Iceberg tables
+- I/O: Added adapter for Delta Lake tables
 
 ## 2026/02/18 v0.0.43
 - Retention: Validated integration with Azure blob storage using Azurite

@@ -613,6 +613,15 @@ class StandaloneCluster(ClusterBase):
                     logger.error("Data loading failed or incomplete")
                     self._load_table_result = False
 
+        elif source_url_obj.scheme.startswith("deltalake") or source_url_obj.scheme.endswith("deltalake"):
+            from cratedb_toolkit.io.deltalake import from_deltalake
+
+            if from_deltalake(str(source_url_obj), target_url):
+                self._load_table_result = True
+            else:
+                logger.error("Data loading failed or incomplete")
+                self._load_table_result = False
+
         elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
             from cratedb_toolkit.io.iceberg import from_iceberg
 
@@ -653,7 +662,13 @@ class StandaloneCluster(ClusterBase):
         source_url = self.address.dburi
         target_url_obj = URL(target.url)
 
-        if target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
+        if target_url_obj.scheme.startswith("deltalake") or target_url_obj.scheme.endswith("deltalake"):
+            from cratedb_toolkit.io.deltalake import to_deltalake
+
+            if not to_deltalake(source_url, target.url):
+                raise OperationFailed("Data export failed or incomplete")
+
+        elif target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
             from cratedb_toolkit.io.iceberg import to_iceberg
 
             if not to_iceberg(source_url, target.url):
