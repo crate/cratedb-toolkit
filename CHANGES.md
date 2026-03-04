@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/03/04 v0.0.44
 - I/O: Added adapter for Apache Iceberg tables
 - I/O: Added adapter for Delta Lake tables
 
