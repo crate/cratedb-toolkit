@@ -16,11 +16,13 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Optional
 
 from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
-from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
+from testcontainers.core.waiting_utils import wait_for_logs
 
 from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer, asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -129,8 +131,8 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
     def _configure(self) -> None:
         self._configure_ports()
         self._configure_credentials()
+        self._configure_wait_condition()
 
-    @wait_container_is_ready()
     def get_connection_url(self, dialect: str = "crate", host: Optional[str] = None) -> str:
         """
         Return a connection URL to the DB
@@ -141,7 +143,6 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         """
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
-        self._wait_for_node_startup()
         return super()._create_connection_url(
             dialect=dialect,
             username=self.CRATEDB_USER,
@@ -150,16 +151,15 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
             port=self.port_to_expose,
         )
 
-    @wait_container_is_ready()
     def _connect(self):
-        self._wait_for_node_startup()
+        wait_for_logs(self, predicate=self._wait_strategy, timeout=MAX_TRIES)
 
-    def _wait_for_node_startup(self):
+    def _configure_wait_condition(self):
         """Wait for CrateDB node to be fully started."""
         # TODO: Better use a network connectivity health check?
         #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
         # TODO: Provide a client instance.
-        wait_for_logs(self, predicate="o.e.n.Node.*started", timeout=MAX_TRIES)
+        self.waiting_for(LogMessageWaitStrategy(re.compile(r"o.e.n.Node.*started")))
 
 
 class CrateDBTestAdapter:

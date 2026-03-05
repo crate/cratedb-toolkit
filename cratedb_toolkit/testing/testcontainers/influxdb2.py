@@ -11,11 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
+import re
 
 from influxdb_client import InfluxDBClient
-from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
-from testcontainers.core.waiting_utils import wait_container_is_ready, wait_for_logs
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer
 
@@ -62,8 +62,10 @@ class InfluxDB2Container(DockerSkippingContainer, KeepaliveContainer, DbContaine
         self.with_env("DOCKER_INFLUXDB_INIT_ORG", self.ORGANIZATION)
         self.with_env("DOCKER_INFLUXDB_INIT_BUCKET", "default")
         self.with_env("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN", self.TOKEN)
+        # TODO: Better use a network connectivity health check?
+        #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
+        self.waiting_for(LogMessageWaitStrategy(re.compile(r"Listening.*tcp-listener.*8086")))
 
-    @wait_container_is_ready()
     def get_connection_url(self, host=None) -> str:
         return super()._create_connection_url(
             dialect="http",
@@ -73,11 +75,7 @@ class InfluxDB2Container(DockerSkippingContainer, KeepaliveContainer, DbContaine
             port=self.port_to_expose,
         )
 
-    @wait_container_is_ready()
     def _connect(self) -> InfluxDBClient:
-        # TODO: Better use a network connectivity health check?
-        #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
-        wait_for_logs(self, predicate="Listening.*tcp-listener.*8086", timeout=MAX_TRIES)
         return InfluxDBClient(url=self.get_connection_url(), org=self.ORGANIZATION, token=self.TOKEN, debug=self.debug)
 
     def get_connection_client(self) -> InfluxDBClient:
