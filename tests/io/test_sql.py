@@ -3,7 +3,7 @@ import io
 import pytest
 import sqlalchemy as sa
 
-from cratedb_toolkit.io.sql import run_sql
+from cratedb_toolkit.util.database import run_sql
 
 
 @pytest.fixture
