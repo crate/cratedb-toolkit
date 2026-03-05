@@ -2,7 +2,10 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 """
 CrateDB Toolkit polyglot I/O dispatcher hub.
-Add new data sources and data sinks at your disposal.
+
+Load data into CrateDB tables, and save data from CrateDB tables
+using a variety of data sources and data sinks. Please add new
+adapters at your disposal.
 """
 
 import logging
@@ -14,7 +17,6 @@ from boltons.urlutils import URL
 from cratedb_toolkit.exception import (
     OperationFailed,
 )
-from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource
 from cratedb_toolkit.util.data import asbool
 
@@ -108,7 +110,9 @@ class IoHub:
 
             return from_iceberg(str(source_url_obj), target_url)
 
-        elif ingestr_select(source_url):
+        from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
+
+        if ingestr_select(source_url):
             return ingestr_copy(source_url, target, progress=True)
 
         else:
