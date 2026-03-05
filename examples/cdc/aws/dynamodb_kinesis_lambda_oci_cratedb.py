@@ -27,8 +27,8 @@ def main():
     # Build and publish OCI image that includes the AWS Lambda function.
     python_image = LambdaPythonImage(
         name="kinesis-cratedb-processor-lambda",
-        entrypoint_file=Path("./cratedb_toolkit/io/processor/kinesis_lambda.py"),
-        entrypoint_handler="kinesis_lambda.handler",
+        entrypoint_file=Path("./cratedb_toolkit/io/awslambda/kinesis.py"),
+        entrypoint_handler="kinesis.handler",
     )
     python_image.publish()
 
