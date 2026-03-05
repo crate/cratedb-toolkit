@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025, Crate.io Inc.
+# Copyright (c) 2021-2026, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import dataclasses
 import json
@@ -9,7 +9,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import click
-from boltons.urlutils import URL
 
 from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootServices
 from cratedb_toolkit.cluster.guide import DataImportGuide
@@ -20,10 +19,9 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
+from cratedb_toolkit.io.hub import IoHub
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
-from cratedb_toolkit.util.data import asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
 from cratedb_toolkit.util.runtime import flexfun
 from cratedb_toolkit.util.setting import (
@@ -463,6 +461,7 @@ class StandaloneCluster(ClusterBase):
     exists: bool = False
     _load_table_result: t.Optional[bool] = None
     _client_bundle: t.Optional[ClientBundle] = None
+    _hub: IoHub = dataclasses.field(default_factory=IoHub)
 
     def __post_init__(self):
         super().__init__()
@@ -542,105 +541,10 @@ class StandaloneCluster(ClusterBase):
         ctk load table kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
         ctk load table kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
-        source_url = source.url
-        target_url = self.address.dburi
-        source_url_obj = URL(source.url)
 
-        if source_url_obj.scheme.startswith("dynamodb"):
-            from cratedb_toolkit.io.dynamodb.api import dynamodb_copy
-
-            if dynamodb_copy(str(source_url_obj), target_url, progress=True):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        elif (
-            source_url_obj.scheme.startswith("influxdb") or source_url.endswith(".lp") or source_url.endswith(".lp.gz")
-        ):
-            from cratedb_toolkit.io.influxdb import influxdb_copy
-
-            http_scheme = "http"
-            if asbool(source_url_obj.query_params.get("ssl")):
-                http_scheme = "https"
-            source_url_obj.scheme = source_url_obj.scheme.replace("influxdb2", http_scheme)
-            if influxdb_copy(str(source_url_obj), target_url, progress=True):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        elif source_url_obj.scheme.startswith("kinesis"):
-            from cratedb_toolkit.io.kinesis.api import kinesis_relay
-
-            kinesis_relay(
-                source_url=source_url_obj,
-                target_url=target_url,
-                recipe=transformation,
-            )
-            self._load_table_result = True
-
-        elif source_url_obj.scheme in [
-            "file+bson",
-            "http+bson",
-            "https+bson",
-            "mongodb",
-            "mongodb+srv",
-            "mongodb+cdc",
-            "mongodb+srv+cdc",
-        ]:
-            if "+cdc" in source_url_obj.scheme:
-                source_url_obj.scheme = source_url_obj.scheme.replace("+cdc", "")
-
-                from cratedb_toolkit.io.mongodb.api import mongodb_relay_cdc
-
-                return mongodb_relay_cdc(
-                    source_url_obj,
-                    target_url,
-                    transformation=transformation,
-                )
-            else:
-                from cratedb_toolkit.io.mongodb.api import mongodb_copy
-
-                if mongodb_copy(
-                    source_url_obj,
-                    target_url,
-                    transformation=transformation,
-                    progress=True,
-                ):
-                    self._load_table_result = True
-                else:
-                    logger.error("Data loading failed or incomplete")
-                    self._load_table_result = False
-
-        elif source_url_obj.scheme.startswith("deltalake") or source_url_obj.scheme.endswith("deltalake"):
-            from cratedb_toolkit.io.deltalake import from_deltalake
-
-            if from_deltalake(str(source_url_obj), target_url):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        elif source_url_obj.scheme.startswith("iceberg") or source_url_obj.scheme.endswith("iceberg"):
-            from cratedb_toolkit.io.iceberg import from_iceberg
-
-            if from_iceberg(str(source_url_obj), target_url):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        elif ingestr_select(source_url):
-            if ingestr_copy(source_url, self.address, progress=True):
-                self._load_table_result = True
-            else:
-                logger.error("Data loading failed or incomplete")
-                self._load_table_result = False
-
-        else:
-            raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
-
+        self._load_table_result = self._hub.load_table(
+            source=source, target=self.address, transformation=transformation
+        )
         return self
 
     def save_table(
@@ -659,24 +563,8 @@ class StandaloneCluster(ClusterBase):
         ctk save table \
           "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
         """
-        source_url = self.address.dburi
-        target_url_obj = URL(target.url)
 
-        if target_url_obj.scheme.startswith("deltalake") or target_url_obj.scheme.endswith("deltalake"):
-            from cratedb_toolkit.io.deltalake import to_deltalake
-
-            if not to_deltalake(source_url, target.url):
-                raise OperationFailed("Data export failed or incomplete")
-
-        elif target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
-            from cratedb_toolkit.io.iceberg import to_iceberg
-
-            if not to_iceberg(source_url, target.url):
-                raise OperationFailed("Data export failed or incomplete")
-
-        else:
-            raise OperationFailed(f"Exporting resource not implemented yet: {target_url_obj}")
-
+        self._hub.save_table(source=self.address, target=target, transformation=transformation)
         return self
 
 
