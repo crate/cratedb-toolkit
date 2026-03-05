@@ -1,5 +1,11 @@
-# TODO: Maybe refactor to `sqlalchemy-cratedb` or `commons-codec` on another iteration?
+"""
+Generic CrateDB bulk operation processor.
+
+TODO: Maybe refactor to `sqlalchemy-cratedb` or `commons-codec` in future iteration?
+"""
+
 import json
+import logging
 import typing as t
 from functools import cached_property
 
@@ -11,7 +17,7 @@ from pympler.asizeof import asizeof
 from sqlalchemy.exc import ProgrammingError
 from tqdm import tqdm
 
-from cratedb_toolkit.util.database import logger
+logger = logging.getLogger(__name__)
 
 
 class BulkResultItem(t.TypedDict):

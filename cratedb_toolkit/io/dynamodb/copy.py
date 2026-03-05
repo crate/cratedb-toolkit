@@ -7,7 +7,7 @@ from commons_codec.transform.dynamodb import DynamoDBFullLoadTranslator
 from tqdm import tqdm
 from yarl import URL
 
-from cratedb_toolkit.io.core import BulkProcessor
+from cratedb_toolkit.io.cratedb.bulk import BulkProcessor
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.data import asbool
