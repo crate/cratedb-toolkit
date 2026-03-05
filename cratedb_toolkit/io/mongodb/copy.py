@@ -9,7 +9,7 @@ from tikray.model.collection import CollectionAddress
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from cratedb_toolkit.io.core import BulkProcessor
+from cratedb_toolkit.io.cratedb.bulk import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
