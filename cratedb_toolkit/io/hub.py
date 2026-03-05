@@ -139,6 +139,7 @@ class IoHub:
         """
         source_url = source.dburi
         target_url_obj = URL(target.url)
+        _ = transformation  # reserved by contract
 
         if target_url_obj.scheme.startswith("deltalake") or target_url_obj.scheme.endswith("deltalake"):
             from cratedb_toolkit.io.deltalake import to_deltalake

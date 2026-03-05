@@ -206,6 +206,9 @@ class TableAddress:
     schema: t.Optional[str] = None
     table: t.Optional[str] = None
 
+    def __bool__(self):
+        return bool(self.table)
+
     @property
     def fullname(self):
         """

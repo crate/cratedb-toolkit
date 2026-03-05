@@ -11,7 +11,7 @@
 
 ## Details
 - This specific document includes a few general guidelines, and a
-  a few specifics coming from `examples/aws/dynamodb_kinesis_lambda_oci_cratedb.py`.
+  few specifics coming from `examples/cdc/aws/dynamodb_kinesis_lambda_oci_cratedb.py`.
 - That program defines a pipeline which looks like this:
   
   DynamoDB CDC -> Kinesis Stream -> Python Lambda via OCI -> CrateDB Cloud
@@ -240,8 +240,7 @@ aws cloudformation continue-update-rollback --stack-name testdrive-dynamodb-dev
 [AWS Lambda]: https://en.wikipedia.org/wiki/AWS_Lambda
 [awslambda/kinesis.py]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/io/awslambda/kinesis.py
 [continue rolling back an update]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html
-[dynamodb_kinesis_lambda_oci_cratedb.py]: https://github.com/crate/cratedb-toolkit/blob/main/examples/aws/dynamodb_kinesis_lambda_oci_cratedb.py
-[example program]: https://github.com/crate/cratedb-toolkit/tree/main/examples/aws
+[dynamodb_kinesis_lambda_oci_cratedb.py]: https://github.com/crate/cratedb-toolkit/blob/main/examples/cdc/aws/dynamodb_kinesis_lambda_oci_cratedb.py
 [How CloudFormation works]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-overview.html
 [Infrastructure as code (IaC)]: https://en.wikipedia.org/wiki/Infrastructure_as_code
 [Monitoring and troubleshooting Lambda functions]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-monitoring.html 
