@@ -19,7 +19,7 @@ from cratedb_toolkit.exception import (
     DatabaseAddressMissingError,
     OperationFailed,
 )
-from cratedb_toolkit.io.hub import IoHub
+from cratedb_toolkit.io.router import IoRouter
 from cratedb_toolkit.model import ClusterAddressOptions, DatabaseAddress, InputOutputResource, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -461,7 +461,7 @@ class StandaloneCluster(ClusterBase):
     exists: bool = False
     _load_table_result: t.Optional[bool] = None
     _client_bundle: t.Optional[ClientBundle] = None
-    _hub: IoHub = dataclasses.field(default_factory=IoHub)
+    _router: IoRouter = dataclasses.field(default_factory=IoRouter)
 
     def __post_init__(self):
         super().__init__()
@@ -545,7 +545,7 @@ class StandaloneCluster(ClusterBase):
         ctk load table kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
 
-        self._load_table_result = self._hub.load_table(
+        self._load_table_result = self._router.load_table(
             source=source, target=self.address, transformation=transformation
         )
         return self
@@ -567,7 +567,7 @@ class StandaloneCluster(ClusterBase):
           "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
         """
 
-        self._hub.save_table(source=self.address, target=target, transformation=transformation)
+        self._router.save_table(source=self.address, target=target, transformation=transformation)
         return self
 
 

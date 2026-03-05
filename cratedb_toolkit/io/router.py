@@ -23,7 +23,7 @@ from cratedb_toolkit.util.data import asbool
 logger = logging.getLogger(__name__)
 
 
-class IoHub:
+class IoRouter:
     def load_table(
         self,
         source: InputOutputResource,
