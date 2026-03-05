@@ -527,7 +527,10 @@ class StandaloneCluster(ClusterBase):
         return client_bundle.adapter.run_sql(sql, records=True)
 
     def load_table(
-        self, source: InputOutputResource, target: TableAddress, transformation: t.Union[Path, None] = None
+        self,
+        source: InputOutputResource,
+        target: t.Optional[TableAddress] = None,
+        transformation: t.Union[Path, None] = None,
     ) -> "StandaloneCluster":
         """
         Load data into unmanaged CrateDB cluster.
