@@ -354,7 +354,7 @@ class ManagedCluster(ClusterBase):
 
         https://console.cratedb.cloud
         """
-        from cratedb_toolkit.io.croud import CloudIo
+        from cratedb_toolkit.io.cratedb.cloud import CloudIo
 
         self.probe()
         target = target or TableAddress()

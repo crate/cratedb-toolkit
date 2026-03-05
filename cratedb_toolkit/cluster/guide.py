@@ -2,7 +2,7 @@ import shlex
 from textwrap import dedent
 
 from cratedb_toolkit.cluster.model import ClusterInformation
-from cratedb_toolkit.io.croud import CloudJob
+from cratedb_toolkit.io.cratedb.cloud import CloudJob
 from cratedb_toolkit.util.croud import table_fqn
 
 

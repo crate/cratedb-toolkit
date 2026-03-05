@@ -2,7 +2,7 @@ import pytest
 
 from cratedb_toolkit.cluster.guide import DataImportGuide
 from cratedb_toolkit.cluster.model import ClusterInformation
-from cratedb_toolkit.io.croud import CloudJob
+from cratedb_toolkit.io.cratedb.cloud import CloudJob
 
 
 @pytest.fixture
