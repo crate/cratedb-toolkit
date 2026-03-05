@@ -103,7 +103,7 @@ python dynamodb_kinesis_lambda_oci_cratedb.py
 For example, choose those two variants:
 
 - IaC driver: [dynamodb_kinesis_lambda_oci_cratedb.py]
-- Record processor: [kinesis_lambda.py]
+- Record processor: [awslambda/kinesis.py]
 
 Putting them next to each other into a directory, and adjusting
 `LambdaPythonImage(entrypoint_file=...)` to point to the second,
@@ -238,12 +238,12 @@ aws cloudformation continue-update-rollback --stack-name testdrive-dynamodb-dev
 [AWS]: https://en.wikipedia.org/wiki/Amazon_Web_Services
 [AWS CloudFormation]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html 
 [AWS Lambda]: https://en.wikipedia.org/wiki/AWS_Lambda
+[awslambda/kinesis.py]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/io/awslambda/kinesis.py
 [continue rolling back an update]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html
 [dynamodb_kinesis_lambda_oci_cratedb.py]: https://github.com/crate/cratedb-toolkit/blob/main/examples/aws/dynamodb_kinesis_lambda_oci_cratedb.py
 [example program]: https://github.com/crate/cratedb-toolkit/tree/main/examples/aws
 [How CloudFormation works]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-overview.html
 [Infrastructure as code (IaC)]: https://en.wikipedia.org/wiki/Infrastructure_as_code
-[kinesis_lambda.py]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/io/processor/kinesis_lambda.py
 [Monitoring and troubleshooting Lambda functions]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-monitoring.html 
 [OCI]: https://en.wikipedia.org/wiki/Open_Container_Initiative
 [repository policy]: https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#gettingstarted-images-permissions

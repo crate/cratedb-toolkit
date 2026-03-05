@@ -90,7 +90,7 @@ DYNAMODB_CDC_MODIFY_NESTED = {
 @pytest.fixture
 def reset_handler():
     try:
-        del sys.modules["cratedb_toolkit.io.processor.kinesis_lambda"]
+        del sys.modules["cratedb_toolkit.io.awslambda.kinesis"]
     except KeyError:
         pass
 
@@ -106,7 +106,7 @@ def test_processor_kinesis_dms_no_records(reset_handler, mocker, caplog):
     }
     mocker.patch.dict(os.environ, handler_environment)
 
-    from cratedb_toolkit.io.processor.kinesis_lambda import handler
+    from cratedb_toolkit.io.awslambda.kinesis import handler
 
     event = {"Records": []}
     handler(event, None)
@@ -134,7 +134,7 @@ def test_processor_kinesis_dynamodb_insert_update(cratedb, reset_handler, mocker
     }
     mocker.patch.dict(os.environ, handler_environment)
 
-    from cratedb_toolkit.io.processor.kinesis_lambda import handler
+    from cratedb_toolkit.io.awslambda.kinesis import handler
 
     # Define two CDC events: INSERT and UPDATE.
     event = {
