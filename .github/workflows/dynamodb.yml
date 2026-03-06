@@ -6,6 +6,8 @@ on:
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
+    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
   push:
@@ -13,6 +15,8 @@ on:
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
+    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
 
