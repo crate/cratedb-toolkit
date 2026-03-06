@@ -5,7 +5,7 @@ import pytest
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
 from tests.io.kinesis.data import DMS_CDC_CREATE_TABLE, DMS_CDC_INSERT_BASIC
-from tests.io.test_processor import wrap_kinesis
+from tests.io.test_awslambda import wrap_kinesis
 
 pytestmark = pytest.mark.kinesis
 

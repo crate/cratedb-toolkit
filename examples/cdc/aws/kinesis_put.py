@@ -1,7 +1,7 @@
 from yarl import URL
 
 from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter
-from tests.io.test_processor import DYNAMODB_CDC_INSERT_NESTED, DYNAMODB_CDC_MODIFY_NESTED, wrap_kinesis
+from tests.io.test_awslambda import DYNAMODB_CDC_INSERT_NESTED, DYNAMODB_CDC_MODIFY_NESTED, wrap_kinesis
 
 
 def main():
