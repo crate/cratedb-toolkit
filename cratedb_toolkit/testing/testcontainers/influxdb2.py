@@ -16,6 +16,7 @@ import re
 from influxdb_client import InfluxDBClient
 from testcontainers.core.generic import DbContainer
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
+from testcontainers.core.waiting_utils import wait_for_logs
 
 from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer
 
@@ -76,6 +77,7 @@ class InfluxDB2Container(DockerSkippingContainer, KeepaliveContainer, DbContaine
         )
 
     def _connect(self) -> InfluxDBClient:
+        wait_for_logs(self, self._wait_strategy)
         return InfluxDBClient(url=self.get_connection_url(), org=self.ORGANIZATION, token=self.TOKEN, debug=self.debug)
 
     def get_connection_client(self) -> InfluxDBClient:
