@@ -5,7 +5,7 @@ import pytest
 from commons_codec.transform.dynamodb_model import PrimaryKeySchema
 
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
-from tests.io.test_processor import DYNAMODB_CDC_INSERT_NESTED, DYNAMODB_CDC_MODIFY_NESTED, wrap_kinesis
+from tests.io.test_awslambda import DYNAMODB_CDC_INSERT_NESTED, DYNAMODB_CDC_MODIFY_NESTED, wrap_kinesis
 
 pytestmark = pytest.mark.kinesis
 

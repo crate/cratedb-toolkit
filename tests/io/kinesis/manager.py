@@ -4,7 +4,7 @@ import typing as t
 from yarl import URL
 
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase
-from tests.io.test_processor import wrap_kinesis
+from tests.io.test_awslambda import wrap_kinesis
 
 logger = logging.getLogger(__name__)
 

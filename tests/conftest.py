@@ -211,4 +211,14 @@ def check_sqlalchemy2(**kwargs):
         raise pytest.skip("This feature or subsystem needs SQLAlchemy 2.x", **kwargs)
 
 
+@pytest.fixture
+def dummy_csv(tmp_path):
+    """
+    Provide a dummy CSV file to the test cases.
+    """
+    csvfile = tmp_path / "dummy.csv"
+    csvfile.write_text("name,value\ntemperature,42.42\nhumidity,84.84")
+    return csvfile
+
+
 setup_logging()
