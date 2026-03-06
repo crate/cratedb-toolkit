@@ -6,6 +6,8 @@ on:
     paths:
     - '.github/workflows/influxdb.yml'
     - 'cratedb_toolkit/io/influxdb/**'
+    - 'cratedb_toolkit/testing/testcontainers/influxdb2.py'
+    - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/influxdb/**'
     - 'pyproject.toml'
   push:
@@ -13,6 +15,8 @@ on:
     paths:
     - '.github/workflows/influxdb.yml'
     - 'cratedb_toolkit/io/influxdb/**'
+    - 'cratedb_toolkit/testing/testcontainers/influxdb2.py'
+    - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/influxdb/**'
     - 'pyproject.toml'
 
