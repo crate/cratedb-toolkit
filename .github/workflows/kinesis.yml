@@ -43,7 +43,9 @@ jobs:
         os: ["ubuntu-latest"]
         python-version: [
           "3.10",
-          "3.13",
+          # TODO: Integration tests became flaky again. Let's investigate later.
+          #       kinesis.exceptions.StreamDoesNotExist: Stream 'testdrive' does not exist
+          # "3.13",
         ]
 
     env:
