@@ -52,7 +52,6 @@ jobs:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
       LOCALSTACK_VERSION: ${{ matrix.localstack-version }}
-      UV_SYSTEM_PYTHON: true
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
@@ -66,19 +65,13 @@ jobs:
     - name: Acquire sources
       uses: actions/checkout@v6
 
-    - name: Install Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
-        cache-dependency-glob: |
-          pyproject.toml
+        activate-environment: 'true'
         cache-suffix: ${{ matrix.python-version }}
         enable-cache: true
-        version: "latest"
+        python-version: ${{ matrix.python-version }}
 
     - name: Set up project
       run: |

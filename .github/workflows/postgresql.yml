@@ -57,7 +57,6 @@ jobs:
       PYTHON: ${{ matrix.python-version }}
       CRATEDB_VERSION: ${{ matrix.cratedb-version }}
       POSTGRESQL_VERSION: ${{ matrix.postgresql-version }}
-      UV_SYSTEM_PYTHON: true
       TC_KEEPALIVE: true  # Do not tear down Testcontainers
       INGESTR_DISABLE_TELEMETRY: true
 
@@ -86,19 +85,13 @@ jobs:
     - name: Acquire sources
       uses: actions/checkout@v6
 
-    - name: Install Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
-        cache-dependency-glob: |
-          pyproject.toml
+        activate-environment: 'true'
         cache-suffix: ${{ matrix.python-version }}
         enable-cache: true
-        version: "latest"
+        python-version: ${{ matrix.python-version }}
 
     - name: Set up project
       run: |
