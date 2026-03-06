@@ -73,5 +73,5 @@ class CloudIoSpecs:
     Define capabilities of CrateDB Cloud Import.
     """
 
-    allowed_compressions = ["gzip", None]
-    allowed_formats = ["csv", "json", "parquet"]
+    allowed_compressions: t.ClassVar[tuple] = ("gzip", None)
+    allowed_formats: t.ClassVar[tuple] = ("csv", "json", "parquet")

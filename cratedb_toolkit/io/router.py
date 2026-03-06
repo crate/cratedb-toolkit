@@ -29,7 +29,7 @@ class IoRouter:
         source: InputOutputResource,
         target: DatabaseAddress,
         transformation: t.Union[Path, None] = None,
-    ):
+    ) -> bool:
         """
         Load data into unmanaged CrateDB cluster.
 
@@ -123,7 +123,7 @@ class IoRouter:
         source: DatabaseAddress,
         target: InputOutputResource,
         transformation: t.Union[Path, None] = None,
-    ):
+    ) -> bool:
         """
         Export data from a database table on a standalone CrateDB Server.
 
@@ -147,11 +147,15 @@ class IoRouter:
             if not to_deltalake(source_url, target.url):
                 raise OperationFailed("Data export failed or incomplete")
 
+            return True
+
         elif target_url_obj.scheme.startswith("iceberg") or target_url_obj.scheme.endswith("iceberg"):
             from cratedb_toolkit.io.iceberg import to_iceberg
 
             if not to_iceberg(source_url, target.url):
                 raise OperationFailed("Data export failed or incomplete")
+
+            return True
 
         else:
             raise OperationFailed(f"Exporting resource not implemented yet: {target_url_obj}")
