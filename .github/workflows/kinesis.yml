@@ -41,14 +41,12 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: [
-          # TODO: Activate test cases again. Currently fails with:
-          #       test_kinesis_latest_dynamodb_cdc_insert_update - assert 0 == 1
-          # "3.10",
-          # TODO: Integration tests became flaky again. Let's investigate later.
-          #       kinesis.exceptions.StreamDoesNotExist: Stream 'testdrive' does not exist
-          # "3.13",
-        ]
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
     env:
       OS: ${{ matrix.os }}
