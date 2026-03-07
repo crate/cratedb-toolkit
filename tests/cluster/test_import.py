@@ -40,7 +40,7 @@ def test_csv_import_local(cloud_environment, dummy_csv, caplog):
     assert results[0]["count"] >= 2
 
 
-def test_parquet_import_remote(cloud_environment, tmp_path, caplog):
+def test_parquet_import_remote(cloud_environment, caplog):
     """
     CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a URL.
     """
