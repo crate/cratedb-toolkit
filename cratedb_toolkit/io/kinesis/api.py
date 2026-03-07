@@ -24,3 +24,5 @@ def kinesis_relay(source_url: URL, target_url: str, recipe: TransformationType =
 
     ka = KinesisRelay(str(source_url), target_url, recipe=parsed_recipe)
     ka.start(once=once)
+
+    return True
