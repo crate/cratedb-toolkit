@@ -39,7 +39,7 @@ FROM python:3.12-slim-bookworm AS package
 
 LABEL org.opencontainers.image.source="https://github.com/crate/cratedb-toolkit" \
       org.opencontainers.image.title="cratedb-toolkit (ingest)" \
-      org.opencontainers.image.description="CrateDB Toolkit \"ingest\" image with io-ingestr extras" \
+      org.opencontainers.image.description="CrateDB Toolkit \"ingest\" image" \
       org.opencontainers.image.licenses="AGPL-3.0-only OR EUPL-1.2"
 
 # Configure operating system.
@@ -122,7 +122,7 @@ RUN \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv pip install --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingestr] @ file://${WHEEL}"
+    && uv pip install --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
 
 # Copy `selftest.sh` to the image.
 COPY release/oci-ingest/selftest.sh /usr/local/bin

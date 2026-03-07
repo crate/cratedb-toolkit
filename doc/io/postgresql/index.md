@@ -8,7 +8,7 @@ building upon the [ingestr i/o subsystem].
 ## Install
 
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io-ingestr]'
+uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 ```
 
 ## Synopsis

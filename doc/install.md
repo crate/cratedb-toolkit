@@ -13,7 +13,7 @@ uv tool install --upgrade 'cratedb-toolkit'
 
 Install package including [all subsystems] / [full dependencies].
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[all]'
+uv tool install --upgrade 'cratedb-toolkit[full]'
 ```
 
 Verify installation.
