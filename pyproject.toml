@@ -256,7 +256,7 @@ optional-dependencies.test = [
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.27",
-  "testcontainers[azurite,localstack,minio,postgres]",
+  "testcontainers[azurite,localstack,minio,postgres]<4.15",
   "types-docutils<0.21",
 ]
 optional-dependencies.test-mongodb = [
