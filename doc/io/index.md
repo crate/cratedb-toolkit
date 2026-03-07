@@ -3,78 +3,126 @@
 
 # I/O Subsystem
 
-Load and extract data into/from CrateDB.
+:::{include} /_snippet/links.md
+:::
+
+:::{div} sd-text-muted
+Import and export data into/from CrateDB.
+:::
 
 ## About
 
-Transfer data from [AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
-[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL], and many more databases,
-platforms, and services to [CrateDB] or [CrateDB Cloud].
+:::{div}
+A polyglot and universal I/O pipeline subsystem that covers data transfer from
+and to [AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
+[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL], and many more
+streaming sources, databases, and data platforms or services with
+[CrateDB] and [CrateDB Cloud].
+:::
 
-## What's inside
+:::{include} /_snippet/install-ctk.md
+:::
 
-A one-stop command, `ctk load table`, to load data into database tables.
+Individual I/O adapters need different sets of dependency packages, please
+consult relevant installation notes in the corresponding documentation
+sections. To cover most I/O adapter type families with two single installation
+commands, use the `io-all` or `io-ingest` extra when installing CrateDB
+Toolkit. Both variants are currently mutually exclusive to each other.
 
-## Installation
-
-Latest release.
+Support for files, open table formats, InfluxDB, and MongoDB.
 ```shell
-pip install --upgrade 'cratedb-toolkit[all]'
+uv tool install --upgrade 'cratedb-toolkit[io-all]'
 ```
 
-Development version.
+Support for other databases, streams, platforms, and services.
 ```shell
-pip install --upgrade 'cratedb-toolkit[all] @ git+https://github.com/crate/cratedb-toolkit.git'
+uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 ```
+
+## Synopsis
+
+You can run jobs from the command-line or by using the Python API.
+
+### CLI
+
+The CLI entrypoints to the I/O subsystem are the `ctk load table`
+and `ctk save table` commands.
+
+Load data from external resource into CrateDB.
+```shell
+ctk load table \
+  'protocol://username:password@hostname:port/catalog/resource' \
+  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table'
+```
+
+Save data from CrateDB to external resource.
+```shell
+ctk save table \
+  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table' \
+  'protocol://username:password@hostname:port/catalog/resource'
+```
+
+### Python API
+
+Use the Python API to import or export data.
+
+```python
+from cratedb_toolkit import DatabaseCluster, InputOutputResource
+
+with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.example.org:4200/schema/table") as cluster:
+    cluster.load_table(source=InputOutputResource(url="protocol://username:password@hostname:port/catalog/resource"))
+    cluster.save_table(target=InputOutputResource(url="protocol://username:password@hostname:port/catalog/resource"))
+```
+
 
 ## General Notes
 
-By default, the table name will be derived from the name of the input resource.
-If you would like to specify a different table name, use the `--table` command
-line option, or the `CRATEDB_TABLE` environment variable.
+:::{rubric} URLs everywhere
+:::
+
+The I/O subsystem uses URLs across the board to address data sources and sinks.
+
+:::{rubric} Address arbitrary resources
+:::
+
+The resource address will be picked from the URL path of the corresponding
+resource locator `/catalog/resource`. Based on the type of the data source
+or sink, those parameters have different semantic meanings. Sometimes, also
+the `hostname` portion needs to be considered.
+
+:::{rubric} Address CrateDB schema and table
+:::
+
+The CrateDB schema and table names will be picked from the URL path
+of the corresponding resource locator `/schema/table`.
+When addressing CrateDB as a data sink, and omitting those parameters, the
+target table address will be derived from the address of the data source.
+
+If you would like to specify the table name differently, use the `--table`
+command line option, or the `CRATEDB_TABLE` environment variable.
 
 When aiming to write into a table in a different database schema, use the
 `--schema` command line option, or the `CRATEDB_SCHEMA` environment variable.
-When omitting this parameter, the default value `doc` will be used.
+If this parameter is not defined, CrateDB's default schema `doc` will be used.
 
+:::{rubric} Address CrateDB with SSL
+:::
 
-## Cloud Import API
-
-Using the [CrateDB Cloud] Import API, you can import files in CSV, JSON, and
-Parquet formats.
-
-### Prerequisites
-Authenticate with CrateDB Cloud using one of those identity providers:
-Cognito, Azure AD, GitHub, Google.
-```shell
-croud login --idp azuread
+Use the `?ssl=true` query parameter, and replace username, password, and
+hostname with values matching your environment. Also use this variant to
+connect to CrateDB Cloud.
+```
+--cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
 ```
 
-To discover the list of available database clusters.
-```shell
-croud clusters list
-```
+:::{rubric} Transfer multiple resources
+:::
 
-Define the cluster id of your CrateDB Cloud Cluster you are aiming to connect
-to, and its connection credentials.
-```shell
-export CRATEDB_CLUSTER_ID='<YOUR_CLUSTER_ID>'
-```
+Currently, the pipeline system can transfer single resources / tables with most
+of the I/O adapter types. Only the MongoDB I/O adapter permits transfer of
+MongoDB collections to CrateDB, including multiple tables. This detail will be
+improved in future iterations.
 
-### Usage
-Load data into database table.
-```shell
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz'
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_marketing.json.gz'
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz'
-```
-
-Query and aggregate data using SQL.
-```shell
-ctk shell --command="SELECT * FROM data_weather LIMIT 10;"
-ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=csv
-ctk shell --command="SELECT * FROM data_weather LIMIT 10;" --format=json
-```
 
 
 ```{toctree}
@@ -90,11 +138,15 @@ Ingestr <ingestr/index>
 MongoDB <mongodb/index>
 PostgreSQL <postgresql/index>
 ```
+```{toctree}
+:maxdepth: 2
+:hidden:
+managed/index
+```
 
 
 [AWS DMS]: https://aws.amazon.com/dms/
 [CrateDB]: https://github.com/crate/crate
-[CrateDB Cloud]: https://console.cratedb.cloud/
 [Databricks]: https://www.databricks.com/
 [DuckDB]: https://github.com/duckdb/duckdb
 [DynamoDB]: https://aws.amazon.com/dynamodb/
