@@ -26,12 +26,12 @@ streaming sources, databases, and data platforms or services with
 Individual I/O adapters need different sets of dependency packages, please
 consult relevant installation notes in the corresponding documentation
 sections. To cover most I/O adapter type families with two single installation
-commands, use the `io-all` or `io-ingest` extra when installing CrateDB
+commands, use the `io-curated` or `io-ingest` extra when installing CrateDB
 Toolkit. Both variants are currently mutually exclusive to each other.
 
 Support for files, open table formats, InfluxDB, and MongoDB.
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io-all]'
+uv tool install --upgrade 'cratedb-toolkit[io-curated]'
 ```
 
 Support for other databases, streams, platforms, and services.

@@ -164,7 +164,7 @@ optional-dependencies.dynamodb = [
   "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,datasets,docs-api,io-all,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,mcp,service]",
 ]
 optional-dependencies.iceberg = [
   "cratedb-toolkit[io]",
@@ -187,7 +187,7 @@ optional-dependencies.io-base = [
   "polars<1.39",
   "universal-pathlib<0.4",
 ]
-optional-dependencies.io-all = [
+optional-dependencies.io-curated = [
   "cratedb-toolkit[io,io-opentable,influxdb,mongodb]",
 ]
 optional-dependencies.io-ingest = [
