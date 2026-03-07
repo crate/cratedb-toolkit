@@ -9,7 +9,7 @@ from cratedb_toolkit import ManagedCluster
 @pytest.mark.skipif(
     os.getenv("FORCE", "no") != "yes",
     reason="Only works when invoked exclusively, using "
-    "`FORCE=yes pytest --no-cov tests/io/test_import.py -k managed_csv_local`. "
+    "`FORCE=yes pytest --no-cov tests/cluster/test_import.py -k test_csv_import_local`. "
     "Otherwise croaks per `AssertionError: ERROR: The following arguments are required: --url`. "
     "We don't know why.",
 )

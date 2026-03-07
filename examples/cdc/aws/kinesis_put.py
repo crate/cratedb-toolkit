@@ -9,6 +9,8 @@ from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter
 def main():
 
     # Address of the Kinesis stream.
+    # Note: Credentials and region are suitable for use with LocalStack ootb.
+    # It is acceptable for local development examples, so please adjust when diverting to streams on AWS.
     kinesis_url = URL("kinesis://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/cdc-stream?region=eu-central-1")
 
     # DynamoDB CDC data payload example.

@@ -139,7 +139,10 @@ class IoRouter:
         """
         source_url = source.dburi
         target_url_obj = URL(target.url)
-        _ = transformation  # reserved by contract
+
+        # Note: The `transformation` parameter is not respected yet, but required by contract.
+        if transformation is not None:
+            raise OperationFailed("Export transformations are not supported yet")
 
         if target_url_obj.scheme.startswith("deltalake") or target_url_obj.scheme.endswith("deltalake"):
             from cratedb_toolkit.io.deltalake import to_deltalake
