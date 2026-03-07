@@ -59,8 +59,8 @@ class IoRouter:
             http_scheme = "http"
             if asbool(source_url_obj.query_params.get("ssl")):
                 http_scheme = "https"
-            source_url_obj.scheme = source_url_obj.scheme.replace("influxdb2", http_scheme)
-            return influxdb_copy(str(source_url_obj), target_url, progress=True)
+            adjusted_url = str(source_url_obj).replace(source_url_obj.scheme, http_scheme, 1)
+            return influxdb_copy(adjusted_url, target_url, progress=True)
 
         elif source_url_obj.scheme.startswith("kinesis"):
             from cratedb_toolkit.io.kinesis.api import kinesis_relay
