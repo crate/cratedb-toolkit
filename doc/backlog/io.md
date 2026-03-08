@@ -21,3 +21,13 @@
 - Can the postgresql catalog implementation be used with CrateDB?
 
 - Verify with other catalogs: https://py.iceberg.apache.org/configuration/#common-integrations-examples
+
+- ingestr - more parameters for Kinesis
+  - https://getbruin.com/docs/ingestr/commands/ingest.html
+  - https://getbruin.com/docs/ingestr/supported-sources/kinesis.html
+  - ```
+    # incremental_strategy="delete+insert",
+    # mask=["temperature:noise:0.35", "temperature:round:100"],
+    # full_refresh=True,
+    # progress="interactive",  # log, interactive
+    ```
