@@ -4,6 +4,7 @@
 - I/O: Refactored `ctk.io` subsystem
 - Documentation: Refurbished introduction and guidance for I/O subsystem
 - IO: Started using ingestr for loading data from Amazon Kinesis
+- IO: Started propagating `start_date` parameter to ingestr's `interval_start`
 
 ## 2026/03/04 v0.0.44
 - I/O: Added adapter for Apache Iceberg tables

@@ -89,11 +89,14 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
     if source_fragment:
         source_table += f"#{source_fragment}"
 
+    start_date = source_url_obj.query.get("start_date")
+
     logger.info("Invoking ingestr")
     logger.info(f"Source URL: {source_url_obj}")
     logger.info(f"Target URL: {target_url}")
     logger.info(f"Source Table: {source_table}")
     logger.info(f"Target Table: {target_table}")
+    logger.info(f"Start Date: {start_date}")
 
     try:
         ingestr.main.ingest(
@@ -101,6 +104,7 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
             dest_uri=str(target_url),
             source_table=source_table,
             dest_table=target_table,
+            interval_start=start_date,
             yes=True,
         )
         return True
