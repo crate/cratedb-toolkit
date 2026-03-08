@@ -33,7 +33,7 @@ cluster/index
 util/index
 datasets
 docs-api
-io/index
+I/O Subsystem <io/index>
 query/index
 retention
 ```

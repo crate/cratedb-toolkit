@@ -1,6 +1,7 @@
-## Install
+## Installation
 
-CrateDB Toolkit uses the Python programming language, which is installed
+CrateDB Toolkit uses the Python programming language with native performance
+extensions, which is installed
 on most machines today. Otherwise, we recommend to [download and install
 Python][install-python] from the original source.
 For installing additional Python packages, we recommend to
@@ -13,6 +14,12 @@ An alternative way to install Python packages is to use [pipx]
 or `pip install --user`.
 ```shell
 pipx install 'cratedb-toolkit'
+```
+
+Another way to invoke CrateDB without installing it is to use its
+container image with Docker, Podman, Kubernetes, and friends.
+```shell
+docker run --rm ghcr.io/crate/cratedb-toolkit ctk
 ```
 
 

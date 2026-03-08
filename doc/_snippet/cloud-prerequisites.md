@@ -1,6 +1,6 @@
 ## Prerequisites
 
-Before interacting with CrateDB Cloud services, authenticate and select
+Before using CrateDB Cloud services, authenticate and select
 your target database cluster.
 
 ### Authenticate

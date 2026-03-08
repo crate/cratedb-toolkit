@@ -1,7 +1,7 @@
 (io)=
 (io-subsystem)=
 
-# I/O Subsystem
+# CrateDB I/O Subsystem
 
 :::{include} /_snippet/links.md
 :::
@@ -23,11 +23,14 @@ streaming sources, databases, and data platforms or services with
 :::{include} /_snippet/install-ctk.md
 :::
 
+:::{rubric} Special considerations
+:::
+
 Individual I/O adapters need different sets of dependency packages, please
 consult relevant installation notes in the corresponding documentation
-sections. To cover most I/O adapter type families with two single installation
-commands, use the `io-curated` or `io-ingest` extra when installing CrateDB
-Toolkit. Both variants are currently mutually exclusive to each other.
+sections. Support for I/O adapter types is currently divided into two
+families defined by Python package extras `io-curated` and `io-ingest`,
+which are mutually exclusive to each other.
 
 Support for files, open table formats, InfluxDB, and MongoDB.
 ```shell
@@ -38,6 +41,15 @@ Support for other databases, streams, platforms, and services.
 ```shell
 uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 ```
+
+Alternatively, use Docker or Podman to invoke the container image.
+```shell
+docker run --rm ghcr.io/crate/cratedb-toolkit ctk --version
+```
+```shell
+docker run --rm ghcr.io/crate/cratedb-toolkit-ingest ctk --version
+```
+
 
 ## Synopsis
 
@@ -51,7 +63,7 @@ and `ctk save table` commands.
 Load data from external resource into CrateDB.
 ```shell
 ctk load table \
-  'protocol://username:password@hostname:port/catalog/resource' \
+  'protocol://username:password@hostname:port/resource' \
   --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table'
 ```
 
@@ -59,7 +71,7 @@ Save data from CrateDB to external resource.
 ```shell
 ctk save table \
   --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table' \
-  'protocol://username:password@hostname:port/catalog/resource'
+  'protocol://username:password@hostname:port/resource'
 ```
 
 ### Python API
@@ -70,8 +82,8 @@ Use the Python API to import or export data.
 from cratedb_toolkit import DatabaseCluster, InputOutputResource
 
 with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.example.org:4200/schema/table") as cluster:
-    cluster.load_table(source=InputOutputResource(url="protocol://username:password@hostname:port/catalog/resource"))
-    cluster.save_table(target=InputOutputResource(url="protocol://username:password@hostname:port/catalog/resource"))
+    cluster.load_table(source=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
+    cluster.save_table(target=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
 ```
 
 
@@ -85,27 +97,41 @@ The I/O subsystem uses URLs across the board to address data sources and sinks.
 :::{rubric} Address arbitrary resources
 :::
 
-The resource address will be picked from the URL path of the corresponding
-resource locator `/catalog/resource`. Based on the type of the data source
-or sink, those parameters have different semantic meanings. Sometimes, also
-the `hostname` portion needs to be considered.
+The resource address will be picked from the resource locator URL path
+`/resource`, which has different semantics based on the adapter type.
+It can be a table name, a bucket name and object path, or anything else
+that identifies an URL-based resource uniquely within the namespace of
+the base URL.
+
+Some adapter types also accept the `?table=` URL query parameter that
+can optionally encode two components separated by a dot, like
+`database.table` or `database.collection`. Others encode the database
+name into the `hostname` fragment of the URL.
+
+Please consult individual adapter documentation pages to
+learn about available URL parameters and differences.
 
 :::{rubric} Address CrateDB schema and table
 :::
 
-The CrateDB schema and table names will be picked from the URL path
-of the corresponding resource locator `/schema/table`.
+CrateDB schema and table names will be picked from the resource locator
+URL path `/schema/table`.
+
 When addressing CrateDB as a data sink, and omitting those parameters, the
 target table address will be derived from the address of the data source.
+When addressing CrateDB as a data source, the source table parameter is
+obligatory.
 
-If you would like to specify the table name differently, use the `--table`
-command line option, or the `CRATEDB_TABLE` environment variable.
+If you would like to specify the table name differently, use the `?table=` URL
+query parameter, the `--table` command line option, or the `CRATEDB_TABLE`
+environment variable.
 
-When aiming to write into a table in a different database schema, use the
-`--schema` command line option, or the `CRATEDB_SCHEMA` environment variable.
-If this parameter is not defined, CrateDB's default schema `doc` will be used.
+If you want to target a different database schema, use the `?schema=` URL
+query parameter, the `--schema` command line option, or the `CRATEDB_SCHEMA`
+environment variable. If this parameter is not defined, CrateDB's default
+schema `doc` will be used.
 
-:::{rubric} Address CrateDB with SSL
+:::{rubric} Connect to CrateDB using SSL
 :::
 
 Use the `?ssl=true` query parameter, and replace username, password, and
@@ -119,10 +145,15 @@ connect to CrateDB Cloud.
 :::
 
 Currently, the pipeline system can transfer single resources / tables with most
-of the I/O adapter types. Only the MongoDB I/O adapter permits transfer of
-MongoDB collections to CrateDB, including multiple tables. This detail will be
-improved in future iterations.
+of the I/O adapter types, and multiple resources / catalogs / collections with
+some adapter types. A few file-based adapters provide file globbing, and
+the MongoDB I/O adapter permits transfer of whole MongoDB databases,
+including multiple collections.
 
+This detail (resource globbing and selection) will be improved in future
+iterations across the board. In the meanwhile, please iterate all sibling
+resources in a loop where multi-resource selection is not possible yet,
+i.e. transfer table by table.
 
 
 ```{toctree}
