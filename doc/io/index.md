@@ -126,20 +126,17 @@ improved in future iterations.
 
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 :hidden:
 
-AWS DMS <dms/index>
-DeltaLake <deltalake/index>
-DynamoDB <dynamodb/index>
-Iceberg <iceberg/index>
-InfluxDB <influxdb/index>
-Ingestr <ingestr/index>
-MongoDB <mongodb/index>
-PostgreSQL <postgresql/index>
+file/index
+database/index
+stream/index
+service/index
+open-table/index
 ```
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 :hidden:
 managed/index
 ```
