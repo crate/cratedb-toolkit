@@ -13,12 +13,62 @@ Import and export data into/from CrateDB.
 ## About
 
 :::{div}
-A polyglot and universal I/O pipeline subsystem that covers data transfer from
-and to [AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
-[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL], and many more
-streaming sources, databases, and data platforms or services with
-[CrateDB] and [CrateDB Cloud].
+A versatile data I/O framework and command-line application to copy
+data between any source and any destination. It supports many data
+sources, destinations, and data loading strategies out of the box.
+
+Adapters for CrateDB let you migrate data from any proprietary enterprise
+data warehouse or database to [CrateDB] or [CrateDB Cloud], to consolidate
+infrastructure and save operational costs.
+
+The polyglot pipeline subsystem covers data transfer from and to
+[AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
+[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL],
+and many more streaming sources, databases, and data platforms or
+services with [CrateDB] and [CrateDB Cloud].
+For a full list of integrations,
+see {ref}`I/O adapter coverage <io-coverage>`.
 :::
+
+## Synopsis
+
+You can run jobs from the command-line or by using the Python API.
+
+### CLI
+
+The CLI entrypoints to the I/O subsystem are the `ctk load table`
+and `ctk save table` commands.
+
+Load data from external resource into CrateDB.
+```shell
+ctk load table \
+  'protocol://username:password@hostname:port/resource' \
+  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table'
+```
+
+Save data from CrateDB to external resource.
+```shell
+ctk save table \
+  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table' \
+  'protocol://username:password@hostname:port/resource'
+```
+
+### Python API
+
+Alternatively, use the Python API to import or export data.
+
+```python
+from cratedb_toolkit import DatabaseCluster, InputOutputResource
+
+# Connect to CrateDB database cluster.
+with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.example.org:4200/schema/table") as cluster:
+
+    # Load data from external resource into CrateDB.
+    cluster.load_table(source=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
+
+    # Save data from CrateDB to external resource.
+    cluster.save_table(target=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
+```
 
 :::{include} /_snippet/install-ctk.md
 :::
@@ -50,49 +100,24 @@ docker run --rm ghcr.io/crate/cratedb-toolkit ctk --version
 docker run --rm ghcr.io/crate/cratedb-toolkit-ingest ctk --version
 ```
 
-
-## Synopsis
-
-You can run jobs from the command-line or by using the Python API.
-
-### CLI
-
-The CLI entrypoints to the I/O subsystem are the `ctk load table`
-and `ctk save table` commands.
-
-Load data from external resource into CrateDB.
-```shell
-ctk load table \
-  'protocol://username:password@hostname:port/resource' \
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table'
-```
-
-Save data from CrateDB to external resource.
-```shell
-ctk save table \
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table' \
-  'protocol://username:password@hostname:port/resource'
-```
-
-### Python API
-
-Use the Python API to import or export data.
-
-```python
-from cratedb_toolkit import DatabaseCluster, InputOutputResource
-
-with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.example.org:4200/schema/table") as cluster:
-    cluster.load_table(source=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
-    cluster.save_table(target=InputOutputResource(url="protocol://username:password@hostname:port/resource"))
-```
-
-
 ## General notes
 
 :::{rubric} URLs everywhere
 :::
 
 The I/O subsystem uses URLs across the board to address data sources and sinks.
+
+:::{rubric} Authentication
+:::
+
+**External:** Different data pipeline elements use their specific way to
+configure access credentials or tokens, using individual parameters.
+
+**CrateDB:** CrateDB as a pipeline source or sink element uses the same way to
+configure credentials across the board, for example by using the
+`--cluster-url` CLI option.
+Please note you **must** specify a password. If your account does not use a
+password, use a random string or just `na`.
 
 :::{rubric} Address arbitrary resources
 :::
@@ -155,6 +180,56 @@ iterations across the board. In the meanwhile, please iterate all sibling
 resources in a loop where multi-resource selection is not possible yet,
 i.e. transfer table by table.
 
+:::{rubric} Incremental loading
+:::
+
+Adapters of the `io-ingest` family support [incremental loading], which means
+you can choose to append, merge, or delete+insert data into the destination
+table using different strategies.
+
+Incremental loading allows you to ingest only the new rows from the source
+table into the destination table, which means that you do not have
+to load the entire table every time you run the data migration procedure.
+
+This comes at a minor cost that a few bookkeeping columns exist in the target
+table, however that is rarely an issue.
+
+(io-coverage)=
+## Coverage
+
+Supported data formats, database types, data platforms, analytics engines,
+and other services.
+
+:**File formats**:
+  CSV, JSONL/NDJSON, Parquet
+
+:**Open table formats**:
+  Apache Iceberg, DeltaLake
+
+:**Cloud storage**:
+ Amazon S3, Azure Cloud Storage, Google Cloud Storage (GCS)
+
+:**Databases**:
+  Actian Data Platform, Actian X, Amazon Athena, Amazon Redshift,
+  Apache Drill, Apache Druid, Apache Hive and Presto, Apache Solr,
+  Clickhouse, CockroachDB, CrateDB, Databend, Databricks, Denodo, DuckDB, EXASOL DB,
+  Elasticsearch, Firebird, Firebolt, Google BigQuery, Google Sheets, Greenplum,
+  HyperSQL (hsqldb), IBM DB2 and Informix, IBM Netezza Performance Server, Impala, Ingres,
+  Kinetica, Microsoft Access, Microsoft SQL Server, MonetDB, MongoDB, MySQL and MariaDB,
+  OpenGauss, OpenSearch, Oracle, PostgreSQL, Rockset, SAP ASE, SAP HANA,
+  SAP Sybase SQL Anywhere, Snowflake, SQLite, Teradata Vantage, TiDB, Vector, YDB,
+  YugabyteDB
+
+:**Streams**:
+  Amazon Kinesis, Apache Kafka (Amazon MSK, Confluent Kafka, Redpanda, RobustMQ)
+
+:**Services**:
+  Airtable, Asana, Facebook Ads, GitHub, Google Ads, Google Analytics,
+  Google Sheets, Jira, HubSpot, Linear, LinkedIn Ads, Mailchimp, Mixpanel,
+  Notion, Personio, Pinterest, Pipedrive, Salesforce, Shopify, Slack, Stripe,
+  TikTok Ads, Zendesk, Zoom, etc.
+
+
 
 ```{toctree}
 :maxdepth: 1
@@ -178,6 +253,7 @@ managed/index
 [Databricks]: https://www.databricks.com/
 [DuckDB]: https://github.com/duckdb/duckdb
 [DynamoDB]: https://aws.amazon.com/dynamodb/
+[incremental loading]: https://bruin-data.github.io/ingestr/getting-started/incremental-loading.html
 [InfluxDB]: https://github.com/influxdata/influxdb
 [MongoDB]: https://github.com/mongodb/mongo
 [MongoDB Atlas]: https://www.mongodb.com/atlas
