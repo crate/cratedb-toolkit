@@ -162,7 +162,7 @@ schema `doc` will be used.
 Use the `?ssl=true` query parameter, and replace username, password, and
 hostname with values matching your environment. Also use this variant to
 connect to CrateDB Cloud.
-```
+```text
 --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
 ```
 

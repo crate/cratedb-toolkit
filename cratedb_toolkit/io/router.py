@@ -62,7 +62,7 @@ class IoRouter:
             adjusted_url = str(source_url_obj).replace(source_url_obj.scheme, http_scheme, 1)
             return influxdb_copy(adjusted_url, target_url, progress=True)
 
-        elif source_url_obj.scheme.startswith("kinesis"):
+        elif source_url_obj.scheme.startswith("kinesis") and not source_url_obj.scheme.endswith("ingest"):
             from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
             return kinesis_relay(
@@ -111,6 +111,11 @@ class IoRouter:
             return from_iceberg(str(source_url_obj), target_url)
 
         from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
+
+        if source_url_obj.scheme.endswith("ingest"):
+            source_url_obj.scheme = source_url_obj.scheme.replace("+ingest", "")
+
+        source_url = str(source_url_obj)
 
         if ingestr_select(source_url):
             return ingestr_copy(source_url, target, progress=True)

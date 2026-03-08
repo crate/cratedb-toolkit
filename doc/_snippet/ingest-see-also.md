@@ -1,5 +1,3 @@
-## See also
-
 CrateDB also provides native data import capabilities and support for different
 ETL applications and frameworks, see [load data into CrateDB].
 If you have additional requirements on this or other I/O adapters, for example

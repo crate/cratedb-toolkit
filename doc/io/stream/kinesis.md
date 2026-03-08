@@ -110,7 +110,7 @@ stream looks like this.
 kinesis+ingest:?aws_access_key_id=${AWS_ACCESS_KEY_ID}&aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}&region_name=${AWS_REGION_NAME}&table=arn:aws:kinesis:${AWS_REGION_NAME}:${AWS_ACCOUNT_ID}:stream/${KINESIS_STREAM_NAME}&start_date=${KINESIS_AT_TIMESTAMP}
 ```
 
-:::{rubric} URL parameters
+:::{rubric} Kinesis URL parameters
 :::
 
 - `aws_access_key_id`: AWS access key ID.
@@ -136,6 +136,20 @@ a few examples are listed below.
 %Y-%m-%dT%H:%M:%S.%f: 2023-01-31T15:00:00.000123
 %Y-%m-%dT%H:%M:%S.%f%z: 2023-01-31T15:00:00.000123+00:00
 ```
+
+:::{rubric} CrateDB URL parameters
+:::
+
+Please make sure to replace username, password, and
+hostname with values matching your environment.
+
+- `ssl`: Use the `?ssl=true` query parameter to enable SSL. Also use this when
+  connecting to CrateDB Cloud.
+  ```text
+  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
+  ```
+
+## See also
 
 :::{include} /_snippet/ingest-see-also.md
 :::
