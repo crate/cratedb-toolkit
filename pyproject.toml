@@ -188,7 +188,7 @@ optional-dependencies.io-base = [
   "universal-pathlib<0.4",
 ]
 optional-dependencies.io-curated = [
-  "cratedb-toolkit[io,io-opentable,influxdb,mongodb]",
+  "cratedb-toolkit[influxdb,io,io-opentable,mongodb]",
 ]
 optional-dependencies.io-ingest = [
   "cratedb-toolkit[io-base]",
