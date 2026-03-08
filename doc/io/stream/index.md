@@ -35,6 +35,18 @@ streaming services and brokers.
 Amazon Kinesis
 ::::
 
+::::{grid-item-card}
+:link: kafka
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/kafka.png
+:height: 80px
+```
++++
+Apache Kafka
+::::
+
 :::::
 
 ## Synopsis
@@ -46,10 +58,10 @@ uvx 'cratedb-toolkit[io-ingest]' load table \
     --cluster-url="crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```
 
-Load data from Apache Kafka into CrateDB.
+Load data from Apache Kafka topic `testdrive` into CrateDB table `testdrive.kafka`.
 ```shell
-ctk load table \
-    "kafka://?bootstrap_servers=localhost:9092&group_id=test_group&security_protocol=SASL_SSL&sasl_mechanisms=PLAIN&sasl_username=example_username&sasl_password=example_secret&batch_size=1000&batch_timeout=3&table=my-topic" \
+uvx 'cratedb-toolkit[io-ingest]' load table \
+    "kafka:?bootstrap_servers=localhost:9092&group_id=test&table=testdrive" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/kafka"
 ```
 
@@ -59,4 +71,5 @@ ctk load table \
 :hidden:
 
 kinesis
+kafka
 ```
