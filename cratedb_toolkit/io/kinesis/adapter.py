@@ -76,6 +76,7 @@ class KinesisStreamAdapter(KinesisAdapterBase):
         self.seqno: int = int(self.kinesis_url.query.get("seqno", 0))
         self.idle_sleep: float = float(self.kinesis_url.query.get("idle-sleep", 0.5))
         self.buffer_time: float = float(self.kinesis_url.query.get("buffer-time", 0.5))
+        self.describe_timeout: int = int(self.kinesis_url.query.get("describe-timeout", 60))
 
         self.kinesis_client = self.session.client("kinesis", endpoint_url=self.endpoint_url)
         self.stopping: bool = False
@@ -106,6 +107,7 @@ class KinesisStreamAdapter(KinesisAdapterBase):
             processor=JsonProcessor(),
             create_stream=self.create,
             create_stream_shards=self.create_shards,
+            describe_timeout=self.describe_timeout,
             **kwargs,
         )
 
@@ -156,6 +158,7 @@ class KinesisStreamAdapter(KinesisAdapterBase):
             buffer_time=self.buffer_time,
             create_stream=self.create,
             create_stream_shards=self.create_shards,
+            describe_timeout=self.describe_timeout,
         ) as producer:
             await producer.put(data)
 
