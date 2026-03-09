@@ -68,7 +68,7 @@ class KinesisFixture:
                     raise
             waiter = kinesis_client.get_waiter("stream_not_exists")
             waiter.wait(StreamName=stream_name, WaiterConfig={"Delay": 0.3, "MaxAttempts": 15})
-            time.sleep(0.25)
+            time.sleep(2)
 
     def get_connection_url_kinesis(self):
         url = URL(self.container.get_url())
