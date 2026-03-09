@@ -25,7 +25,7 @@ def test_kinesis_earliest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
 
     # Define source and target URLs.
     kinesis_url = (
-        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}/demo"
+        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}"
         f"?region=us-east-1&create=true&buffer-time=0.01&idle-sleep=0.01"
     )
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -69,7 +69,7 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
 
     # Define source and target URLs.
     kinesis_url = (
-        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}/demo"
+        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}"
         f"?region=us-east-1&create=true&buffer-time=0.01&idle-sleep=0.01&start=latest"
     )
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"

@@ -1,7 +1,7 @@
 # ruff: noqa: E402
 import logging
-import time
 import typing
+import uuid
 
 import pytest
 
@@ -13,16 +13,10 @@ import botocore
 from yarl import URL
 
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter
-from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter
 from tests.io.dynamodb.manager import DynamoDBTestManager
 
 logger = logging.getLogger(__name__)
 
-
-# Define streams to be deleted before running each test case.
-RESET_STREAMS = [
-    "demo",
-]
 
 # Define tables to be deleted before running each test case.
 RESET_TABLES = [
@@ -32,16 +26,16 @@ RESET_TABLES = [
 
 class DynamoDBFixture:
     """
-    A little helper wrapping Testcontainer's `LocalStackContainer`.
+    A little helper wrapping Testcontainer's ``LocalStackContainer``.
 
-    TODO: Generalize into `LocalStackFixture`, see also `tests.io.kinesis.conftest.KinesisFixture`.
+    TODO: Generalize into ``LocalStackFixture``, see also ``tests.io.kinesis.conftest.KinesisFixture``.
     """
 
     def __init__(self):
         self.container = None
         self.url = None
         self.dynamodb_adapter: typing.Union[DynamoDBAdapter, None] = None
-        self.kinesis_adapter: typing.Union[KinesisStreamAdapter, None] = None
+        self._stream_name = "demo"
         self.setup()
 
     def setup(self):
@@ -53,34 +47,20 @@ class DynamoDBFixture:
         self.container.start()
 
         self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}/?region=us-east-1"))
-        self.kinesis_adapter = KinesisStreamAdapter(
-            URL(f"{self.get_connection_url_kinesis_dynamodb_cdc()}/?region=us-east-1")
-        )
 
     def finalize(self):
         self.container.stop()
 
     def reset(self):
         """
-        Reset all resources to provide each test case with a fresh canvas.
-        """
-        self.reset_streams()
-        self.reset_tables()
+        Provide each test case with a fresh canvas by assigning a unique stream name.
 
-    def reset_streams(self):
+        This avoids the delete/recreate race condition with LocalStack's eventual
+        consistency, where ``create_stream`` can fail if called too soon after
+        ``delete_stream`` completes.
         """
-        Drop all Kinesis streams used for testing.
-        """
-        kinesis_client = self.kinesis_adapter.kinesis_client
-        for stream_name in RESET_STREAMS:
-            try:
-                kinesis_client.delete_stream(StreamName=stream_name)
-            except botocore.exceptions.ClientError as error:
-                if error.response["Error"]["Code"] != "ResourceNotFoundException":
-                    raise
-            waiter = kinesis_client.get_waiter("stream_not_exists")
-            waiter.wait(StreamName=stream_name, WaiterConfig={"Delay": 0.3, "MaxAttempts": 15})
-            time.sleep(0.25)
+        self._stream_name = f"demo-{uuid.uuid4().hex[:8]}"
+        self.reset_tables()
 
     def reset_tables(self):
         """
@@ -102,7 +82,7 @@ class DynamoDBFixture:
 
     def get_connection_url_kinesis_dynamodb_cdc(self):
         url = URL(self.container.get_url())
-        return f"kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}"
+        return f"kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}/{self._stream_name}"
 
 
 @pytest.fixture(scope="session")
@@ -111,7 +91,6 @@ def dynamodb_service():
     Provide a DynamoDB service instance to the test suite.
     """
     db = DynamoDBFixture()
-    db.reset()
     yield db
     db.finalize()
 
@@ -119,7 +98,7 @@ def dynamodb_service():
 @pytest.fixture(scope="function")
 def dynamodb(dynamodb_service):
     """
-    Provide a fresh canvas to each test case invocation, by resetting database content.
+    Provide a fresh canvas to each test case invocation, by assigning a unique stream name.
     """
     dynamodb_service.reset()
     yield dynamodb_service
