@@ -237,6 +237,7 @@ and other services.
 
 file/index
 database/index
+data-warehouse/index
 stream/index
 service/index
 open-table/index

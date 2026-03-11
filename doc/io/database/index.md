@@ -1,7 +1,7 @@
 # Databases
 
 :::{div} sd-text-muted
-Import and export data into/from databases and data warehouses.
+Import and export data into/from database systems.
 :::
 
 Database I/O adapters are provided in two groups that support
@@ -75,34 +75,6 @@ ctk load table \
 :::{rubric} Integrations
 :::
 
-Load data from Google BigQuery into CrateDB.
-```shell
-ctk load table \
-    "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>?table=<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/bigquery_demo"
-```
-
-Load data from Databricks into CrateDB.
-```shell
-ctk load table \
-    "databricks://token:<access_token>@<server_hostname>?http_path=<http_path>&catalog=<catalog>&schema=<schema>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/databricks_demo"
-```
-
-Load data from PostgreSQL into CrateDB.
-```shell
-ctk load table \
-    "postgresql://<username>:<password>@postgresql.example.org:5432/postgres?table=information_schema.tables" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
-```
-
-Load data from Amazon Redshift into CrateDB.
-```shell
-ctk load table \
-    "redshift+psycopg2://<username>:<password>@host.amazonaws.com:5439/database?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/redshift_demo"
-```
-
 Load data from Apache Solr into CrateDB.
 ```shell
 ctk load table \
@@ -128,12 +100,8 @@ ctk load table \
     "crate://crate:na@localhost:4200/?table=information_schema.tables" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_tables"
 ```
-
-Load data from Databricks into CrateDB.
 ```shell
 ctk load table \
-    "databricks://token:<access_token>@<server_hostname>?http_path=<http_path>&catalog=<catalog>&schema=<schema>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/databricks_demo"
 ```
 
 Load data from DuckDB into CrateDB.
@@ -155,13 +123,6 @@ Load data from Elasticsearch into CrateDB.
 ctk load table \
     "elasticsearch://<username>:<password>@es.example.org:9200?secure=false&verify_certs=false&table=demo" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/elastic_demo"
-```
-
-Load data from Google BigQuery into CrateDB.
-```shell
-ctk load table \
-    "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>?table=<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/bigquery_demo"
 ```
 
 Load data from Google Sheets into CrateDB.
@@ -192,25 +153,11 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
 ```
 
-Load data from Snowflake into CrateDB.
-```shell
-ctk load table \
-    "snowflake://<username>:<password>@account/dbname?warehouse=COMPUTE_WH&role=data_scientist&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/snowflake_demo"
-```
-
 Load data from SQLite into CrateDB.
 ```shell
 ctk load table \
     "sqlite:////path/to/demo.sqlite?table=demo" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite_demo"
-```
-
-Load data from Teradata into CrateDB.
-```shell
-ctk load table \
-    "teradatasql://guest:please@teradata.example.com/?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/teradata_demo"
 ```
 
 
