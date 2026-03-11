@@ -1,3 +1,5 @@
+(io-file)=
+
 # Files
 
 :::{div} sd-text-muted
@@ -38,13 +40,6 @@ ctk load table \
 ctk load table \
     "csv://./examples/cdc/postgresql/diamonds.csv?table=sample" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/csv_diamonds"
-```
-
-### SQLite
-```shell
-ctk load table \
-    "sqlite:////path/to/demo.sqlite?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite_demo"
 ```
 
 

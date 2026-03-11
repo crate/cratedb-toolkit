@@ -1,9 +1,10 @@
-(io-postgresql)=
+(postgresql)=
 
 # PostgreSQL I/O
 
-Load and continuously replicate data from PostgreSQL to CrateDB,
-building upon the [ingestr i/o subsystem].
+:::{div} sd-text-muted
+Load data from PostgreSQL into CrateDB.
+:::
 
 ## Install
 
@@ -20,24 +21,15 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
 ```
 
-## Configure
-
-Because the underlying framework uses [dlt], you will configure parameters like
-batch size in your `.dlt/config.toml`.
-```toml
-[data_writer]
-buffer_max_items=1_000
-file_max_items=100_000
-file_max_bytes=50_000
+```{include} ../../_db-options.md
 ```
 
 
 ```{toctree}
 :hidden:
 
-research
+Research <research>
 ```
 
 
 [dlt]: https://github.com/dlt-hub/dlt
-[ingestr i/o subsystem]: project:#ingestr

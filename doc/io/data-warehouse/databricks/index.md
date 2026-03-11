@@ -56,7 +56,7 @@ docker run --rm --name=cratedb \
   docker.io/crate:latest '-Cdiscovery.type=single-node'
 ```
 
-### Populate Databricks
+### Populate data
 
 The Databricks starter warehouse includes a few example tables.
 You can use them for data transfer explorations, so you don't need to
@@ -162,4 +162,4 @@ hostname with values matching your environment.
 [cratedb-toolkit]: https://pypi.org/project/cratedb-toolkit/
 [Databricks]: https://www.databricks.com/
 [Databricks OAuth M2M authentication]: https://getbruin.com/docs/ingestr/supported-sources/databricks.html
-[SQLAlchemy's Databricks dialect]: htvvvrvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvqvvvvvvvvvqvvvvvvvvvvvvvvvvvvtps://docs.databricks.com/aws/en/dev-tools/sqlalchemyvvvvvvv
+[SQLAlchemy's Databricks dialect]: https://docs.databricks.com/aws/en/dev-tools/sqlalchemy

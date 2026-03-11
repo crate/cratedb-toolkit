@@ -1,3 +1,5 @@
+(io-stream)=
+
 # Streams
 
 :::{div} sd-text-muted

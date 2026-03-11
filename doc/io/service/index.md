@@ -1,3 +1,5 @@
+(io-service)=
+
 # Services
 
 :::{div} sd-text-muted
@@ -9,18 +11,18 @@ Import data from APIs and services.
 
 ## Integrations
 
-Load data from Salesforce into CrateDB.
-```shell
-ctk load table \
-    "salesforce://?username=<username>&password=<password>&token=<token>&table=opportunity" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/salesforce_opportunity"
-```
-
 Load data from GitHub into CrateDB.
 ```shell
 ctk load table \
     "github://?access_token=${GH_TOKEN}&owner=crate&repo=cratedb-toolkit&table=issues" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/github_ctk_issues"
+```
+
+Load data from Google Sheets into CrateDB.
+```shell
+ctk load table \
+    "gsheets://?credentials_path=/path/to/service/account.json&table=fkdUQ2bjdNfUq2CA.Sheet1" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/gsheets_demo"
 ```
 
 Load data from HubSpot into CrateDB.

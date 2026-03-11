@@ -1,3 +1,5 @@
+(managed-etl)=
+
 # Managed ETL
 
 :::{include} /_snippet/links.md

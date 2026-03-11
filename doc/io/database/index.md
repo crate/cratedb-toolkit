@@ -1,3 +1,5 @@
+(io-database)=
+
 # Databases
 
 :::{div} sd-text-muted
@@ -44,33 +46,9 @@ uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 :::{rubric} Coverage
 :::
 
+- [All databases supported by SQLAlchemy]
 - CSV, JSON, and Parquet files
-- [Databases supported by SQLAlchemy]
-- Event brokers
-
-:::{rubric} Batch size
-:::
-Because the underlying framework uses [dlt], you will configure parameters like
-batch size in your `.dlt/config.toml`.
-```toml
-[data_writer]
-buffer_max_items=1_000
-file_max_items=100_000
-file_max_bytes=50_000
-```
-
-:::{rubric} Custom queries
-:::
-The feature [custom queries for SQL sources] can be used for partial table
-loading to limit the import to use just a subset of the source columns,
-or for general data filtering and aggregation purposes.
-Use the `query:` prefix to the source table name to provide an SQL statement.
-Example:
-```shell
-ctk load table \
-    "crate://crate:na@localhost:4200/?table=query:SELECT * FROM sys.summits WHERE height > 4000" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_summits"
-```
+- Message and event brokers
 
 :::{rubric} Integrations
 :::
@@ -102,20 +80,16 @@ ctk load table \
 ```
 ```shell
 ctk load table \
+    "crate://crate:na@localhost:4200/?table=query:SELECT * FROM sys.summits WHERE height > 4000" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_summits"
 ```
+
 
 Load data from DuckDB into CrateDB.
 ```shell
 ctk load table \
     "duckdb:////path/to/demo.duckdb?table=information_schema.tables" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/duckdb_tables"
-```
-
-Load data from EXASOL DB into CrateDB.
-```shell
-ctk load table \
-    "exa+websocket://sys:exasol@127.0.0.1:8888?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol_demo"
 ```
 
 Load data from Elasticsearch into CrateDB.
@@ -125,11 +99,11 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/elastic_demo"
 ```
 
-Load data from Google Sheets into CrateDB.
+Load data from EXASOL DB into CrateDB.
 ```shell
 ctk load table \
-    "gsheets://?credentials_path=/path/to/service/account.json&table=fkdUQ2bjdNfUq2CA.Sheet1" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/gsheets_demo"
+    "exa+websocket://sys:exasol@127.0.0.1:8888?table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol_demo"
 ```
 
 Load data from MySQL or MariaDB into CrateDB.
@@ -162,5 +136,4 @@ ctk load table \
 
 
 
-[custom queries for SQL sources]: https://bruin-data.github.io/ingestr/supported-sources/custom_queries.html
-[databases supported by SQLAlchemy]: https://docs.sqlalchemy.org/en/20/dialects/
+[All databases supported by SQLAlchemy]: https://docs.sqlalchemy.org/en/20/dialects/

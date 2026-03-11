@@ -51,7 +51,7 @@ docker run --rm --name=cratedb \
   docker.io/crate:latest '-Cdiscovery.type=single-node'
 ```
 
-### Populate stream
+### Populate data
 
 Publish two events to a Kafka topic using `kcat`.
 ```sh

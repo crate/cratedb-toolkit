@@ -42,7 +42,7 @@ docker run --rm --name=cratedb \
   docker.io/crate:latest '-Cdiscovery.type=single-node'
 ```
 
-###  Configure AWS clients
+### Configure AWS clients
 
 LocalStack's default region is `us-east-1`. Let's use it.
 ```shell
@@ -50,7 +50,7 @@ export AWS_DEFAULT_REGION=us-east-1
 export AWS_ENDPOINT_URL="http://localhost:4566"
 ```
 
-### Populate stream
+### Populate data
 
 Create the Kinesis stream or enumerate existing ones.
 ```shell

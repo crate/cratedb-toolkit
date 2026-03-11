@@ -1,3 +1,5 @@
+(io-opentable)=
+
 # Open table formats
 
 :::{div} sd-text-muted
