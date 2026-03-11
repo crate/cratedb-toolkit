@@ -90,6 +90,7 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
         source_table += f"#{source_fragment}"
 
     start_date = source_url_obj.query.get("start_date")
+    batch_size = source_url_obj.query.get("batch_size")
 
     logger.info("Invoking ingestr")
     logger.info(f"Source URL: {source_url_obj}")
@@ -105,6 +106,7 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
             source_table=source_table,
             dest_table=target_table,
             interval_start=start_date,
+            page_size=batch_size,
             yes=True,
         )
         return True

@@ -5,6 +5,7 @@
 - Documentation: Refurbished introduction and guidance for I/O subsystem
 - IO: Started using ingestr for loading data from Amazon Kinesis
 - IO: Started propagating `start_date` parameter to ingestr's `interval_start`
+- IO: Started propagating `batch_size` parameter to ingestr's `page_size`
 
 ## 2026/03/04 v0.0.44
 - I/O: Added adapter for Apache Iceberg tables
