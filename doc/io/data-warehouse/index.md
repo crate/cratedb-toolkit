@@ -17,6 +17,7 @@ for cost-effective data analytics.
 
 BigQuery <bigquery/index>
 databricks/index
+HANA <hana/index>
 Redshift <redshift/index>
 snowflake/index
 teradata/index
