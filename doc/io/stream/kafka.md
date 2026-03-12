@@ -115,7 +115,7 @@ kafka://?bootstrap_servers=localhost:9092&group_id=test&security_protocol=SASL_S
 - `batch_size`: Number of messages to fetch in a single batch (default: 3000).
 - `batch_timeout`: Maximum time to wait for messages (default: 3 seconds).
 
-:::{include} ../_cratedb-options.md
+:::{include} ../../_cratedb-options.md
 :::
 
 ## Big data example

@@ -90,7 +90,7 @@ crash -c "SELECT * FROM hana.sys_adapters LIMIT 2"
 The SAP HANA table name can be provided by using the `&table=` query parameter.
 See also the documentation about the [SQLAlchemy Dialect for SAP HANA].
 
-:::{include} ../_cratedb-options.md
+:::{include} ../../_cratedb-options.md
 :::
 
 ## See also
