@@ -115,17 +115,8 @@ kafka://?bootstrap_servers=localhost:9092&group_id=test&security_protocol=SASL_S
 - `batch_size`: Number of messages to fetch in a single batch (default: 3000).
 - `batch_timeout`: Maximum time to wait for messages (default: 3 seconds).
 
-:::{rubric} CrateDB URL parameters
+:::{include} ../_cratedb-options.md
 :::
-
-Please make sure to replace username, password, and
-hostname with values matching your environment.
-
-- `ssl`: Use the `?ssl=true` query parameter to enable SSL. Also use this when
-  connecting to CrateDB Cloud.
-  ```text
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
-  ```
 
 ## Big data example
 

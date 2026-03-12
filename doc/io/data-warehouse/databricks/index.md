@@ -141,17 +141,8 @@ on the original documentation.
 
 See also the documentation about [SQLAlchemy's Databricks dialect].
 
-:::{rubric} CrateDB URL parameters
+:::{include} ../_cratedb-options.md
 :::
-
-Please make sure to replace username, password, and
-hostname with values matching your environment.
-
-- `ssl`: Use the `?ssl=true` query parameter to enable SSL. Also use this when
-  connecting to CrateDB Cloud.
-  ```text
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
-  ```
 
 ## See also
 

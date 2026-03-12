@@ -137,17 +137,8 @@ a few examples are listed below.
 %Y-%m-%dT%H:%M:%S.%f%z: 2023-01-31T15:00:00.000123+00:00
 ```
 
-:::{rubric} CrateDB URL parameters
+:::{include} ../_cratedb-options.md
 :::
-
-Please make sure to replace username, password, and
-hostname with values matching your environment.
-
-- `ssl`: Use the `?ssl=true` query parameter to enable SSL. Also use this when
-  connecting to CrateDB Cloud.
-  ```text
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
-  ```
 
 ## See also
 
