@@ -46,7 +46,7 @@ class DynamoDBFixture:
         self.container.with_services("dynamodb", "kinesis")
         self.container.start()
 
-        self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}/?region=us-east-1"))
+        self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}?region=us-east-1"))
 
     def finalize(self):
         self.container.stop()
