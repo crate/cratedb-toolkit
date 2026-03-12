@@ -238,6 +238,7 @@ and other services.
 file/index
 database/index
 data-warehouse/index
+search-engine/index
 stream/index
 service/index
 open-table/index

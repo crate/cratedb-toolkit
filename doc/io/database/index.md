@@ -53,13 +53,6 @@ uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 :::{rubric} Integrations
 :::
 
-Load data from Apache Solr into CrateDB.
-```shell
-ctk load table \
-    "solr://<username>:<password>@<host>:<port>/solr/<collection>?table=<collection>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/solr_demo"
-```
-
 Load data from ClickHouse into CrateDB.
 ```shell
 ctk load table \
@@ -90,13 +83,6 @@ Load data from DuckDB into CrateDB.
 ctk load table \
     "duckdb:////path/to/demo.duckdb?table=information_schema.tables" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/duckdb_tables"
-```
-
-Load data from Elasticsearch into CrateDB.
-```shell
-ctk load table \
-    "elasticsearch://<username>:<password>@es.example.org:9200?secure=false&verify_certs=false&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/elastic_demo"
 ```
 
 Load data from EXASOL DB into CrateDB.
