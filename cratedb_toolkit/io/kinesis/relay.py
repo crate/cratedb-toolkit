@@ -11,6 +11,7 @@ from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from yarl import URL
 
+from cratedb_toolkit.io.exception import SkipAdapterException
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.model import DatabaseAddress
@@ -52,7 +53,7 @@ class KinesisRelay:
                 primary_keys=pks, column_types=cms, mapping_strategy=mapping_strategy, ignore_ddl=ignore_ddl
             )
         else:
-            raise NotImplementedError(f"Data processing not implemented for {self.kinesis_url}")
+            raise SkipAdapterException(f"Not processing {self.kinesis_url} here")
 
         self.connection: sa.Connection
         self.progress_bar: tqdm

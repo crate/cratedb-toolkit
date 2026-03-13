@@ -7,44 +7,24 @@ The database shell interface of CrateDB Toolkit is based on the
 managed clusters on CrateDB Cloud, and self-hosted instances of
 CrateDB.
 
-## Install
-
-We recommend using the [uv] package manager to install the application per
-`uv tool install`. Otherwise, using `pipx install` or `pip install --user`
-are viable alternatives.
-```shell
-uv tool install --upgrade 'cratedb-toolkit'
-```
-
 ## Synopsis
 
 ```shell
 ctk shell
 ```
 
+:::{include} /_snippet/install-ctk.md
+:::
+
+:::{include} /_snippet/cloud-prerequisites.md
+:::
+
 ## Usage
 
 The `ctk shell` subcommand accepts configuration settings per CLI options and
-environment variables.
-
-:::{include} ../cluster/_address.md
-:::
+environment variables, like outlined above.
 
 ### CrateDB Cloud
-
-When working with [CrateDB Cloud], you can select between two authentication variants.
-Either _interactively authorize_ your terminal session using `croud login`,
-```shell
-croud login --idp {cognito,azuread,github,google}
-```
-or provide API access credentials per environment variables for _headless/unattended
-operations_ after creating them using the [CrateDB Cloud Console] or
-`croud api-keys create`.
-```shell
-# CrateDB Cloud API credentials.
-export CRATEDB_CLOUD_API_KEY='<YOUR_API_KEY_HERE>'
-export CRATEDB_CLOUD_API_SECRET='<YOUR_API_SECRET_HERE>'
-```
 
 Connect to CrateDB Cloud.
 ```shell

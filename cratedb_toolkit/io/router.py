@@ -17,6 +17,7 @@ from boltons.urlutils import URL
 from cratedb_toolkit.exception import (
     OperationFailed,
 )
+from cratedb_toolkit.io.exception import SkipAdapterException
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource
 from cratedb_toolkit.util.data import asbool
 
@@ -65,11 +66,14 @@ class IoRouter:
         elif source_url_obj.scheme.startswith("kinesis"):
             from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
-            return kinesis_relay(
-                source_url=source_url_obj,
-                target_url=target_url,
-                recipe=transformation,
-            )
+            try:
+                return kinesis_relay(
+                    source_url=source_url_obj,
+                    target_url=target_url,
+                    recipe=transformation,
+                )
+            except SkipAdapterException:
+                pass
 
         elif source_url_obj.scheme in [
             "file+bson",
@@ -111,6 +115,8 @@ class IoRouter:
             return from_iceberg(str(source_url_obj), target_url)
 
         from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
+
+        source_url = str(source_url_obj)
 
         if ingestr_select(source_url):
             return ingestr_copy(source_url, target, progress=True)

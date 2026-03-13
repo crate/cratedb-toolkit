@@ -118,9 +118,6 @@ dependencies = [
   "verlib2<0.4",
   "yarl<1.24",
 ]
-optional-dependencies.all = [
-  "cratedb-toolkit[full,influxdb,mongodb]",
-]
 optional-dependencies.cfr = [
   "duckdb<2",
   "marimo<0.21",
@@ -167,7 +164,7 @@ optional-dependencies.dynamodb = [
   "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,datasets,docs-api,io,io-opentable,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,mcp,service]",
 ]
 optional-dependencies.iceberg = [
   "cratedb-toolkit[io]",
@@ -190,7 +187,10 @@ optional-dependencies.io-base = [
   "polars<1.40",
   "universal-pathlib<0.4",
 ]
-optional-dependencies.io-ingestr = [
+optional-dependencies.io-curated = [
+  "cratedb-toolkit[influxdb,io,io-opentable,mongodb]",
+]
+optional-dependencies.io-ingest = [
   "cratedb-toolkit[io-base]",
   "dlt>=1.10,<1.24",
   "dlt-cratedb>=0.0.1",

@@ -6,14 +6,14 @@ which is an extremely fast Python package and project manager.
 
 ## GA packages
 
-Install package with only [fundamental dependencies].
+Install package with only fundamental dependencies.
 ```shell
 uv tool install --upgrade 'cratedb-toolkit'
 ```
 
-Install package including [all subsystems] / [full dependencies].
+Install package including all dependencies.
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[all]'
+uv tool install --upgrade 'cratedb-toolkit[full]'
 ```
 
 Verify installation.
@@ -29,7 +29,7 @@ ctk --version
 ## Container
 
 Alternatively, use a container image from GHCR. Use `ghcr.io/crate/cratedb-toolkit`
-for the default toolset. To use the "ingest" image (which includes the `io-ingestr`
+for the default toolset. To use the "ingest" image (which includes the `io-ingest`
 extras and the ingestr-based I/O adapters), use `ghcr.io/crate/cratedb-toolkit-ingest`.
 The default image does not include these extras or drivers.
 
@@ -68,7 +68,4 @@ Python package "extras" that relate to corresponding subsystems:
 `kinesis`, `mcp`, `mongodb`, `pymongo`, `service`, `testing`.
 
 
-[fundamental dependencies]: https://github.com/crate/cratedb-toolkit/blob/v0.0.30/pyproject.toml#L85-L110
-[full dependencies]: https://github.com/crate/cratedb-toolkit/blob/v0.0.30/pyproject.toml#L148-L150
-[all subsystems]: https://github.com/crate/cratedb-toolkit/blob/v0.0.30/pyproject.toml#L112-L114
 [uv]: https://docs.astral.sh/uv/

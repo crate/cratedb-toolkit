@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "cratedb-toolkit"
-copyright = "2022-2025, The CrateDB Developers"
+copyright = "2022-2026, The CrateDB Developers"  # noqa: A001
 author = "The CrateDB Developers"
 
 # -- General configuration ---------------------------------------------------
@@ -26,7 +26,9 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
+suppress_warnings = [
+    "myst.header",
+]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -71,7 +73,9 @@ html_show_sourcelink = True
 
 intersphinx_mapping = {
     "crash": ("https://cratedb.com/docs/crate/crash/en/latest/", None),
+    "cloud": ("https://cratedb.com/docs/cloud/en/latest/", None),
     "croud": ("https://cratedb.com/docs/cloud/cli/en/latest/", None),
+    "guide": ("https://cratedb.com/docs/guide/", None),
     "influxio": ("https://influxio.readthedocs.io/", None),
 }
 linkcheck_ignore = []

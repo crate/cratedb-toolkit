@@ -1,5 +1,8 @@
 # MCP server landscape for PostgreSQL and CrateDB
 
+:::{include} /_snippet/links.md
+:::
+
 An overview about a fragment of the MCP server landscape,
 focusing on the most popular ones that can connect to both PostgreSQL and CrateDB databases.
 
@@ -9,7 +12,7 @@ The CrateDB MCP server specialises on advanced CrateDB SQL operations by blendin
 knowledge base resources from CrateDB's documentation about query optimizations.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: <https://cratedb.com/docs/guide/integrate/mcp/cratedb-mcp.html>
+:Homepage: [CrateDB MCP](inv:guide:std:doc#integrate/mcp/cratedb-mcp)
 :Validated with CrateDB: True
 :Install: `uv pip install cratedb-mcp`
 :Run: `cratedb-mcp serve`

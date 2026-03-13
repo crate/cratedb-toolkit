@@ -1,5 +1,8 @@
 # CrateDB MCP sandbox
 
+:::{include} /_snippet/links.md
+:::
+
 A little walkthrough to get you started using CrateDB and MCP.
 
 ## Prerequisites
@@ -111,9 +114,7 @@ ctk query mcp --server-name=postgres-basic launch
 
 
 
-[CrateDB]: https://cratedb.com/database
 [cratedb-mcp]: https://cratedb.com/docs/guide/integrate/mcp/cratedb-mcp.html
-[CrateDB Cloud]: https://cratedb.com/docs/cloud/
 [CrateDB Toolkit]: https://cratedb-toolkit.readthedocs.io/
 [Docker]: https://www.docker.com/
 [inquiry]: https://github.com/crate/cratedb-toolkit/blob/main/cratedb_toolkit/query/mcp/inquiry.py
