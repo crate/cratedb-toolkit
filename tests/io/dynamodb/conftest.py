@@ -35,7 +35,7 @@ class DynamoDBFixture:
         self.container = None
         self.url = None
         self.dynamodb_adapter: typing.Union[DynamoDBAdapter, None] = None
-        self._stream_name = "demo"
+        self._stream_name = f"demo-{uuid.uuid4().hex[:8]}"
         self.setup()
 
     def setup(self):
