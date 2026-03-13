@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/03/13 v0.0.45
 - I/O: Refactored `ctk.io` subsystem
 - I/O: Refurbished documentation of the [I/O subsystem]
 - I/O: Started using ingestr for loading data from Amazon Kinesis
