@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "cratedb-toolkit"
-copyright = "2022-2026, The CrateDB Developers"  # noqa: A001.
+copyright = "2022-2026, The CrateDB Developers"  # noqa: A001
 author = "The CrateDB Developers"
 
 # -- General configuration ---------------------------------------------------

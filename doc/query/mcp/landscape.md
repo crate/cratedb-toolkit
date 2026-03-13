@@ -12,7 +12,7 @@ The CrateDB MCP server specialises on advanced CrateDB SQL operations by blendin
 knowledge base resources from CrateDB's documentation about query optimizations.
 It is written in Python, optionally to be invoked with `uv` or `uvx`.
 
-:Homepage: [](inv:guide:std:doc#integrate/mcp/cratedb-mcp)
+:Homepage: [CrateDB MCP](inv:guide:std:doc#integrate/mcp/cratedb-mcp)
 :Validated with CrateDB: True
 :Install: `uv pip install cratedb-mcp`
 :Run: `cratedb-mcp serve`

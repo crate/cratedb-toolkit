@@ -127,7 +127,7 @@ teradata/index
 Load data from BigQuery table into CrateDB table.
 ```shell
 ctk load table \
-    "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>?table=<table-name>" \
+    "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>&table=<table-name>" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/bigquery"
 ```
 

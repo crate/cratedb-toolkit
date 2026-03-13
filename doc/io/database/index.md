@@ -324,7 +324,7 @@ ctk load table \
 Load data from IBM Db2 into CrateDB.
 ```shell
 ctk load table \
-    "db2://<username>:<password>@<host>:<port>/<database-name>&table=demo" \
+    "db2://<username>:<password>@<host>:<port>/<database-name>?table=demo" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/ibmdb2"
 ```
 

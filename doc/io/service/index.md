@@ -456,7 +456,7 @@ See [Zendesk entities] about any labels you can use for the `table` parameter
 in the source URL.
 ```shell
 ctk load table \
-    "zendesk://:<oauth_token>@<sub-domain>&table=tickets" \
+    "zendesk://:<oauth_token>@<sub-domain>?table=tickets" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/zendesk_tickets"
 ```
 

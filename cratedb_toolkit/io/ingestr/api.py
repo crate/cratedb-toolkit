@@ -87,7 +87,6 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
             raise ValueError("`batch_size` must be greater than 0")
 
     start_date = source_url_obj.query.get("start_date")
-    batch_size = int(source_url_obj.query.get("batch_size", 50_000))
     source_url_obj = source_url_obj.without_query_params("table", "start_date", "batch_size").with_fragment("")
 
     target_uri, target_table_address = target_address.decode()
@@ -115,8 +114,6 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
         dest_uri=str(target_url),
         source_table=source_table,
         dest_table=target_table,
-        interval_start=start_date,
-        page_size=batch_size,
         yes=True,
     )
     if start_date is not None:

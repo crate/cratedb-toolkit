@@ -36,13 +36,6 @@ elasticsearch/index
 
 ## Synopsis
 
-Load data from Apache Solr into CrateDB (planned).
-```shell
-ctk load table \
-    "solr://<username>:<password>@<host>:<port>/solr/<collection>?table=<collection>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/solr"
-```
-
 Load data from Elasticsearch into CrateDB.
 ```shell
 ctk load table \
