@@ -91,7 +91,7 @@ ctk load table \
   --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
-## InfluxDB parameters
+## InfluxDB options
 
 ### `timeout`
 
@@ -104,7 +104,7 @@ To adjust the timeout, add a `timeout` query parameter to the InfluxDB URL:
 ctk load table influxdb2://example:token@localhost:8086/testdrive/demo?timeout=300
 ```
 
-## CrateDB parameters
+## CrateDB options
 
 ### `if-exists`
 

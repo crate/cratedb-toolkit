@@ -2,11 +2,13 @@
 
 ## Unreleased
 - I/O: Refactored `ctk.io` subsystem
-- Documentation: Refurbished introduction and guidance for I/O subsystem
-- IO: Started using ingestr for loading data from Amazon Kinesis
-- IO: Started propagating `start_date` parameter to ingestr's `interval_start`
-- IO: Started propagating `batch_size` parameter to ingestr's `page_size`
+- I/O: Refurbished documentation of the [I/O subsystem]
+- I/O: Started using ingestr for loading data from Amazon Kinesis
+- I/O: Started propagating `start_date` parameter to ingestr's `interval_start`
+- I/O: Started propagating `batch_size` parameter to ingestr's `page_size`
 - Packaging: Renamed extras `all` → `full`, `io-ingestr` → `io-ingest`, and `io-all` → `io-curated`
+
+[I/O subsystem]: https://cratedb-toolkit.readthedocs.io/io/
 
 ## 2026/03/04 v0.0.44
 - I/O: Added adapter for Apache Iceberg tables

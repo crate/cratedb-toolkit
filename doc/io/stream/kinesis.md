@@ -137,7 +137,7 @@ a few examples are listed below.
 %Y-%m-%dT%H:%M:%S.%f%z: 2023-01-31T15:00:00.000123+00:00
 ```
 
-:::{include} ../../_cratedb-options.md
+:::{include} ../_cratedb-options.md
 :::
 
 ## See also

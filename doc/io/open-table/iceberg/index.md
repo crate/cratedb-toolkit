@@ -138,7 +138,7 @@ ctk load table \
 
 ## Options
 
-### Generic parameters
+### Generic options
 
 #### `batch-size`
 

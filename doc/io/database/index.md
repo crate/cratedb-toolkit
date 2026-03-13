@@ -61,7 +61,7 @@ Load data from ClickHouse into CrateDB.
 ```shell
 ctk load table \
     "clickhouse://<username>:<password>@<host>:<port>?secure=<secure>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/clickhouse_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/clickhouse"
 ```
 
 Load data from CrateDB into CrateDB.
@@ -93,21 +93,21 @@ Load data from EXASOL DB into CrateDB.
 ```shell
 ctk load table \
     "exa+websocket://sys:exasol@127.0.0.1:8888?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol"
 ```
 
 Load data from MySQL or MariaDB into CrateDB.
 ```shell
 ctk load table \
     "mysql://<username>:<password>@host:port/dbname?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/mysql_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/mysql"
 ```
 
 Load data from Oracle into CrateDB.
 ```shell
 ctk load table \
     "oracle+cx_oracle://<username>:<password>@<hostname>:<port>/dbname?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/oracle_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/oracle"
 ```
 
 Load data from PostgreSQL into CrateDB.
@@ -121,7 +121,7 @@ Load data from SQLite into CrateDB.
 ```shell
 ctk load table \
     "sqlite:////path/to/demo.sqlite?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite"
 ```
 
 

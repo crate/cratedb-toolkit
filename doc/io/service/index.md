@@ -22,7 +22,7 @@ Load data from Google Sheets into CrateDB.
 ```shell
 ctk load table \
     "gsheets://?credentials_path=/path/to/service/account.json&table=fkdUQ2bjdNfUq2CA.Sheet1" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/gsheets_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/gsheets"
 ```
 
 Load data from HubSpot into CrateDB.

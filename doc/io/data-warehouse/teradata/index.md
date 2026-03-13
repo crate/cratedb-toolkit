@@ -12,7 +12,7 @@ analytics and data management capabilities for large-scale data workloads.
 ```shell
 ctk load table \
     "teradatasql://guest:please@teradata.example.com/?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/teradata_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/teradata"
 ```
 
 

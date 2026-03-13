@@ -13,7 +13,7 @@ by a column-oriented DBMS principle.
 ```shell
 ctk load table \
     "redshift+psycopg2://<username>:<password>@host.amazonaws.com:5439/database?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/redshift_demo"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/redshift"
 ```
 
 

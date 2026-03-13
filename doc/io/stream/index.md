@@ -32,6 +32,7 @@ streaming services and brokers.
 :class-footer: sd-fs-5 sd-font-weight-bold
 ```{image} /_static/logo/kinesis.svg
 :height: 80px
+:alt:
 ```
 +++
 Amazon Kinesis
@@ -44,6 +45,7 @@ Amazon Kinesis
 :class-footer: sd-fs-5 sd-font-weight-bold
 ```{image} /_static/logo/kafka.png
 :height: 80px
+:alt:
 ```
 +++
 Apache Kafka

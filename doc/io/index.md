@@ -221,7 +221,7 @@ and other services.
   YugabyteDB
 
 :**Streams**:
-  Amazon Kinesis, Apache Kafka (Amazon MSK, Confluent Kafka, Redpanda, RobustMQ)
+  Amazon Kinesis, Apache Kafka (Amazon MSK, Confluent Kafka, Redpanda, RobustMQ, WarpStream)
 
 :**Services**:
   Airtable, Asana, Facebook Ads, GitHub, Google Ads, Google Analytics,
