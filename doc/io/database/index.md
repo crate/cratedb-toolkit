@@ -96,6 +96,23 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol"
 ```
 
+Load data from IBM Db2 into CrateDB.
+```shell
+ctk load table \
+    "db2://<username>:<password>@<host>:<port>/<database-name>&table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/ibmdb2"
+```
+
+Load data from Microsoft SQL Server into CrateDB.
+```shell
+alias ctk-ingest='docker run --rm -it --network=host ghcr.io/crate/cratedb-toolkit-ingest:latest ctk'
+USER=$(az account show --query user.name -o tsv)
+TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
+ctk-ingest load table \
+    "mssql://$USER:$TOKEN@<server>.database.windows.net/<database>?table=demo&Authentication=ActiveDirectoryAccessToken" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/mssql"
+```
+
 Load data from MySQL or MariaDB into CrateDB.
 ```shell
 ctk load table \
@@ -115,6 +132,18 @@ Load data from PostgreSQL into CrateDB.
 ctk load table \
     "postgresql://<username>:<password>@postgresql.example.org:5432/postgres?table=information_schema.tables" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
+```
+
+Load data from Spanner into CrateDB.
+```shell
+ctk load table \
+    "spanner://?project_id=<project_id>&instance_id=<instance_id>&database=<database>&credentials_path=</path/to/service/account.json>&table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/spanner"
+```
+```shell
+ctk load table \
+    "spanner://?project_id=<project_id>&instance_id=<instance_id>&database=<database>&credentials_base64=<base64_encoded_credentials>&table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/spanner"
 ```
 
 Load data from SQLite into CrateDB.
