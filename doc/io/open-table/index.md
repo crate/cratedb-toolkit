@@ -17,8 +17,41 @@ They build upon [Apache Parquet] data files, a free and open-source
 column-oriented data storage format, effectively succeeding and superseding
 [Apache Hive] use cases from the [Hadoop] era.
 
+:::::{grid} 3
+:gutter: 2
+:padding: 0
+
+::::{grid-item-card}
+:link: iceberg
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/iceberg.png
+:height: 80px
+:alt:
+```
++++
+Apache Iceberg
+::::
+
+::::{grid-item-card}
+:link: deltalake
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/delta-lake.svg
+:height: 80px
+:alt:
+```
++++
+Delta Lake
+::::
+
+:::::
+
 ```{toctree}
 :maxdepth: 1
+:hidden:
 
 DeltaLake <deltalake/index>
 Iceberg <iceberg/index>

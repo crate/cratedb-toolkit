@@ -11,6 +11,246 @@ Import data from APIs and services.
 
 ## Integrations
 
+:::::{grid} 2 3 3 4
+:gutter: 2
+:padding: 0
+
+::::{grid-item-card}
+:link: airtable
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/airtable.svg
+:height: 80px
+:alt:
+```
++++
+Airtable
+::::
+
+::::{grid-item-card}
+:link: anthropic
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/anthropic.svg
+:height: 80px
+:alt:
+```
++++
+Anthropic
+::::
+
+::::{grid-item-card}
+:link: asana
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/asana.svg
+:height: 80px
+:alt:
+```
++++
+Asana
+::::
+
+::::{grid-item-card}
+:link: attio
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/attio.svg
+:height: 80px
+:alt:
+```
++++
+Attio
+::::
+
+::::{grid-item-card}
+:link: facebook-ads
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/facebook.svg
+:height: 80px
+:alt:
+```
++++
+Facebook Ads
+::::
+
+::::{grid-item-card}
+:link: github
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/github.svg
+:height: 80px
+:alt:
+```
++++
+GitHub
+::::
+
+::::{grid-item-card}
+:link: google-ads
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/google-ads.svg
+:height: 80px
+:alt:
+```
++++
+Google Ads
+::::
+
+::::{grid-item-card}
+:link: google-analytics
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/google-analytics.svg
+:height: 80px
+:alt:
+```
++++
+Google Analytics
+::::
+
+::::{grid-item-card}
+:link: google-sheets
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/google-sheets.svg
+:height: 80px
+:alt:
+```
++++
+Google Sheets
+::::
+
+::::{grid-item-card}
+:link: hubspot
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/hubspot.svg
+:height: 80px
+:alt:
+```
++++
+HubSpot
+::::
+
+::::{grid-item-card}
+:link: jira
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/jira.svg
+:height: 80px
+:alt:
+```
++++
+Jira
+::::
+
+::::{grid-item-card}
+:link: salesforce
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/salesforce.svg
+:height: 80px
+:alt:
+```
++++
+Salesforce
+::::
+
+::::{grid-item-card}
+:link: shopify
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/shopify.svg
+:height: 80px
+:alt:
+```
++++
+Shopify
+::::
+
+::::{grid-item-card}
+:link: slack
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/slack.svg
+:height: 80px
+:alt:
+```
++++
+Slack
+::::
+
+::::{grid-item-card}
+:link: stripe
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/stripe.svg
+:height: 80px
+:alt:
+```
++++
+Stripe
+::::
+
+::::{grid-item-card}
+:link: wise
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/wise.svg
+:height: 80px
+:alt:
+```
++++
+Wise
+::::
+
+::::{grid-item-card}
+:link: zendesk
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/zendesk.svg
+:height: 80px
+:alt:
+```
++++
+Zendesk
+::::
+
+::::{grid-item-card}
+:link: zoom
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/zoom.svg
+:height: 80px
+:alt:
+```
++++
+Zoom
+::::
+
+:::::
+
 ## Examples
 
 (airtable)=

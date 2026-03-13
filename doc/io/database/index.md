@@ -6,57 +6,272 @@
 Import and export data into/from database systems.
 :::
 
-Database I/O adapters are provided in two groups that support
-different types of data source and data sink pipeline elements
-and data formats. Please select the right one based on your needs.
+## Integrations
 
-## Group »curated«
+:::::{grid} 2 3 3 4
+:gutter: 2
+:padding: 0
 
-Support for files, open table formats, DynamoDB, InfluxDB, and MongoDB.
-
-:::{rubric} Install
-:::
-```shell
-uv tool install --upgrade 'cratedb-toolkit[io-curated]'
+::::{grid-item-card}
+:link: athena
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/athena.svg
+:height: 80px
+:alt:
 ```
++++
+Athena
+::::
 
-:::{rubric} Integrations
-:::
+::::{grid-item-card}
+:link: aws-dms
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/aws-dms.svg
+:height: 80px
+:alt:
+```
++++
+AWS DMS
+::::
+
+::::{grid-item-card}
+:link: clickhouse
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/clickhouse.png
+:height: 80px
+:alt:
+```
++++
+ClickHouse
+::::
+
+::::{grid-item-card}
+:link: couchbase
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/couchbase.svg
+:height: 80px
+:alt:
+```
++++
+Couchbase
+::::
+
+::::{grid-item-card}
+:link: duckdb
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/duckdb.svg
+:height: 80px
+:alt:
+```
++++
+DuckDB
+::::
+
+::::{grid-item-card}
+:link: dynamodb
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/dynamodb.svg
+:height: 80px
+:alt:
+```
++++
+DynamoDB
+::::
+
+::::{grid-item-card}
+:link: exasol
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/exasol.svg
+:height: 80px
+:alt:
+```
++++
+Exasol
+::::
+
+::::{grid-item-card}
+:link: ibm-db2
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/ibm-db2.svg
+:height: 80px
+:alt:
+```
++++
+IBM Db2
+::::
+
+::::{grid-item-card}
+:link: influxdb
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/influxdb.svg
+:height: 80px
+:alt:
+```
++++
+InfluxDB
+::::
+
+::::{grid-item-card}
+:link: mariadb
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/mariadb.svg
+:height: 80px
+:alt:
+```
++++
+MariaDB
+::::
+
+::::{grid-item-card}
+:link: mongodb
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/mongodb.svg
+:height: 80px
+:alt:
+```
++++
+MongoDB
+::::
+
+::::{grid-item-card}
+:link: mssql
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/mssql.svg
+:height: 80px
+:alt:
+```
++++
+Microsoft SQL
+::::
+
+::::{grid-item-card}
+:link: mysql
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/mysql.svg
+:height: 80px
+:alt:
+```
++++
+MySQL
+::::
+
+::::{grid-item-card}
+:link: oracle
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/oracle.svg
+:height: 80px
+:alt:
+```
++++
+Oracle
+::::
+
+::::{grid-item-card}
+:link: postgresql
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/postgresql.svg
+:height: 80px
+:alt:
+```
++++
+PostgreSQL
+::::
+
+::::{grid-item-card}
+:link: spanner
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/spanner.svg
+:height: 80px
+:alt:
+```
++++
+Spanner
+::::
+
+::::{grid-item-card}
+:link: sqlite
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/sqlite.svg
+:height: 80px
+:alt:
+```
++++
+SQLite
+::::
+
+:::::
+
+
 ```{toctree}
 :maxdepth: 1
+:hidden:
 
 AWS DMS <dms/index>
 DynamoDB <dynamodb/index>
 InfluxDB <influxdb/index>
 MongoDB <mongodb/index>
-```
-
-## Group »ingest«
-
-Support for files, RDBMS databases and search servers, streams, platforms,
-and services.
-
-:::{rubric} Install
-:::
-```shell
-uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
-```
-
-:::{rubric} Coverage
-:::
-
-- [SQLAlchemy-supported databases]
-- CSV, JSON, and Parquet files
-- Message and event brokers
-
-:::{rubric} Integrations
-:::
-```{toctree}
-:maxdepth: 1
-
 PostgreSQL <postgresql/index>
 ```
 
+### Examples
+
+(athena)=
+:::{rubric} Amazon Athena
+:::
+Load data from Amazon Athena into CrateDB.
+```shell
+ctk load table \
+    "athena://?bucket=<your-destination-bucket>&access_key_id=<your-aws-access-key-id>&secret_access_key=<your-aws-secret-access-key>&region_name=<your-aws-region>&table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/athena"
+```
+
+(couchbase)=
+:::{rubric} Couchbase
+:::
+Load data from Couchbase into CrateDB.
+```shell
+ctk load table \
+    "couchbase://username:password@host/bucket?ssl=true&table=demo" \
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/couchbase"
+```
+
+(clickhouse)=
+:::{rubric} ClickHouse
+:::
 Load data from ClickHouse into CrateDB.
 ```shell
 ctk load table \
@@ -64,6 +279,8 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/clickhouse"
 ```
 
+:::{rubric} CrateDB
+:::
 Load data from CrateDB into CrateDB.
 ```shell
 ctk load table \
@@ -81,7 +298,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_summits"
 ```
 
-
+(duckdb)=
+:::{rubric} DuckDB
+:::
 Load data from DuckDB into CrateDB.
 ```shell
 ctk load table \
@@ -89,6 +308,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/duckdb_tables"
 ```
 
+(exasol)=
+:::{rubric} Exasol
+:::
 Load data from EXASOL DB into CrateDB.
 ```shell
 ctk load table \
@@ -96,6 +318,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol"
 ```
 
+(ibm-db2)=
+:::{rubric} IBM Db2
+:::
 Load data from IBM Db2 into CrateDB.
 ```shell
 ctk load table \
@@ -103,6 +328,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/ibmdb2"
 ```
 
+(mssql)=
+:::{rubric} Microsoft SQL Server
+:::
 Load data from Microsoft SQL Server into CrateDB.
 ```shell
 alias ctk-ingest='docker run --rm -it --network=host ghcr.io/crate/cratedb-toolkit-ingest:latest ctk'
@@ -113,6 +341,10 @@ ctk-ingest load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/mssql"
 ```
 
+(mysql)=
+(mariadb)=
+:::{rubric} MySQL
+:::
 Load data from MySQL or MariaDB into CrateDB.
 ```shell
 ctk load table \
@@ -120,6 +352,8 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/mysql"
 ```
 
+:::{rubric} Oracle
+:::
 Load data from Oracle into CrateDB.
 ```shell
 ctk load table \
@@ -127,6 +361,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/oracle"
 ```
 
+(oracle)=
+:::{rubric} PostgreSQL
+:::
 Load data from PostgreSQL into CrateDB.
 ```shell
 ctk load table \
@@ -134,6 +371,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
 ```
 
+(spanner)=
+:::{rubric} Spanner
+:::
 Load data from Spanner into CrateDB.
 ```shell
 ctk load table \
@@ -146,6 +386,9 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/spanner"
 ```
 
+(sqlite)=
+:::{rubric} SQLite
+:::
 Load data from SQLite into CrateDB.
 ```shell
 ctk load table \

@@ -8,8 +8,28 @@ Import and export data into/from search engines.
 
 ## Integrations
 
+:::::{grid} 3
+:gutter: 2
+:padding: 0
+
+::::{grid-item-card}
+:link: elasticsearch
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/elasticsearch.svg
+:height: 80px
+:alt:
+```
++++
+Elasticsearch
+::::
+
+:::::
+
 ```{toctree}
 :maxdepth: 1
+:hidden:
 
 elasticsearch/index
 ```

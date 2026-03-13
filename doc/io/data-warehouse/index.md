@@ -12,8 +12,106 @@ for cost-effective data analytics.
 
 ## Integrations
 
+:::::{grid} 3
+:gutter: 2
+:padding: 0
+
+::::{grid-item-card}
+:link: redshift
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/redshift.svg
+:height: 80px
+:alt:
+```
++++
+Amazon Redshift
+::::
+
+::::{grid-item-card}
+:link: databricks
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/databricks.svg
+:height: 80px
+:alt:
+```
++++
+Databricks
+::::
+
+::::{grid-item-card}
+:link: bigquery
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/bigquery.svg
+:height: 80px
+:alt:
+```
++++
+Google BigQuery
+::::
+
+::::{grid-item-card}
+:link: motherduck
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/motherduck.svg
+:height: 80px
+:alt:
+```
++++
+MotherDuck
+::::
+
+::::{grid-item-card}
+:link: hana
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/sap.svg
+:height: 80px
+:alt:
+```
++++
+SAP HANA
+::::
+
+::::{grid-item-card}
+:link: snowflake
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/snowflake.svg
+:height: 80px
+:alt:
+```
++++
+Snowflake
+::::
+
+::::{grid-item-card}
+:link: teradata
+:link-type: ref
+:class-item: sd-fs-1 sd-text-center
+:class-footer: sd-fs-5 sd-font-weight-bold
+```{image} /_static/logo/teradata.svg
+:height: 80px
+:alt:
+```
++++
+Teradata
+::::
+
+:::::
+
 ```{toctree}
 :maxdepth: 1
+:hidden:
 
 BigQuery <bigquery/index>
 databricks/index
