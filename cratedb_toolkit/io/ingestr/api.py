@@ -75,7 +75,9 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
     source_url_obj = URL(source_url)
     source_table = source_url_obj.query.get("table")
     source_fragment = source_url_obj.fragment
-    source_url_obj = source_url_obj.without_query_params("table").with_fragment("")
+    start_date = source_url_obj.query.get("start_date")
+    batch_size = source_url_obj.query.get("batch_size", 5_000)
+    source_url_obj = source_url_obj.without_query_params("table", "start_date", "batch_size").with_fragment("")
 
     target_uri, target_table_address = target_address.decode()
     target_table = target_table_address.fullname
@@ -89,15 +91,13 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
     if source_fragment:
         source_table += f"#{source_fragment}"
 
-    start_date = source_url_obj.query.get("start_date")
-    batch_size = source_url_obj.query.get("batch_size")
-
     logger.info("Invoking ingestr")
     logger.info(f"Source URL: {source_url_obj}")
     logger.info(f"Target URL: {target_url}")
     logger.info(f"Source Table: {source_table}")
     logger.info(f"Target Table: {target_table}")
     logger.info(f"Start Date: {start_date}")
+    logger.info(f"Batch Size: {batch_size}")
 
     try:
         ingestr.main.ingest(

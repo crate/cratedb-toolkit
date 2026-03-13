@@ -17,6 +17,7 @@ from boltons.urlutils import URL
 from cratedb_toolkit.exception import (
     OperationFailed,
 )
+from cratedb_toolkit.io.exception import SkipAdapterException
 from cratedb_toolkit.model import DatabaseAddress, InputOutputResource
 from cratedb_toolkit.util.data import asbool
 
@@ -62,14 +63,17 @@ class IoRouter:
             adjusted_url = str(source_url_obj).replace(source_url_obj.scheme, http_scheme, 1)
             return influxdb_copy(adjusted_url, target_url, progress=True)
 
-        elif source_url_obj.scheme.startswith("kinesis") and not source_url_obj.scheme.endswith("ingest"):
+        elif source_url_obj.scheme.startswith("kinesis"):
             from cratedb_toolkit.io.kinesis.api import kinesis_relay
 
-            return kinesis_relay(
-                source_url=source_url_obj,
-                target_url=target_url,
-                recipe=transformation,
-            )
+            try:
+                return kinesis_relay(
+                    source_url=source_url_obj,
+                    target_url=target_url,
+                    recipe=transformation,
+                )
+            except SkipAdapterException:
+                pass
 
         elif source_url_obj.scheme in [
             "file+bson",
@@ -111,9 +115,6 @@ class IoRouter:
             return from_iceberg(str(source_url_obj), target_url)
 
         from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
-
-        if source_url_obj.scheme.endswith("ingest"):
-            source_url_obj.scheme = source_url_obj.scheme.replace("+ingest", "")
 
         source_url = str(source_url_obj)
 

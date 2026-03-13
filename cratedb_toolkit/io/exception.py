@@ -1,0 +1,2 @@
+class SkipAdapterException(Exception):
+    pass
