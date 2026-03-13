@@ -17,4 +17,4 @@ ctk load table \
 ```
 
 
-[Redshift]: https://cloud.google.com/bigquery
+[Redshift]: https://aws.amazon.com/redshift/

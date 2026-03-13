@@ -30,6 +30,3 @@ ctk load table \
 
 Research <research>
 ```
-
-
-[dlt]: https://github.com/dlt-hub/dlt

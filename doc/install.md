@@ -29,7 +29,7 @@ ctk --version
 ## Container
 
 Alternatively, use a container image from GHCR. Use `ghcr.io/crate/cratedb-toolkit`
-for the default toolset. To use the "ingest" image (which includes the `io-ingestr`
+for the default toolset. To use the "ingest" image (which includes the `io-ingest`
 extras and the ingestr-based I/O adapters), use `ghcr.io/crate/cratedb-toolkit-ingest`.
 The default image does not include these extras or drivers.
 

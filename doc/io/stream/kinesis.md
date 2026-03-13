@@ -77,7 +77,7 @@ Use {ref}`index` to load data from Kinesis stream into CrateDB table.
 
 ```shell
 ctk load table \
-    "kinesis+ingest:?aws_access_key_id=test&aws_secret_access_key=test&region_name=us-east-1&table=demo" \
+    "kinesis:?aws_access_key_id=test&aws_secret_access_key=test&region_name=us-east-1&table=demo" \
     --cluster-url="crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```
 
@@ -107,10 +107,10 @@ format.
 A fully qualified Kinesis URL template that uses ARNs to address the Kinesis
 stream looks like this.
 ```shell
-kinesis+ingest:?aws_access_key_id=${AWS_ACCESS_KEY_ID}&aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}&region_name=${AWS_REGION_NAME}&table=arn:aws:kinesis:${AWS_REGION_NAME}:${AWS_ACCOUNT_ID}:stream/${KINESIS_STREAM_NAME}&start_date=${KINESIS_AT_TIMESTAMP}
+kinesis:?aws_access_key_id=${AWS_ACCESS_KEY_ID}&aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}&region_name=${AWS_REGION_NAME}&table=arn:aws:kinesis:${AWS_REGION_NAME}:${AWS_ACCOUNT_ID}:stream/${KINESIS_STREAM_NAME}&start_date=${KINESIS_AT_TIMESTAMP}
 ```
 
-:::{rubric} Kinesis URL parameters
+:::{rubric} Kinesis options
 :::
 
 - `aws_access_key_id`: AWS access key ID.

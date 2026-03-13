@@ -16,7 +16,7 @@ or `pip install --user`.
 pipx install 'cratedb-toolkit'
 ```
 
-Another way to invoke CrateDB without installing it is to use its
+Another way to invoke CrateDB Toolkit without installing it is to use its
 container image with Docker, Podman, Kubernetes, and friends.
 ```shell
 docker run --rm ghcr.io/crate/cratedb-toolkit ctk

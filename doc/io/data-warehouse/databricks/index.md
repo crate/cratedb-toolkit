@@ -100,7 +100,7 @@ crash -c 'SELECT * FROM testdrive.accuweather_forecast_hourly_metric LIMIT 5'
 
 The Databricks table name can be provided by using the `&table=` query parameter.
 
-:::{rubric} Databricks URL parameters
+:::{rubric} Databricks options
 :::
 
 - `server_hostname`: Host name of the Databricks instance.

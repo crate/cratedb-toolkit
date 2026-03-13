@@ -122,7 +122,7 @@ ctk load table \
 
 ## Options
 
-### Generic parameters
+### Generic options
 
 #### `batch-size`
 
@@ -143,7 +143,7 @@ ctk save table \
     "file+deltalake://./var/lib/delta/"
 ```
 
-### CrateDB parameters
+### CrateDB options
 
 #### `if-exists`
 
@@ -164,7 +164,7 @@ export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/testdrive/demo?if
 ctk load table ...
 ```
 
-### Delta Lake parameters
+### Delta Lake options
 
 #### `mode`
 

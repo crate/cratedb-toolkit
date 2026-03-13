@@ -28,7 +28,7 @@ Source URL template: `s3://?access_key_id=<aws-access-key-id>&secret_access_key=
 ### Google Cloud Storage (GCS)
 ```shell
 ctk load table \
-    "gs://?credentials_path=/path/to/service-account.json?table=<bucket-name>/<file-glob>" \
+    "gs://?credentials_path=/path/to/service-account.json&table=<bucket-name>/<file-glob>" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/gcs_demo"
 ```
 

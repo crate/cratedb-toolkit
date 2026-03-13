@@ -12,7 +12,7 @@ and data formats. Please select the right one based on your needs.
 
 ## Group »curated«
 
-Support for files, open table formats, InfluxDB, and MongoDB.
+Support for files, open table formats, DynamoDB, InfluxDB, and MongoDB.
 
 :::{rubric} Install
 :::
@@ -29,7 +29,6 @@ AWS DMS <dms/index>
 DynamoDB <dynamodb/index>
 InfluxDB <influxdb/index>
 MongoDB <mongodb/index>
-PostgreSQL <postgresql/index>
 ```
 
 ## Group »ingest«
@@ -46,12 +45,17 @@ uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
 :::{rubric} Coverage
 :::
 
-- [All databases supported by SQLAlchemy]
+- [SQLAlchemy-supported databases]
 - CSV, JSON, and Parquet files
 - Message and event brokers
 
 :::{rubric} Integrations
 :::
+```{toctree}
+:maxdepth: 1
+
+PostgreSQL <postgresql/index>
+```
 
 Load data from ClickHouse into CrateDB.
 ```shell
@@ -122,4 +126,4 @@ ctk load table \
 
 
 
-[All databases supported by SQLAlchemy]: https://docs.sqlalchemy.org/en/20/dialects/
+[SQLAlchemy-supported databases]: https://docs.sqlalchemy.org/en/20/dialects/

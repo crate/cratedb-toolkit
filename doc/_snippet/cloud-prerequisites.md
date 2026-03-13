@@ -8,7 +8,8 @@ your target database cluster.
 When working with [CrateDB Cloud], you can select between two authentication variants.
 Either _interactively authorize_ your terminal session using `croud login`,
 ```shell
-croud login --idp {cognito,azuread,github,google}
+# Replace YOUR_IDP with one of: cognito, azuread, github, google.
+croud login --idp YOUR_IDP
 ```
 or provide API access credentials per environment variables for _headless/unattended
 operations_ after creating them using the [CrateDB Cloud Console] or

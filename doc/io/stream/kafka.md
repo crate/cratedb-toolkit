@@ -13,7 +13,7 @@ More than 80% of all Fortune 100 companies trust, and use Apache Kafka.
 
 Today, managed Kafka and Kafka-compatible streaming services are available
 through products like Amazon MSK, Confluent Cloud, Redpanda Streaming,
-and others.
+WarpStream, and others.
 
 ## Prerequisites
 
@@ -98,7 +98,7 @@ A fully qualified Kafka URL template looks like this.
 kafka://?bootstrap_servers=localhost:9092&group_id=test&security_protocol=SASL_SSL&sasl_mechanisms=PLAIN&sasl_username=example_username&sasl_password=example_secret&batch_size=1000&batch_timeout=3
 ```
 
-:::{rubric} Kafka URL parameters
+:::{rubric} Kafka options
 :::
 
 - `bootstrap_servers`: Kafka broker(s).

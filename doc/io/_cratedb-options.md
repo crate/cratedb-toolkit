@@ -1,4 +1,4 @@
-:::{rubric} CrateDB URL parameters
+:::{rubric} CrateDB options
 :::
 
 Please make sure to replace username, password, and

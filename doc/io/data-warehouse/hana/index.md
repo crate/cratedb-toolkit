@@ -53,7 +53,7 @@ Starting HANA takes a while: It will start responding to requests on port 39017
 (tenant database) when it says `Startup finished!`.
 :::
 
-###  Pre-flight checks
+### Pre-flight checks
 Run basic connectivity check with system database.
 ```shell
 docker exec -it hana bash -ic "hdbsql -i 90 -n localhost:39017 -u SYSTEM -p HXEHana1 'SELECT * FROM sys.dummy'"

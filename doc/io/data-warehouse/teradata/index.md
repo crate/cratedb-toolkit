@@ -6,9 +6,8 @@
 Load data from Teradata into CrateDB.
 :::
 
-[Teradata] is a managed data warehouse product by Amazon Web Services,
-offering the ability to handle analytic workloads on big data sets stored
-by a column-oriented DBMS principle.
+[Teradata] is an enterprise data warehouse platform providing high-performance
+analytics and data management capabilities for large-scale data workloads.
 
 ```shell
 ctk load table \

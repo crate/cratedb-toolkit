@@ -159,7 +159,7 @@ ctk save table \
     "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi-tiny"
 ```
 
-### CrateDB parameters
+### CrateDB options
 
 #### `if-exists`
 
@@ -180,7 +180,7 @@ export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/testdrive/demo?if
 ctk load table ...
 ```
 
-### Iceberg parameters
+### Iceberg options
 
 #### `append`
 
