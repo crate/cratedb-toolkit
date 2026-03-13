@@ -25,7 +25,7 @@ def test_kinesis_earliest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
 
     # Define source and target URLs.
     kinesis_url = (
-        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}/demo"
+        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}"
         f"?region=us-east-1&create=true&buffer-time=0.01&idle-sleep=0.01"
     )
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -69,7 +69,7 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
 
     # Define source and target URLs.
     kinesis_url = (
-        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}/demo"
+        f"{dynamodb.get_connection_url_kinesis_dynamodb_cdc()}"
         f"?region=us-east-1&create=true&buffer-time=0.01&idle-sleep=0.01&start=latest"
     )
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -93,11 +93,18 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     # Start event processor / stream consumer in separate thread, consuming forever.
     thread = threading.Thread(target=table_loader.start)
     thread.start()
-    time.sleep(1)
+    # Allow enough time for the consumer to create its LATEST shard iterator
+    # before producing events. With LocalStack, stream creation + shard iterator
+    # setup can take longer than 1 second on slow systems.
+    time.sleep(3)
 
     # Populate source database with data.
     for event in events:
         table_loader.kinesis_adapter.produce(event)
+
+    # Allow time for the consumer's fetch tasks to poll Kinesis
+    # and deliver the records to the processing handler.
+    time.sleep(2)
 
     # Stop stream consumer.
     table_loader.stop()

@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
+import re
 
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
+from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.localstack import LocalStackContainer
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer
@@ -39,3 +42,17 @@ class LocalStackContainerWithKeepalive(KeepaliveContainer, LocalStackContainer):
     ) -> None:
         super().__init__(image=image, **kwargs)
         self.with_name("testcontainers-localstack")
+
+    def _configure(self):
+        self.waiting_for(LogMessageWaitStrategy(re.compile(r"Ready\.\n")))
+
+    def _connect(self):
+        """
+        Wait for LocalStack to be fully ready.
+
+        ``KeepaliveContainer.start()`` calls ``_configure()`` and ``_connect()``
+        hooks, bypassing ``LocalStackContainer.start()`` which normally waits for
+        the "Ready" log message. Without this, Kinesis and other service APIs
+        receive requests before LocalStack is ready.
+        """
+        wait_for_logs(self, predicate=self._wait_strategy, timeout=60)
