@@ -1,6 +1,6 @@
 # CrateDB MCP sandbox
 
-:::{include} /doc/_snippet/links.md
+:::{include} /_snippet/links.md
 :::
 
 A little walkthrough to get you started using CrateDB and MCP.

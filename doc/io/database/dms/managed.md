@@ -1,6 +1,6 @@
 # AWS DMS Managed
 
-:::{include} /doc/_snippet/links.md
+:::{include} /_snippet/links.md
 :::
 
 ## About

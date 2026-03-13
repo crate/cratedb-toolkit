@@ -1,7 +1,7 @@
 (mongodb-cdc-relay)=
 # MongoDB CDC Relay
 
-:::{include} /doc/_snippet/links.md
+:::{include} /_snippet/links.md
 :::
 
 ## About

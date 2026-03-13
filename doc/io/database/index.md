@@ -352,6 +352,7 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/mysql"
 ```
 
+(oracle)=
 :::{rubric} Oracle
 :::
 Load data from Oracle into CrateDB.
@@ -361,7 +362,6 @@ ctk load table \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/oracle"
 ```
 
-(oracle)=
 :::{rubric} PostgreSQL
 :::
 Load data from PostgreSQL into CrateDB.
@@ -395,7 +395,3 @@ ctk load table \
     "sqlite:////path/to/demo.sqlite?table=demo" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite"
 ```
-
-
-
-[SQLAlchemy-supported databases]: https://docs.sqlalchemy.org/en/20/dialects/

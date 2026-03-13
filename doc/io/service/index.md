@@ -259,7 +259,7 @@ Zoom
 Load data from Airtable into CrateDB.
 ```shell
 ctk load table \
-    "airtable://?access_token=<access_token>?table=demo" \
+    "airtable://?access_token=<access_token>&table=demo" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/airtable"
 ```
 
@@ -432,7 +432,7 @@ See [Stripe entities] about any labels you can use for the `table` parameter
 in the source URL.
 ```shell
 ctk load table \
-    "slack://?api_key=${SLACK_TOKEN}&table=charge" \
+    "stripe://?api_key=${STRIPE_API_KEY}&table=charge" \
     --cluster-url="crate://crate:na@localhost:4200/testdrive/stripe_charges"
 ```
 

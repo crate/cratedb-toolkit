@@ -75,8 +75,19 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
     source_url_obj = URL(source_url)
     source_table = source_url_obj.query.get("table")
     source_fragment = source_url_obj.fragment
+
+    batch_size_raw = source_url_obj.query.get("batch_size")
+    batch_size = None
+    if batch_size_raw is not None:
+        try:
+            batch_size = int(batch_size_raw)
+        except ValueError as ex:
+            raise ValueError("`batch_size` must be an integer") from ex
+        if batch_size <= 0:
+            raise ValueError("`batch_size` must be greater than 0")
+
     start_date = source_url_obj.query.get("start_date")
-    batch_size = source_url_obj.query.get("batch_size", 5_000)
+    batch_size = int(source_url_obj.query.get("batch_size", 50_000))
     source_url_obj = source_url_obj.without_query_params("table", "start_date", "batch_size").with_fragment("")
 
     target_uri, target_table_address = target_address.decode()
@@ -99,16 +110,22 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
     logger.info(f"Start Date: {start_date}")
     logger.info(f"Batch Size: {batch_size}")
 
+    ingest_kwargs = dict(  # noqa: C408
+        source_uri=str(source_url_obj),
+        dest_uri=str(target_url),
+        source_table=source_table,
+        dest_table=target_table,
+        interval_start=start_date,
+        page_size=batch_size,
+        yes=True,
+    )
+    if start_date is not None:
+        ingest_kwargs["interval_start"] = start_date
+    if batch_size is not None:
+        ingest_kwargs["page_size"] = batch_size
+
     try:
-        ingestr.main.ingest(
-            source_uri=str(source_url_obj),
-            dest_uri=str(target_url),
-            source_table=source_table,
-            dest_table=target_table,
-            interval_start=start_date,
-            page_size=batch_size,
-            yes=True,
-        )
+        ingestr.main.ingest(**ingest_kwargs)
         return True
     except ConfigFieldMissingException:
         logger.error(

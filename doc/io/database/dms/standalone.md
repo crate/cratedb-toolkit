@@ -1,6 +1,6 @@
 # AWS DMS Standalone
 
-:::{include} /doc/_snippet/links.md
+:::{include} /_snippet/links.md
 :::
 
 ## About

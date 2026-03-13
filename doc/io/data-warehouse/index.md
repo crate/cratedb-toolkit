@@ -142,14 +142,14 @@ Load data from SAP HANA table into CrateDB table.
 ```shell
 ctk load table \
     "hana://SYSTEM:HXEHana1@localhost:39017/SYSTEMDB?table=sys.adapters" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/databricks"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/hana"
 ```
 
 Load data from MotherDuck table into CrateDB table.
 ```shell
 ctk load table \
     "motherduck://<database-name>?token=<your-token>&table=<schema-name>.<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/databricks"
+    --cluster-url="crate://crate:na@localhost:4200/testdrive/motherduck"
 ```
 
 Load data from Redshift table into CrateDB table.

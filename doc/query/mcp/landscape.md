@@ -1,6 +1,6 @@
 # MCP server landscape for PostgreSQL and CrateDB
 
-:::{include} /doc/_snippet/links.md
+:::{include} /_snippet/links.md
 :::
 
 An overview about a fragment of the MCP server landscape,
