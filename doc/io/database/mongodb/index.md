@@ -1,6 +1,6 @@
 (mongodb)=
 
-# MongoDB I/O Subsystem
+# MongoDB
 
 ## About
 Using the MongoDB subsystem, you can transfer data from and to MongoDB.

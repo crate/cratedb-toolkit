@@ -1,6 +1,6 @@
 (dynamodb)=
 
-# DynamoDB I/O Subsystem
+# DynamoDB
 
 ## About
 Using the DynamoDB subsystem, you can transfer data from and to DynamoDB.

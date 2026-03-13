@@ -1,6 +1,6 @@
 (aws-dms)=
 
-# AWS DMS Processor
+# AWS DMS
 
 ## About
 

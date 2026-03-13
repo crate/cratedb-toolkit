@@ -1,6 +1,6 @@
 (postgresql)=
 
-# PostgreSQL I/O
+# PostgreSQL
 
 :::{div} sd-text-muted
 Load data from PostgreSQL into CrateDB.

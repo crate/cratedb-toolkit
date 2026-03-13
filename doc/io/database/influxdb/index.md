@@ -1,6 +1,6 @@
 (influxdb)=
 
-# InfluxDB I/O Subsystem
+# InfluxDB
 
 ## About
 Import and export data into/from InfluxDB, for humans and machines.
