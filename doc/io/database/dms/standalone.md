@@ -1,5 +1,8 @@
 # AWS DMS Standalone
 
+:::{include} /doc/_snippet/links.md
+:::
+
 ## About
 
 Relay an [AWS DMS] data stream from Amazon Kinesis into [CrateDB] using
@@ -89,4 +92,3 @@ collections:
 
 
 [AWS DMS]: https://aws.amazon.com/dms/
-[CrateDB]: https://cratedb.com/docs/guide/home/

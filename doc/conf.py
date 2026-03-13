@@ -73,7 +73,9 @@ html_show_sourcelink = True
 
 intersphinx_mapping = {
     "crash": ("https://cratedb.com/docs/crate/crash/en/latest/", None),
+    "cloud": ("https://cratedb.com/docs/cloud/en/latest/", None),
     "croud": ("https://cratedb.com/docs/cloud/cli/en/latest/", None),
+    "guide": ("https://cratedb.com/docs/guide/", None),
     "influxio": ("https://influxio.readthedocs.io/", None),
 }
 linkcheck_ignore = []

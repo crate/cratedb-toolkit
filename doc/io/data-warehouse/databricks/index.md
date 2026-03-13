@@ -141,7 +141,7 @@ on the original documentation.
 
 See also the documentation about [SQLAlchemy's Databricks dialect].
 
-:::{include} ../_cratedb-options.md
+:::{include} ../../_cratedb-options.md
 :::
 
 ## See also

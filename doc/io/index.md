@@ -251,7 +251,6 @@ managed/index
 
 
 [AWS DMS]: https://aws.amazon.com/dms/
-[CrateDB]: https://github.com/crate/crate
 [Databricks]: https://www.databricks.com/
 [DuckDB]: https://github.com/duckdb/duckdb
 [DynamoDB]: https://aws.amazon.com/dynamodb/

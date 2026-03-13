@@ -1,6 +1,9 @@
 (mongodb-cdc-relay)=
 # MongoDB CDC Relay
 
+:::{include} /doc/_snippet/links.md
+:::
+
 ## About
 Relay a [MongoDB Change Stream] into a [CrateDB] table using a one-stop command
 `ctk load table mongodb+cdc://...`, or `mongodb+srv+cdc://` for MongoDB Atlas.
@@ -155,8 +158,6 @@ mongosh "${MONGODB_URL}" --eval 'db.demo.drop()'
 
 
 [commons-codec]: https://pypi.org/project/commons-codec/
-[CrateDB]: https://cratedb.com/docs/guide/home/
-[CrateDB Cloud]: https://cratedb.com/docs/cloud/
 [MongoDB Atlas]: https://www.mongodb.com/atlas
 [MongoDB Change Stream]: https://www.mongodb.com/docs/manual/changeStreams/
 [SDK and CLI for CrateDB Cloud Cluster APIs]: https://github.com/crate-workbench/cratedb-toolkit/pull/81
