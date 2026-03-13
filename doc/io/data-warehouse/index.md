@@ -3,7 +3,7 @@
 # Data warehouses
 
 :::{div} sd-text-muted
-Import and export data into/from data warehouses.
+Import and export data into/from data warehouses (DWH).
 :::
 
 Data warehouses are strong but expensive.
@@ -18,6 +18,7 @@ for cost-effective data analytics.
 BigQuery <bigquery/index>
 databricks/index
 HANA <hana/index>
+motherduck/index
 Redshift <redshift/index>
 snowflake/index
 teradata/index
