@@ -35,7 +35,7 @@ def test_shell_managed_jwt(mocker, cloud_cluster_name):
         "CRATEDB_CLOUD_API_SECRET": os.environ.get("TEST_CRATEDB_CLOUD_API_SECRET"),
     }
 
-    if any(setting is None for setting in settings.values()):
+    if any(not setting for setting in settings.values()):
         raise pytest.skip("Missing environment variables for headless mode with croud")
 
     # Synthesize a valid environment.
@@ -64,7 +64,7 @@ def test_shell_managed_username_password(mocker, cloud_cluster_name):
         "CRATEDB_PASSWORD": os.environ.get("TEST_CRATEDB_PASSWORD"),
     }
 
-    if any(setting is None for setting in settings.values()):
+    if any(not setting for setting in settings.values()):
         raise pytest.skip("Missing environment variables for headless mode with croud")
 
     # Synthesize a valid environment.
