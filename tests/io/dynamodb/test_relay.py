@@ -111,6 +111,7 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     # Stop stream consumer.
     table_loader.stop()
     thread.join(timeout=10)
+    assert not thread.is_alive(), "Consumer thread did not shut down within 10 seconds"
 
     # Verify data in target database, more specifically that both events have been processed well.
     assert cratedb.database.count_records(table_name) == 1
