@@ -159,7 +159,7 @@ def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str
         "CRATEDB_VERSION": "nightly",
     }
 
-    if any(setting is None for setting in settings.values()):
+    if any(not setting for setting in settings.values()):
         raise pytest.skip("Missing environment variables for headless mode with croud")
 
     mocker.patch.dict("os.environ", settings)
