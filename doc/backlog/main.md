@@ -53,7 +53,7 @@
 ## Iteration +1
 - Table Loader: Refactor URL dispatcher, use fsspec
 - Table Loader/Docs: Advertise using OCI image
-- MongoDB: Load table with querying by single object id
+- MongoDB: load with querying by single object id
 - MongoDB: Multi-phase BulkProcessor batch size adjustments
 - MongoDB: Report byte sizes (cur/avg/total) in progress bar
 - Documentation:
@@ -75,7 +75,7 @@
 
 ## Iteration +2
 - Address `fix_job_info_table_name`
-- Add more items about `ctk load table` to `examples/` folder
+- Add more items about `ctk load` to `examples/` folder
   - Python, Bash
 - Cloud: Parallelize import jobs?
 - Bug: Use CRATEDB_USERNAME=admin from cluster-info
@@ -83,14 +83,14 @@
 - Cloud: Use `.ini` file and `keyring` for storing CrateDB Cloud Cluster ID and credentials
 - Cloud: List RUNNING/FAILED/SUCCEEDED jobs
 - Cloud: Sanitize file name `yc.2019.07-tiny.parquet` to be accepted as table name
-- `ctk load table`: Accept `offset`/`limit` and `start`/`stop` options
+- `ctk load`: Accept `offset`/`limit` and `start`/`stop` options
   - Humanized: https://github.com/panodata/aika
 - UX: Unlock `testdata://` data sources from `influxio`
 - UX: No stack traces when `cratedb_toolkit.util.croud.CroudException: 401 - Unauthorized`
 - UX: Explain `cratedb_toolkit.util.croud.CroudException: Another cluster operation is currently in progress, please try again later.`
 - UX: Explain `cratedb_toolkit.util.croud.CroudException: Resource not found.` when accessing unknown cluster id.
 - UX: Make `ctk cluster list-jobs` respect `"status": "SUCCEEDED"` etc.
-- UX: Improve textual report from `ctk load table`
+- UX: Improve textual report from `ctk load`
 - UX: Accept alias `--format {jsonl,ndjson}` for `--format json_row` 
 - Catch recursion errors:
   ```
@@ -283,7 +283,7 @@ Add two non-partition-based strategies. Category: `timerange`.
 - UX: `ctk load`: Clearly disambiguate between loading data into
   RDBMS database tables, blob tables, or filesystem objects.
   ```shell
-  ctk load table https://s3.amazonaws.com/my.import.data.gz
+  ctk load https://s3.amazonaws.com/my.import.data.gz
   ```
   ```shell
   ctk load blob /path/to/image.png

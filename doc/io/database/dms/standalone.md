@@ -6,7 +6,7 @@
 ## About
 
 Relay an [AWS DMS] data stream from Amazon Kinesis into [CrateDB] using
-a one-stop command `ctk load table kinesis+dms:///...`.
+a one-stop command `ctk load kinesis+dms:///...`.
 
 Use it for ad-hoc transfers or in data pipelines, either from the command-line
 (CLI) or as a library.
@@ -32,11 +32,11 @@ uv tool install --upgrade 'cratedb-toolkit[kinesis]'
    ```
 3. Transfer data from Kinesis data stream into CrateDB.
    ```shell
-   ctk load table "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive"
+   ctk load "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive"
    ```
    Alternatively, transfer data from a stream-dump file.
    ```shell
-   ctk load table "kinesis+dms:///path/to/dms-over-kinesis.jsonl"
+   ctk load "kinesis+dms:///path/to/dms-over-kinesis.jsonl"
    ```
 
 :::{todo}
@@ -50,7 +50,7 @@ because you are using awscli or boto3 successfully, you should be ready to go.
 You can configure the processor element by using a recipe file, to be conveyed through
 the `--transformation` CLI option, like so:
 ```shell
-ctk load table \
+ctk load \
   "kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive" \
   --transformation=dms-load-schema-universal.yaml
 ```

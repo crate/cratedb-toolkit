@@ -34,11 +34,13 @@ You can run jobs from the command-line or by using the Python API.
 
 ### CLI
 
-Use the `ctk load table` command to load data into database tables.
+Use the `ctk load` command to load data into database tables.
+By default, the table name is derived from the filename.
+Use the `--table` option to specify a custom name.
 ```shell
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz'
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_marketing.json.gz'
-ctk load table 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz' --table='yc-2019-07-tiny'
+ctk load 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz'
+ctk load 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_marketing.json.gz'
+ctk load 'https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz' --table='yc-2019-07-tiny'
 ```
 
 Use the `ctk shell` command to query and aggregate data using SQL.

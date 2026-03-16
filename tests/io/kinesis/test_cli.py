@@ -13,7 +13,7 @@ pytestmark = pytest.mark.kinesis
 
 def test_kinesis_dms_stream_universal(caplog, cratedb, kinesis, kinesis_test_manager):
     """
-    CLI test: Invoke `ctk load table` for DMS over Kinesis from a stream, using universal mapping strategy.
+    CLI test: Invoke `ctk load` for DMS over Kinesis from a stream, using universal mapping strategy.
     """
 
     # Define transformation file.
@@ -38,7 +38,7 @@ def test_kinesis_dms_stream_universal(caplog, cratedb, kinesis, kinesis_test_man
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {kinesis_url} --transformation='{transformation_file}'",
+        args=f"load {kinesis_url} --transformation='{transformation_file}'",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -53,7 +53,7 @@ def test_kinesis_dms_stream_universal(caplog, cratedb, kinesis, kinesis_test_man
 
 def test_kinesis_dms_stream_direct(caplog, cratedb, kinesis, kinesis_test_manager):
     """
-    CLI test: Invoke `ctk load table` for DMS over Kinesis from a stream, using direct mapping strategy.
+    CLI test: Invoke `ctk load` for DMS over Kinesis from a stream, using direct mapping strategy.
     """
 
     # Define transformation file.
@@ -75,7 +75,7 @@ def test_kinesis_dms_stream_direct(caplog, cratedb, kinesis, kinesis_test_manage
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {kinesis_url} --transformation='{transformation_file}'",
+        args=f"load {kinesis_url} --transformation='{transformation_file}'",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -90,7 +90,7 @@ def test_kinesis_dms_stream_direct(caplog, cratedb, kinesis, kinesis_test_manage
 
 def test_kinesis_dms_file_universal(caplog, cratedb):
     """
-    CLI test: Invoke `ctk load table` for DMS over Kinesis from a dump file.
+    CLI test: Invoke `ctk load` for DMS over Kinesis from a dump file.
     """
 
     stream_dump_file = Path("./examples/cdc/aws/postgresql-pglogical-dms-kinesis.ndjson")
@@ -103,7 +103,7 @@ def test_kinesis_dms_file_universal(caplog, cratedb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {kinesis_url}",
+        args=f"load {kinesis_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -157,7 +157,7 @@ def test_kinesis_dms_load_without_ddl_universal(caplog, tmp_path, cratedb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {kinesis_url} --transformation='{transformation_file}'",
+        args=f"load {kinesis_url} --transformation='{transformation_file}'",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -200,7 +200,7 @@ def test_kinesis_dms_load_without_ddl_direct(caplog, tmp_path, cratedb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {kinesis_url} --transformation='{transformation_file}'",
+        args=f"load {kinesis_url} --transformation='{transformation_file}'",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

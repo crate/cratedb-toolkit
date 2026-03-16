@@ -11,12 +11,12 @@ Import and export data into/from [Delta Lake] tables ([paper]), for humans and m
 
 Load from Delta Lake table:
 ```shell
-ctk load table {file,http,https,s3,abfs,gs,hdfs,lakefs}+deltalake://...
+ctk load {file,http,https,s3,abfs,gs,hdfs,lakefs}+deltalake://...
 ```
 
 Export to Delta Lake table:
 ```shell
-ctk save table {file,http,https,s3,abfs,gs,hdfs,lakefs}+deltalake://...
+ctk save {file,http,https,s3,abfs,gs,hdfs,lakefs}+deltalake://...
 ```
 
 ## Install
@@ -44,43 +44,51 @@ Otherwise, derive your ETL commands from the examples shared below.
 
 Load from filesystem.
 ```shell
-ctk load table \
+ctk load \
     "file+deltalake://./var/lib/delta/demo/taxi-tiny" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Load from HTTP.
 ```shell
-ctk load table \
+ctk load \
     "https+deltalake://datahub.example.org/delta/demo/taxi-tiny" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Load from AWS S3.
 ```shell
-ctk load table \
+ctk load \
     "s3+deltalake://bucket1/demo/taxi-tiny?AWS_ACCESS_KEY_ID=<your_access_key_id>&AWS_SECRET_ACCESS_KEY=<your_secret_access_key>&AWS_ENDPOINT=<endpoint_url>&AWS_REGION=<s3-region>" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Load from Azure Data Lake.
 ```shell
-ctk load table "abfs+deltalake://container/path?AZURE_STORAGE_ACCOUNT_NAME=devstoreaccount1&AZURE_STORAGE_ACCOUNT_KEY=foo&..."
+ctk load \
+    "abfs+deltalake://container/path?AZURE_STORAGE_ACCOUNT_NAME=devstoreaccount1&AZURE_STORAGE_ACCOUNT_KEY=foo&..." \
+    "crate://crate:crate@localhost:4200/demo/example"
 ```
 
 Load from Google Cloud.
 ```shell
-ctk load table "gs+deltalake://bucket1/demo/taxi-tiny?GOOGLE_SERVICE_ACCOUNT=...&GOOGLE_SERVICE_ACCOUNT_KEY="
+ctk load \
+    "gs+deltalake://bucket1/demo/taxi-tiny?GOOGLE_SERVICE_ACCOUNT=...&GOOGLE_SERVICE_ACCOUNT_KEY=" \
+    "crate://crate:crate@localhost:4200/demo/example"
 ```
 
 Load from HDFS.
 ```shell
-ctk load table "hdfs+deltalake://localhost:9000"
+ctk load \
+    "hdfs+deltalake://localhost:9000" \
+    "crate://crate:crate@localhost:4200/demo/example"
 ```
 
 Load from LakeFS.
 ```shell
-ctk load table "lakefs+deltalake://bucket1/demo/taxi-tiny?endpoint=https://lakefs.example.org&access_key_id=LAKEFSID&secret_access_key=LAKEFSKEY"
+ctk load \
+    "lakefs+deltalake://bucket1/demo/taxi-tiny?endpoint=https://lakefs.example.org&access_key_id=LAKEFSID&secret_access_key=LAKEFSKEY" \
+    "crate://crate:crate@localhost:4200/demo/example"
 ```
 
 :::{tip}
@@ -95,15 +103,15 @@ ctk show table '"demo"."taxi-tiny"'
 
 Save to filesystem.
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny" \
     "file+deltalake://./var/lib/delta/demo/taxi-tiny"
 ```
 
 Save to AWS S3.
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny" \
     "s3+deltalake://bucket1/demo/taxi-tiny?AWS_ACCESS_KEY_ID=<your_access_key_id>&AWS_SECRET_ACCESS_KEY=<your_secret_access_key>&AWS_ENDPOINT=<endpoint_url>&AWS_REGION=<s3-region>"
 ```
 
@@ -115,9 +123,9 @@ A canonical invocation for copying data from a Delta Lake table on AWS S3 to Cra
 Please note the `ssl=true` query parameter on the CrateDB cluster URL.
 
 ```shell
-ctk load table \
+ctk load \
     "s3+deltalake://bucket1/demo/taxi-tiny?AWS_ACCESS_KEY_ID=<your_access_key_id>&AWS_SECRET_ACCESS_KEY=<your_secret_access_key>&AWS_ENDPOINT=<endpoint_url>&AWS_REGION=<s3-region>" \
-    --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+    "crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
 ## Options
@@ -133,13 +141,13 @@ The default value is `75000`.
 :::{rubric} Example usage
 :::
 ```shell
-ctk load table \
+ctk load \
     "file+deltalake://./var/lib/delta/?batch-size=200000" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
     "file+deltalake://./var/lib/delta/"
 ```
 
@@ -161,7 +169,7 @@ In order to always replace the target table, i.e. to drop and re-create it
 prior to inserting data, use `?if-exists=replace`.
 ```shell
 export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/testdrive/demo?if-exists=replace"
-ctk load table ...
+ctk load ...
 ```
 
 ### Delta Lake options
@@ -177,7 +185,7 @@ The Delta Lake URL supports three modes of operations when used as a data sink.
 :::{rubric} Example usage
 :::
 ```shell
-ctk save table "file+deltalake://./var/lib/delta/?...&mode=append"
+ctk save "file+deltalake://./var/lib/delta/?...&mode=append"
 ```
 
 

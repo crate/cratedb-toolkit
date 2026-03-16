@@ -3,7 +3,7 @@
 
 ## About
 Load data from DynamoDB into CrateDB using a one-stop command
-`ctk load table dynamodb://...`, in order to facilitate convenient
+`ctk load dynamodb://...` to facilitate convenient
 data transfers to be used within data pipelines or ad hoc operations.
 
 It is the brother to the corresponding cdc-relay implementation,
@@ -18,7 +18,7 @@ pip install --upgrade 'cratedb-toolkit[dynamodb]'
 Transfer data from DynamoDB table into CrateDB schema/table.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@aws/ProductCatalog?region=us-east-1
+ctk load "dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@aws/ProductCatalog?region=us-east-1"
 ```
 
 Query data in CrateDB.
@@ -34,21 +34,21 @@ ctk show table "testdrive.demo"
 The source URL accepts the `batch-size` option to configure DynamoDB
 [pagination]. The default value is `100`.
 ```shell
-ctk load table .../ProductCatalog?batch-size=5000
+ctk load .../ProductCatalog?batch-size=5000
 ```
 
 ### Consistent Read
 The source URL accepts the `consistent-read` option to configure DynamoDB
 [read consistency]. The default value is `false`.
 ```shell
-ctk load table .../ProductCatalog?consistent-read=true
+ctk load .../ProductCatalog?consistent-read=true
 ```
 
 ### Region
 The source URL accepts the `region` option to configure the AWS region
 label. The default value is `us-east-1`.
 ```shell
-ctk load table .../ProductCatalog?region=eu-central-1
+ctk load .../ProductCatalog?region=eu-central-1
 ```
 
 
@@ -69,7 +69,7 @@ use LocalStack to run a DynamoDB service surrogate locally. See also the
 For addressing a DynamoDB database on LocalStack, use a command of that shape.
 See [Credentials for accessing LocalStack AWS API] for further information.
 ```shell
-ctk load table dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/ProductCatalog?region=us-east-1
+ctk load "dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/ProductCatalog?region=us-east-1"
 ```
 
 :::{tip}

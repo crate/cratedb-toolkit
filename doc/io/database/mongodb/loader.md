@@ -3,7 +3,7 @@
 
 ## About
 Load data from MongoDB and its file formats into CrateDB using a one-stop
-command `ctk load table`, in order to facilitate convenient data transfers
+command `ctk load`, to facilitate convenient data transfers
 to be used within data pipelines or ad hoc operations.
 
 ## Coverage
@@ -40,13 +40,13 @@ concrete usage examples.
 Transfer a single collection from MongoDB Atlas.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/ticker/stocks
-ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker/stocks?batch-size=5000"
+ctk load "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker/stocks?batch-size=5000"
 ```
 
 Transfer all collections in database from MongoDB Atlas.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/ticker
-ctk load table "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker?batch-size=5000"
+ctk load "mongodb+srv://john:EeY6OocooL8rungu@testdrive.ahnaik1.mongodb.net/ticker?batch-size=5000"
 ```
 :::{important}
 When transferring **multiple collections**, make sure to use a CrateDB database
@@ -59,7 +59,7 @@ database address also MUST reference a **database**, NOT a specific collection.
 Transfer data from MongoDB database/collection into CrateDB schema/table.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table "mongodb://localhost:27017/testdrive/demo"
+ctk load "mongodb://localhost:27017/testdrive/demo"
 ```
 Query data in CrateDB.
 ```shell
@@ -74,18 +74,18 @@ Load data from MongoDB JSON/BSON files, for example produced by the
 
 ```shell
 # Extended JSON, filesystem, full path.
-ctk load table "file+bson:///path/to/mongodb-json-files/datasets/books.json"
+ctk load "file+bson:///path/to/mongodb-json-files/datasets/books.json"
 
 # Extended JSON, HTTP resource.
-ctk load table "https+bson://github.com/ozlerhakan/mongodb-json-files/raw/master/datasets/books.json"
+ctk load "https+bson://github.com/ozlerhakan/mongodb-json-files/raw/master/datasets/books.json"
 
 # BSON, filesystem, relative path, compressed.
-ctk load table "file+bson:./var/data/testdrive/books.bson.gz"
+ctk load "file+bson:./var/data/testdrive/books.bson.gz"
 
 # Extended JSON, filesystem, multiple files.
-ctk load table \
+ctk load \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --CRATEDB_CLUSTER_URL-url="crate://crate@localhost:4200/datasets"
+  "crate://crate@localhost:4200/datasets"
 ```
 :::{important}
 When transferring **multiple collections**, make sure to use a CrateDB database
@@ -183,9 +183,9 @@ wget https://github.com/crate/cratedb-toolkit/raw/v0.0.36/examples/tikray/tikray
 Load all referenced `.json` files into corresponding tables within the CrateDB
 schema `datasets`, using a batch size of 2,500 items.
 ```shell
-ctk load table \
+ctk load \
   "file+bson:///path/to/mongodb-json-files/datasets/*.json?batch-size=2500" \
-  --CRATEDB_CLUSTER_URL-url="crate://crate@localhost:4200/datasets" \
+  "crate://crate@localhost:4200/datasets" \
   --transformation tikray-mongodb-json-files.yaml
 ```
 

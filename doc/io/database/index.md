@@ -254,9 +254,9 @@ PostgreSQL <postgresql/index>
 :::
 Load data from Amazon Athena into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "athena://?bucket=<your-destination-bucket>&access_key_id=<your-aws-access-key-id>&secret_access_key=<your-aws-secret-access-key>&region_name=<your-aws-region>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/athena"
+    "crate://crate:na@localhost:4200/testdrive/athena"
 ```
 
 (couchbase)=
@@ -264,9 +264,9 @@ ctk load table \
 :::
 Load data from Couchbase into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "couchbase://username:password@host/bucket?ssl=true&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/couchbase"
+    "crate://crate:na@localhost:4200/testdrive/couchbase"
 ```
 
 (clickhouse)=
@@ -274,28 +274,28 @@ ctk load table \
 :::
 Load data from ClickHouse into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "clickhouse://<username>:<password>@<host>:<port>?secure=<secure>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/clickhouse"
+    "crate://crate:na@localhost:4200/testdrive/clickhouse"
 ```
 
 :::{rubric} CrateDB
 :::
 Load data from CrateDB into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "crate://crate:na@localhost:4200/?table=sys.summits" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_summits"
+    "crate://crate:na@localhost:4200/testdrive/cratedb_summits"
 ```
 ```shell
-ctk load table \
+ctk load \
     "crate://crate:na@localhost:4200/?table=information_schema.tables" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_tables"
+    "crate://crate:na@localhost:4200/testdrive/cratedb_tables"
 ```
 ```shell
-ctk load table \
+ctk load \
     "crate://crate:na@localhost:4200/?table=query:SELECT * FROM sys.summits WHERE height > 4000" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/cratedb_summits"
+    "crate://crate:na@localhost:4200/testdrive/cratedb_summits"
 ```
 
 (duckdb)=
@@ -303,9 +303,9 @@ ctk load table \
 :::
 Load data from DuckDB into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "duckdb:////path/to/demo.duckdb?table=information_schema.tables" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/duckdb_tables"
+    "crate://crate:na@localhost:4200/testdrive/duckdb_tables"
 ```
 
 (exasol)=
@@ -313,9 +313,9 @@ ctk load table \
 :::
 Load data from EXASOL DB into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "exa+websocket://sys:exasol@127.0.0.1:8888?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/exasol"
+    "crate://crate:na@localhost:4200/testdrive/exasol"
 ```
 
 (ibm-db2)=
@@ -323,9 +323,9 @@ ctk load table \
 :::
 Load data from IBM Db2 into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "db2://<username>:<password>@<host>:<port>/<database-name>?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/ibmdb2"
+    "crate://crate:na@localhost:4200/testdrive/ibmdb2"
 ```
 
 (mssql)=
@@ -336,9 +336,9 @@ Load data from Microsoft SQL Server into CrateDB.
 alias ctk-ingest='docker run --rm -it --network=host ghcr.io/crate/cratedb-toolkit-ingest:latest ctk'
 USER=$(az account show --query user.name -o tsv)
 TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
-ctk-ingest load table \
+ctk-ingest load \
     "mssql://$USER:$TOKEN@<server>.database.windows.net/<database>?table=demo&Authentication=ActiveDirectoryAccessToken" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/mssql"
+    "crate://crate:na@localhost:4200/testdrive/mssql"
 ```
 
 (mysql)=
@@ -347,9 +347,9 @@ ctk-ingest load table \
 :::
 Load data from MySQL or MariaDB into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "mysql://<username>:<password>@host:port/dbname?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/mysql"
+    "crate://crate:na@localhost:4200/testdrive/mysql"
 ```
 
 (oracle)=
@@ -357,18 +357,18 @@ ctk load table \
 :::
 Load data from Oracle into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "oracle+cx_oracle://<username>:<password>@<hostname>:<port>/dbname?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/oracle"
+    "crate://crate:na@localhost:4200/testdrive/oracle"
 ```
 
 :::{rubric} PostgreSQL
 :::
 Load data from PostgreSQL into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "postgresql://<username>:<password>@postgresql.example.org:5432/postgres?table=information_schema.tables" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/postgresql_tables"
+    "crate://crate:na@localhost:4200/testdrive/postgresql_tables"
 ```
 
 (spanner)=
@@ -376,14 +376,14 @@ ctk load table \
 :::
 Load data from Spanner into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "spanner://?project_id=<project_id>&instance_id=<instance_id>&database=<database>&credentials_path=</path/to/service/account.json>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/spanner"
+    "crate://crate:na@localhost:4200/testdrive/spanner"
 ```
 ```shell
-ctk load table \
+ctk load \
     "spanner://?project_id=<project_id>&instance_id=<instance_id>&database=<database>&credentials_base64=<base64_encoded_credentials>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/spanner"
+    "crate://crate:na@localhost:4200/testdrive/spanner"
 ```
 
 (sqlite)=
@@ -391,7 +391,7 @@ ctk load table \
 :::
 Load data from SQLite into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "sqlite:////path/to/demo.sqlite?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/sqlite"
+    "crate://crate:na@localhost:4200/testdrive/sqlite"
 ```

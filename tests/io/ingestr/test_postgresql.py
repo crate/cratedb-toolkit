@@ -11,7 +11,7 @@ pytest.importorskip("dlt_cratedb", reason="Skipping PostgreSQL tests because 'dl
 
 def test_postgresql_load_table(caplog, cratedb):
     """
-    CLI test: Invoke `ctk load table` for PostgresSQL to CrateDB.
+    CLI test: Invoke `ctk load` for PostgreSQL to CrateDB.
 
     TODO: Use Testcontainers.
     """
@@ -27,7 +27,7 @@ def test_postgresql_load_table(caplog, cratedb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": ingestr_cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {ingestr_postgresql_url}",
+        args=f"load {ingestr_postgresql_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

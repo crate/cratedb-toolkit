@@ -17,7 +17,7 @@ from influxio.adapter import InfluxDbApiAdapter
 
 def test_line_protocol_load_table_success(caplog, cratedb, needs_sqlalchemy2):
     """
-    CLI test: Invoke `ctk load table` for InfluxDB line protocol (ILP) file.
+    CLI test: Invoke `ctk load` for InfluxDB line protocol (ILP) file.
     """
     ilp_url = "https://github.com/influxdata/influxdb2-sample-data/raw/master/noaa-ndbc-data/latest-observations.lp"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -26,7 +26,7 @@ def test_line_protocol_load_table_success(caplog, cratedb, needs_sqlalchemy2):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {ilp_url}",
+        args=f"load {ilp_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -39,7 +39,7 @@ def test_line_protocol_load_table_success(caplog, cratedb, needs_sqlalchemy2):
 
 def test_influxdb2_load_table(caplog, cratedb, influxdb, needs_sqlalchemy2):
     """
-    CLI test: Invoke `ctk load table` for InfluxDB.
+    CLI test: Invoke `ctk load` for InfluxDB.
     """
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
     influxdb_url = f"{influxdb.get_connection_url()}/testdrive/demo"
@@ -58,7 +58,7 @@ def test_influxdb2_load_table(caplog, cratedb, influxdb, needs_sqlalchemy2):
     influxdb_url = influxdb_url.replace("http://", "influxdb2://")
     result = runner.invoke(
         cli,
-        args=f"load table {influxdb_url}",
+        args=f"load {influxdb_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

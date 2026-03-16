@@ -8,7 +8,7 @@ pytestmark = pytest.mark.dynamodb
 
 def test_dynamodb_load_table(caplog, cratedb, dynamodb, dynamodb_test_manager):
     """
-    CLI test: Invoke `ctk load table` for DynamoDB.
+    CLI test: Invoke `ctk load` for DynamoDB.
     """
     dynamodb_url = f"{dynamodb.get_connection_url_dynamodb()}/ProductCatalog?region=us-east-1"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -20,7 +20,7 @@ def test_dynamodb_load_table(caplog, cratedb, dynamodb, dynamodb_test_manager):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {dynamodb_url}",
+        args=f"load {dynamodb_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

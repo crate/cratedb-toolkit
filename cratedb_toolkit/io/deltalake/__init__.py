@@ -102,9 +102,9 @@ def from_deltalake(source_url, target_url, progress: bool = False):
     See also: https://docs.pola.rs/api/python/stable/reference/api/polars.scan_delta.html
 
     # Synopsis: Load from filesystem.
-    ctk load table \
+    ctk load \
         "file+deltalake://./var/lib/delta" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi"
+        "crate://crate@localhost:4200/demo/taxi"
     """
     source = DeltaLakeAddress.from_url(source_url)
     logger.info(f"DeltaLake address: {source.location}")
@@ -123,8 +123,8 @@ def to_deltalake(source_url, target_url, progress: bool = False):
     See also: https://docs.pola.rs/api/python/stable/reference/api/polars.DataFrame.write_delta.html
 
     # Synopsis: Save to filesystem.
-    ctk save table \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi" \
+    ctk save \
+        "crate://crate@localhost:4200/demo/taxi" \
         "file+deltalake://./var/lib/delta"
     """
 

@@ -28,11 +28,11 @@ EOF
 ## CLI
 
 Use the {ref}`cluster-api`'s {ref}`ctk cluster <cluster-api-cli>` command to deploy a database cluster,
-the `ctk load table` command of the {ref}`io-subsystem` to import data,
+the `ctk load` command of the {ref}`io-subsystem` to import data,
 and the {ref}`shell` command for executing an SQL statement.
 ```shell
 ctk cluster start
-ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
+ctk load "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
 ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
 ctk cluster stop
 ```

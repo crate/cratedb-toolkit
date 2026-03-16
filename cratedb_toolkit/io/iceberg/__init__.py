@@ -156,9 +156,9 @@ def from_iceberg(source_url, target_url, progress: bool = False):
     See also: https://docs.pola.rs/api/python/stable/reference/api/polars.scan_iceberg.html
 
     # Synopsis: Load from metadata file on filesystem.
-    ctk load table \
+    ctk load \
         "file+iceberg://./iceberg/demo/taxi/metadata/00001-79d5b044-8bce-46dd-b21c-83679a01c986.metadata.json" \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi"
+        "crate://crate@localhost:4200/demo/taxi"
     """
     source = IcebergAddress.from_url(source_url)
     logger.info(f"Iceberg address: {source.location}")
@@ -177,8 +177,8 @@ def to_iceberg(source_url, target_url, progress: bool = False):
     See also: https://pandas.pydata.org/docs/dev/reference/api/pandas.DataFrame.to_iceberg.html
 
     # Synopsis: Save to filesystem.
-    ctk save table \
-        --cluster-url="crate://crate@localhost:4200/demo/taxi" \
+    ctk save \
+        "crate://crate@localhost:4200/demo/taxi" \
         "file+iceberg://./iceberg/?catalog=default&namespace=demo&table=taxi"
     """
 

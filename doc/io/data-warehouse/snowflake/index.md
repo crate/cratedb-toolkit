@@ -11,9 +11,9 @@ offering the ability to handle analytic workloads on big data sets stored
 by a column-oriented DBMS principle.
 
 ```shell
-ctk load table \
+ctk load \
     "snowflake://<username>:<password>@account/dbname?warehouse=COMPUTE_WH&role=data_scientist&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/snowflake"
+    "crate://crate:na@localhost:4200/testdrive/snowflake"
 ```
 
 

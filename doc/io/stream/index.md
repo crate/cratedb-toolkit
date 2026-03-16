@@ -57,16 +57,16 @@ Apache Kafka
 
 Load data from Amazon Kinesis stream `testdrive` into CrateDB table `testdrive.kinesis`.
 ```shell
-uvx 'cratedb-toolkit[io-ingest]' load table \
+uvx 'cratedb-toolkit[io-ingest]' load \
     "kinesis:?aws_access_key_id=${AWS_ACCESS_KEY_ID}&aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}&region_name=eu-central-1&table=arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/kinesis"
+    "crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```
 
 Load data from Apache Kafka topic `testdrive` into CrateDB table `testdrive.kafka`.
 ```shell
-uvx 'cratedb-toolkit[io-ingest]' load table \
+uvx 'cratedb-toolkit[io-ingest]' load \
     "kafka:?bootstrap_servers=localhost:9092&group_id=test&table=testdrive" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/kafka"
+    "crate://crate:na@localhost:4200/testdrive/kafka"
 ```
 
 

@@ -6,7 +6,7 @@
 
 ## About
 Relay a [MongoDB Change Stream] into a [CrateDB] table using a one-stop command
-`ctk load table mongodb+cdc://...`, or `mongodb+srv+cdc://` for MongoDB Atlas.
+`ctk load mongodb+cdc://...`, or `mongodb+srv+cdc://` for MongoDB Atlas.
 
 You can use it in order to facilitate convenient data transfers to be used
 within data pipelines or ad hoc operations. It can be used as a CLI interface,
@@ -50,7 +50,7 @@ Docker or Podman in the {ref}`mongodb-services-standalone` section.
 export MONGODB_URL=mongodb://localhost/testdrive
 export MONGODB_URL_CTK=mongodb+cdc://localhost/testdrive/demo
 export CRATEDB_CLUSTER_URL=crate://crate@localhost/testdrive/demo-cdc
-ctk load table "${MONGODB_URL_CTK}"
+ctk load "${MONGODB_URL_CTK}"
 ```
 
 Insert document into MongoDB collection, and update it.
@@ -90,7 +90,7 @@ export CRATEDB_CLUSTER_URL="https://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws
 export CRATEDB_CLUSTER_URL="crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo-cdc?ssl=true"
 ```
 ```shell
-ctk load table "${MONGODB_URL_CTK}"
+ctk load "${MONGODB_URL_CTK}"
 ```
 
 :::{note}

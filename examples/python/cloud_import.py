@@ -72,7 +72,7 @@ def import_csv():
 
     The corresponding shell commands are::
 
-        ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
+        ctk load "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
         ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'
     """
 
@@ -98,7 +98,7 @@ def import_parquet():
 
     The corresponding shell commands are::
 
-        ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz"
+        ctk load "https://cdn.crate.io/downloads/datasets/cratedb-datasets/timeseries/yc.2019.07-tiny.parquet.gz"
         ctk shell --command 'SELECT * FROM "testdrive"."yc-201907" LIMIT 10;'
     """
 

@@ -52,12 +52,12 @@ ctk --version
 
 ## Usage
 
-`ctk load table` is your one-stop command to populate a CrateDB table from a
+`ctk load` is your one-stop command to load data into a CrateDB table from a
 MongoDB collection.
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table mongodb://localhost:27017/testdrive/demo
+ctk load mongodb://localhost:27017/testdrive/demo
 ```
 
 It will run `extract` and `translate` to gather the SQL DDL schema, and will

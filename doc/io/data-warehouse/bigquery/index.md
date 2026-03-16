@@ -10,9 +10,9 @@ Load data from Google BigQuery into CrateDB.
 designed for scalable analytics and machine learning workloads.
 
 ```shell
-ctk load table \
+ctk load \
     "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>&table=<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/bigquery"
+    "crate://crate:na@localhost:4200/testdrive/bigquery"
 ```
 
 

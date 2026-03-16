@@ -126,49 +126,49 @@ teradata/index
 
 Load data from BigQuery table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "bigquery://<project-name>?credentials_path=/path/to/service/account.json&location=<location>&table=<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/bigquery"
+    "crate://crate:na@localhost:4200/testdrive/bigquery"
 ```
 
 Load data from Databricks table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "databricks://token:<access_token>@<server_hostname>?http_path=<http_path>&catalog=<catalog>&schema=<schema>&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/databricks"
+    "crate://crate:na@localhost:4200/testdrive/databricks"
 ```
 
 Load data from SAP HANA table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "hana://SYSTEM:HXEHana1@localhost:39017/SYSTEMDB?table=sys.adapters" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/hana"
+    "crate://crate:na@localhost:4200/testdrive/hana"
 ```
 
 Load data from MotherDuck table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "motherduck://<database-name>?token=<your-token>&table=<schema-name>.<table-name>" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/motherduck"
+    "crate://crate:na@localhost:4200/testdrive/motherduck"
 ```
 
 Load data from Redshift table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "redshift+psycopg2://<username>:<password>@host.amazonaws.com:5439/database?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/redshift"
+    "crate://crate:na@localhost:4200/testdrive/redshift"
 ```
 
 Load data from Snowflake table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "snowflake://<username>:<password>@account/dbname?warehouse=COMPUTE_WH&role=data_scientist&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/snowflake"
+    "crate://crate:na@localhost:4200/testdrive/snowflake"
 ```
 
 Load data from Teradata table into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "teradatasql://guest:please@teradata.example.com/?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/teradata"
+    "crate://crate:na@localhost:4200/testdrive/teradata"
 ```

@@ -71,9 +71,9 @@ Let's connect to the system database at `localhost:39017/SYSTEMDB` because it
 is available earlier than the tenant database. Otherwise, address the tenant
 database using `localhost:39041/HXE`.
 ```shell
-ctk load table \
+ctk load \
     "hana://SYSTEM:HXEHana1@localhost:39017/SYSTEMDB?table=sys.adapters" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/hana_sys_adapters"
+    "crate://crate:crate@localhost:4200/testdrive/hana_sys_adapters"
 ```
 
 ### Query data

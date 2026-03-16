@@ -15,7 +15,7 @@ from cratedb_toolkit import ManagedCluster
 )
 def test_csv_import_local(cloud_environment, dummy_csv, caplog):
     """
-    CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a local file.
+    CLI test: Invoke `ctk load ...` for a CrateDB Cloud Import, from a local file.
     """
 
     from cratedb_toolkit.cli import cli
@@ -26,7 +26,7 @@ def test_csv_import_local(cloud_environment, dummy_csv, caplog):
 
     result = runner.invoke(
         cli,
-        args=f"load table {resource_url}",
+        args=["load", resource_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0, f"ERROR: {result.output}"
@@ -42,7 +42,7 @@ def test_csv_import_local(cloud_environment, dummy_csv, caplog):
 
 def test_parquet_import_remote(cloud_environment, caplog):
     """
-    CLI test: Invoke `ctk load table ...` for a CrateDB Cloud Import, from a URL.
+    CLI test: Invoke `ctk load ...` for a CrateDB Cloud Import, from a URL.
     """
 
     from cratedb_toolkit.cli import cli
@@ -53,7 +53,7 @@ def test_parquet_import_remote(cloud_environment, caplog):
 
     result = runner.invoke(
         cli,
-        args=f"load table {resource_url}",
+        args=["load", resource_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0, f"ERROR: {result.output}"

@@ -350,7 +350,7 @@ class ManagedCluster(ClusterBase):
         Synopsis
         --------
         export CRATEDB_CLUSTER_ID=95998958-4d96-46eb-a77a-a894e7dde128
-        ctk load table https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz
+        ctk load https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/data_weather.csv.gz
 
         https://console.cratedb.cloud
         """
@@ -360,7 +360,7 @@ class ManagedCluster(ClusterBase):
         target = target or TableAddress()
 
         if self.cluster_id is None:
-            raise DatabaseAddressMissingError("Need cluster identifier to load table")
+            raise DatabaseAddressMissingError("Need cluster identifier to load data")
 
         try:
             cio = CloudIo(cluster_id=self.cluster_id)
@@ -539,10 +539,10 @@ class StandaloneCluster(ClusterBase):
         --------
         export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 
-        ctk load table influxdb2://example:token@localhost:8086/testdrive/demo
-        ctk load table mongodb://localhost:27017/testdrive/demo
-        ctk load table kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
-        ctk load table kinesis+dms:///path/to/dms-over-kinesis.jsonl
+        ctk load influxdb2://example:token@localhost:8086/testdrive/demo
+        ctk load mongodb://localhost:27017/testdrive/demo
+        ctk load kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
+        ctk load kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
 
         self._load_table_result = self._router.load_table(
@@ -563,7 +563,7 @@ class StandaloneCluster(ClusterBase):
         --------
         export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
 
-        ctk save table \
+        ctk save \
           "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi_dataset"
         """
 

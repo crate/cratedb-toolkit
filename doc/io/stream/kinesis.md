@@ -76,9 +76,9 @@ aws kinesis put-record \
 Use {ref}`index` to load data from Kinesis stream into CrateDB table.
 
 ```shell
-ctk load table \
+ctk load \
     "kinesis:?aws_access_key_id=test&aws_secret_access_key=test&region_name=us-east-1&table=demo" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/kinesis"
+    "crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```
 
 ### Query data
