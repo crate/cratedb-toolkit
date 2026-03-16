@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/03/16 v0.0.46
 - I/O: API improvements: `ctk {load,save} table` became `ctk {load,save}`
   Also, the `--cluster-url` option becomes optional. That's a much more
   concise interface now.
