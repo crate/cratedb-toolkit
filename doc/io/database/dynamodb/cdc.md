@@ -3,7 +3,7 @@
 
 ## About
 Relay data changes from DynamoDB into CrateDB using a one-stop command
-`ctk load table kinesis+dynamodb+cdc://...`, in order to facilitate
+`ctk load kinesis+dynamodb+cdc://...` to facilitate
 convenient data transfers to be used within data pipelines or ad hoc
 operations.
 
@@ -21,7 +21,7 @@ Consume data from Kinesis Data Stream of DynamoDB CDC events into
 CrateDB schema/table.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
-ctk load table kinesis+dynamodb+cdc://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@aws/cdc-stream?region=eu-central-1
+ctk load "kinesis+dynamodb+cdc://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@aws/cdc-stream?region=eu-central-1"
 ```
 
 Query data in CrateDB.
@@ -39,14 +39,14 @@ the Kinesis Stream at once. The default value is `100`.
 For many datasets, a much larger batch size is applicable for most efficient
 data transfers.
 ```shell
-ctk load table .../cdc-stream?batch-size=5000
+ctk load .../cdc-stream?batch-size=5000
 ```
 
 ### Create
 The source URL option `create` configures whether the designated Kinesis Stream
 should be created upfront. The default value is `false`.
 ```shell
-ctk load table .../cdc-stream?create=true
+ctk load .../cdc-stream?create=true
 ```
 
 ### Create Shards
@@ -54,14 +54,14 @@ The source URL option `create-shards` configures whether the designated number
 of shards when a Kinesis Stream is created before consuming.
 The default value is `1`.
 ```shell
-ctk load table .../cdc-stream?create=true&create-shards=4
+ctk load .../cdc-stream?create=true&create-shards=4
 ```
 
 ### Region
 The source URL accepts the `region` option to configure the AWS region
 label. The default value is `us-east-1`.
 ```shell
-ctk load table .../cdc-stream?region=eu-central-1
+ctk load .../cdc-stream?region=eu-central-1
 ```
 
 ### Start
@@ -70,7 +70,7 @@ It accepts the following values, mapping to corresponding original options. The 
 value is `earliest`.
 
 ```shell
-ctk load table .../cdc-stream?start=latest
+ctk load .../cdc-stream?start=latest
 ```
 
 - `start=earliest`
@@ -101,7 +101,7 @@ The source URL accepts the `seqno` option to configure the DynamoDB [SequenceNum
 parameter. It accepts the sequence number of a stream record in the shard from which
 to start reading.
 ```shell
-ctk load table .../cdc-stream?start=seqno-after&seqno=49590338271490256608559692538361571095921575989136588898
+ctk load .../cdc-stream?start=seqno-after&seqno=49590338271490256608559692538361571095921575989136588898
 ```
 
 ### Idle Sleep
@@ -130,7 +130,7 @@ also the [Get started with Kinesis on LocalStack] tutorial.
 For addressing a Kinesis Data Stream on LocalStack, use a command of that shape.
 See [Credentials for accessing LocalStack AWS API] for further information.
 ```shell
-ctk load table kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/cdc-stream?region=eu-central-1
+ctk load "kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/cdc-stream?region=eu-central-1"
 ```
 
 :::{tip}

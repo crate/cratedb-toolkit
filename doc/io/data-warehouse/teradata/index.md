@@ -10,9 +10,9 @@ Load data from Teradata into CrateDB.
 analytics and data management capabilities for large-scale data workloads.
 
 ```shell
-ctk load table \
+ctk load \
     "teradatasql://guest:please@teradata.example.com/?table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/teradata"
+    "crate://crate:na@localhost:4200/testdrive/teradata"
 ```
 
 

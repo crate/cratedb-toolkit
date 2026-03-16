@@ -69,9 +69,9 @@ Use {ref}`index` to load data from Databricks SQL warehouse into CrateDB table.
 #### `samples.nyctaxi.trips`
 Transfer data.
 ```shell
-ctk load table \
+ctk load \
     "databricks://token:<access_token>@<instance>.cloud.databricks.com:443/?http_path=/sql/1.0/warehouses/<warehouse>&catalog=samples&table=nyctaxi.trips" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/nyctaxi_trips"
+    "crate://crate:crate@localhost:4200/testdrive/nyctaxi_trips"
 ```
 Query data using [crash](https://pypi.org/project/crash/).
 ```shell
@@ -84,9 +84,9 @@ crash -c 'SELECT * FROM testdrive.nyctaxi_trips LIMIT 5'
 #### `samples.accuweather.forecast_hourly_metric`
 Transfer data.
 ```shell
-ctk load table \
+ctk load \
     "databricks://token:<access_token>@<instance>.cloud.databricks.com:443/?http_path=/sql/1.0/warehouses/<warehouse>&catalog=samples&table=accuweather.forecast_hourly_metric" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/accuweather_forecast_hourly_metric"
+    "crate://crate:crate@localhost:4200/testdrive/accuweather_forecast_hourly_metric"
 ```
 Query data.
 ```shell

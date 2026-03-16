@@ -70,9 +70,9 @@ kcat -C -e -b localhost -t demo
 
 Use {ref}`index` to load data from Kafka topic into CrateDB table.
 ```shell
-ctk load table \
+ctk load \
     "kafka:?bootstrap_servers=localhost:9092&group_id=test&table=demo" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/kafka"
+    "crate://crate:crate@localhost:4200/testdrive/kafka"
 ```
 
 ### Query data
@@ -128,9 +128,9 @@ NDJSON=https://cdn.crate.io/downloads/datasets/cratedb-datasets/cloud-tutorials/
 curl --silent ${NDJSON} | gunzip | kcat -P -b localhost -t devices_readings
 ```
 ```shell
-ctk load table \
+ctk load \
     "kafka:?bootstrap_servers=localhost:9092&group_id=test&table=devices_readings" \
-    --cluster-url="crate://crate:crate@localhost:4200/testdrive/devices_readings"
+    "crate://crate:crate@localhost:4200/testdrive/devices_readings"
 ```
 ```shell
 crash -c "SELECT count(*) FROM testdrive.devices_readings"

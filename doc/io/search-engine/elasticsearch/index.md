@@ -66,9 +66,9 @@ ingestr ingest --yes \
 Use {ref}`index` to load data from Elasticsearch index into CrateDB table.
 
 ```shell
-ctk load table \
+ctk load \
     "elasticsearch://localhost:9200?secure=false&table=taxi_details" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/taxi_details"
+    "crate://crate:na@localhost:4200/testdrive/taxi_details"
 ```
 
 ### Query data

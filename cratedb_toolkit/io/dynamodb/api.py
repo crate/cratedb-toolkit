@@ -11,13 +11,13 @@ def dynamodb_copy(source_url, target_url, progress: bool = False):
     Synopsis
     --------
     export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/testdrive/demo
-    ctk load table dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/us-east-1/ProductCatalog
-    ctk load table dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
+    ctk load dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/us-east-1/ProductCatalog
+    ctk load dynamodb://AWS_ACCESS_KEY:AWS_SECRET_ACCESS_KEY@localhost:4566/arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
 
-    ctk load table dynamodb://arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
-                              arn:aws:dynamodb:us-east-1:841394475918:table/stream-demo
+    ctk load dynamodb://arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
+    ctk load dynamodb://arn:aws:dynamodb:us-east-1:841394475918:table/stream-demo
 
-    ctk load table dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/ProductCatalog?region=eu-central-1
+    ctk load dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/ProductCatalog?region=eu-central-1
 
     Resources
     ---------

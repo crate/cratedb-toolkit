@@ -51,17 +51,17 @@ def ingestr_copy(source_url: str, target_address: DatabaseAddress, progress: boo
 
     Synopsis:
 
-        ctk load table \
+        ctk load \
             "frankfurter://?base=EUR&table=latest" \
-            --cluster-url="crate://crate:na@localhost:4200/testdrive/exchange_latest"
+            "crate://crate:na@localhost:4200/testdrive/exchange_latest"
 
-        ctk load table \
+        ctk load \
             "frankfurter://?base=EUR&table=currencies" \
-            --cluster-url="crate://crate:na@localhost:4200/testdrive/exchange_currencies"
+            "crate://crate:na@localhost:4200/testdrive/exchange_currencies"
 
-        ctk load table \
+        ctk load \
             "postgresql://pguser:secret11@postgresql.example.org:5432/postgres?table=public.diamonds" \
-            --cluster-url="crate://crate:na@localhost:4200/testdrive/ibis_diamonds"
+            "crate://crate:na@localhost:4200/testdrive/ibis_diamonds"
     """
     ingestr_available, ingestr, ConfigFieldMissingException = _get_ingestr()
 

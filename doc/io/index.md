@@ -36,20 +36,20 @@ You can run jobs from the command-line or by using the Python API.
 
 ### CLI
 
-The CLI entrypoints to the I/O subsystem are the `ctk load table`
-and `ctk save table` commands.
+The CLI entrypoints to the I/O subsystem are the `ctk load`
+and `ctk save` commands.
 
 Load data from external resource into CrateDB.
 ```shell
-ctk load table \
+ctk load \
   'protocol://username:password@hostname:port/resource' \
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table'
+  'crate://crate:crate@cratedb.example.org:4200/schema/table'
 ```
 
 Save data from CrateDB to external resource.
 ```shell
-ctk save table \
-  --cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table' \
+ctk save \
+  'crate://crate:crate@cratedb.example.org:4200/schema/table' \
   'protocol://username:password@hostname:port/resource'
 ```
 
@@ -114,8 +114,7 @@ The I/O subsystem uses URLs across the board to address data sources and sinks.
 configure access credentials or tokens, using individual parameters.
 
 **CrateDB:** CrateDB as a pipeline source or sink element uses the same way to
-configure credentials across the board, for example by using the
-`--cluster-url` CLI option.
+configure credentials across the board.
 Please note you **must** specify a password. If your account does not use a
 password, use a random string or just `na`.
 
@@ -163,7 +162,7 @@ Use the `?ssl=true` query parameter, and replace username, password, and
 hostname with values matching your environment. Also use this variant to
 connect to CrateDB Cloud.
 ```text
---cluster-url='crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
+'crate://crate:crate@cratedb.example.org:4200/schema/table?ssl=true'
 ```
 
 :::{rubric} Transfer multiple resources

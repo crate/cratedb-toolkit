@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- I/O: API improvements: `ctk {load,save} table` became `ctk {load,save}`
+  Also, the `--cluster-url` option becomes optional. That's a much more
+  concise interface now.
 
 ## 2026/03/13 v0.0.45
 - I/O: Refactored `ctk.io` subsystem

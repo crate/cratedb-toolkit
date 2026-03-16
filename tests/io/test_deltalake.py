@@ -37,7 +37,7 @@ def test_load_deltalake_table_filesystem_base_success(cratedb, example_deltalake
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": target_url})
     result = runner.invoke(
         cli,
-        args=["load", "table", source_url],
+        args=["load", source_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -62,7 +62,7 @@ def test_load_deltalake_table_filesystem_version_integer_success(cratedb, exampl
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": target_url})
     result = runner.invoke(
         cli,
-        args=["load", "table", source_url],
+        args=["load", source_url],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -89,7 +89,7 @@ def test_load_deltalake_table_filesystem_version_integer_invalid(cratedb, exampl
     with pytest.raises(DeltaError) as exc_info:
         runner.invoke(
             cli,
-            args=["load", "table", source_url],
+            args=["load", source_url],
             catch_exceptions=False,
         )
     assert exc_info.match("LogSegment end version 0 not the same as the specified end version 99")
@@ -108,10 +108,10 @@ def test_save_deltalake_table_filesystem(cratedb, tmp_path):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": source_url})
     result = runner.invoke(
         cli,
-        args=["save", "table", target_url],
+        args=["save", target_url],
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify data in DeltaLake table.
     table = pl.scan_delta(str(tmp_path))

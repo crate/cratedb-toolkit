@@ -38,7 +38,7 @@ elasticsearch/index
 
 Load data from Elasticsearch into CrateDB.
 ```shell
-ctk load table \
+ctk load \
     "elasticsearch://<username>:<password>@es.example.org:9200?secure=false&table=demo" \
-    --cluster-url="crate://crate:na@localhost:4200/testdrive/elastic"
+    "crate://crate:na@localhost:4200/testdrive/elastic"
 ```

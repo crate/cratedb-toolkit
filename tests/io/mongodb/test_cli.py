@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "testdrive"."demo" (
 
 def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
     """
-    CLI test: Invoke `ctk load table` for MongoDB.
+    CLI test: Invoke `ctk load` for MongoDB.
     """
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
     mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo"
@@ -112,7 +112,7 @@ def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {mongodb_url}",
+        args=f"load {mongodb_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -125,7 +125,7 @@ def test_mongodb_load_table_basic(caplog, cratedb, mongodb):
 
 def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
     """
-    CLI test: Invoke `ctk load table` for MongoDB.
+    CLI test: Invoke `ctk load` for MongoDB.
     """
     mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -142,7 +142,7 @@ def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {mongodb_url} --transformation={transformation}",
+        args=f"load {mongodb_url} --transformation={transformation}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0
@@ -165,7 +165,7 @@ def test_mongodb_load_table_complex_lists_normalize(caplog, cratedb, mongodb):
 
 def test_mongodb_load_table_complex_lists_ignore(caplog, cratedb, mongodb):
     """
-    CLI test: Invoke `ctk load table` for MongoDB, with special parameter to ignore complex lists.
+    CLI test: Invoke `ctk load` for MongoDB, with special parameter to ignore complex lists.
     """
     mongodb_url = f"{mongodb.get_connection_url()}/testdrive/demo"
     cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"
@@ -182,7 +182,7 @@ def test_mongodb_load_table_complex_lists_ignore(caplog, cratedb, mongodb):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load table {mongodb_url} --transformation={transformation}",
+        args=f"load {mongodb_url} --transformation={transformation}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

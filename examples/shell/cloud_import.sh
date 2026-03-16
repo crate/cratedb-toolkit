@@ -84,7 +84,7 @@ set -e
 ctk cluster start
 
 # Import data from a public CSV file into a table named "nab-machine-failure".
-ctk load table "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
+ctk load "https://cdn.crate.io/downloads/datasets/cratedb-datasets/machine-learning/timeseries/nab-machine-failure.csv"
 
 # Query the first 10 rows from the imported table.
 ctk shell --command 'SELECT * FROM "nab-machine-failure" LIMIT 10;'

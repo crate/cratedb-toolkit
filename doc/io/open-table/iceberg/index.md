@@ -11,12 +11,12 @@ Import and export data into/from [Apache Iceberg] tables, for humans and machine
 
 Load from Iceberg table:
 ```shell
-ctk load table {file,s3,abfs,gs,hdfs}+iceberg://...
+ctk load {file,s3,abfs,gs,hdfs}+iceberg://...
 ```
 
 Export to Iceberg table:
 ```shell
-ctk save table {file,s3,abfs,gs,hdfs}+iceberg://...
+ctk save {file,s3,abfs,gs,hdfs}+iceberg://...
 ```
 
 ## Install
@@ -45,58 +45,59 @@ otherwise derive your ETL commands from the examples shared below.
 
 Load from metadata file on filesystem.
 ```shell
-ctk load table \
+ctk load \
     "file+iceberg://./var/lib/iceberg/demo/taxi-tiny/metadata/00001-07cdcc42-bfd8-406f-8ad0-6528e7382c24.metadata.json" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Load from metadata file on AWS S3.
 ```shell
-ctk load table \
+ctk load \
     "s3+iceberg://bucket1/demo/taxi-tiny/metadata/00003-dd9223cb-6d11-474b-8d09-3182d45862f4.metadata.json?s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Use REST catalog and AWS S3 storage.
 ```shell
-ctk load table \
+ctk load \
     "s3+iceberg://bucket1?catalog-uri=http://iceberg-catalog.example.org:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 
 Use catalog in Apache Hive.
 ```shell
-ctk load table "s3+iceberg://bucket1?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret&..."
+export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/demo/example"
+ctk load "s3+iceberg://bucket1?catalog-uri=thrift://localhost:9083/&catalog-credential=t-1234:secret&..."
 ```
 
 Use catalog in AWS Glue.
 ```shell
-ctk load table "s3+iceberg://bucket1?catalog-type=glue&glue.id=foo&glue.profile-name=bar&glue.region=region&glue.access-key-id=key&glue.secret-access-key=secret&..."
+ctk load "s3+iceberg://bucket1?catalog-type=glue&glue.id=foo&glue.profile-name=bar&glue.region=region&glue.access-key-id=key&glue.secret-access-key=secret&..."
 ```
 
 Use catalog in Google BigQuery.
 ```shell
-ctk load table "s3+iceberg://bucket1?catalog-type=bigquery&gcp.bigquery.project-id=foo&..."
+ctk load "s3+iceberg://bucket1?catalog-type=bigquery&gcp.bigquery.project-id=foo&..."
 ```
 
 Use catalog in DynamoDB.
 ```shell
-ctk load table "s3+iceberg://bucket1?catalog-type=dynamodb&dynamodb.profile-name=foo&dynamodb.region=bar&dynamodb.access-key-id=key&dynamodb.secret-access-key=secret&..."
+ctk load "s3+iceberg://bucket1?catalog-type=dynamodb&dynamodb.profile-name=foo&dynamodb.region=bar&dynamodb.access-key-id=key&dynamodb.secret-access-key=secret&..."
 ```
 
 Load data from Azure Data Lake Storage.
 ```shell
-ctk load table "abfs+iceberg://container/path?adls.account-name=devstoreaccount1&adls.account-key=foo&..."
+ctk load "abfs+iceberg://container/path?adls.account-name=devstoreaccount1&adls.account-key=foo&..."
 ```
 
 Load data from Google Cloud Storage.
 ```shell
-ctk load table "gs+iceberg://bucket1/demo/taxi-tiny?gcs.project-id=..."
+ctk load "gs+iceberg://bucket1/demo/taxi-tiny?gcs.project-id=..."
 ```
 
 Load data from HDFS Storage.
 ```shell
-ctk load table "hdfs+iceberg://path?hdfs.host=10.0.19.25&hdfs.port=9000&hdfs.user=<user>&hdfs.kerberos_ticket=<ticket>"
+ctk load "hdfs+iceberg://path?hdfs.host=10.0.19.25&hdfs.port=9000&hdfs.user=<user>&hdfs.kerberos_ticket=<ticket>"
 ```
 
 :::{tip}
@@ -111,15 +112,15 @@ ctk show table '"demo"."taxi-tiny"'
 
 Save to filesystem.
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny" \
     "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi-tiny"
 ```
 
 Save to AWS S3.
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny" \
     "s3+iceberg://bucket1?catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>"
 ```
 
@@ -131,9 +132,9 @@ A canonical invocation for copying data from an Iceberg table on AWS S3 to Crate
 Please note the `ssl=true` query parameter on the CrateDB cluster URL.
 
 ```shell
-ctk load table \
+ctk load \
     "s3+iceberg://bucket1?catalog-uri=https://iceberg-catalog:5000&catalog-token=foo&catalog=default&namespace=demo&table=taxi-tiny&s3.access-key-id=<your_access_key_id>&s3.secret-access-key=<your_secret_access_key>&s3.endpoint=<endpoint_url>&s3.region=<s3-region>" \
-    --cluster-url="crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
+    "crate://admin:dZ...6LqB@green-shaak-ti.eks1.eu-west-1.aws.cratedb.net:4200/testdrive/demo?ssl=true"
 ```
 
 ## Options
@@ -149,13 +150,13 @@ The default value is `75000`.
 :::{rubric} Example usage
 :::
 ```shell
-ctk load table \
+ctk load \
     "file+iceberg://./var/lib/iceberg/?batch-size=200000" \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny"
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny"
 ```
 ```shell
-ctk save table \
-    --cluster-url="crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
+ctk save \
+    "crate://crate:crate@localhost:4200/demo/taxi-tiny?batch-size=200000" \
     "file+iceberg://./var/lib/iceberg/?catalog=default&namespace=demo&table=taxi-tiny"
 ```
 
@@ -177,7 +178,7 @@ In order to always replace the target table, i.e. to drop and re-create it
 prior to inserting data, use `?if-exists=replace`.
 ```shell
 export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/testdrive/demo?if-exists=replace"
-ctk load table ...
+ctk load ...
 ```
 
 ### Iceberg options
@@ -190,7 +191,7 @@ to a truthy value, save operations will append to an existing table.
 :::{rubric} Example usage
 :::
 ```shell
-ctk save table "file+iceberg://./var/lib/iceberg/?...&append=true"
+ctk save "file+iceberg://./var/lib/iceberg/?...&append=true"
 ```
 
 #### PyIceberg
