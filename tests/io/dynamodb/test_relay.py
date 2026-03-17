@@ -93,25 +93,27 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     # Start event processor / stream consumer in separate thread, consuming forever.
     thread = threading.Thread(target=table_loader.start)
     thread.start()
-    # Allow enough time for the consumer to create its LATEST shard iterator
-    # before producing events. With LocalStack, stream creation + shard iterator
-    # setup can take longer than 1 second on slow systems.
-    time.sleep(3)
+    # Wait for the consumer to obtain its LATEST shard iterator before producing events.
+    assert table_loader.kinesis_adapter.wait_until_ready(timeout=30), "Consumer did not become ready in time"
 
     # Populate source database with data.
     for event in events:
         table_loader.kinesis_adapter.produce(event)
 
-    # Allow time for the consumer's fetch tasks to poll Kinesis
-    # and deliver the records to the processing handler.
-    time.sleep(2)
+    # Wait for records to be processed before stopping.
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        cratedb.database.refresh_table(table_name)
+        if cratedb.database.count_records(table_name) >= 1:
+            break
+        time.sleep(0.2)
 
     # Stop stream consumer.
     table_loader.stop()
-    thread.join()
+    thread.join(timeout=10)
+    assert not thread.is_alive(), "Consumer thread did not shut down within 10 seconds"
 
     # Verify data in target database, more specifically that both events have been processed well.
-    assert cratedb.database.refresh_table(table_name) is True
     assert cratedb.database.count_records(table_name) == 1
     results = cratedb.database.run_sql(f"SELECT * FROM {table_name}", records=True)  # noqa: S608
     assert results[0]["data"]["list_of_objects"] == [{"foo": "bar"}, {"baz": "qux"}]

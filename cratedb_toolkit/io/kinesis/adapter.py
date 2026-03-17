@@ -1,5 +1,6 @@
 import abc
 import asyncio
+import threading
 import typing as t
 from pathlib import Path
 
@@ -80,6 +81,8 @@ class KinesisStreamAdapter(KinesisAdapterBase):
 
         self.kinesis_client = self.session.client("kinesis", endpoint_url=self.endpoint_url)
         self.stopping: bool = False
+        self._ready_event = threading.Event()
+        self._ready_exception: t.Optional[BaseException] = None
 
     @property
     def iterator_type(self):
@@ -120,11 +123,32 @@ class KinesisStreamAdapter(KinesisAdapterBase):
     def stop(self):
         self.stopping = True
 
+    def wait_until_ready(self, timeout: float = 30) -> bool:
+        """
+        Block until the consumer has obtained shard iterators and is ready to receive records.
+        Thread-safe — intended to be called from a different thread than ``consume_forever``.
+
+        Raises the initialization exception if ``consumer.wait_ready()`` failed.
+        """
+        self._ready_event.wait(timeout=timeout)
+        if self._ready_exception is not None:
+            raise self._ready_exception
+        return self._ready_event.is_set()
+
     async def _consume_forever(self, handler: t.Callable):
         """
         Consume items from a Kinesis stream, forever.
         """
+        self._ready_event.clear()
+        self._ready_exception = None
         async with self.consumer_factory() as consumer:
+            try:
+                await consumer.wait_ready(timeout=self.describe_timeout)
+            except (asyncio.TimeoutError, ValueError, RuntimeError) as ex:
+                self._ready_exception = ex
+                self._ready_event.set()
+                raise
+            self._ready_event.set()
             while True:
                 async for item in consumer:
                     handler(item)
