@@ -340,6 +340,17 @@ lint.per-file-ignores."tests/*" = [ "S101" ]  # Allow use of `assert`, and `prin
 lint.per-file-ignores."tests/adapter/test_rockset.py" = [ "E402" ]
 lint.per-file-ignores."tests/info/test_http.py" = [ "E402" ]
 
+[tool.mypy]
+packages = [ "cratedb_toolkit" ]
+exclude = [
+  "cratedb_toolkit/adapter/pymongo/",
+]
+check_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = true
+install_types = true
+non_interactive = true
+
 [tool.pytest]
 ini_options.addopts = "-rfEXs -p pytester --strict-markers --verbosity=3 --cov=. --cov-report=term-missing --cov-report=xml"
 ini_options.minversion = "2.0"
@@ -374,17 +385,6 @@ run.omit = [
 run.source = [ "cratedb_toolkit" ]
 report.fail_under = 0
 report.show_missing = true
-
-[tool.mypy]
-packages = [ "cratedb_toolkit" ]
-exclude = [
-  "cratedb_toolkit/adapter/pymongo/",
-]
-check_untyped_defs = true
-ignore_missing_imports = true
-implicit_optional = true
-install_types = true
-non_interactive = true
 
 # ===================
 # Tasks configuration
