@@ -43,7 +43,7 @@ def test_cfr_sys_export_success(cratedb, tmp_path, caplog):
         args="--debug sys-export",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify log output.
     assert "Exporting system tables to" in caplog.text
@@ -76,7 +76,7 @@ def test_cfr_sys_export_to_archive_file(cratedb, tmp_path, caplog):
         args=f"--debug sys-export {target}",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify log output.
     assert "Exporting system tables to" in caplog.text
@@ -112,7 +112,7 @@ def test_cfr_sys_export_failure(cratedb, tmp_path, caplog):
         args="--debug sys-export",
         catch_exceptions=False,
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, result.output
 
     # Verify log output.
     assert "Failed to establish a new connection" in caplog.text or "Failed to resolve" in caplog.text
@@ -128,7 +128,7 @@ def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, tmp_path, caplog):
         args="--debug sys-export",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     path = Path(json.loads(result.stdout)["path"])
     sys_cluster_table_schema = path / "schema" / "sys-cluster.sql"
@@ -186,7 +186,7 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
         args="--debug sys-import",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify log output.
     assert "Importing system tables from" in caplog.text
@@ -212,7 +212,7 @@ def test_cfr_sys_import_failure(cratedb, tmp_path, caplog):
         args="--debug sys-import",
         catch_exceptions=False,
     )
-    assert result.exit_code == 1
+    assert result.exit_code == 1, result.output
 
     # Verify log output.
     assert "Failed to establish a new connection" in caplog.text or "Failed to resolve" in caplog.text

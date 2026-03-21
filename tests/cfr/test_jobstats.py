@@ -24,7 +24,7 @@ def test_cfr_jobstats_collect_self(cratedb, caplog):
         args="jobstats collect --once",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify outcome: Log output.
     assert "Recording information snapshot" in caplog.messages
@@ -57,7 +57,7 @@ def test_cfr_jobstats_collect_anonymized(cratedb, caplog):
         args="jobstats collect --once --anonymize",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify outcome: Log output.
     assert "Recording information snapshot" in caplog.messages
@@ -93,7 +93,7 @@ def test_cfr_jobstats_collect_reportdb(cratedb, caplog):
         args=f"jobstats collect --once --reportdb={dburi_report}",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify outcome: Log output.
     assert "Recording information snapshot" in caplog.messages
@@ -126,7 +126,7 @@ def test_cfr_jobstats_view(cratedb):
         args="jobstats view",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify outcome.
     info = json.loads(result.output)
