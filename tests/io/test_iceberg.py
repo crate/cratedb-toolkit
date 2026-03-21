@@ -69,10 +69,10 @@ def test_load_iceberg_table_filesystem(cratedb, example_iceberg):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": target_url})
     result = runner.invoke(
         cli,
-        args=["load", "table", source_url],
+        args=["load", source_url],
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify data in target database.
     db = cratedb.database
@@ -94,10 +94,10 @@ def test_save_iceberg_table_success(cratedb, tmp_path):
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": source_url})
     result = runner.invoke(
         cli,
-        args=["save", "table", target_url],
+        args=["save", target_url],
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
 
     # Verify data in Iceberg table.
     metadata_location = find_iceberg_data_metadata_location(tmp_path / "sys" / "summits")
@@ -131,7 +131,7 @@ def test_save_iceberg_table_namespace_missing(cratedb, tmp_path):
     with pytest.raises(ValueError) as exc_info:
         runner.invoke(
             cli,
-            args=["save", "table", target_url],
+            args=["save", target_url],
             catch_exceptions=False,
         )
     assert exc_info.match("Iceberg table namespace is missing or empty")
@@ -152,7 +152,7 @@ def test_save_iceberg_table_name_missing(cratedb, tmp_path):
     with pytest.raises(ValueError) as exc_info:
         runner.invoke(
             cli,
-            args=["save", "table", target_url],
+            args=["save", target_url],
             catch_exceptions=False,
         )
     assert exc_info.match("Iceberg table name is missing or empty")
