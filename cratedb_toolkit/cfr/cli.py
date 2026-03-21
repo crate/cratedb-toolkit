@@ -109,7 +109,7 @@ cli.add_command(job_statistics, name="jobstats")
 @click.option(
     "--anonymize",
     type=str,
-    is_flag=False,
+    is_flag=True,
     flag_value="decoder_dictionary.json",  # Use this value when flag is used without value
     default=None,  # No anonymization by default
     help="Path to the decoder dictionary file for anonymizing SQL statements",
