@@ -188,11 +188,20 @@ class CrateDBTestAdapter:
         if self.cratedb:
             self.cratedb.stop()
 
-    def reset(self, tables: Optional[list] = None):
+    def reset(self, tables: Optional[list] = None, schemas: Optional[list] = None):
         """
         Drop tables from the given list, used for tests set up or tear down
         """
-        if tables and self.database:
+        if not self.database:
+            return
+
+        if schemas:
+            for reset_schema in schemas:
+                self.database.connection.exec_driver_sql(
+                    f"DROP SCHEMA IF EXISTS {self.database.quote_relation_name(reset_schema)} CASCADE;"
+                )
+
+        if tables:
             for reset_table in tables:
                 self.database.connection.exec_driver_sql(
                     f"DROP TABLE IF EXISTS {self.database.quote_relation_name(reset_table)};"

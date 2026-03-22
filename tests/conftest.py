@@ -19,24 +19,15 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 # schema.
 TESTDRIVE_DATA_SCHEMA = "testdrive-data"
 TESTDRIVE_EXT_SCHEMA = "testdrive-ext"
+RESET_SCHEMAS = [
+    TESTDRIVE_DATA_SCHEMA,
+    TESTDRIVE_EXT_SCHEMA,
+    "ext",
+    "testdrive",
+]
 RESET_TABLES = [
-    # FIXME: Let all subsystems use configured schema instead of hard-coded ones.
     '"doc"."clusterinfo"',
     '"doc"."jobinfo"',
-    '"ext"."clusterinfo"',
-    '"ext"."jobinfo"',
-    f'"{TESTDRIVE_EXT_SCHEMA}"."jobstats_statements"',
-    f'"{TESTDRIVE_EXT_SCHEMA}"."jobstats_last"',
-    f'"{TESTDRIVE_EXT_SCHEMA}"."retention_policy"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."raw_metrics"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."sensor_readings"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."testdrive"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_single"',
-    f'"{TESTDRIVE_DATA_SCHEMA}"."foobar_unique_composite"',
-    # cratedb_toolkit.io.{influxdb,mongodb}
-    '"testdrive"."demo"',
-    '"testdrive"."ndbc"',
 ]
 
 CRATEDB_HTTP_PORT = 44209
@@ -63,9 +54,19 @@ class CrateDBFixture(PytestTestcontainerAdapter):
         self.database = DatabaseAdapter(dburi=self.get_connection_url())
 
     def reset(self):
+
+        if not self.database:
+            return
+
         # TODO: Make list of tables configurable.
+        for reset_schema in RESET_SCHEMAS:
+            self.database.connection.exec_driver_sql(
+                f"DROP SCHEMA IF EXISTS {self.database.quote_relation_name(reset_schema)} CASCADE;"
+            )
         for reset_table in RESET_TABLES:
-            self.database.connection.exec_driver_sql(f"DROP TABLE IF EXISTS {reset_table};")
+            self.database.connection.exec_driver_sql(
+                f"DROP TABLE IF EXISTS {self.database.quote_relation_name(reset_table)};"
+            )
 
     def get_connection_url(self, *args, **kwargs):
         return self.container.get_connection_url(*args, **kwargs)
@@ -124,7 +125,7 @@ def cratedb_custom_service():
     """
     db = CrateDBTestAdapter(crate_version="nightly")
     db.start(ports={CRATEDB_HTTP_PORT: None}, cmd_opts=CRATEDB_SETTINGS)
-    db.reset(tables=RESET_TABLES)
+    db.reset(schemas=RESET_SCHEMAS, tables=RESET_TABLES)
     yield db
     db.stop()
 
@@ -134,7 +135,7 @@ def cratedb(cratedb_custom_service):
     """
     Provide a fresh canvas to each test case invocation, by resetting database content.
     """
-    cratedb_custom_service.reset(tables=RESET_TABLES)
+    cratedb_custom_service.reset(schemas=RESET_SCHEMAS, tables=RESET_TABLES)
     yield cratedb_custom_service
 
 
