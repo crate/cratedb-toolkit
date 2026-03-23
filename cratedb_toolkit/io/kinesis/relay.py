@@ -121,9 +121,11 @@ class KinesisRelay:
                 self.connection.execute(sa.text(f"REFRESH TABLE {self.cratedb_table}"))
 
             self.connection.commit()
-        except sa.exc.ProgrammingError as ex:
-            logger.error(f"Executing query failed: {ex}")
-        self.progress_bar.update()
+        except (sa.exc.ProgrammingError, sa.exc.OperationalError):
+            logger.exception("Executing query failed")
+            raise
+        else:
+            self.progress_bar.update()
 
     def __del__(self):
         self.stop()
