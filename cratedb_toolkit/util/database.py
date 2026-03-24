@@ -377,25 +377,28 @@ class DatabaseAdapter:
         # Set a few defaults.
         npartitions = npartitions or os.cpu_count()
 
+        ctx: contextlib.AbstractContextManager
         if progress:
             from dask.diagnostics import ProgressBar
 
-            pbar = ProgressBar()
-            pbar.register()
+            ctx = ProgressBar()
+        else:
+            ctx = contextlib.nullcontext()
 
         # Load data into database.
         df = pd.read_csv(filepath)
         ddf = dd.from_pandas(df, npartitions=npartitions)
-        return ddf.to_sql(
-            tablename,
-            uri=self.dburi,
-            index=index,
-            chunksize=chunksize,
-            if_exists=if_exists,
-            method=insert_bulk,
-            parallel=True,
-            engine_kwargs={"echo": False},
-        )
+        with ctx:
+            return ddf.to_sql(
+                tablename,
+                uri=self.dburi,
+                index=index,
+                chunksize=chunksize,
+                if_exists=if_exists,
+                method=insert_bulk,
+                parallel=True,
+                engine_kwargs={"echo": False},
+            )
 
     def describe_table_columns(self, table_name: str):
         """
