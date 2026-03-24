@@ -52,6 +52,7 @@ def test_info_cluster(request, runner_factory):
         # "libraries",
     ]
     assert "cluster_name" in database_keys
+    assert "cluster_health" in database_keys
     assert "cluster_nodes_count" in database_keys
 
 

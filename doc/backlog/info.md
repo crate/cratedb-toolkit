@@ -31,6 +31,7 @@
 - Experimental UI using Grafana Scenes
 
 ## Done
+- Include `sys.cluster_health` information (GH-449)
 - Make it work
 - Proper marshalling of timestamp values (ISO 8601)
 - Expose collected data via HTTP API

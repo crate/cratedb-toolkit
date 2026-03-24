@@ -39,6 +39,13 @@ class Library:
             description="Most recent 10 backups",
         )
 
+        cluster_health = InfoElement(
+            name="cluster_health",
+            label="Cluster Health",
+            sql="SELECT health, severity, description, missing_shards, underreplicated_shards FROM sys.cluster_health;",
+            description="Overall cluster health including missing and underreplicated shard counts",
+        )
+
         cluster_name = InfoElement(
             name="cluster_name",
             label="Cluster name",

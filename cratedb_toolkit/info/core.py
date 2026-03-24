@@ -1,13 +1,17 @@
 # Copyright (c) 2021-2024, Crate.io Inc.
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
+import logging
 import typing as t
 from functools import cached_property
 
 import boltons.ecoutils
+from sqlalchemy.exc import ProgrammingError
 
 from cratedb_toolkit.info.library import Library
 from cratedb_toolkit.info.model import InfoContainerBase
 from cratedb_toolkit.util.platform import PlatformInfo
+
+logger = logging.getLogger(__name__)
 
 
 class InfoContainer(InfoContainerBase):
@@ -15,6 +19,7 @@ class InfoContainer(InfoContainerBase):
         self.elements.add(
             # General cluster health information.
             Library.Health.cluster_name,
+            Library.Health.cluster_health,
             Library.Health.nodes_count,
             Library.Health.nodes_list,
             Library.Health.table_health,
@@ -64,7 +69,14 @@ class InfoContainer(InfoContainerBase):
             'database cluster, effectively about the "storage" domain.'
         )
         for element in self.elements.items:
-            data[element.name] = self.evaluate_element(element)
+            try:
+                data[element.name] = self.evaluate_element(element)
+            except ProgrammingError as ex:
+                if "RelationUnknown" in str(ex) or "ColumnUnknownException" in str(ex):
+                    logger.warning(f"Failed to evaluate element '{element.name}'", exc_info=True)
+                    data[element.name] = None
+                else:
+                    raise
         return data
 
 
