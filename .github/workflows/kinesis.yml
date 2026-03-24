@@ -42,11 +42,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version:
-          # TODO: test_kinesis_latest_dynamodb_cdc_insert_update has a
-          #       within-test race condition on 3.10: the relay's stop()
-          #       flag is checked between consumer batches, so events
-          #       produced just before stop() may not be processed in time.
-          # - "3.10"
+          - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
