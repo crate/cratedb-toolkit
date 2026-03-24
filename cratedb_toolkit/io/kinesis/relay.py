@@ -90,7 +90,7 @@ class KinesisRelay:
             try:
                 self.connection.close()
             except Exception:
-                pass
+                logger.debug("Ignoring error while closing connection during cleanup")
             del self.connection
         if hasattr(self, "kinesis_adapter"):
             self.kinesis_adapter.stop()
