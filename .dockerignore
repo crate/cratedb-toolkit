@@ -1,5 +1,6 @@
 *
 !.git
+!.gitignore
 !cratedb_toolkit/**
 !release/**
 !pyproject.toml
