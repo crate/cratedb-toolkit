@@ -100,13 +100,18 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     for event in events:
         table_loader.kinesis_adapter.produce(event)
 
-    # Wait for records to be processed before stopping.
+    # Wait for both INSERT and MODIFY to be processed before stopping.
     deadline = time.monotonic() + 10
+    modify_applied = False
     while time.monotonic() < deadline:
         cratedb.database.refresh_table(table_name)
         if cratedb.database.count_records(table_name) >= 1:
-            break
+            results = cratedb.database.run_sql(f"SELECT * FROM {table_name}", records=True)  # noqa: S608
+            if "list_of_objects" in results[0].get("data", {}):
+                modify_applied = True
+                break
         time.sleep(0.2)
+    assert modify_applied, "Timed out waiting for MODIFY event to populate data.list_of_objects"
 
     # Stop stream consumer.
     table_loader.stop()
