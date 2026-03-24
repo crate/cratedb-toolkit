@@ -99,6 +99,9 @@ def test_kinesis_relay_write_failure_propagates(caplog, cratedb, kinesis):
         with pytest.raises(sa.exc.OperationalError, match="connection lost"):
             table_loader.start(once=True)
 
+    # Verify that stop() cleaned up the connection.
+    assert not hasattr(table_loader, "connection"), "connection should be cleaned up after start() failure"
+
 
 def test_kinesis_relay_corrupt_record_skipped(caplog, cratedb, kinesis):
     """

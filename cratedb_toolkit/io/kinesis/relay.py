@@ -64,24 +64,34 @@ class KinesisRelay:
         """
         logger.info(f"Source: Kinesis stream={self.kinesis_adapter.stream_name} count=unknown")
         self.connection = self.cratedb_adapter.engine.connect()
-        if self.cratedb_table is not None:
-            if not self.cratedb_adapter.table_exists(self.cratedb_table):
-                self.connection.execute(sa.text(self.translator.sql_ddl))
-                self.connection.commit()
-            records_target = self.cratedb_adapter.count_records(self.cratedb_table)
-            logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
-        # Harmonize logging and progress bar.
-        # https://github.com/tqdm/tqdm#redirecting-logging
-        self.progress_bar = tqdm()
-        with logging_redirect_tqdm():
-            if once:
-                self.kinesis_adapter.consume_once(self.process_event)
-            else:
-                self.kinesis_adapter.consume_forever(self.process_event)
+        try:
+            if self.cratedb_table is not None:
+                if not self.cratedb_adapter.table_exists(self.cratedb_table):
+                    self.connection.execute(sa.text(self.translator.sql_ddl))
+                    self.connection.commit()
+                records_target = self.cratedb_adapter.count_records(self.cratedb_table)
+                logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
+            # Harmonize logging and progress bar.
+            # https://github.com/tqdm/tqdm#redirecting-logging
+            self.progress_bar = tqdm()
+            with logging_redirect_tqdm():
+                if once:
+                    self.kinesis_adapter.consume_once(self.process_event)
+                else:
+                    self.kinesis_adapter.consume_forever(self.process_event)
+        except Exception:
+            self.stop()
+            raise
 
     def stop(self):
         if hasattr(self, "progress_bar"):
             self.progress_bar.close()
+        if hasattr(self, "connection"):
+            try:
+                self.connection.close()
+            except Exception:
+                pass
+            del self.connection
         if hasattr(self, "kinesis_adapter"):
             self.kinesis_adapter.stop()
 
