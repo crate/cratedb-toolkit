@@ -62,6 +62,7 @@ class MongoDBCDCRelayCrateDB:
         if tm:
             address = CollectionAddress(
                 container=self.mongodb_adapter.database_name,
+                # TODO: Collection name must be permitted to be None?
                 name=t.cast(str, self.mongodb_adapter.collection_name),
             )
             try:

@@ -37,8 +37,8 @@ class MongoDBFixture(PytestTestcontainerAdapter):
         )
 
         self.container_class = container_class
-        self.container: t.Union[MongoDbContainerWithKeepalive, MongoDbReplicasetContainer]
-        self.client: MongoClient
+        self.container: t.Optional[t.Union[MongoDbContainerWithKeepalive, MongoDbReplicasetContainer]] = None
+        self.client: t.Optional[MongoClient] = None
         super().__init__()
 
     def setup(self):
@@ -54,19 +54,28 @@ class MongoDBFixture(PytestTestcontainerAdapter):
         self.client = self.container.get_connection_client()
 
     def finalize(self):
+        if not self.container:
+            return
         self.container.stop()
 
     def reset(self):
         """
         Drop all databases used for testing.
         """
+        if self.client is None:
+            return
+
         for database_name in RESET_DATABASES:
             self.client.drop_database(database_name)
 
     def get_connection_url(self):
+        if not self.container:
+            raise RuntimeError("Container has not been initialized")
         return self.container.get_connection_url()
 
     def get_connection_client(self):
+        if not self.container:
+            raise RuntimeError("Container has not been initialized")
         return self.container.get_connection_client()
 
 
