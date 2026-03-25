@@ -8,7 +8,7 @@ from docutils import nodes
 from docutils.examples import internals
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.admonitions import Note
-from docutils.parsers.rst.roles import normalized_role_options, register_canonical_role  # type: ignore[attr-defined]
+from docutils.parsers.rst.roles import normalized_role_options, register_canonical_role
 
 from cratedb_toolkit.docs.model import DocsItem
 from cratedb_toolkit.docs.util import GenericProcessor
@@ -73,8 +73,10 @@ class FunctionRegistry:
 
 
 def sphinx_ref_role(role, rawtext, text=None, lineno=None, inliner=None, options=None, content=None):
+    if inliner is None:
+        raise ValueError("inliner must be provided")
     options = normalized_role_options(options)
-    text = nodes.unescape(text, True)  # type: ignore[attr-defined]
+    text = nodes.unescape(text, True)  # ty: ignore[unresolved-attribute]
     label = text.split(" ", 1)[0]
     node = nodes.raw(rawtext, label, **options)
     node.source, node.line = inliner.reporter.get_source_and_line(lineno)
@@ -114,7 +116,7 @@ class FunctionsExtractor(GenericProcessor):
         for item in document:
             if item.tagname == "section":
                 category_title = item.children[0].astext()
-                for function in item.children:  # type: ignore[assignment]
+                for function in item.children:
                     if function.tagname == "section":
                         function_title = function.children[0].astext()
                         function_body = function.children[1].astext()

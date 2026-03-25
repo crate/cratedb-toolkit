@@ -24,7 +24,9 @@ class KinesisFixture:
     """
 
     def __init__(self):
-        self.container = None
+        from cratedb_toolkit.testing.testcontainers.localstack import LocalStackContainerWithKeepalive
+
+        self.container: LocalStackContainerWithKeepalive
         self.url = None
         self.kinesis_adapter: typing.Union[KinesisStreamAdapter, None] = None
         self._stream_name = "testdrive"

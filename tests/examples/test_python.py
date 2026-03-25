@@ -37,6 +37,6 @@ def test_managed_import_notebook(cloud_environment):
     # Execute the notebook.
     notebook = Path("examples") / "notebook" / "cloud_import.ipynb"
     if not notebook.exists():
-        pytest.fail(f"Notebook not found: {notebook}")
+        pytest.fail(f"Notebook not found: {notebook}")  # ty: ignore[invalid-argument-type]
     with testbook(notebook, timeout=180) as tb:
         tb.execute()

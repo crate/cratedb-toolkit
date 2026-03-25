@@ -1,3 +1,5 @@
+from typing import Optional
+
 from click import ClickException
 
 
@@ -26,7 +28,7 @@ class DatabaseAddressMissingError(ClickException):
         "environment variables."
     )
 
-    def __init__(self, message: str = None):
+    def __init__(self, message: Optional[str] = None):
         if not message:
             message = self.EXTENDED_MESSAGE
         super().__init__(message)
@@ -37,7 +39,7 @@ class DatabaseAddressDuplicateError(ClickException):
         "Duplicate database address, please specify only one of: cluster id, cluster name, or database URL"
     )
 
-    def __init__(self, message: str = None):
+    def __init__(self, message: Optional[str] = None):
         if not message:
             message = self.STANDARD_MESSAGE
         super().__init__(message)

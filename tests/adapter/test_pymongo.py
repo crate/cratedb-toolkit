@@ -14,7 +14,7 @@ from tests.conftest import check_sqlalchemy1
 check_sqlalchemy1(allow_module_level=True)
 
 if Version(pymongo.version) >= Version("4.9"):
-    raise pytest.skip("This feature or subsystem needs PyMongo 4.8", allow_module_level=True)
+    pytest.skip("This feature or subsystem needs PyMongo 4.8", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 from cratedb_toolkit.adapter.pymongo import PyMongoCrateDBAdapter
 from cratedb_toolkit.adapter.pymongo.util import AmendedObjectId

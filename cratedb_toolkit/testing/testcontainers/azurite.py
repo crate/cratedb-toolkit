@@ -43,7 +43,7 @@ class ExtendedAzuriteContainer(ExtendedDockerContainer, AzuriteContainer):
     def get_container_endpoint(self, container_name: str):
         container = self.get_container(container_name)
         hostname = self.get_real_host_address()
-        return container._format_url(hostname=hostname)
+        return container._format_url(hostname=hostname)  # ty: ignore[unresolved-attribute]
 
     def get_blob_service_client(self) -> BlobServiceClient:
         """

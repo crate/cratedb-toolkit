@@ -13,4 +13,4 @@ def patch_types_map():
     Register missing timestamp data type.
     """
     # TODO: Submit patch to `crate-python`.
-    TYPES_MAP["timestamp without time zone"] = sqltypes.TIMESTAMP
+    TYPES_MAP["timestamp without time zone"] = sqltypes.TIMESTAMP  # ty: ignore[invalid-assignment]

@@ -9,7 +9,7 @@ from verlib2 import Version
 
 import cratedb_toolkit
 from cratedb_toolkit.cluster.core import ManagedClusterSettings
-from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBTestAdapter
+from cratedb_toolkit.testing.testcontainers.cratedb import CrateDBContainer, CrateDBTestAdapter
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
 from cratedb_toolkit.util.common import setup_logging
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -41,8 +41,8 @@ class CrateDBFixture(PytestTestcontainerAdapter):
     """
 
     def __init__(self):
-        self.container = None
-        self.database: DatabaseAdapter = None
+        self.container: CrateDBContainer
+        self.database: DatabaseAdapter
         super().__init__()
 
     def setup(self):
@@ -161,7 +161,7 @@ def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str
     }
 
     if any(not setting for setting in settings.values()):
-        raise pytest.skip("Missing environment variables for headless mode with croud")
+        pytest.skip("Missing environment variables for headless mode with croud")  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
     mocker.patch.dict("os.environ", settings)
 
@@ -169,7 +169,8 @@ def cloud_environment(mocker, cloud_cluster_name) -> t.Generator[t.Dict[str, str
         settings_accept_env=True,
     )
 
-    yield settings
+    # TODO: Yield expression type does not match annotation. Why?
+    yield settings  # ty: ignore[invalid-yield]
 
     cratedb_toolkit.configure(
         settings_accept_env=False,
@@ -193,7 +194,7 @@ def check_sqlalchemy1(**kwargs):
     Skip pytest test cases or modules testing subsystems which need SQLAlchemy 1.x.
     """
     if not IS_SQLALCHEMY1:
-        raise pytest.skip("This feature or subsystem needs SQLAlchemy 1.x", **kwargs)
+        pytest.skip("This feature or subsystem needs SQLAlchemy 1.x", **kwargs)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture
@@ -209,7 +210,7 @@ def check_sqlalchemy2(**kwargs):
     Skip pytest test cases or modules testing subsystems which need SQLAlchemy 2.x.
     """
     if not IS_SQLALCHEMY2:
-        raise pytest.skip("This feature or subsystem needs SQLAlchemy 2.x", **kwargs)
+        pytest.skip("This feature or subsystem needs SQLAlchemy 2.x", **kwargs)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture

@@ -37,7 +37,7 @@ def init_dotenv():
         load_dotenv(dotenv_file)
 
 
-def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str, str]:
+def obtain_settings(specs: t.List[Setting], prog_name: t.Optional[str] = None) -> t.Dict[str, str]:
     """
     Employ command-line parsing at runtime, using the `click` parser.
 
@@ -74,7 +74,10 @@ def obtain_settings(specs: t.List[Setting], prog_name: str = None) -> t.Dict[str
 
 
 def check_mutual_exclusiveness(
-    specs: t.List[Setting], settings: t.Dict[str, str], message_none: str = None, message_multiple: str = None
+    specs: t.List[Setting],
+    settings: t.Dict[str, str],
+    message_none: t.Optional[str] = None,
+    message_multiple: t.Optional[str] = None,
 ):
     """
     Check settings for mutual exclusiveness.

@@ -30,7 +30,7 @@ def read_root():
 
 
 @app.get("/info/{category}")
-def info(category: str, adapter: t.Annotated[DatabaseAdapter, Depends(database_adapter)], scrub: bool = False):  # type: ignore[name-defined]
+def info(category: str, adapter: t.Annotated[DatabaseAdapter, Depends(database_adapter)], scrub: bool = False):
     if category != "all":
         raise HTTPException(status_code=404, detail="Info category not found")
     sample = InfoContainer(adapter=adapter, scrub=scrub)

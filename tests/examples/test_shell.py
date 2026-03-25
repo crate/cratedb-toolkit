@@ -14,5 +14,5 @@ def test_example_cloud_cluster_shell(cloud_environment):
     """
     program = ROOT / "tests" / "examples" / "test_shell.sh"
     if not program.exists():
-        pytest.fail(f"Test program not found: {program}")
+        pytest.fail(f"Test program not found: {program}")  # ty: ignore[invalid-argument-type]
     subprocess.check_call([str(program)])  # noqa: S603

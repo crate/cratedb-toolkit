@@ -3,7 +3,7 @@ import typing as t
 import sqlalchemy as sa
 
 
-def patch_pandas_sqltable_with_dialect_parameters(table_kwargs: t.Dict = None):
+def patch_pandas_sqltable_with_dialect_parameters(table_kwargs: t.Optional[t.Dict] = None):
     """
     When using pandas' `to_sql` function, configure the SQLAlchemy database dialect
     implementation using custom dialect parameters.
@@ -27,7 +27,7 @@ def patch_pandas_sqltable_with_dialect_parameters(table_kwargs: t.Dict = None):
     # Activate enhancement code.
     import pandas.io.sql
 
-    pandas.io.sql.SQLTable = SQLTableWithDialectParameters
+    pandas.io.sql.SQLTable = SQLTableWithDialectParameters  # ty: ignore[invalid-assignment]
 
 
 def patch_pandas_sqltable_with_extended_mapping():
@@ -49,12 +49,13 @@ def patch_pandas_sqltable_with_extended_mapping():
                         raise ValueError("pandas indexes not supported yet")
 
                 else:
+                    assert self.frame is not None  # noqa: S101
                     values = self.frame._get_value(0, name)
                     if isinstance(values, list):
                         first_value = values[0]
                         first_value_type = type(first_value)
                         # TODO: Use `boltons.remap`.
-                        sqlalchemy_type = ARRAY_TYPE_MAP.get(first_value_type)
+                        sqlalchemy_type = ARRAY_TYPE_MAP.get(first_value_type)  # ty: ignore[invalid-argument-type]
                         if sqlalchemy_type is None:
                             raise TypeError(f"Data type not supported yet: List[{first_value_type}]")
 
@@ -73,7 +74,7 @@ def patch_pandas_sqltable_with_extended_mapping():
     # Activate enhancement code.
     import pandas.io.sql
 
-    pandas.io.sql.SQLTable = SQLTableWithDtypeMappersForCrateDB
+    pandas.io.sql.SQLTable = SQLTableWithDtypeMappersForCrateDB  # ty: ignore[invalid-assignment]
 
 
 ARRAY_TYPE_MAP = {

@@ -24,7 +24,7 @@ from cratedb_toolkit.util.data import str_contains
 try:
     from typing import Literal
 except ImportError:
-    from typing_extensions import Literal  # type: ignore[assignment]
+    from typing_extensions import Literal
 
 if t.TYPE_CHECKING:
     from cratedb_toolkit.cluster.model import JwtResponse
@@ -47,7 +47,7 @@ class DatabaseAdapter:
 
     internal_tag = "  -- ctk"
 
-    def __init__(self, dburi: str, echo: bool = False, internal: bool = False, jwt: "JwtResponse" = None):
+    def __init__(self, dburi: str, echo: bool = False, internal: bool = False, jwt: t.Optional["JwtResponse"] = None):
         if not dburi:
             raise ValueError("Database URI must be specified")
         if dburi.startswith("crate://"):
@@ -109,9 +109,9 @@ class DatabaseAdapter:
     def run_sql(
         self,
         sql: t.Union[str, Path, io.IOBase],
-        parameters: t.Mapping[str, str] = None,
-        records: bool = False,
-        ignore: str = None,
+        parameters: t.Optional[t.Mapping[str, str]] = None,
+        records: t.Optional[bool] = False,
+        ignore: t.Optional[str] = None,
     ):
         """
         Run SQL statement and return results, optionally ignoring exceptions.
@@ -136,7 +136,9 @@ class DatabaseAdapter:
                 raise
             return None
 
-    def run_sql_real(self, sql: str, parameters: t.Mapping[str, str] = None, records: bool = False):
+    def run_sql_real(
+        self, sql: str, parameters: t.Optional[t.Mapping[str, str]] = None, records: t.Optional[bool] = False
+    ):
         """
         Invoke an SQL statement and return results.
         """
@@ -365,8 +367,8 @@ class DatabaseAdapter:
         index=False,
         chunksize=1000,
         if_exists="replace",
-        npartitions: int = None,
-        progress: bool = False,
+        npartitions: t.Optional[int] = None,
+        progress: t.Optional[bool] = False,
     ):
         """
         Import CSV data using Dask.

@@ -21,8 +21,10 @@ class InfluxDB2Fixture(PytestTestcontainerAdapter):
     def __init__(self):
         from influxdb_client import InfluxDBClient
 
-        self.container = None
-        self.client: InfluxDBClient = None
+        from cratedb_toolkit.testing.testcontainers.influxdb2 import InfluxDB2Container
+
+        self.container: InfluxDB2Container
+        self.client: InfluxDBClient
         super().__init__()
 
     def setup(self):

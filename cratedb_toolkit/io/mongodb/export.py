@@ -45,12 +45,15 @@ def convert(d):
     converter = MongoDBCrateDBConverter()
     newdict = {}
     for k, v in sanitize_field_names(d).items():
-        newdict[k] = converter.convert(v)
+        newdict[k] = converter.decode_document(v)
     return newdict
 
 
 def collection_to_json(
-    collection: pymongo.collection.Collection, fp: t.IO[t.Any], tm: TransformationManager = None, limit: int = 0
+    collection: pymongo.collection.Collection,
+    fp: t.IO[t.Any],
+    tm: t.Optional[TransformationManager] = None,
+    limit: t.Optional[int] = None,
 ):
     """
     Export a MongoDB collection's documents to standard JSON.
@@ -62,6 +65,7 @@ def collection_to_json(
     file
       a file-like object (stream).
     """
+    limit = limit or 0
     for document in collection.find().limit(limit):
         bson_json = bsonjs.dumps(document.raw)
         json_object = json.loads(bson_json)

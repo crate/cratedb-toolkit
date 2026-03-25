@@ -89,7 +89,7 @@ class DatabaseAddress:
         uri.scheme = "crate"
         return cls(uri=uri)
 
-    def with_credentials(self, username: str = None, password: str = None):
+    def with_credentials(self, username: t.Optional[str] = None, password: t.Optional[str] = None):
         """
         Add credentials, with in-place modification.
         """

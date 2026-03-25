@@ -1,4 +1,5 @@
 import contextlib
+from typing import Optional
 from unittest.mock import patch
 
 import crate.client.http
@@ -11,20 +12,22 @@ class jwt_token_patch(contextlib.ContextDecorator):
     Patch the `Client._request` method to add the Authorization header for JWT token-based authentication.
     """
 
-    def __init__(self, jwt_token: str = None):
+    def __init__(self, jwt_token: Optional[str] = None):
         self.jwt_token = jwt_token
 
     def __enter__(self):
-        self.patcher = patch.object(crate.client.http.Client, "_request", _mk_crate_client_request(self.jwt_token))
-        self.patcher.start()
+        if self.jwt_token:
+            self.patcher = patch.object(crate.client.http.Client, "_request", _mk_crate_client_request(self.jwt_token))
+            self.patcher.start()
         return self
 
     def __exit__(self, type, value, tb):  # noqa: A002
-        self.patcher.stop()
+        if self.jwt_token:
+            self.patcher.stop()
         return self
 
 
-def _mk_crate_client_request(jwt_token: str = None):
+def _mk_crate_client_request(jwt_token: Optional[str] = None):
     """
     Create a monkey patched `Client._request` method to add the Authorization header for JWT token-based authentication.
     """

@@ -138,10 +138,10 @@ optional-dependencies.deltalake = [
 ]
 optional-dependencies.develop = [
   "black[jupyter]<27",
-  "mypy<1.20",
   "poethepoet<1",
   "pyproject-fmt<3",
   "ruff<0.16",
+  "ty==0.0.25",
   "validate-pyproject<1",
 ]
 optional-dependencies.docs = [
@@ -338,16 +338,29 @@ lint.per-file-ignores."doc/conf.py" = [ "A001", "ERA001" ]
 lint.per-file-ignores."examples/*" = [ "ERA001", "F401", "T201", "T203" ]  # Allow `print` and `pprint`
 lint.per-file-ignores."tests/*" = [ "S101" ]  # Allow use of `assert`, and `print`.
 
-[tool.mypy]
-packages = [ "cratedb_toolkit" ]
-exclude = [
-  "cratedb_toolkit/adapter/pymongo/",
+[tool.ty]
+src.include = [ "cratedb_toolkit", "tests" ]
+rules.unused-ignore-comment = "ignore"
+analysis.allowed-unresolved-imports = [
+  "bson.**",
+  "bsonjs.**",
+  "datasets.**",
+  "dlt.**",
+  "dlt_cratedb.**",
+  "fastapi.**",
+  "importlib_metadata.**",
+  "importlib_resources.**",
+  "ingestr.**",
+  "jessiql.**",
+  "kaggle.**",
+  "kinesis",
+  "lorrystream.**",
+  "mcp.**",
+  "pymongo.**",
+  "sqlalchemy.**",
+  "tikray.**",
+  "undatum.**",
 ]
-check_untyped_defs = true
-ignore_missing_imports = true
-implicit_optional = true
-install_types = true
-non_interactive = true
 
 [tool.pytest]
 ini_options.addopts = "-rfEXs -p pytester --strict-markers --verbosity=3 --cov=. --cov-report=term-missing --cov-report=xml"
@@ -417,7 +430,7 @@ tasks.lint = [
   { cmd = "ruff format --check" },
   { cmd = "ruff check" },
   { cmd = "validate-pyproject pyproject.toml" },
-  { cmd = "mypy" },
+  { cmd = "ty check" },
 ]
 tasks.release = [
   { cmd = "python -m build" },

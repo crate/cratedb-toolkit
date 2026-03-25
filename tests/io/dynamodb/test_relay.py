@@ -94,6 +94,7 @@ def test_kinesis_latest_dynamodb_cdc_insert_update(caplog, cratedb, dynamodb):
     thread = threading.Thread(target=table_loader.start)
     thread.start()
     # Wait for the consumer to obtain its LATEST shard iterator before producing events.
+    assert table_loader.kinesis_adapter is not None
     assert table_loader.kinesis_adapter.wait_until_ready(timeout=30), "Consumer did not become ready in time"
 
     # Populate source database with data.

@@ -17,7 +17,7 @@ class PyMongoCrateDBAdapter:
         self.cratedb = DatabaseAdapter(dburi=dburi)
         self.collection_backup = pymongo.collection.Collection
 
-        collection_patched = collection_factory(cratedb=self.cratedb)  # type: ignore[misc]
+        collection_patched = collection_factory(cratedb=self.cratedb)
         self.patches = [
             # Patch PyMongo's `Collection` implementation.
             patch("pymongo.collection.Collection", collection_patched),

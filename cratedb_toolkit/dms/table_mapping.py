@@ -42,8 +42,8 @@ class TableMappingBuilder:
         action: str,
         locator: Dict[str, str],
         id: Union[str, None] = None,  # noqa: A002
-        filters: List[Any] = None,
-        mapping_parameters: Dict[str, str] = None,
+        filters: Union[List[Any], None] = None,
+        mapping_parameters: Union[Dict[str, str], None] = None,
     ) -> "TableMappingBuilder":
         if id is None:
             id = str(len(self.rules) + 1)  # noqa: A001

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 import sqlalchemy as sa
+from sqlalchemy.exc import OperationalError
 
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
@@ -91,12 +92,12 @@ def test_kinesis_relay_write_failure_propagates(caplog, cratedb, kinesis):
     def failing_execute(self, statement, *args, **kwargs):
         stmt_text = statement.text if hasattr(statement, "text") else str(statement)
         if "INSERT" in stmt_text.upper() or "UPSERT" in stmt_text.upper():
-            raise sa.exc.OperationalError("test", {}, Exception("connection lost"))
+            raise OperationalError("test", {}, Exception("connection lost"))
         return original_execute(self, statement, *args, **kwargs)
 
     # Verify that the write failure propagates instead of being swallowed.
     with patch.object(sa.Connection, "execute", failing_execute):
-        with pytest.raises(sa.exc.OperationalError, match="connection lost"):
+        with pytest.raises(OperationalError, match="connection lost"):
             table_loader.start(once=True)
 
     # Verify that stop() cleaned up the connection.

@@ -12,11 +12,11 @@ from cratedb_toolkit.util.client import jwt_token_patch
 def run_crash(
     hosts: str,
     command: str,
-    output_format: str = None,
-    schema: str = None,
-    username: str = None,
-    password: str = None,
-    jwt_token: str = None,
+    output_format: t.Optional[str] = None,
+    schema: t.Optional[str] = None,
+    username: t.Optional[str] = None,
+    password: t.Optional[str] = None,
+    jwt_token: t.Optional[str] = None,
 ):
     """
     Run the interactive CrateDB database shell using `crash`.

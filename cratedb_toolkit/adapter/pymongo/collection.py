@@ -52,7 +52,7 @@ def collection_factory(cratedb: DatabaseAdapter):
         def insert_one(
             self: Collection,
             document: Union[_DocumentType, RawBSONDocument],
-            bypass_document_validation: bool = False,
+            bypass_document_validation: Optional[bool] = None,
             session: Optional[ClientSession] = None,
             comment: Optional[Any] = None,
         ) -> InsertOneResult:
@@ -112,7 +112,7 @@ def collection_factory(cratedb: DatabaseAdapter):
             self,
             documents: Iterable[Union[_DocumentType, RawBSONDocument]],
             ordered: bool = True,
-            bypass_document_validation: bool = False,
+            bypass_document_validation: Optional[bool] = None,
             session: Optional[ClientSession] = None,
             comment: Optional[Any] = None,
         ) -> InsertManyResult:
@@ -127,8 +127,8 @@ def collection_factory(cratedb: DatabaseAdapter):
                     if "_id" in document:
                         identifier = ObjectId(document["_id"])
                         if isinstance(document, RawBSONDocument):
-                            document = document.decode()
-                        del document["_id"]
+                            document = document.decode()  # ty: ignore[unresolved-attribute]
+                        del document["_id"]  # ty: ignore[not-subscriptable]
                     else:
                         identifier = ObjectId()
                     inserted_ids.append(identifier)

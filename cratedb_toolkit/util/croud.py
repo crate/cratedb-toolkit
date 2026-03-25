@@ -35,7 +35,7 @@ class CroudCall:
 
 
 class CroudWrapper:
-    def __init__(self, call: CroudCall, output_format: str = None, decode_output: bool = True):
+    def __init__(self, call: CroudCall, output_format: t.Optional[str] = None, decode_output: t.Optional[bool] = True):
         """
         format: One of table,wide,json,yaml
         """
@@ -257,7 +257,7 @@ class CroudClient(croud.api.Client):
         return config
 
 
-croud.api.Client = CroudClient
+croud.api.Client = CroudClient  # ty: ignore[invalid-assignment]
 
 
 def get_sane_log_level(src) -> int:
@@ -270,7 +270,7 @@ def get_sane_log_level(src) -> int:
     return level
 
 
-def get_croud_output_formats() -> t.List[str]:
+def get_croud_output_formats() -> t.Iterable[str]:
     """
     Inquire the output formats `croud` understands.
     """

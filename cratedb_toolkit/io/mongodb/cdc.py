@@ -61,7 +61,8 @@ class MongoDBCDCRelayCrateDB:
         transformation = None
         if tm:
             address = CollectionAddress(
-                container=self.mongodb_adapter.database_name, name=self.mongodb_adapter.collection_name
+                container=self.mongodb_adapter.database_name,
+                name=t.cast(str, self.mongodb_adapter.collection_name),
             )
             try:
                 transformation = tm.project.get(address=address)

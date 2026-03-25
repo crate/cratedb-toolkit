@@ -85,7 +85,7 @@ def help_statistics():
     """  # noqa: E501
 
 
-@click.group(cls=ClickAliasedGroup, help=docstring_format_verbatim(help_statistics.__doc__))  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup, help=docstring_format_verbatim(help_statistics.__doc__))
 @click.pass_context
 def job_statistics(ctx: click.Context):
     """
@@ -221,7 +221,7 @@ def job_statistics_ui(ctx: click.Context):
     uvicorn.run(app, host="localhost", port=7777, log_level="info")
 
 
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup)
 @click.pass_context
 def info(ctx: click.Context):
     """

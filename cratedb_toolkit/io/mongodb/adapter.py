@@ -100,6 +100,10 @@ class MongoDBAdapterBase:
         raise NotImplementedError()
 
     @abstractmethod
+    def create_collection(self):
+        raise NotImplementedError()
+
+    @abstractmethod
     def subscribe_cdc(self, resume_after: t.Optional[DocumentDict] = None):
         raise NotImplementedError()
 

@@ -1,7 +1,7 @@
 import io
 
 import pytest
-import sqlalchemy as sa
+from sqlalchemy.exc import OperationalError
 
 from cratedb_toolkit.util.database import run_sql
 
@@ -52,7 +52,7 @@ def test_run_sql_multiple_statements(sqlcmd):
 
 
 def test_run_sql_invalid_host(capsys):
-    with pytest.raises(sa.exc.OperationalError) as ex:
+    with pytest.raises(OperationalError) as ex:
         run_sql(dburi="crate://localhost:12345", sql="SELECT 1;")
     assert ex.match(
         ".*ConnectionError.*No more Servers available.*HTTPConnectionPool.*"

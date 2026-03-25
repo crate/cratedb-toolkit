@@ -33,7 +33,7 @@ def split_list(value: str, delimiter: str = ",") -> t.List[str]:
     return [c.strip() for c in value.split(delimiter)]
 
 
-def to_list(x: t.Any, default: t.List[t.Any] = None) -> t.List[t.Any]:
+def to_list(x: t.Any, default: t.Optional[t.List[t.Any]] = None) -> t.List[t.Any]:
     if not isinstance(default, t.List):
         raise ValueError("Default value is not a list")
     if x is None:
@@ -118,7 +118,7 @@ def error_level_by_debug(debug: bool):
 
 
 def running_with_debug(ctx: click.Context) -> bool:
-    return (
+    return bool(
         (ctx.parent and ctx.parent.params.get("debug", False))
         or (ctx.parent and ctx.parent.parent and ctx.parent.parent.params.get("debug", False))
         or False

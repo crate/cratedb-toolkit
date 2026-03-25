@@ -8,7 +8,7 @@ from cratedb_toolkit.config import CONFIG
 logger = logging.getLogger()
 
 
-def flexfun(domain: t.Literal["runtime", "settings"] = None):
+def flexfun(domain: t.Optional[t.Literal["runtime", "settings"]] = None):
     """
     Function decorator, which honors toolkit environment settings wrt. error handling.
 

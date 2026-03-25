@@ -1,9 +1,10 @@
 import os
+import typing as t
 import zipfile
 from unittest.mock import patch
 
 
-def load_dataset_kaggle(dataset: str, path: str, file_name: str = None):
+def load_dataset_kaggle(dataset: str, path: str, file_name: t.Optional[str] = None):
     """
     Download complete dataset or individual files from Kaggle.
 

@@ -25,7 +25,7 @@ def help_serve():
     """  # noqa: E501
 
 
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup)
 @option_cluster_url
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")

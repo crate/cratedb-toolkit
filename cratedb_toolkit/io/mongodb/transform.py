@@ -49,10 +49,11 @@ class TransformationManager:
         # TODO: Also support addressing nested elements.
         #       Hint: Implementation already exists on another machine,
         #       where it has not been added to the repository. Sigh.
-        for rule in transformation.schema.rules:
-            pointer = JsonPointer(f"/document{rule.pointer}/types")
-            type_stats = pointer.resolve(collection_schema)
-            type_stats[rule.type] = {"count": int(9e10)}
+        if transformation.schema:
+            for rule in transformation.schema.rules:
+                pointer = JsonPointer(f"/document{rule.pointer}/types")
+                type_stats = pointer.resolve(collection_schema)
+                type_stats[rule.type] = {"count": int(9e10)}
 
     def apply_transformations(self, database_name: str, collection_name: str, data: t.Dict[str, t.Any]):
         if not self.active:
