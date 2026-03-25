@@ -13,7 +13,7 @@ data transfers to be used within data pipelines or ad hoc operations.
 
 ## Synopsis
 - Load from InfluxDB server: `ctk load influxdb2://...`
-- Load from InfluxDB line protocol: `ctk load file://observations.lp`
+- Load from InfluxDB line protocol: `ctk load observations.lp`
 
 ## Details
 The InfluxDB table loader is based on the [influxio] package. Please also check
@@ -69,7 +69,7 @@ ctk show table "testdrive.demo"
 
 Import ILP file from local filesystem.
 ```shell
-ctk load "file://influxdb-export.lp"
+ctk load influxdb-export.lp
 ```
 
 Import ILP file from a remote resource.

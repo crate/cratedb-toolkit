@@ -57,10 +57,13 @@ class IoRouter:
         ):
             from cratedb_toolkit.io.influxdb import influxdb_copy
 
-            http_scheme = "http"
-            if asbool(source_url_obj.query_params.get("ssl")):
-                http_scheme = "https"
-            adjusted_url = str(source_url_obj).replace(source_url_obj.scheme, http_scheme, 1)
+            if source_url_obj.scheme.startswith("influxdb"):
+                http_scheme = "http"
+                if asbool(source_url_obj.query_params.get("ssl")):
+                    http_scheme = "https"
+                adjusted_url = str(source_url_obj).replace(source_url_obj.scheme, http_scheme, 1)
+            else:
+                adjusted_url = source_url
             return influxdb_copy(adjusted_url, target_url, progress=True)
 
         elif source_url_obj.scheme.startswith("kinesis"):
