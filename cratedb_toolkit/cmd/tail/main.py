@@ -5,10 +5,10 @@ import time
 import typing as t
 
 import attr
-import colorlog
 import orjson
 import sqlparse
 import yaml
+from colorlog.escape_codes import escape_codes
 
 from cratedb_toolkit.model import TableAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -37,9 +37,9 @@ class SysJobsLog:
 
     @property
     def label(self):
-        red = colorlog.escape_codes.escape_codes["red"]
-        green = colorlog.escape_codes.escape_codes["green"]
-        reset = colorlog.escape_codes.escape_codes["reset"]
+        red = escape_codes["red"]
+        green = escape_codes["green"]
+        reset = escape_codes["reset"]
         if self.error:
             return f"{red}ERROR{reset}"
         else:

@@ -5,6 +5,7 @@ import unittest
 from unittest import mock
 
 import pymongo
+import pymongo.errors
 import pytest
 
 from tests.conftest import check_sqlalchemy2
@@ -48,7 +49,7 @@ class TestMongoDBIntegration(unittest.TestCase):
             logger.debug(f"MongoDB server info: {server_info}")
         except pymongo.errors.ServerSelectionTimeoutError as ex:
             if cls.SKIP_IF_NOT_RUNNING:
-                raise cls.skipTest(cls, reason="MongoDB server not running") from ex
+                raise cls.skipTest(cls, reason="MongoDB server not running") from ex  # ty: ignore[invalid-argument-type]
             else:  # noqa: RET506
                 raise
 

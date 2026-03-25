@@ -101,7 +101,7 @@ def extract(args) -> t.Dict[str, t.Any]:
     return schemas
 
 
-def translate(schemas, schemaname: str = None) -> t.Dict[str, str]:
+def translate(schemas, schemaname: t.Optional[str] = None) -> t.Dict[str, str]:
     """
     Translate a given schema into SQL DDL statements compatible with CrateDB.
     """

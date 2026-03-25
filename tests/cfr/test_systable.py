@@ -1,5 +1,5 @@
 # ruff: noqa: E402
-import importlib
+import importlib.metadata
 import json
 import os.path
 import re
@@ -9,6 +9,8 @@ import tarfile
 
 import pytest
 from verlib2 import Version
+
+import tests.cfr
 
 pymongo = pytest.importorskip("polars", reason="Skipping tests because polars is not installed")
 

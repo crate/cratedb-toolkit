@@ -1,6 +1,5 @@
 # ruff: noqa: E402
 import logging
-import typing
 import uuid
 
 import pytest
@@ -10,6 +9,7 @@ pytest.importorskip("commons_codec", reason="Skipping DynamoDB tests because 'co
 pytest.importorskip("kinesis", reason="Skipping DynamoDB tests because 'async-kinesis' package is not installed")
 
 import botocore
+import botocore.exceptions
 from yarl import URL
 
 from cratedb_toolkit.io.dynamodb.adapter import DynamoDBAdapter
@@ -32,9 +32,11 @@ class DynamoDBFixture:
     """
 
     def __init__(self):
-        self.container = None
+        from cratedb_toolkit.testing.testcontainers.localstack import LocalStackContainerWithKeepalive
+
+        self.container: LocalStackContainerWithKeepalive
         self.url = None
-        self.dynamodb_adapter: typing.Union[DynamoDBAdapter, None] = None
+        self.dynamodb_adapter: DynamoDBAdapter
         self._stream_name = f"demo-{uuid.uuid4().hex[:8]}"
         self.setup()
 
@@ -49,7 +51,8 @@ class DynamoDBFixture:
         self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}?region=us-east-1"))
 
     def finalize(self):
-        self.container.stop()
+        if self.container:
+            self.container.stop()
 
     def reset(self):
         """

@@ -1,5 +1,4 @@
 # Compansate pymongo<>4.9 woes.
-# mypy: disable-error-code="arg-type,attr-defined,call-arg,misc"
 # Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
 from __future__ import annotations
 
@@ -250,7 +249,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
                     self.__query_spec(),
                     self.__projection,
                     self.__codec_options,
-                    self._read_preference(),
+                    self._read_preference(),  # ty: ignore[call-non-callable,invalid-argument-type,missing-argument]
                     self.__limit,
                     self.__batch_size,
                     self.__read_concern,
@@ -275,7 +274,7 @@ def cursor_factory(cratedb: DatabaseAdapter):
                     limit,
                     self.__id,
                     self.__codec_options,
-                    self._read_preference(),
+                    self._read_preference(),  # ty: ignore[call-non-callable,invalid-argument-type,missing-argument]
                     self.__session,
                     self.__collection.database.client,
                     self.__max_await_time_ms,

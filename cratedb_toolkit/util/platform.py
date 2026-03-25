@@ -30,7 +30,7 @@ class PlatformInfo:
 
             data["sqlalchemy"] = {
                 "dialects_builtin": list(sqlalchemy.dialects.registry.impls.keys()),
-                "dialects_3rdparty": [dialect.name for dialect in entry_points(group="sqlalchemy.dialects")],  # type: ignore[attr-defined,call-arg]
+                "dialects_3rdparty": [dialect.name for dialect in entry_points(group="sqlalchemy.dialects")],  # ty: ignore[unknown-argument,unresolved-attribute]
                 "plugins": list(sqlalchemy.dialects.plugins.impls.keys()),
             }
         except Exception:  # noqa: S110

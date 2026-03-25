@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from commons_codec.model import SkipOperation
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from yarl import URL
@@ -50,7 +51,10 @@ class KinesisRelay:
             if self.recipe:
                 pks, cms, mapping_strategy, ignore_ddl = self.recipe.codec_options()
             self.translator = DMSTranslatorCrateDB(
-                primary_keys=pks, column_types=cms, mapping_strategy=mapping_strategy, ignore_ddl=ignore_ddl
+                primary_keys=pks,  # ty: ignore[invalid-argument-type]
+                column_types=cms,  # ty: ignore[invalid-argument-type]
+                mapping_strategy=mapping_strategy,  # ty: ignore[invalid-argument-type]
+                ignore_ddl=ignore_ddl,  # ty: ignore[invalid-argument-type]
             )
         else:
             raise SkipAdapterException(f"Not processing {self.kinesis_url} here")
@@ -67,7 +71,8 @@ class KinesisRelay:
         try:
             if self.cratedb_table is not None:
                 if not self.cratedb_adapter.table_exists(self.cratedb_table):
-                    self.connection.execute(sa.text(self.translator.sql_ddl))
+                    assert self.translator and hasattr(self.translator, "sql_ddl")  # noqa: S101
+                    self.connection.execute(sa.text(t.cast(str, self.translator.sql_ddl)))
                     self.connection.commit()
                 records_target = self.cratedb_adapter.count_records(self.cratedb_table)
                 logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
@@ -131,7 +136,7 @@ class KinesisRelay:
                 self.connection.execute(sa.text(f"REFRESH TABLE {self.cratedb_table}"))
 
             self.connection.commit()
-        except (sa.exc.ProgrammingError, sa.exc.OperationalError):
+        except (ProgrammingError, OperationalError):
             logger.exception("Executing query failed")
             raise
         else:

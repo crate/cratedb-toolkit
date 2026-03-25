@@ -34,6 +34,7 @@ def test_cluster_universal_managed(cloud_environment, cloud_cluster_name):
     Validate the universal `DatabaseCluster` factory for "managed" CrateDB Cloud clusters.
     """
     mc = DatabaseCluster.create(cluster_name=cloud_cluster_name).probe()
+    assert mc.info
     assert uuid.UUID(mc.info.cloud_id).time >= 774933237065562038
     assert mc.info.cloud_name == cloud_cluster_name
 

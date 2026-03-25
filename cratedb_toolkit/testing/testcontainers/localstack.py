@@ -55,4 +55,6 @@ class LocalStackContainerWithKeepalive(KeepaliveContainer, LocalStackContainer):
         the "Ready" log message. Without this, Kinesis and other service APIs
         receive requests before LocalStack is ready.
         """
+        if not self._wait_strategy:
+            raise ValueError("No wait strategy defined")
         wait_for_logs(self, predicate=self._wait_strategy, timeout=60)

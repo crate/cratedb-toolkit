@@ -76,7 +76,9 @@ class InfluxDB2Container(DockerSkippingContainer, KeepaliveContainer, DbContaine
             port=self.port_to_expose,
         )
 
-    def _connect(self) -> InfluxDBClient:
+    def _connect(self) -> InfluxDBClient:  # ty: ignore[invalid-method-override]
+        if not self._wait_strategy:
+            raise ValueError("No wait strategy defined")
         wait_for_logs(self, self._wait_strategy)
         return InfluxDBClient(url=self.get_connection_url(), org=self.ORGANIZATION, token=self.TOKEN, debug=self.debug)
 

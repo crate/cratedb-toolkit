@@ -26,7 +26,7 @@ def test_adapter_scan_failure_consistent_read(dynamodb):
     adapter = DynamoDBAdapter(URL(dynamodb_url))
 
     with pytest.raises(ParamValidationError) as ex:
-        next(adapter.scan("demo", consistent_read=-42, on_error="raise"))
+        next(adapter.scan("demo", consistent_read=-42, on_error="raise"))  # ty: ignore[invalid-argument-type]
     assert ex.match("Parameter validation failed:\nInvalid type for parameter ConsistentRead, value: -42.*")
 
 

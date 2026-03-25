@@ -1,5 +1,6 @@
 import logging
 import os
+import typing as t
 
 import pytest
 
@@ -30,9 +31,14 @@ class MongoDBFixture(PytestTestcontainerAdapter):
     def __init__(self, container_class):
         from pymongo import MongoClient
 
+        from cratedb_toolkit.testing.testcontainers.mongodb import (
+            MongoDbContainerWithKeepalive,
+            MongoDbReplicasetContainer,
+        )
+
         self.container_class = container_class
-        self.container = None
-        self.client: MongoClient = None
+        self.container: t.Union[MongoDbContainerWithKeepalive, MongoDbReplicasetContainer]
+        self.client: MongoClient
         super().__init__()
 
     def setup(self):
@@ -62,9 +68,6 @@ class MongoDBFixture(PytestTestcontainerAdapter):
 
     def get_connection_client(self):
         return self.container.get_connection_client()
-
-    def get_connection_client_replicaset(self):
-        return self.container.get_connection_client_replicaset()
 
 
 class MongoDBFixtureFactory:

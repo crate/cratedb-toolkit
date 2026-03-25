@@ -52,7 +52,7 @@ async def execute(request: Request, adapter: t.Annotated[DatabaseAdapter, Depend
 
     results = adapter.run_sql(
         sql=sql,
-        parameters=parameters,
+        parameters=parameters or {},
         records=True,
     )
     time_duration = time.time_ns() - time_start

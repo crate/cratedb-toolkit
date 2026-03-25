@@ -19,7 +19,6 @@ import os
 import re
 from typing import Optional
 
-from testcontainers.core.config import MAX_TRIES
 from testcontainers.core.generic import DbContainer
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 from testcontainers.core.waiting_utils import wait_for_logs
@@ -152,7 +151,9 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         )
 
     def _connect(self):
-        wait_for_logs(self, predicate=self._wait_strategy, timeout=MAX_TRIES)
+        if not self._wait_strategy:
+            raise ValueError("No wait strategy defined")
+        wait_for_logs(self, predicate=self._wait_strategy)
 
     def _configure_wait_condition(self):
         """Wait for CrateDB node to be fully started."""
@@ -169,8 +170,8 @@ class CrateDBTestAdapter:
     """
 
     def __init__(self, crate_version: str = "nightly", **kwargs):
-        self.cratedb: Optional[CrateDBContainer] = None
-        self.database: Optional[DatabaseAdapter] = None
+        self.cratedb: CrateDBContainer
+        self.database: DatabaseAdapter
         self.image: str = "crate/crate:{}".format(crate_version)
 
     def start(self, **kwargs):

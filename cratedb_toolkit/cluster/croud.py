@@ -164,7 +164,7 @@ class CloudRootServices:
             item["backup_location"] = _transform_backup_location(item["backup_location"])
         return data
 
-    def create_project(self, name: str, organization_id: str = None):
+    def create_project(self, name: str, organization_id: t.Optional[str] = None):
         """
         Create project.
 
@@ -184,7 +184,7 @@ class CloudRootServices:
 
         call = CroudCall(
             fun=project_create,
-            specs=command_tree["projects"]["commands"]["create"]["extra_args"],
+            specs=command_tree["projects"]["commands"]["create"]["extra_args"],  # ty: ignore[invalid-argument-type,not-subscriptable]
             arguments=arguments,
         )
 
@@ -216,7 +216,7 @@ class CloudRootServices:
 
         return project_id
 
-    def deploy_cluster(self, name: str, project_id: str, subscription_id: str = None):
+    def deploy_cluster(self, name: str, project_id: str, subscription_id: t.Optional[str] = None):
         """
         Deploy cluster.
 
@@ -273,7 +273,7 @@ class CloudRootServices:
 
         call = CroudCall(
             fun=clusters_deploy,
-            specs=command_tree["clusters"]["commands"]["deploy"]["extra_args"],
+            specs=command_tree["clusters"]["commands"]["deploy"]["extra_args"],  # ty: ignore[invalid-argument-type,not-subscriptable]
             arguments=[
                 "--subscription-id",
                 subscription_id,

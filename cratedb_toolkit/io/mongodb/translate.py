@@ -33,6 +33,7 @@ the type with the greatest proportion.
 
 import logging
 from functools import reduce
+from typing import Optional
 
 from cratedb_toolkit.io.mongodb.util import sanitize_field_names
 
@@ -164,7 +165,7 @@ def indent_sql(query: str) -> str:
     return "\n".join(lines)
 
 
-def translate(schemas, schemaname: str = None):
+def translate(schemas, schemaname: Optional[str] = None):
     """
     Translate a schema definition for a set of MongoDB collection schemas.
 

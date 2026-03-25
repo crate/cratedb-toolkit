@@ -80,6 +80,8 @@ class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
     def _create_connection_url(
         self,
         dialect: str,
+        username: str,
+        password: str,
         host: t.Optional[str] = None,
         port: t.Optional[int] = None,
         dbname: t.Optional[str] = None,
@@ -92,6 +94,7 @@ class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
         if self._container is None:
             raise ContainerStartException("container has not been started")
         host = host or self.get_container_host_ip()
+        assert port is not None  # noqa: S101
         port = self.get_exposed_port(port)
         url = f"{dialect}://{host}:{port}"
         if dbname:
@@ -101,6 +104,8 @@ class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
     def get_connection_url(self) -> str:
         return self._create_connection_url(
             dialect="mongodb",
+            username="admin",
+            password="",
             port=self.port,
         )
 

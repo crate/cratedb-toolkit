@@ -5,22 +5,23 @@ import sqlalchemy as sa
 from jessiql import Query, QueryObject, QueryObjectDict
 from jessiql.exc import InvalidColumnError
 from jessiql.typing import SARowDict
+from sqlalchemy.orm import Mapper, registry
 
 
-def table_to_model(table: sa.Table) -> t.Type[sa.orm.Mapper]:
+def table_to_model(table: sa.Table) -> t.Type[Mapper]:
     """
     Create SQLAlchemy model class from Table object.
 
     - https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#imperative-mapping
     - https://sparrigan.github.io/sql/sqla/2016/01/03/dynamic-tables.html
     """
-    mapper_registry = sa.orm.registry(metadata=table.metadata)
+    mapper_registry = registry(metadata=table.metadata)
     Surrogate = type("Surrogate", (), {})
     mapper_registry.map_imperatively(Surrogate, table)
-    return Surrogate
+    return Surrogate  # ty: ignore[invalid-return-type]
 
 
-def reflect_model(engine: t.Any, metadata: sa.MetaData, table_name: str) -> t.Type[sa.orm.Mapper]:
+def reflect_model(engine: t.Any, metadata: sa.MetaData, table_name: str) -> t.Type[Mapper]:
     """
     Create SQLAlchemy model class by reflecting a database table.
     """
@@ -29,7 +30,7 @@ def reflect_model(engine: t.Any, metadata: sa.MetaData, table_name: str) -> t.Ty
 
 
 def mongodb_query(
-    model: t.Type[sa.orm.Mapper],
+    model: t.Type[Mapper],
     select: t.Union[t.List, None] = None,
     filter: t.Union[t.Dict[str, t.Any], None] = None,  # noqa: A002
     sort: t.Union[t.List[str], None] = None,
@@ -38,7 +39,7 @@ def mongodb_query(
     Create a JessiQL Query object from an SQLAlchemy model class and typical MongoDB query parameters.
     """
 
-    select = select or list(model._sa_class_manager.keys())  # type: ignore[attr-defined]
+    select = select or list(model._sa_class_manager.keys())
 
     filter = filter or {}  # noqa: A001
     sort = sort or []

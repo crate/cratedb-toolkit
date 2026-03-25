@@ -38,6 +38,7 @@ class ExtendedDockerContainer(DockerContainer):
         To let containers talk to each other, explicitly provide the real IP address
         of the container. In corresponding jargon, it appears to be the "bridge IP".
         """
+        assert self._container is not None  # noqa: S101
         return self.get_docker_client().bridge_ip(self._container.id)
 
     def get_real_host_address(self) -> str:
@@ -108,7 +109,7 @@ class KeepaliveContainer(DockerContainer):
                 command=self._command,
                 detach=True,
                 environment=self.env,
-                ports=self.ports,
+                ports=self.ports or {},  # ty: ignore[invalid-argument-type]
                 name=self._name,
                 volumes=self.volumes,
                 **self._kwargs,
@@ -124,11 +125,11 @@ class KeepaliveContainer(DockerContainer):
                 logger.info(f"Starting container: {container_id} ({container_name})")
                 self._container.start()
 
-        if hasattr(self, "_connect"):
-            self._connect()
+        if hasattr(self, "_connect") and callable(self._connect):
+            self._connect()  # ty: ignore[call-top-callable]
         return self
 
-    def stop(self, **kwargs):
+    def stop(self, force: bool = True, delete_volume: bool = True) -> None:
         """
         Shut down container again, unless "keepalive" is enabled.
         """
@@ -156,7 +157,7 @@ class DockerSkippingContainer(DockerContainer):
         except DockerException as ex:
             if any(token in str(ex) for token in ("Connection aborted", "Error while fetching server API version")):
                 # TODO: Make this configurable through some `pytest_` variable.
-                raise pytest.skip(reason="Skipping test because Docker is not running", allow_module_level=True) from ex
+                pytest.skip("Skipping test because Docker is not running", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
             else:  # noqa: RET506
                 raise
 
@@ -175,7 +176,7 @@ class PytestTestcontainerAdapter:
     """
 
     def __init__(self):
-        self.container: DockerContainer = None
+        self.container: DockerContainer
         self.run_setup()
 
     @abstractmethod
@@ -196,9 +197,7 @@ class PytestTestcontainerAdapter:
         except DockerException as ex:
             if any(token in str(ex) for token in ("Connection aborted", "Error while fetching server API version")):
                 # TODO: Make this configurable through some `pytest_` variable.
-                raise pytest.skip(
-                    reason="Skipping test because Docker daemon is not available", allow_module_level=True
-                ) from ex
+                pytest.skip("Skipping test because Docker daemon is not available", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
             else:  # noqa: RET506
                 raise
 

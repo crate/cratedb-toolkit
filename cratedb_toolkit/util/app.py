@@ -9,7 +9,7 @@ from cratedb_toolkit.util.cli import boot_click
 
 
 def make_cli():
-    @click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+    @click.group(cls=ClickAliasedGroup)
     @option_cluster_id
     @option_cluster_name
     @option_cluster_url

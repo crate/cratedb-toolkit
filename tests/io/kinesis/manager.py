@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class KinesisTestManager:
     def __init__(self, url: str):
-        url = URL(url).with_query({"region": "us-east-1", "create": "true"})
-        self.adapter = KinesisAdapterBase.factory(url)
+        url_obj = URL(url).with_query({"region": "us-east-1", "create": "true"})
+        self.adapter = KinesisAdapterBase.factory(url_obj)
 
     def load_events(self, events: t.List[t.Dict[str, t.Any]]):
         for event in events:

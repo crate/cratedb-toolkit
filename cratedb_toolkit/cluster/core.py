@@ -9,6 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import click
+from crate.client.connection import Connection
 
 from cratedb_toolkit.cluster.croud import CloudClusterServices, CloudRootServices
 from cratedb_toolkit.cluster.guide import DataImportGuide
@@ -110,11 +111,11 @@ class ManagedCluster(ClusterBase):
 
     def __init__(
         self,
-        cluster_id: str = None,
-        cluster_name: str = None,
-        settings: ManagedClusterSettings = None,
-        address: DatabaseAddress = None,
-        info: ClusterInformation = None,
+        cluster_id: t.Optional[str] = None,
+        cluster_name: t.Optional[str] = None,
+        settings: t.Optional[ManagedClusterSettings] = None,
+        address: t.Optional[DatabaseAddress] = None,
+        info: t.Optional[ClusterInformation] = None,
         stop_on_exit: bool = False,
     ):
         super().__init__()
@@ -408,7 +409,7 @@ class ManagedCluster(ClusterBase):
             raise DatabaseAddressMissingError()
         return DatabaseAdapter(dburi=self.address.dburi, jwt=self.info.jwt)
 
-    def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
+    def get_client_bundle(self, username: t.Optional[str] = None, password: t.Optional[str] = None) -> ClientBundle:
         """
         Return a bundle of client handles to the CrateDB Cloud cluster database.
 
@@ -431,7 +432,7 @@ class ManagedCluster(ClusterBase):
         adapter = DatabaseAdapter(address.dburi)
         self._client_bundle = ClientBundle(
             adapter=adapter,
-            dbapi=adapter.connection.connection.dbapi_connection,
+            dbapi=t.cast(Connection, adapter.connection.connection.dbapi_connection),
             sqlalchemy=adapter.engine,
         )
         return self._client_bundle
@@ -492,7 +493,7 @@ class StandaloneCluster(ClusterBase):
         """
         return DatabaseAdapter(dburi=self.address.dburi)
 
-    def get_client_bundle(self, username: str = None, password: str = None) -> ClientBundle:
+    def get_client_bundle(self, username: t.Optional[str] = None, password: t.Optional[str] = None) -> ClientBundle:
         """
         Return a bundle of client handles to the CrateDB Cloud cluster database.
 
@@ -512,7 +513,7 @@ class StandaloneCluster(ClusterBase):
         adapter = DatabaseAdapter(address.dburi)
         self._client_bundle = ClientBundle(
             adapter=adapter,
-            dbapi=adapter.connection.connection.dbapi_connection,
+            dbapi=t.cast(Connection, adapter.connection.connection.dbapi_connection),
             sqlalchemy=adapter.engine,
         )
         return self._client_bundle
@@ -592,7 +593,10 @@ class DatabaseCluster:
 
     @classmethod
     def create(
-        cls, cluster_id: str = None, cluster_name: str = None, cluster_url: str = None
+        cls,
+        cluster_id: t.Optional[str] = None,
+        cluster_name: t.Optional[str] = None,
+        cluster_url: t.Optional[str] = None,
     ) -> t.Union[ManagedCluster, StandaloneCluster]:
         """
         Create the cluster instance based on the provided parameters.

@@ -26,7 +26,7 @@ class AmendedObjectId:
         return cls(bytes(oid, "ascii"))
 
     def __str__(self) -> str:
-        return binascii.hexlify(self.__id).decode()  # type: ignore[arg-type]
+        return binascii.hexlify(self.__id).decode()  # ty: ignore[invalid-argument-type]
 
     def __repr__(self) -> str:
         return f"ObjectId('{self!s}')"

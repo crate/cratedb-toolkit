@@ -184,7 +184,7 @@ class KinesisStreamAdapter(KinesisAdapterBase):
             create_stream_shards=self.create_shards,
             describe_timeout=self.describe_timeout,
         ) as producer:
-            await producer.put(data)
+            await producer.put(data)  # ty: ignore[unresolved-attribute]
 
 
 class KinesisFileAdapter(KinesisAdapterBase):
@@ -209,3 +209,9 @@ class KinesisFileAdapter(KinesisAdapterBase):
 
     def stop(self):
         pass
+
+    def wait_until_ready(self, timeout: float = 30) -> bool:
+        return True
+
+    def produce(self, data: t.Dict[str, t.Any]):
+        raise NotImplementedError("Unable to produce to file")

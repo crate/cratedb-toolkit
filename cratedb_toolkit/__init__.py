@@ -2,7 +2,7 @@
 try:
     from importlib.metadata import PackageNotFoundError, version
 except (ImportError, ModuleNotFoundError):  # pragma:nocover
-    from importlib_metadata import PackageNotFoundError, version  # type: ignore[assignment,no-redef,unused-ignore]
+    from importlib_metadata import PackageNotFoundError, version
 
 __appname__ = "cratedb-toolkit"
 

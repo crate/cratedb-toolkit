@@ -35,14 +35,14 @@ class SQLAlchemyTagHelperMixin:
         """
         Return list of SQL WHERE constraint clauses from given tags.
         """
-        from sqlalchemy.sql.selectable import NamedFromClause  # type: ignore[attr-defined]
+        from sqlalchemy.sql.selectable import NamedFromClause
 
-        table: NamedFromClause = self.table  # type: ignore[attr-defined]
+        table: NamedFromClause = self.table  # ty: ignore[unresolved-attribute]
         constraints = []
         for tag in tags:
             if not tag:
                 continue
-            constraint = table.c[self.tag_column][tag] != sa.Null()  # type: ignore[attr-defined]
+            constraint = table.c[self.tag_column][tag] != sa.Null()
             constraints.append(constraint)
         return sa.and_(sa.true(), *constraints)
 
@@ -55,7 +55,7 @@ class SQLAlchemyTagHelperMixin:
 
         TODO: Create corresponding issue at crate/crate.
         """
-        table = self.table  # type: ignore[attr-defined]
+        table = self.table  # ty: ignore[unresolved-attribute]
         where_clause = self.get_tags_constraints(tags)
         if sa_is_empty(where_clause):
             return False
@@ -87,12 +87,12 @@ class SQLAlchemyTagHelperMixin:
             logger.warning(f"No retention policies found with tags: {tags}")
             return 0
 
-        table = self.table  # type: ignore[attr-defined]
+        table = self.table  # ty: ignore[unresolved-attribute]
         where_clause = self.get_tags_constraints(tags)
         if sa_is_empty(where_clause):
             logger.warning("Unable to compute criteria for deletion")
             return 0
-        deletable = sa.delete(table).where(where_clause)  # type: ignore[arg-type]
+        deletable = sa.delete(table).where(where_clause)
         result = self.execute(deletable)
         self.synchronize()
         return result.rowcount

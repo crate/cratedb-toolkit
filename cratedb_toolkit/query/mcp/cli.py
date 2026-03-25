@@ -27,7 +27,7 @@ format_option_markdown = get_format_option(default="markdown")
 format_option_json = get_format_option(default="json")
 
 
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup)
 @click.option("--server-name", type=str, required=False, help="Select MCP server name")
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")

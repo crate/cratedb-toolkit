@@ -9,7 +9,7 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 try:
     from typing import Literal
 except ImportError:
-    from typing_extensions import Literal  # type: ignore[assignment]
+    from typing_extensions import Literal
 
 
 @dataclasses.dataclass

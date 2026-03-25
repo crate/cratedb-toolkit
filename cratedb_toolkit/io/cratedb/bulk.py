@@ -17,6 +17,8 @@ from pympler.asizeof import asizeof
 from sqlalchemy.exc import ProgrammingError
 from tqdm import tqdm
 
+from cratedb_toolkit.util.cli import to_list
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,8 +41,8 @@ class BulkResponse:
     TODO: Think about refactoring this to `sqlalchemy_cratedb.support`.
     """
 
-    parameters: t.Union[t.List[t.Dict[str, t.Any]], None]
-    cratedb_bulk_result: t.Union[t.List[BulkResultItem], None]
+    parameters: t.Union[t.List[t.Dict[str, t.Any]], None] = None
+    cratedb_bulk_result: t.Union[t.List[BulkResultItem], None] = None
 
     @cached_property
     def failed_records(self) -> t.List[t.Dict[str, t.Any]]:
@@ -126,6 +128,9 @@ class BulkProcessor:
             return logger.warning
 
     def start(self) -> BulkMetrics:
+        # Sanity checks.
+        if not self.batch_to_operation:
+            raise ValueError("Callback `batch_to_operation` not defined")
         # Acquire batches of documents, convert to SQL operations, and submit to CrateDB.
         batch_count = 0
         for batch in self.data:
@@ -151,7 +156,7 @@ class BulkProcessor:
                 self.connection.commit()
                 if cursor.rowcount > 0:
                     cratedb_bulk_result = getattr(cursor.context, "last_result", None)
-                    bulk_response = BulkResponse(operation.parameters, cratedb_bulk_result)
+                    bulk_response = BulkResponse(to_list(operation.parameters, []), cratedb_bulk_result)
                     failed_records = bulk_response.failed_records
                     count_success_local = bulk_response.success_count
                     self._metrics.count_success_total += bulk_response.success_count
@@ -176,7 +181,7 @@ class BulkProcessor:
                 )
                 for record in failed_records:
                     try:
-                        cursor = self.connection.execute(statement=statement, parameters=record)
+                        cursor = self.connection.execute(statement=statement, parameters=record)  # ty: ignore[no-matching-overload]
                         self.connection.commit()
                         if cursor.rowcount != 1:
                             raise IOError("Record has not been processed")

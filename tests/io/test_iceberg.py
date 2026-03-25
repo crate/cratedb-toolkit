@@ -10,7 +10,7 @@ from cratedb_toolkit.cli import cli
 pl = pytest.importorskip("polars", reason="Skipping Iceberg tests because 'polars' package is not installed")
 
 if not hasattr(pd.DataFrame, "to_iceberg"):
-    pytest.skip("Older pandas releases do not support Apache Iceberg", allow_module_level=True)
+    pytest.skip("Older pandas releases do not support Apache Iceberg", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture

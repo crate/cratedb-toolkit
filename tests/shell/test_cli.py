@@ -36,7 +36,7 @@ def test_shell_managed_jwt(mocker, cloud_cluster_name):
     }
 
     if any(not setting for setting in settings.values()):
-        raise pytest.skip("Missing environment variables for headless mode with croud")
+        pytest.skip("Missing environment variables for headless mode with croud")  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
     # Synthesize a valid environment.
     mocker.patch.dict("os.environ", settings)
@@ -65,7 +65,7 @@ def test_shell_managed_username_password(mocker, cloud_cluster_name):
     }
 
     if any(not setting for setting in settings.values()):
-        raise pytest.skip("Missing environment variables for headless mode with croud")
+        pytest.skip("Missing environment variables for headless mode with croud")  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
     # Synthesize a valid environment.
     mocker.patch.dict("os.environ", settings)

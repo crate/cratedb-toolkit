@@ -17,7 +17,7 @@ def help_table_mappings():
     """
 
 
-@click.group(cls=ClickAliasedGroup, help="AWS DMS utilities")  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup, help="AWS DMS utilities")
 @click.pass_context
 def cli(ctx: click.Context):
     pass

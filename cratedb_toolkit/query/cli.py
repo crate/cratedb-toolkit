@@ -10,7 +10,7 @@ from .mcp.cli import cli as mcp_cli
 logger = logging.getLogger(__name__)
 
 
-@click.group(cls=ClickAliasedGroup)  # type: ignore[arg-type]
+@click.group(cls=ClickAliasedGroup)
 @click.option("--verbose", is_flag=True, required=False, help="Turn on logging")
 @click.option("--debug", is_flag=True, required=False, help="Turn on logging with debug level")
 @click.version_option()

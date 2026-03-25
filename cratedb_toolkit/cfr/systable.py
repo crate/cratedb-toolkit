@@ -83,7 +83,9 @@ class SystemTableInspector:
     def table_names(self):
         return self.inspector.get_table_names(schema=SystemTableKnowledge.SYS_SCHEMA)
 
-    def ddl(self, tablename_in: str, tablename_out: str, out_schema: str = None, with_drop_table: bool = False) -> str:
+    def ddl(
+        self, tablename_in: str, tablename_out: str, out_schema: t.Optional[str] = None, with_drop_table: bool = False
+    ) -> str:
         meta = sa.MetaData(schema=SystemTableKnowledge.SYS_SCHEMA)
         table = sa.Table(tablename_in, meta, autoload_with=self.engine)
         table.schema = out_schema
@@ -147,9 +149,9 @@ class SystemTableExporter(PathProvider):
             # return df.write_csv()  # noqa: ERA001
             return frame.to_pandas().to_csv(file)
         elif self.data_format in ["jsonl", "ndjson"]:
-            return frame.write_ndjson(file and file.buffer)  # type: ignore[arg-type]
+            return frame.write_ndjson(file and file.buffer)
         elif self.data_format in ["parquet", "pq"]:
-            return frame.write_parquet(file and file.buffer)  # type: ignore[arg-type]
+            return frame.write_parquet(file and file.buffer)  # ty: ignore[invalid-argument-type]
         else:
             raise NotImplementedError(f"Output format not implemented: {self.data_format}")
 

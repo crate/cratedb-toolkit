@@ -80,9 +80,9 @@ except Exception as ex:
 # TODO: Propagate mapping definitions and other settings.
 cdc: t.Union[DMSTranslatorCrateDB, DynamoDBCDCTranslator]
 if MESSAGE_FORMAT == "dms":
-    cdc = DMSTranslatorCrateDB(column_types=column_types)
+    cdc = DMSTranslatorCrateDB(column_types=column_types)  # ty: ignore[invalid-argument-type]
 elif MESSAGE_FORMAT == "dynamodb":
-    cdc = DynamoDBCDCTranslator(table_name=CRATEDB_TABLE)
+    cdc = DynamoDBCDCTranslator(table_name=CRATEDB_TABLE)  # ty: ignore[invalid-argument-type]
 
 # Create the database connection outside the handler to allow
 # connections to be re-used by subsequent function invocations.
