@@ -1,4 +1,4 @@
-# Backlog for `ctk {load,save} [table]`
+# Backlog for `ctk {load,save}`
 
 ## General
 - ingestr: Educate about batch size (`page_size`)
