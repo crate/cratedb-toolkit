@@ -20,10 +20,14 @@ CRATEDB_URL = "crate://localhost:4200/testdrive/demo"
         "/tmp/export/data.lp.gz",
         "https://example.com/data.lp",
         "http://example.com/data.lp.gz",
+        "file://observations.lp",
+        "file://observations.lp.gz",
+        "file:///tmp/data.lp",
+        "file:///tmp/data.lp.gz",
     ],
 )
 def test_router_load_lp_file_passthrough(source_url):
-    # Bare .lp paths and HTTP .lp URLs must reach influxdb_copy unchanged.
+    # Bare .lp paths, HTTP(S) .lp URLs, and file:// URIs must reach influxdb_copy unchanged.
     # The router dispatches on ``source_url.endswith(".lp")``, not the parsed scheme.
     with mock.patch("cratedb_toolkit.io.influxdb.influxdb_copy", return_value=True) as mock_copy:
         router = IoRouter()
@@ -42,6 +46,7 @@ def test_router_load_lp_file_passthrough(source_url):
         ("influxdb2://example:token@localhost:8086/testdrive/demo", "http"),
         ("influxdb2://example:token@localhost:8086/testdrive/demo?ssl=true", "https"),
         ("influxdb://example:token@localhost:8086/testdrive/demo", "http"),
+        ("influxdb://example:token@localhost:8086/testdrive/demo?ssl=true", "https"),
     ],
 )
 def test_router_load_influxdb_scheme_conversion(source_url, expected_scheme):
