@@ -14,17 +14,18 @@ class jwt_token_patch(contextlib.ContextDecorator):
 
     def __init__(self, jwt_token: Optional[str] = None):
         self.jwt_token = jwt_token
+        self._patch_stack = contextlib.ExitStack()
 
     def __enter__(self):
         if self.jwt_token:
-            self.patcher = patch.object(crate.client.http.Client, "_request", _mk_crate_client_request(self.jwt_token))
-            self.patcher.start()
+            self._patch_stack.enter_context(
+                patch.object(crate.client.http.Client, "_request", _mk_crate_client_request(self.jwt_token))
+            )
         return self
 
     def __exit__(self, type, value, tb):  # noqa: A002
-        if self.jwt_token:
-            self.patcher.stop()
-        return self
+        self._patch_stack.close()
+        return False
 
 
 def _mk_crate_client_request(jwt_token: Optional[str] = None):

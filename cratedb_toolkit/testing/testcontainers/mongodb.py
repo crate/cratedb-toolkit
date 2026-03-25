@@ -18,6 +18,7 @@ import pymongo.errors
 from pymongo import MongoClient
 from testcontainers.core.exceptions import ContainerStartException
 from testcontainers.mongodb import MongoDbContainer
+from yarl import URL
 
 from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer
 
@@ -26,7 +27,7 @@ class MongoDbContainerWithKeepalive(DockerSkippingContainer, KeepaliveContainer,
     """
     A Testcontainer for MongoDB with improved configurability.
 
-    It honors the `TC_KEEPALIVE` and `MONGODB_VERSION` environment variables.
+    It honours the `TC_KEEPALIVE` and `MONGODB_VERSION` environment variables.
 
     Defining `TC_KEEPALIVE` will set a signal not to shut down the container
     after running the test cases, in order to speed up subsequent invocations.
@@ -87,6 +88,11 @@ class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
         dbname: t.Optional[str] = None,
         **kwargs,
     ) -> str:
+        """
+        TODO: Why does this method need to be overwritten?
+        Hint: Probably because of getting rid of credentials forwarding,
+              which is currently intended to reduce configuration complexity.
+        """
         from testcontainers.core.utils import raise_for_deprecated_parameter
 
         if raise_for_deprecated_parameter(kwargs, "db_name", "dbname"):
@@ -96,16 +102,20 @@ class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
         host = host or self.get_container_host_ip()
         assert port is not None  # noqa: S101
         port = self.get_exposed_port(port)
-        url = f"{dialect}://{host}:{port}"
+        url = URL(f"{dialect}://{host}:{port}")
+        if username:
+            url = url.with_user(username)
+        if password:
+            url = url.with_password(password)
         if dbname:
-            url = f"{url}/{dbname}"
-        return url
+            url = url.with_path(dbname)
+        return str(url)
 
     def get_connection_url(self) -> str:
         return self._create_connection_url(
             dialect="mongodb",
-            username="admin",
-            password="",
+            username=None,  # ty: ignore[invalid-argument-type]
+            password=None,  # ty: ignore[invalid-argument-type]
             port=self.port,
         )
 

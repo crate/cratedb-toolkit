@@ -4,6 +4,7 @@ import typing as t
 
 import sqlalchemy as sa
 from boltons.urlutils import URL
+from commons_codec.model import SQLOperation
 from commons_codec.transform.mongodb import MongoDBCrateDBConverter, MongoDBFullLoadTranslator
 from tikray.model.collection import CollectionAddress
 from tqdm import tqdm
@@ -13,6 +14,7 @@ from cratedb_toolkit.io.cratedb.bulk import BulkProcessor
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
+from cratedb_toolkit.util.cli import to_list
 from cratedb_toolkit.util.database import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
@@ -51,6 +53,7 @@ class MongoDBFullLoad:
         if tm:
             address = CollectionAddress(
                 container=self.mongodb_adapter.database_name,
+                # TODO: Collection name must be permitted to be None?
                 name=t.cast(str, self.mongodb_adapter.collection_name),
             )
             try:
@@ -88,10 +91,13 @@ class MongoDBFullLoad:
             logger.info(f"Target: CrateDB table={self.cratedb_table} count={records_target}")
             progress_bar = tqdm(total=records_in)
 
+            def batch_to_sql_operation(batch: t.List[t.Dict[str, t.Any]]) -> SQLOperation:
+                return self.translator.to_sql(to_list(batch, []))
+
             processor = BulkProcessor(
                 connection=connection,
                 data=self.mongodb_adapter.query(),
-                batch_to_operation=self.translator.to_sql,  # ty: ignore[invalid-argument-type]
+                batch_to_operation=batch_to_sql_operation,
                 progress_bar=progress_bar,
                 on_error=self.on_error,
                 debug=self.debug,

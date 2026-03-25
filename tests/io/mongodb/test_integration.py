@@ -49,7 +49,7 @@ class TestMongoDBIntegration(unittest.TestCase):
             logger.debug(f"MongoDB server info: {server_info}")
         except pymongo.errors.ServerSelectionTimeoutError as ex:
             if cls.SKIP_IF_NOT_RUNNING:
-                raise cls.skipTest(cls, reason="MongoDB server not running") from ex  # ty: ignore[invalid-argument-type]
+                raise unittest.SkipTest("MongoDB server not running") from ex
             else:  # noqa: RET506
                 raise
 

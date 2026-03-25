@@ -69,6 +69,10 @@ if MESSAGE_FORMAT not in message_formats:
     message = f"Invalid value for MESSAGE_FORMAT: {MESSAGE_FORMAT}. Use one of: {message_formats}"
     logger.fatal(message)
     sys.exit(22)
+if MESSAGE_FORMAT == "dynamodb" and not CRATEDB_TABLE:
+    message = "CRATEDB_TABLE environment variable is required when MESSAGE_FORMAT is 'dynamodb'"
+    logger.fatal(message)
+    sys.exit(22)
 try:
     column_types = ColumnTypeMapStore.from_json(COLUMN_TYPES)
 except Exception as ex:
@@ -82,7 +86,8 @@ cdc: t.Union[DMSTranslatorCrateDB, DynamoDBCDCTranslator]
 if MESSAGE_FORMAT == "dms":
     cdc = DMSTranslatorCrateDB(column_types=column_types)  # ty: ignore[invalid-argument-type]
 elif MESSAGE_FORMAT == "dynamodb":
-    cdc = DynamoDBCDCTranslator(table_name=CRATEDB_TABLE)  # ty: ignore[invalid-argument-type]
+    assert CRATEDB_TABLE is not None  # Validated at module startup  # noqa: S101
+    cdc = DynamoDBCDCTranslator(table_name=CRATEDB_TABLE)
 
 # Create the database connection outside the handler to allow
 # connections to be re-used by subsequent function invocations.

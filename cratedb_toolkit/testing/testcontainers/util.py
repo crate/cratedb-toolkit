@@ -19,6 +19,7 @@ import pytest
 from docker.errors import DockerException
 from docker.models.containers import Container
 from testcontainers.core.container import DockerContainer
+from testcontainers.core.generic import DbContainer
 
 from cratedb_toolkit.util.data import asbool
 
@@ -176,7 +177,7 @@ class PytestTestcontainerAdapter:
     """
 
     def __init__(self):
-        self.container: DockerContainer
+        self.container: t.Optional[DbContainer] = None
         self.run_setup()
 
     @abstractmethod
@@ -204,7 +205,11 @@ class PytestTestcontainerAdapter:
         self.start()
 
     def start(self):
+        if self.container is None:
+            raise ValueError("Container not initialized")
         self.container.start()
 
     def stop(self):
+        if self.container is None:
+            raise ValueError("Container not initialized")
         self.container.stop()

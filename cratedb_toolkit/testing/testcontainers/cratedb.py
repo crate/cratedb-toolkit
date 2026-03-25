@@ -153,7 +153,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
     def _connect(self):
         if not self._wait_strategy:
             raise ValueError("No wait strategy defined")
-        wait_for_logs(self, predicate=self._wait_strategy)
+        wait_for_logs(self, predicate=self._wait_strategy, timeout=15)
 
     def _configure_wait_condition(self):
         """Wait for CrateDB node to be fully started."""
@@ -170,9 +170,15 @@ class CrateDBTestAdapter:
     """
 
     def __init__(self, crate_version: str = "nightly", **kwargs):
-        self.cratedb: CrateDBContainer
-        self.database: DatabaseAdapter
+        self.cratedb: Optional[CrateDBContainer] = None
+        self._database: Optional[DatabaseAdapter] = None
         self.image: str = "crate/crate:{}".format(crate_version)
+
+    @property
+    def database(self) -> DatabaseAdapter:
+        if self._database is None:
+            raise ValueError("DatabaseAdapter is not initialized")
+        return self._database
 
     def start(self, **kwargs):
         """
@@ -180,7 +186,7 @@ class CrateDBTestAdapter:
         """
         self.cratedb = CrateDBContainer(image=self.image, **kwargs)
         self.cratedb.start()
-        self.database = DatabaseAdapter(dburi=self.get_connection_url(), echo=False)
+        self._database = DatabaseAdapter(dburi=self.get_connection_url(), echo=False)
 
     def stop(self):
         """
@@ -193,19 +199,19 @@ class CrateDBTestAdapter:
         """
         Drop tables from the given list, used for tests set up or tear down
         """
-        if not self.database:
+        if not self._database:
             return
 
         if schemas:
             for reset_schema in schemas:
-                self.database.connection.exec_driver_sql(
-                    f"DROP SCHEMA IF EXISTS {self.database.quote_relation_name(reset_schema)} CASCADE;"
+                self._database.connection.exec_driver_sql(
+                    f"DROP SCHEMA IF EXISTS {self._database.quote_relation_name(reset_schema)} CASCADE;"
                 )
 
         if tables:
             for reset_table in tables:
-                self.database.connection.exec_driver_sql(
-                    f"DROP TABLE IF EXISTS {self.database.quote_relation_name(reset_table)};"
+                self._database.connection.exec_driver_sql(
+                    f"DROP TABLE IF EXISTS {self._database.quote_relation_name(reset_table)};"
                 )
 
     def get_connection_url(self, *args, **kwargs):

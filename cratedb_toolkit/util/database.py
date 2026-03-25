@@ -110,7 +110,7 @@ class DatabaseAdapter:
         self,
         sql: t.Union[str, Path, io.IOBase],
         parameters: t.Optional[t.Mapping[str, str]] = None,
-        records: t.Optional[bool] = False,
+        records: bool = False,
         ignore: t.Optional[str] = None,
     ):
         """
@@ -136,9 +136,7 @@ class DatabaseAdapter:
                 raise
             return None
 
-    def run_sql_real(
-        self, sql: str, parameters: t.Optional[t.Mapping[str, str]] = None, records: t.Optional[bool] = False
-    ):
+    def run_sql_real(self, sql: str, parameters: t.Optional[t.Mapping[str, str]] = None, records: bool = False):
         """
         Invoke an SQL statement and return results.
         """
@@ -368,7 +366,7 @@ class DatabaseAdapter:
         chunksize=1000,
         if_exists="replace",
         npartitions: t.Optional[int] = None,
-        progress: t.Optional[bool] = False,
+        progress: bool = False,
     ):
         """
         Import CSV data using Dask.
