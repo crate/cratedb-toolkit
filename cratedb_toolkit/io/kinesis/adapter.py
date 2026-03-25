@@ -1,5 +1,6 @@
 import abc
 import asyncio
+import logging
 import threading
 import typing as t
 from pathlib import Path
@@ -11,6 +12,8 @@ from kinesis import Consumer, JsonProcessor, Producer
 from yarl import URL
 
 from cratedb_toolkit.util.data import asbool
+
+logger = logging.getLogger(__name__)
 
 
 class KinesisAdapterBase(abc.ABC):
@@ -39,6 +42,14 @@ class KinesisAdapterBase(abc.ABC):
 class KinesisStreamAdapter(KinesisAdapterBase):
     """
     Read a Kinesis stream from an API.
+
+    Checkpoint URL query parameters:
+
+    - ``checkpointer``: Backend type (``memory``, ``cratedb``).
+      Without this param, no persistent checkpointing is used.
+    - ``checkpointer-name``: Namespace for checkpoint storage. Defaults to stream name.
+    - ``checkpointer-schema``: CrateDB schema for checkpoint table. Defaults to ``ext``.
+    - ``checkpointer-interval``: Seconds between checkpoint flushes. Defaults to ``5``.
     """
 
     # Configuration for Kinesis shard iterators.
@@ -79,6 +90,19 @@ class KinesisStreamAdapter(KinesisAdapterBase):
         self.buffer_time: float = float(self.kinesis_url.query.get("buffer-time", 0.5))
         self.describe_timeout: int = int(self.kinesis_url.query.get("describe-timeout", 60))
 
+        # Checkpointer configuration from URL query params.
+        self.checkpointer_type: t.Optional[str] = self.kinesis_url.query.get("checkpointer")
+        self.checkpointer_name: str = self.kinesis_url.query.get("checkpointer-name", self.stream_name)
+        self.checkpointer_schema: str = self.kinesis_url.query.get("checkpointer-schema", "ext")
+        checkpoint_interval_raw = self.kinesis_url.query.get("checkpointer-interval")
+        try:
+            self.checkpoint_interval: float = float(checkpoint_interval_raw) if checkpoint_interval_raw else 5.0
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid checkpointer-interval {checkpoint_interval_raw!r}, using default 5.0")
+            self.checkpoint_interval = 5.0
+
+        self._checkpointer: t.Any = None
+
         self.kinesis_client = self.session.client("kinesis", endpoint_url=self.endpoint_url)
         self.stopping: bool = False
         self._ready_event = threading.Event()
@@ -98,7 +122,22 @@ class KinesisStreamAdapter(KinesisAdapterBase):
         except KeyError as ex:
             raise KeyError(f"Value for 'start' option unknown: {self.start}") from ex
 
+    def set_checkpointer(self, checkpointer: t.Any) -> None:
+        """
+        Set the checkpointer instance to be used by the consumer.
+
+        The checkpointer is created externally (by the relay) because it may
+        need resources the adapter doesn't own (e.g., a CrateDB engine).
+        """
+        self._checkpointer = checkpointer
+
     def consumer_factory(self, **kwargs):
+        consumer_kwargs: t.Dict[str, t.Any] = {}
+        if self._checkpointer is not None:
+            consumer_kwargs["checkpointer"] = self._checkpointer
+            consumer_kwargs["checkpoint_interval"] = self.checkpoint_interval
+        consumer_kwargs.update(kwargs)  # Caller-supplied kwargs override checkpointer configuration.
+
         return Consumer(
             stream_name=self.stream_name,
             session=self.async_session,
@@ -111,7 +150,7 @@ class KinesisStreamAdapter(KinesisAdapterBase):
             create_stream=self.create,
             create_stream_shards=self.create_shards,
             describe_timeout=self.describe_timeout,
-            **kwargs,
+            **consumer_kwargs,
         )
 
     def consume_forever(self, handler: t.Callable):

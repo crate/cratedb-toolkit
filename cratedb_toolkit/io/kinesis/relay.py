@@ -13,7 +13,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 from yarl import URL
 
 from cratedb_toolkit.io.exception import SkipAdapterException
-from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase
+from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase, KinesisStreamAdapter
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -62,11 +62,45 @@ class KinesisRelay:
         self.connection: sa.Connection
         self.progress_bar: tqdm
 
+    def _setup_checkpointer(self) -> None:
+        """
+        Create and wire a checkpointer into the Kinesis adapter, if configured.
+        """
+        if not isinstance(self.kinesis_adapter, KinesisStreamAdapter):
+            return
+
+        checkpointer_type = self.kinesis_adapter.checkpointer_type
+        if checkpointer_type is None:
+            logger.warning(
+                "No persistent checkpointer configured; stream will resume from '%s' on next start.",
+                self.kinesis_adapter.start,
+            )
+            return
+
+        if checkpointer_type == "cratedb":
+            from cratedb_toolkit.io.kinesis.checkpointer import CrateDBCheckPointer
+
+            checkpointer = CrateDBCheckPointer(
+                engine=self.cratedb_adapter.engine,
+                name=self.kinesis_adapter.checkpointer_name,
+                schema=self.kinesis_adapter.checkpointer_schema,
+            )
+        elif checkpointer_type == "memory":
+            from kinesis.checkpointers import MemoryCheckPointer
+
+            checkpointer = MemoryCheckPointer(name=self.kinesis_adapter.checkpointer_name)
+        else:
+            raise ValueError(f"Unsupported checkpointer type: {checkpointer_type!r}. Supported: memory, cratedb")
+
+        logger.info(f"Using {checkpointer_type} checkpointer (name={self.kinesis_adapter.checkpointer_name})")
+        self.kinesis_adapter.set_checkpointer(checkpointer)
+
     def start(self, once: bool = False):
         """
         Read events from Kinesis stream, convert to SQL statements, and submit to CrateDB.
         """
         logger.info(f"Source: Kinesis stream={self.kinesis_adapter.stream_name} count=unknown")
+        self._setup_checkpointer()
         self.connection = self.cratedb_adapter.engine.connect()
         try:
             if self.cratedb_table is not None:
