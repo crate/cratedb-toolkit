@@ -47,6 +47,7 @@ jobs:
         ]
         localstack-version:
           - "4.14"
+          - "2026.3"
 
     env:
       OS: ${{ matrix.os }}
