@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import datetime as dt
 import os
 from unittest import mock
