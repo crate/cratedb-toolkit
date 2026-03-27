@@ -353,7 +353,7 @@ analysis.allowed-unresolved-imports = [
   "ingestr.**",
   "jessiql.**",
   "kaggle.**",
-  "kinesis",
+  "kinesis.**",
   "lorrystream.**",
   "mcp.**",
   "pymongo.**",

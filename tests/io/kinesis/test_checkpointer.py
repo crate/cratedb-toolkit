@@ -9,6 +9,7 @@ pytestmark = pytest.mark.kinesis
 pytest.importorskip("kinesis", reason="Only works with async-kinesis installed")
 pytest.importorskip("commons_codec", reason="Only works with commons-codec installed")
 
+from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter  # noqa: E402
 from cratedb_toolkit.io.kinesis.checkpointer import CrateDBCheckPointer, _validate_identifier  # noqa: E402
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition  # noqa: E402
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay  # noqa: E402
@@ -221,6 +222,7 @@ def test_checkpointer_url_param_wiring(cratedb, kinesis):
 
     # Verify the parsed params on the adapter.
     adapter = relay.kinesis_adapter
+    assert isinstance(adapter, KinesisStreamAdapter)
     assert adapter.checkpointer_type == "cratedb"
     assert adapter.checkpointer_name == "my_stream"
     assert adapter.checkpoint_interval == 10.0

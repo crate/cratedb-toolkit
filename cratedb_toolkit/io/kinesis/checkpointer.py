@@ -30,7 +30,7 @@ class CrateDBCheckPointer(BaseCheckPointer):
           updated_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
           PRIMARY KEY (namespace, shard_id)
 
-    All sync CrateDB driver calls are wrapped with ``asyncio.to_thread()``
+    All sync CrateDB driver calls are wrapped with ``run_in_executor()``
     to avoid blocking the consumer's event loop.
     """
 
@@ -113,7 +113,8 @@ class CrateDBCheckPointer(BaseCheckPointer):
                 logger.info(f"{self.get_ref()} allocated {shard_id} (fresh start)")
                 return True, None
 
-        result = await asyncio.to_thread(_allocate)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(None, _allocate)
         self._items[shard_id] = result[1]
         self._owned_shards.add(shard_id)
         return result
@@ -146,7 +147,8 @@ class CrateDBCheckPointer(BaseCheckPointer):
                 conn.commit()
                 conn.execute(sa.text(f"REFRESH TABLE {self.table_name}"))
 
-        await asyncio.to_thread(_checkpoint)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, _checkpoint)
         self._items[shard_id] = sequence
         logger.debug(f"{self.get_ref()} checkpointed {shard_id}@{sequence}")
 
@@ -168,7 +170,8 @@ class CrateDBCheckPointer(BaseCheckPointer):
                 conn.commit()
                 conn.execute(sa.text(f"REFRESH TABLE {self.table_name}"))
 
-        await asyncio.to_thread(_deallocate)
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, _deallocate)
         final_seq = self._items.pop(shard_id, None)
         logger.info(f"{self.get_ref()} deallocated {shard_id}@{final_seq}")
         self._owned_shards.discard(shard_id)
