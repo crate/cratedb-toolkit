@@ -1,0 +1,3 @@
+Allow: *
+User-agent: *
+Sitemap: https://cratedb-toolkit.readthedocs.io/site.xml

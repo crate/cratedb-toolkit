@@ -105,6 +105,7 @@ ogp_enable_meta_description = True
 
 # Configure sphinx-sitemap
 html_baseurl = "https://cratedb-toolkit.readthedocs.io/"
+html_extra_path = ["_extra"]
 sitemap_filename = "site.xml"
 sitemap_url_scheme = "{link}"
 sitemap_excludes = [
