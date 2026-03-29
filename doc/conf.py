@@ -17,6 +17,7 @@ extensions = [
     "myst_parser",
     "sphinx_copybutton",
     "sphinx_design",
+    "sphinx_sitemap",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.ifconfig",
@@ -102,6 +103,14 @@ ogp_enable_meta_description = True
 # ogp_image = "http://example.org/image.png"
 # ogp_description_length = 300
 
+# Configure sphinx-sitemap
+html_baseurl = "https://cratedb-toolkit.readthedocs.io/"
+sitemap_url_scheme = "{link}"
+sitemap_excludes = [
+    "search.html",
+    "genindex.html",
+    "_snippet/*",
+]
 
 # -- Options for MyST -------------------------------------------------
 
