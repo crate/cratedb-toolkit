@@ -151,6 +151,7 @@ optional-dependencies.docs = [
   "sphinx-autobuild",
   "sphinx-copybutton",
   "sphinx-design-elements<1",
+  "sphinx-sitemap<3",
   "sphinxcontrib-mermaid<3",
   "sphinxext-opengraph<1",
 ]
