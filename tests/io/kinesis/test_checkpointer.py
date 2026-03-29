@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 import asyncio
 from pathlib import Path
 
@@ -9,13 +10,13 @@ pytestmark = pytest.mark.kinesis
 pytest.importorskip("kinesis", reason="Only works with async-kinesis installed")
 pytest.importorskip("commons_codec", reason="Only works with commons-codec installed")
 
-from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter  # noqa: E402
-from cratedb_toolkit.io.kinesis.checkpointer import CrateDBCheckPointer, _validate_identifier  # noqa: E402
-from cratedb_toolkit.io.kinesis.model import RecipeDefinition  # noqa: E402
-from cratedb_toolkit.io.kinesis.relay import KinesisRelay  # noqa: E402
-from tests.conftest import TESTDRIVE_EXT_SCHEMA  # noqa: E402
-from tests.io.kinesis.data import DMS_CDC_CREATE_TABLE, DMS_CDC_INSERT_BASIC, DMS_CDC_INSERT_SECOND  # noqa: E402
-from tests.io.test_awslambda import wrap_kinesis  # noqa: E402
+from cratedb_toolkit.io.kinesis.adapter import KinesisStreamAdapter
+from cratedb_toolkit.io.kinesis.checkpointer import CrateDBCheckPointer, _validate_identifier
+from cratedb_toolkit.io.kinesis.model import RecipeDefinition
+from cratedb_toolkit.io.kinesis.relay import KinesisRelay
+from tests.conftest import TESTDRIVE_EXT_SCHEMA
+from tests.io.kinesis.data import DMS_CDC_CREATE_TABLE, DMS_CDC_INSERT_BASIC, DMS_CDC_INSERT_SECOND
+from tests.io.test_awslambda import wrap_kinesis
 
 TRANSFORMATION_FILE = Path("./examples/cdc/aws/dms-load-schema-universal.yaml")
 

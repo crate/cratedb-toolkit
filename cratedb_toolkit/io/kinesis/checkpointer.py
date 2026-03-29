@@ -39,7 +39,7 @@ class CrateDBCheckPointer(BaseCheckPointer):
         engine: sa.Engine,
         name: str,
         schema: str = "ext",
-        consumer_id: t.Optional[t.Union[str, int]] = None,
+        consumer_id: t.Union[str, int, None] = None,
     ):
         super().__init__(name=name, id=consumer_id)
         _validate_identifier(schema)

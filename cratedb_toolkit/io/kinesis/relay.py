@@ -72,8 +72,7 @@ class KinesisRelay:
         checkpointer_type = self.kinesis_adapter.checkpointer_type
         if checkpointer_type is None:
             logger.warning(
-                "No persistent checkpointer configured; stream will resume from '%s' on next start.",
-                self.kinesis_adapter.start,
+                f"No persistent checkpointer configured; stream will resume from '{self.kinesis_adapter.start}' on next start."
             )
             return
 
