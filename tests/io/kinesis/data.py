@@ -52,3 +52,24 @@ DMS_CDC_INSERT_BASIC = {
         "table-name": "demo",
     },
 }
+
+DMS_CDC_INSERT_SECOND = {
+    "kinesis": {
+        "shard_id": "shardId-000000000002",
+        "seq_no": "49663978758868311932389618382606955261804395813629067298",
+        "ts": "2025-06-10 11:28:48.120000+00:00",
+        "partition": "public.demo.394",
+        "stream_name": "arn:aws:kinesis:eu-central-1:931394475905:stream/testdrive-dms-postgresql-dev-stream",
+    },
+    "kinesis_msg_id": "kR9FtGHN2MvbYQ/xDXLw",
+    "data": {"id": 394, "name": "Second", "age": 7, "attributes": None},
+    "metadata": {
+        "timestamp": "2025-06-10T11:28:48.118721Z",
+        "record-type": "data",
+        "operation": "load",
+        "partition-key-type": "primary-key",
+        "partition-key-value": "public.demo.394",
+        "schema-name": "public",
+        "table-name": "demo",
+    },
+}

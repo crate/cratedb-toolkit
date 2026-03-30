@@ -140,6 +140,81 @@ a few examples are listed below.
 :::{include} ../_cratedb-options.md
 :::
 
+## Checkpointing
+
+By default, the Kinesis CDC relay starts reading from the beginning of the
+stream (`TRIM_HORIZON`) on every restart. For long-running pipelines, this
+means re-ingesting records that were already written to CrateDB.
+
+To enable persistent checkpointing, add the `checkpointer` query parameter
+to the Kinesis URL. The relay will then record its progress and resume from
+the last checkpoint on restart.
+
+:::{rubric} Checkpointer URL parameters
+:::
+
+- `checkpointer`: Backend type. Supported values: `cratedb`, `memory`.
+  Without this parameter, no persistent checkpointing is used.
+- `checkpointer-name`: Namespace for checkpoint storage. Defaults to the
+  stream name. Use distinct names when multiple relays consume the same stream.
+- `checkpointer-schema`: CrateDB schema for the checkpoint table.
+  Defaults to `ext`.
+- `checkpointer-interval`: Seconds between checkpoint flushes. Defaults to `5`.
+  Lower values reduce duplicate records after a crash but increase write load.
+
+:::{rubric} Example: CrateDB checkpointer
+:::
+
+```shell
+ctk load \
+    "kinesis+dms://localhost:4566/demo?region=us-east-1&create=true&checkpointer=cratedb&checkpointer-interval=10" \
+    "crate://localhost:4200/testdrive" \
+    --transformation examples/cdc/aws/dms-load-schema-universal.yaml
+```
+
+The relay creates a `kinesis_checkpoints` table in the configured schema
+(default `ext`) to store shard progress. On restart, the consumer resumes
+from the last checkpointed sequence number.
+
+:::{rubric} Delivery guarantee
+:::
+
+Checkpointed delivery is **at-least-once**. Records between the last flushed
+checkpoint and a crash will be replayed on restart. Relay SQL writes should
+use upsert or idempotent semantics (`INSERT ... ON CONFLICT`) to handle
+duplicate delivery gracefully.
+
+:::{rubric} Maintenance
+:::
+
+The checkpoint table stores one row per shard per namespace. For typical
+workloads (a handful of streams with 1-10 shards each), the table stays
+small indefinitely.
+
+Rows may accumulate over time from decommissioned pipelines or Kinesis shard
+splits. Inspect the checkpoint state with:
+
+```sql
+SELECT "namespace", "shard_id", "sequence", "active", "updated_at"
+FROM "ext"."kinesis_checkpoints"
+ORDER BY "updated_at" DESC;
+```
+
+Prune stale checkpoints (inactive shards older than 30 days):
+
+```sql
+DELETE FROM "ext"."kinesis_checkpoints"
+WHERE "active" = FALSE
+AND "updated_at" < NOW() - INTERVAL '30 days';
+```
+
+To remove all checkpoints for a decommissioned pipeline:
+
+```sql
+DELETE FROM "ext"."kinesis_checkpoints"
+WHERE "namespace" = 'old-pipeline-name';
+```
+
 ## See also
 
 :::{include} /_snippet/ingest-see-also.md
