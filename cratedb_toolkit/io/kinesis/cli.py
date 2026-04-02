@@ -13,6 +13,7 @@ import typing as t
 
 import click
 from click_aliases import ClickAliasedGroup
+from sqlalchemy_cratedb.support import refresh_after_dml
 
 from cratedb_toolkit.exception import CheckpointTableNotFound
 from cratedb_toolkit.io.kinesis.maintenance import list_checkpoints, prune_checkpoints
@@ -60,6 +61,11 @@ def list_checkpoints_cmd(dburi: str, schema: t.Optional[str], namespace: t.Optio
 
     schema = schema or "ext"
     engine = sa.create_engine(str(DatabaseAddress.from_string(dburi).decode()[0]))
+    # Synchronize CrateDB write operations to avoid eventual consistency,
+    # i.e. make rows visible to subsequent queries immediately.
+    # https://cratedb.com/docs/sqlalchemy-cratedb/support.html#synthetic-table-refresh-after-dml
+    refresh_after_dml(engine)
+
     try:
         rows = list_checkpoints(engine=engine, schema=schema, namespace=namespace)
     except CheckpointTableNotFound as ex:
@@ -105,6 +111,11 @@ def prune_checkpoints_cmd(
 
     schema = schema or "ext"
     engine = sa.create_engine(str(DatabaseAddress.from_string(dburi).decode()[0]))
+    # Synchronize CrateDB write operations to avoid eventual consistency,
+    # i.e. make rows visible to subsequent queries immediately.
+    # https://cratedb.com/docs/sqlalchemy-cratedb/support.html#synthetic-table-refresh-after-dml
+    refresh_after_dml(engine)
+
     try:
         if dry_run:
             result = prune_checkpoints(
