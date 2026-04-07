@@ -176,6 +176,13 @@ class DatabaseAddress:
         return uri, TableAddress(database, table)
 
     @property
+    def sqlalchemy_url(self) -> str:
+        """
+        Return a clean SQLAlchemy connection URL (path/table stripped).
+        """
+        return str(self.decode()[0])
+
+    @property
     def username(self) -> t.Union[str, None]:
         """
         Return the username of the database URI.

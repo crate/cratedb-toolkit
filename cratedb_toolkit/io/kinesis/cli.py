@@ -60,7 +60,7 @@ def list_checkpoints_cmd(dburi: str, schema: t.Optional[str], namespace: t.Optio
     import sqlalchemy as sa
 
     schema = schema or "ext"
-    engine = sa.create_engine(str(DatabaseAddress.from_string(dburi).decode()[0]))
+    engine = sa.create_engine(DatabaseAddress.from_string(dburi).sqlalchemy_url)
     # Synchronize CrateDB write operations to avoid eventual consistency,
     # i.e. make rows visible to subsequent queries immediately.
     # https://cratedb.com/docs/sqlalchemy-cratedb/support.html#synthetic-table-refresh-after-dml
@@ -110,7 +110,7 @@ def prune_checkpoints_cmd(
         raise click.UsageError("At least one of --older-than or --namespace is required")
 
     schema = schema or "ext"
-    engine = sa.create_engine(str(DatabaseAddress.from_string(dburi).decode()[0]))
+    engine = sa.create_engine(DatabaseAddress.from_string(dburi).sqlalchemy_url)
     # Synchronize CrateDB write operations to avoid eventual consistency,
     # i.e. make rows visible to subsequent queries immediately.
     # https://cratedb.com/docs/sqlalchemy-cratedb/support.html#synthetic-table-refresh-after-dml
