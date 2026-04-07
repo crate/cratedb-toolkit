@@ -138,7 +138,6 @@ def cratedb(cratedb_custom_service):
     """
     cratedb_custom_service.reset(schemas=RESET_SCHEMAS, tables=RESET_TABLES)
     yield cratedb_custom_service
-    cratedb_custom_service.database.close()
 
 
 @pytest.fixture(scope="function")
