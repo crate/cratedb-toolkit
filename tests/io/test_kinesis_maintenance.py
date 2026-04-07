@@ -64,8 +64,6 @@ def _insert_checkpoint(
         conn.commit()
 
 
-
-
 # -- list_checkpoints tests --
 
 
