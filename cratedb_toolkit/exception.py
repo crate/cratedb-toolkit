@@ -7,6 +7,10 @@ class TableNotFound(Exception):
     pass
 
 
+class CheckpointTableNotFound(Exception):
+    pass
+
+
 class OperationFailed(Exception):
     pass
 

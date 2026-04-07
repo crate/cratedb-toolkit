@@ -5,6 +5,7 @@ import typing as t
 
 import pytest
 import sqlalchemy as sa
+from sqlalchemy_cratedb.support import refresh_after_dml
 from verlib2 import Version
 
 import cratedb_toolkit
@@ -135,6 +136,21 @@ def cratedb(cratedb_custom_service):
     """
     Provide a fresh canvas to each test case invocation, by resetting database content.
     """
+    cratedb_custom_service.reset(schemas=RESET_SCHEMAS, tables=RESET_TABLES)
+    yield cratedb_custom_service
+
+
+@pytest.fixture(scope="function")
+def cratedb_synchronized(cratedb_custom_service):
+    """
+    Provide a fresh canvas to each test case invocation, by resetting database content.
+
+    Also, configure the SQLAlchemy engine to synchronize CrateDB write operations to
+    avoid eventual consistency, i.e. make rows visible to subsequent queries immediately.
+
+    https://cratedb.com/docs/sqlalchemy-cratedb/support.html#synthetic-table-refresh-after-dml
+    """
+    refresh_after_dml(cratedb_custom_service.database.engine)
     cratedb_custom_service.reset(schemas=RESET_SCHEMAS, tables=RESET_TABLES)
     yield cratedb_custom_service
 

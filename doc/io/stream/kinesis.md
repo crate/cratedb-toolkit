@@ -192,7 +192,53 @@ workloads (a handful of streams with 1-10 shards each), the table stays
 small indefinitely.
 
 Rows may accumulate over time from decommissioned pipelines or Kinesis shard
-splits. Inspect the checkpoint state with:
+splits. Use the `ctk kinesis` commands to inspect and clean up checkpoint state.
+
+**List checkpoints:**
+
+```shell
+# All checkpoints
+ctk kinesis list-checkpoints "crate://localhost/"
+
+# Filter by namespace (stream name)
+ctk kinesis list-checkpoints --namespace my-stream "crate://localhost/"
+```
+
+**Prune stale checkpoints:**
+
+At least one of `--older-than` or `--namespace` is required. By default only
+inactive rows (`active=FALSE`) are eligible for deletion.
+
+```shell
+# Preview what would be deleted (dry run)
+ctk kinesis prune-checkpoints --older-than 30d --dry-run "crate://localhost/"
+
+# Delete inactive checkpoints older than 30 days
+ctk kinesis prune-checkpoints --older-than 30d "crate://localhost/"
+
+# Remove all checkpoints for a decommissioned pipeline
+ctk kinesis prune-checkpoints --namespace old-pipeline "crate://localhost/"
+
+# Skip confirmation prompt
+ctk kinesis prune-checkpoints --older-than 30d --yes "crate://localhost/"
+
+# Custom schema (if not using default "ext")
+ctk kinesis prune-checkpoints --older-than 7d --schema my_ext "crate://localhost/"
+```
+
+The `--older-than` option accepts durations like `7d`, `24h`, `2w`, or
+combinations like `1d12h`.
+
+:::{note}
+A healthy but idle consumer's checkpoints can look stale by `updated_at`.
+Stop consumers before pruning, or use `--dry-run` to verify what will be
+deleted.
+:::
+
+:::{rubric} Manual SQL
+:::
+
+You can also query and manage the checkpoint table directly:
 
 ```sql
 SELECT "namespace", "shard_id", "sequence", "active", "updated_at"
@@ -200,19 +246,10 @@ FROM "ext"."kinesis_checkpoints"
 ORDER BY "updated_at" DESC;
 ```
 
-Prune stale checkpoints (inactive shards older than 30 days):
-
 ```sql
 DELETE FROM "ext"."kinesis_checkpoints"
 WHERE "active" = FALSE
 AND "updated_at" < NOW() - INTERVAL '30 days';
-```
-
-To remove all checkpoints for a decommissioned pipeline:
-
-```sql
-DELETE FROM "ext"."kinesis_checkpoints"
-WHERE "namespace" = 'old-pipeline-name';
 ```
 
 ## See also
