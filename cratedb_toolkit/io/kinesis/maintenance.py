@@ -10,20 +10,18 @@ the ``kinesis`` (async-kinesis) dependency.
 import logging
 import re
 import typing as t
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import sqlalchemy as sa
 
 from cratedb_toolkit.exception import CheckpointTableNotFound
+from cratedb_toolkit.util.date import parse_duration
 
 logger = logging.getLogger(__name__)
 
 # SQL identifier pattern: prevents injection via dynamic DDL/DML.
 # Hyphens are allowed because all identifiers are double-quoted in generated SQL.
 _IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_-]*$")
-
-# Duration pattern: e.g. "7d", "24h", "30m", "90s", "2w", or combinations like "1d12h".
-_DURATION_RE = re.compile(r"^(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")
 
 TABLE_NAME = "kinesis_checkpoints"
 
@@ -50,39 +48,6 @@ def _check_table_exists(conn: sa.Connection, schema: str) -> None:
         raise CheckpointTableNotFound(f"Checkpoint table {_qualified_table(schema)} does not exist")
 
 
-def parse_duration(value: str) -> timedelta:
-    """
-    Parse a human-friendly duration string into a ``timedelta``.
-
-    Accepted formats: ``2w``, ``7d``, ``24h``, ``30m``, ``90s``, or
-    combinations like ``1d12h``. At least one component is required
-    and the total duration must be positive.
-
-    Raises ``ValueError`` for invalid or zero-length durations.
-    """
-    value = value.strip()
-    if not value:
-        raise ValueError(
-            "Invalid duration: ''. Use a combination of Nw, Nd, Nh, Nm, Ns (e.g. '7d', '24h', '2w', '1d12h')."
-        )
-    match = _DURATION_RE.match(value)
-    if not match:
-        raise ValueError(
-            f"Invalid duration: {value!r}. Use a combination of Nw, Nd, Nh, Nm, Ns (e.g. '7d', '24h', '2w', '1d12h')."
-        )
-
-    weeks = int(match.group(1) or 0)
-    days = int(match.group(2) or 0)
-    hours = int(match.group(3) or 0)
-    minutes = int(match.group(4) or 0)
-    seconds = int(match.group(5) or 0)
-
-    td = timedelta(weeks=weeks, days=days, hours=hours, minutes=minutes, seconds=seconds)
-    if td.total_seconds() <= 0:
-        raise ValueError(f"Duration must be positive, got: {value!r}")
-    return td
-
-
 def list_checkpoints(
     engine: sa.Engine,
     schema: str = "ext",
@@ -97,6 +62,8 @@ def list_checkpoints(
     table = _qualified_table(schema)
     with engine.connect() as conn:
         _check_table_exists(conn, schema)
+        # Explicit refresh ensures visibility of rows written by other
+        # processes (e.g. CrateDBCheckPointer / Kinesis consumers).
         conn.execute(sa.text(f"REFRESH TABLE {table}"))
 
         where = ' WHERE "namespace" = :ns' if namespace else ""
@@ -157,6 +124,8 @@ def prune_checkpoints(
 
     with engine.connect() as conn:
         _check_table_exists(conn, schema)
+        # Explicit refresh ensures visibility of rows written by other
+        # processes (e.g. CrateDBCheckPointer / Kinesis consumers).
         conn.execute(sa.text(f"REFRESH TABLE {table}"))
 
         if dry_run:
