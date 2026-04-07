@@ -34,6 +34,9 @@ suppress_warnings = [
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+# Where the documentation is published to. Needed for sphinx-sitemap.
+html_baseurl = "https://cratedb-toolkit.readthedocs.io/"
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
@@ -104,9 +107,6 @@ ogp_enable_meta_description = True
 # ogp_description_length = 300
 
 # Configure sphinx-sitemap
-html_baseurl = "https://cratedb-toolkit.readthedocs.io/"
-html_extra_path = ["_extra"]
-sitemap_filename = "site.xml"
 sitemap_url_scheme = "{link}"
 sitemap_excludes = [
     "search.html",
