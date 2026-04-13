@@ -545,10 +545,10 @@ class StandaloneCluster(ClusterBase):
         ctk load kinesis+dms:///arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive
         ctk load kinesis+dms:///path/to/dms-over-kinesis.jsonl
         """
-
-        self._load_table_result = self._router.load_table(
-            source=source, target=self.address, transformation=transformation
-        )
+        address = self.address
+        if target:
+            address = address.with_table_address(target)
+        self._load_table_result = self._router.load_table(source=source, target=address, transformation=transformation)
         return self
 
     def save_table(

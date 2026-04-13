@@ -460,8 +460,9 @@ def decode_database_table(url: str) -> t.Tuple[t.Union[str, None], t.Union[str, 
             if "too many values to unpack" not in str(ex) and "not enough values to unpack" not in str(ex):
                 raise
 
+        table = url_.query_params.get("table")
+        if not database:
             database = url_.query_params.get("database")
-            table = url_.query_params.get("table")
             if url_.scheme == "crate" and not database:
                 database = url_.query_params.get("schema")
             if database is None and table is None:
