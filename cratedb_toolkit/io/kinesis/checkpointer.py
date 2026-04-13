@@ -36,7 +36,7 @@ class CrateDBCheckPointer(BaseCheckPointer):
 
     def __init__(
         self,
-        engine: sa.Engine,
+        engine: sa.engine.Engine,
         name: str,
         schema: str = "ext",
         consumer_id: t.Union[str, int, None] = None,

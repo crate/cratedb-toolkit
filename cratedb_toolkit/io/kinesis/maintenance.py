@@ -38,7 +38,7 @@ def _qualified_table(schema: str) -> str:
     return f'"{schema}"."{TABLE_NAME}"'
 
 
-def _check_table_exists(conn: sa.Connection, schema: str) -> None:
+def _check_table_exists(conn: sa.engine.Connection, schema: str) -> None:
     """Raise ``CheckpointTableNotFound`` if the checkpoint table does not exist."""
     result = conn.execute(
         sa.text("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = :schema AND table_name = :table"),
@@ -49,7 +49,7 @@ def _check_table_exists(conn: sa.Connection, schema: str) -> None:
 
 
 def list_checkpoints(
-    engine: sa.Engine,
+    engine: sa.engine.Engine,
     schema: str = "ext",
     namespace: t.Optional[str] = None,
 ) -> t.List[t.Dict[str, t.Any]]:
@@ -79,7 +79,7 @@ def list_checkpoints(
 
 
 def prune_checkpoints(
-    engine: sa.Engine,
+    engine: sa.engine.Engine,
     schema: str = "ext",
     older_than: t.Optional[str] = None,
     namespace: t.Optional[str] = None,

@@ -87,7 +87,7 @@ def test_kinesis_relay_write_failure_propagates(caplog, cratedb, kinesis):
         table_loader.kinesis_adapter.produce(event)
 
     # Patch connection.execute to raise OperationalError on the INSERT (not the DDL).
-    original_execute = sa.Connection.execute
+    original_execute = sa.engine.Connection.execute
 
     def failing_execute(self, statement, *args, **kwargs):
         stmt_text = statement.text if hasattr(statement, "text") else str(statement)
@@ -96,7 +96,7 @@ def test_kinesis_relay_write_failure_propagates(caplog, cratedb, kinesis):
         return original_execute(self, statement, *args, **kwargs)
 
     # Verify that the write failure propagates instead of being swallowed.
-    with patch.object(sa.Connection, "execute", failing_execute):
+    with patch.object(sa.engine.Connection, "execute", failing_execute):
         with pytest.raises(OperationalError, match="connection lost"):
             table_loader.start(once=True)
 

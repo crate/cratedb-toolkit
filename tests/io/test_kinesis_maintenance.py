@@ -25,7 +25,7 @@ from tests.conftest import TESTDRIVE_EXT_SCHEMA
 pytestmark = pytest.mark.kinesis
 
 
-def _create_checkpoint_table(engine: sa.Engine, schema: str) -> None:
+def _create_checkpoint_table(engine: sa.engine.Engine, schema: str) -> None:
     """Create the checkpoint table matching the CrateDBCheckPointer layout."""
     table = f'"{schema}"."{TABLE_NAME}"'
     ddl = f"""
@@ -44,7 +44,7 @@ def _create_checkpoint_table(engine: sa.Engine, schema: str) -> None:
 
 
 def _insert_checkpoint(
-    engine: sa.Engine,
+    engine: sa.engine.Engine,
     schema: str,
     namespace: str,
     shard_id: str,
