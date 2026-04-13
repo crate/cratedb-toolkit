@@ -206,8 +206,12 @@ class DatabaseAddress:
     def with_table_address(self, table_address: "TableAddress") -> "DatabaseAddress":
         cp = deepcopy(self)
         cp.uri.path = f"/{table_address.schema}/{table_address.table}"
+        # Use `if-exists` from table address.
         if table_address.if_exists:
             cp.uri.query_params["if-exists"] = table_address.if_exists
+        # When not supplied, don't let existing spots leak.
+        else:
+            cp.uri.query_params.pop("if-exists", None)
         return cp
 
 

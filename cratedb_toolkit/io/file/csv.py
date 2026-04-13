@@ -31,7 +31,7 @@ class CsvFileAddress:
     url: URL
     location: str
     pipeline: Optional[List[str]] = dataclasses.field(default_factory=list)
-    batch_size: Optional[int] = DEFAULT_BATCH_SIZE
+    batch_size: int = DEFAULT_BATCH_SIZE
     # TODO: What about other parameters? See `polars.io.csv.functions`.
     separator: Optional[str] = DEFAULT_SEPARATOR
     quote_char: Optional[str] = DEFAULT_QUOTE_CHAR
@@ -47,11 +47,15 @@ class CsvFileAddress:
         https://guided-path.s3.us-east-1.amazonaws.com/demo_climate_data_export.csv
         """
         url_obj, location = parse_uri(url, "csv")
+        try:
+            batch_size = int(url_obj.query_params.get("batch-size", DEFAULT_BATCH_SIZE))
+        except ValueError as ex:
+            raise ValueError("Invalid value for batch size") from ex
         return cls(
             url=url_obj,
             location=location,
             pipeline=url_obj.query_params.getlist("pipe"),
-            batch_size=int(url_obj.query_params.get("batch-size", DEFAULT_BATCH_SIZE)),
+            batch_size=batch_size,
             separator=url_obj.query_params.get("separator", DEFAULT_SEPARATOR),
             quote_char=url_obj.query_params.get("quote-char", DEFAULT_QUOTE_CHAR),
         )
@@ -81,18 +85,22 @@ class CsvFileAddress:
                     break
         return opts
 
-    def load_table(self) -> pl.LazyFrame:
+    def load_table(self, lazy: bool = True) -> pl.LazyFrame:
         """
         Load the CSV file as a Polars LazyFrame.
         """
 
         # Read from data source.
-        lf = pl.scan_csv(
-            self.location,
-            separator=self.separator,
-            quote_char=self.quote_char,
-            storage_options=self.storage_options,
-        )
+        kwargs = {
+            "separator": self.separator,
+            "quote_char": self.quote_char,
+            "storage_options": self.storage_options,
+        }
+        # Note: Type checker ignores are only for Python 3.9.
+        if lazy:
+            lf = pl.scan_csv(self.location, **kwargs)  # ty: ignore[invalid-argument-type]
+        else:
+            lf = pl.read_csv(self.location, **kwargs).lazy()  # ty: ignore[invalid-argument-type]
 
         # Optionally apply transformations.
         if self.pipeline:
@@ -118,8 +126,27 @@ def from_csv(source_url, target_url, progress: bool = False) -> bool:
     """
     source = CsvFileAddress.from_url(source_url)
     logger.info(f"File address: {source.location}")
-    return polars_to_cratedb(
-        frame=source.load_table(),
-        target_url=target_url,
-        chunk_size=source.batch_size,
-    )
+
+    try:
+        return polars_to_cratedb(
+            frame=source.load_table(),
+            target_url=target_url,
+            chunk_size=source.batch_size or DEFAULT_BATCH_SIZE,
+        )
+
+    # OSError: object-store error: Generic S3 error: Error performing PUT http://169.254.169.254/latest/api/token
+    # in 218.979617ms, after 2 retries, max_retries: 2, retry_timeout: 10s  - HTTP error:
+    # error sending request (path: s3://guided-path/demo_climate_data_export.csv)
+    except OSError as ex:
+        msg = str(ex)
+        if "Generic S3 error" in msg and "/api/token" in msg:
+            logger.warning(
+                "Storage backend authentication is required for streaming reads but failed. "
+                "Falling back to non-streaming mode: This may result in inefficient reads."
+            )
+            return polars_to_cratedb(
+                frame=source.load_table(lazy=False),
+                target_url=target_url,
+                chunk_size=source.batch_size,
+            )
+        raise OSError(f"Loading data from CSV failed: {source_url}: {msg}") from ex

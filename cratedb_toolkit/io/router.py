@@ -116,7 +116,7 @@ class IoRouter:
 
             adjusted_url = str(source_url_obj)
             if source_url_obj.scheme.startswith("csv"):
-                adjusted_url = str(source_url_obj.path)
+                source_url_obj.scheme = None
 
             return from_csv(adjusted_url, target_url)
 
