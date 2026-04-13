@@ -59,7 +59,7 @@ class KinesisRelay:
         else:
             raise SkipAdapterException(f"Not processing {self.kinesis_url} here")
 
-        self.connection: sa.Connection
+        self.connection: sa.engine.Connection
         self.progress_bar: tqdm
 
     def _setup_checkpointer(self) -> None:
