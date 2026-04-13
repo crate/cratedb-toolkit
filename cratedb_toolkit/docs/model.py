@@ -3,6 +3,8 @@ import logging
 
 import requests
 
+from cratedb_toolkit import __version__
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,7 +19,7 @@ class DocsItem:
     source_url: str
 
     def fetch(self) -> str:
-        response = requests.get(self.source_url, timeout=10)
+        response = requests.get(self.source_url, headers={"User-Agent": f"ctk/{__version__}"}, timeout=10)
         if response.status_code != 200:
             logger.error(
                 f"Failed to fetch documentation from {self.source_url}: HTTP {response.status_code}\n{response.text}"
