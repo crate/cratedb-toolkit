@@ -1,6 +1,6 @@
 from click.testing import CliRunner
 
-from cratedb_toolkit.query.cli import cli
+from cratedb_toolkit.query.convert.cli import convert_query as cli
 
 
 def test_query_convert_ddb_relocate_pks():
@@ -12,8 +12,8 @@ def test_query_convert_ddb_relocate_pks():
     result = runner.invoke(
         cli,
         input="SELECT * FROM foobar WHERE data['PK']",
-        args="convert --type=ddb-relocate-pks --primary-keys=PK,SK -",
+        args="--type=ddb-relocate-pks --primary-keys=PK,SK -",
         catch_exceptions=False,
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     assert result.output == "SELECT * FROM foobar WHERE pk['PK']"
