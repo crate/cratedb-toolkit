@@ -163,7 +163,7 @@ optional-dependencies.dynamodb = [
   "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,llm,mcp,service]",
 ]
 optional-dependencies.iceberg = [
   "cratedb-toolkit[io]",
@@ -209,6 +209,15 @@ optional-dependencies.kinesis = [
   "commons-codec>=0.0.24",
   "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
+]
+optional-dependencies.llm = [
+  "langchain-openai<1.2; python_version>='3.10'",
+  "llama-index-embeddings-langchain<0.6; python_version>='3.10'",
+  "llama-index-embeddings-ollama<0.10; python_version>='3.10'",
+  "llama-index-embeddings-openai<0.7; python_version>='3.10'",
+  "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
+  "llama-index-llms-ollama<0.11; python_version>='3.10'",
+  "llama-index-llms-openai<0.8; python_version>='3.10'",
 ]
 optional-dependencies.mcp = [
   "mcp<1.28; python_version>='3.10'",
@@ -353,6 +362,7 @@ analysis.allowed-unresolved-imports = [
   "jessiql.**",
   "kaggle.**",
   "kinesis.**",
+  "llama_index.**",
   "lorrystream.**",
   "mcp.**",
   "pymongo.**",

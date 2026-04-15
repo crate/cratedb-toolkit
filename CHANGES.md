@@ -5,6 +5,7 @@
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and
   `prune-checkpoints` commands for checkpoint table maintenance
 - Dependencies: Permitted installation of click 8.3
+- QueryData: Help agents turn natural language into SQL queries
 
 ## 2026/03/16 v0.0.46
 - I/O: API improvements: `ctk {load,save} table` became `ctk {load,save}`
