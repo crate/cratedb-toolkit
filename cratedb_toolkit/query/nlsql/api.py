@@ -7,7 +7,7 @@ import dataclasses
 import logging
 from typing import Optional
 
-from cratedb_toolkit.query.llm.model import DatabaseInfo, ModelInfo
+from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class DataQuery:
         # Configure model.
         logger.info("Configuring LLM model")
         llm: LLM
-        from cratedb_toolkit.query.llm.util import configure_llm
+        from cratedb_toolkit.query.nlsql.util import configure_llm
 
         llm = configure_llm(self.model)
 

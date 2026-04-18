@@ -8,8 +8,8 @@ import click
 from dotenv import load_dotenv
 
 from cratedb_toolkit import DatabaseCluster
-from cratedb_toolkit.query.llm.api import DataQuery
-from cratedb_toolkit.query.llm.model import DatabaseInfo, ModelInfo, ModelProvider
+from cratedb_toolkit.query.nlsql.api import DataQuery
+from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo, ModelProvider
 from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def help_llm():
     ========
 
     export CRATEDB_CLUSTER_URL=crate://localhost/
-    ctk query llm "What is the average value for sensor 1?"
+    ctk query nlsql "What is the average value for sensor 1?"
 
     """  # noqa: E501
 

@@ -44,7 +44,7 @@ VALUES
 @pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set")
 def test_query_llm(cratedb, provision_db):
     """
-    Verify `ctk query llm ...`.
+    Verify `ctk query nlsql ...`.
     """
 
     runner = CliRunner(
@@ -57,7 +57,7 @@ def test_query_llm(cratedb, provision_db):
     result = runner.invoke(
         cli,
         input="What is the average value for sensor 1?",
-        args="llm -",
+        args="nlsql -",
         catch_exceptions=False,
     )
     assert result.exit_code == 0, result.output

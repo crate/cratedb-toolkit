@@ -163,7 +163,7 @@ optional-dependencies.dynamodb = [
   "cratedb-toolkit[io-recipe]",
 ]
 optional-dependencies.full = [
-  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,llm,mcp,service]",
+  "cratedb-toolkit[cfr,datasets,docs-api,io-curated,mcp,nlsql,service]",
 ]
 optional-dependencies.iceberg = [
   "cratedb-toolkit[io]",
@@ -210,11 +210,6 @@ optional-dependencies.kinesis = [
   "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
 ]
-optional-dependencies.llm = [
-  "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
-  "llama-index-llms-ollama<0.11; python_version>='3.10'",
-  "llama-index-llms-openai<0.8; python_version>='3.10'",
-]
 optional-dependencies.mcp = [
   "mcp<1.28; python_version>='3.10'",
 ]
@@ -226,6 +221,11 @@ optional-dependencies.mongodb = [
   "python-bsonjs<0.8",
   "rich>=3.3.2,<16",
   "undatum<1.2",
+]
+optional-dependencies.nlsql = [
+  "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
+  "llama-index-llms-ollama<0.11; python_version>='3.10'",
+  "llama-index-llms-openai<0.8; python_version>='3.10'",
 ]
 optional-dependencies.pymongo = [
   "jessiql==1.0.0rc1",

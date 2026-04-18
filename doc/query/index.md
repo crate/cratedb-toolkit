@@ -6,7 +6,7 @@ expressions: Adapters, converters, migration support tasks, etc.
 ```{toctree}
 :maxdepth: 2
 
-llm/index
+nlsql/index
 mcp/index
 convert
 ```

@@ -1,11 +1,10 @@
-# ty: ignore[unresolved-import]
 import llama_index.core
 from llama_index.core.llms import LLM
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
 
-from cratedb_toolkit.query.llm.model import ModelInfo, ModelProvider
+from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
 
 
 def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:

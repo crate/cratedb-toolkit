@@ -5,7 +5,7 @@
 ## Install
 
 ```shell
-uv pip install 'cratedb-toolkit[llm]'
+uv pip install 'cratedb-toolkit[nlsql]'
 ```
 
 ## Usage
@@ -31,8 +31,8 @@ ollama pull gemma3:1b
 
 ```python
 import sqlalchemy as sa
-from cratedb_toolkit.query.llm.api import DataQuery
-from cratedb_toolkit.query.llm.model import DatabaseInfo, ModelInfo, ModelProvider
+from cratedb_toolkit.query.nlsql.api import DataQuery
+from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo, ModelProvider
 
 engine = sa.create_engine("crate://")
 schema = "doc"
@@ -78,7 +78,7 @@ VALUES
 REFRESH TABLE time_series_data;
 ```
 ```shell
-ctk query llm "What is the average value for sensor 1?"
+ctk query nlsql "What is the average value for sensor 1?"
 ```
 ```text
 Answer: The average value for sensor 1 is approximately 17.03.
