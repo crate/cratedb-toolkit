@@ -57,6 +57,10 @@ def llm_cli(
     setup_logging()
     load_dotenv()
 
+    # Read question.
+    if question == "-":
+        question = sys.stdin.read().strip()
+
     schema = schema or os.getenv("CRATEDB_SCHEMA") or "doc"
     llm_provider = llm_provider or os.getenv("LLM_PROVIDER")
     llm_endpoint = llm_endpoint or os.getenv("LLM_ENDPOINT")
