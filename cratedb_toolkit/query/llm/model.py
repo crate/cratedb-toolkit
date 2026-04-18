@@ -19,8 +19,7 @@ class ModelInfo:
     """Information about the model."""
 
     provider: ModelProvider
-    completion: str
-    embedding: str
+    name: str
     endpoint: Optional[str] = None
     instance: Optional[str] = None
     api_key: Optional[str] = None
@@ -32,7 +31,6 @@ class ModelInfo:
         provider: ModelProvider,
         llm_endpoint: Optional[str],
         llm_name: Optional[str],
-        llm_embedding_name: Optional[str],
         llm_api_key: Optional[str],
         llm_api_version: Optional[str],
     ):
@@ -44,23 +42,13 @@ class ModelInfo:
                 llm_name = "gemma3:1b"
             else:
                 raise ValueError("LLM completion model not selected")
-        if not llm_embedding_name:
-            if provider in [ModelProvider.OPENAI, ModelProvider.AZURE]:
-                # Canonical embedding models with Open AI: text-embedding-ada-002, text-embedding-3-large
-                llm_embedding_name = "text-embedding-ada-002"
-            elif provider in [ModelProvider.OLLAMA]:
-                # Popular embedding models with Ollama: nomic-embed-text, embeddinggemma, mxbai-embed-large
-                llm_embedding_name = "nomic-embed-text"
-            else:
-                raise ValueError("LLM embedding model not selected")
         if not llm_api_key:
             if provider in [ModelProvider.OPENAI, ModelProvider.AZURE]:
                 llm_api_key = os.getenv("OPENAI_API_KEY")
         return cls(
             provider=provider,
             endpoint=llm_endpoint,
-            completion=llm_name,
-            embedding=llm_embedding_name,
+            name=llm_name,
             api_key=llm_api_key,
             api_version=llm_api_version,
         )

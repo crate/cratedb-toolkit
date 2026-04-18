@@ -211,10 +211,6 @@ optional-dependencies.kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.llm = [
-  "langchain-openai<1.2; python_version>='3.10'",
-  "llama-index-embeddings-langchain<0.6; python_version>='3.10'",
-  "llama-index-embeddings-ollama<0.10; python_version>='3.10'",
-  "llama-index-embeddings-openai<0.7; python_version>='3.10'",
   "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
   "llama-index-llms-ollama<0.11; python_version>='3.10'",
   "llama-index-llms-openai<0.8; python_version>='3.10'",

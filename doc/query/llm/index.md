@@ -40,13 +40,13 @@ schema = "doc"
 # Use Open AI GPT-4.
 dq = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.OPENAI, completion="gpt-4.1", embedding="text-embedding-3-large"),
+    model=ModelInfo(provider=ModelProvider.OPENAI, name="gpt-4.1"),
 )
 
 # Use Gemma3 via Ollama.
 dq = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.OLLAMA, completion="gemma3:1b", embedding="local"),
+    model=ModelInfo(provider=ModelProvider.OLLAMA, name="gemma3:1b"),
 )
 ```
 

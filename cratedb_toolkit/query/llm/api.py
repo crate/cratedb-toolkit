@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from llama_index.core.base.embeddings.base import BaseEmbedding
     from llama_index.core.base.response.schema import RESPONSE_TYPE
     from llama_index.core.llms import LLM
     from llama_index.core.query_engine import NLSQLTableQueryEngine
@@ -56,10 +55,9 @@ class DataQuery:
         # Configure model.
         logger.info("Configuring LLM model")
         llm: LLM
-        embed_model: BaseEmbedding
         from cratedb_toolkit.query.llm.util import configure_llm
 
-        llm, embed_model = configure_llm(self.model)
+        llm = configure_llm(self.model)
 
         # Configure query engine.
         logger.info("Creating query engine")
@@ -72,7 +70,6 @@ class DataQuery:
         self.query_engine = NLSQLTableQueryEngine(
             sql_database=sql_database,
             llm=llm,
-            embed_model=embed_model,
         )
 
     def ask(self, question: str) -> "RESPONSE_TYPE":

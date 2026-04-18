@@ -32,7 +32,6 @@ def help_llm():
 @click.option("--llm-provider", type=str, required=False, help="LLM provider name")
 @click.option("--llm-endpoint", type=str, required=False, help="LLM endpoint URL")
 @click.option("--llm-name", type=str, required=False, help="LLM model name for completions")
-@click.option("--llm-embedding-name", type=str, required=False, help="LLM model name for embeddings")
 @click.option("--llm-api-key", type=str, required=False, help="LLM API key")
 @click.option("--llm-api-version", type=str, required=False, help="LLM API version")
 @click.pass_context
@@ -43,7 +42,6 @@ def llm_cli(
     llm_provider: Optional[str],
     llm_endpoint: Optional[str],
     llm_name: Optional[str],
-    llm_embedding_name: Optional[str],
     llm_api_key: Optional[str],
     llm_api_version: Optional[str],
 ):
@@ -57,7 +55,6 @@ def llm_cli(
     llm_provider = llm_provider or os.getenv("LLM_PROVIDER")
     llm_endpoint = llm_endpoint or os.getenv("LLM_ENDPOINT")
     llm_name = llm_name or os.getenv("LLM_NAME")
-    llm_embedding_name = llm_embedding_name or os.getenv("LLM_EMBEDDING_NAME")
     llm_api_key = llm_api_key or os.getenv("LLM_API_KEY")
     if not llm_provider:
         raise click.UsageError("LLM provider name is required")
@@ -76,14 +73,13 @@ def llm_cli(
         model=ModelInfo.from_options(
             provider=provider,
             llm_name=llm_name,
-            llm_embedding_name=llm_embedding_name,
             llm_endpoint=llm_endpoint,
             llm_api_key=llm_api_key,
             llm_api_version=llm_api_version,
         ),
     )
 
-    logger.info("Selected LLM: completion=%s, embedding=%s", dq.model.completion, dq.model.embedding)
+    logger.info("Selected LLM: completion=%s", dq.model.name)
 
     response = dq.ask(question)
 
