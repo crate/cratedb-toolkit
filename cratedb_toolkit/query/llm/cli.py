@@ -28,9 +28,12 @@ def help_llm():
 
 @click.command()
 @click.argument("question")
-@click.option("--schema", type=str, required=False, help="Schema where to operate on")
+@click.option("--schema", type=str, required=False, help="Database schema where to operate on")
 @click.option("--llm-provider", type=str, required=False, help="LLM provider name")
 @click.option("--llm-endpoint", type=str, required=False, help="LLM endpoint URL")
+@click.option(
+    "--llm-instance", type=str, required=False, help="LLM model resource name, e.g. with Azure OpenAI service"
+)
 @click.option("--llm-name", type=str, required=False, help="LLM model name for completions")
 @click.option("--llm-api-key", type=str, required=False, help="LLM API key")
 @click.option("--llm-api-version", type=str, required=False, help="LLM API version")
@@ -41,6 +44,7 @@ def llm_cli(
     schema: Optional[str],
     llm_provider: Optional[str],
     llm_endpoint: Optional[str],
+    llm_instance: Optional[str],
     llm_name: Optional[str],
     llm_api_key: Optional[str],
     llm_api_version: Optional[str],
@@ -74,6 +78,7 @@ def llm_cli(
             provider=provider,
             llm_name=llm_name,
             llm_endpoint=llm_endpoint,
+            llm_instance=llm_instance,
             llm_api_key=llm_api_key,
             llm_api_version=llm_api_version,
         ),

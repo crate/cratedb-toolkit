@@ -30,6 +30,7 @@ class ModelInfo:
         cls,
         provider: ModelProvider,
         llm_endpoint: Optional[str],
+        llm_instance: Optional[str],
         llm_name: Optional[str],
         llm_api_key: Optional[str],
         llm_api_version: Optional[str],
@@ -41,13 +42,18 @@ class ModelInfo:
             elif provider in [ModelProvider.OLLAMA]:
                 llm_name = "gemma3:1b"
             else:
-                raise ValueError("LLM completion model not selected")
+                raise ValueError("LLM completion model not defined")
         if not llm_api_key:
             if provider in [ModelProvider.OPENAI, ModelProvider.AZURE]:
                 llm_api_key = os.getenv("OPENAI_API_KEY")
+                if not llm_api_key:
+                    raise ValueError(
+                        "LLM API key not defined. Use either API option or OPENAI_API_KEY environment variable."
+                    )
         return cls(
             provider=provider,
             endpoint=llm_endpoint,
+            instance=llm_instance,
             name=llm_name,
             api_key=llm_api_key,
             api_version=llm_api_version,

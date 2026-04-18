@@ -35,6 +35,8 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             api_version=info.api_version,
         )
     elif info.provider is ModelProvider.AZURE:
+        if not info.instance:
+            raise ValueError("Azure OpenAI deployment/engine instance name not defined")
         llm = AzureOpenAI(
             model=completion_model,
             temperature=0.0,
