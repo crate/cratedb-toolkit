@@ -64,8 +64,10 @@ def llm_cli(
     schema = schema or os.getenv("CRATEDB_SCHEMA") or "doc"
     llm_provider = llm_provider or os.getenv("LLM_PROVIDER")
     llm_endpoint = llm_endpoint or os.getenv("LLM_ENDPOINT")
+    llm_instance = llm_instance or os.getenv("LLM_INSTANCE")
     llm_name = llm_name or os.getenv("LLM_NAME")
     llm_api_key = llm_api_key or os.getenv("LLM_API_KEY")
+    llm_api_version = llm_api_version or os.getenv("LLM_API_VERSION")
     if not llm_provider:
         raise click.UsageError("LLM provider name is required")
 
@@ -95,5 +97,5 @@ def llm_cli(
     response = dataquery.ask(question)
     output = {"question": question, "answer": str(response)}
     if response.metadata:
-        output.update(list(response.metadata.values())[0])
+        output.update(next(iter(response.metadata.values())))
     print(json.dumps(output, indent=2), file=sys.stdout)  # noqa: T201

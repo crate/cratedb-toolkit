@@ -17,7 +17,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
     completion_model = info.name
 
     if not info.provider:
-        raise ValueError("LLM model type not defined")
+        raise ValueError("LLM model provider not defined")
     if not completion_model:
         raise ValueError("LLM model name not defined")
 
@@ -54,6 +54,6 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             keep_alive=-1,
         )
     else:
-        raise ValueError("LLM model type invalid: %s", info.provider)
+        raise ValueError(f"LLM model provider not found: {info.provider}")
 
     return llm

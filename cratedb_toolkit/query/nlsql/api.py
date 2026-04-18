@@ -46,7 +46,8 @@ class DataQuery:
     query_engine: Optional["NLSQLTableQueryEngine"] = None
 
     def __post_init__(self):
-        self.setup()
+        if self.query_engine is None:
+            self.setup()
 
     def setup(self):
         """Configure database connection and query engine."""
