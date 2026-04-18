@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import sys
 from typing import Optional
 
 import click
@@ -68,8 +70,8 @@ def llm_cli(
     engine = dc.adapter.engine
     provider = ModelProvider(llm_provider)
 
-    # Submit query.
-    dq = DataQuery(
+    # Configure natural language query machinery.
+    dataquery = DataQuery(
         db=DatabaseInfo(
             engine=engine,
             schema=schema,
@@ -83,14 +85,11 @@ def llm_cli(
             llm_api_version=llm_api_version,
         ),
     )
+    logger.info("Selected LLM: completion=%s", dataquery.model.name)
 
-    logger.info("Selected LLM: completion=%s", dq.model.name)
-
-    response = dq.ask(question)
-
-    logger.info("Query was: %s", question)
-    logger.info("Answer was: %s", response)
-    logger.info("More (metadata, formatted sources):")
-    logger.info(response.get_formatted_sources())
-    logger.info(response.metadata)
-    return response
+    # Submit query.
+    response = dataquery.ask(question)
+    output = {"question": question, "answer": str(response)}
+    if response.metadata:
+        output.update(list(response.metadata.values())[0])
+    print(json.dumps(output, indent=2), file=sys.stdout)  # noqa: T201
