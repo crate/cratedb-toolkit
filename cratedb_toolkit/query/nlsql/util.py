@@ -8,6 +8,7 @@ from llama_index.core.embeddings.utils import EmbedType
 from llama_index.core.llms import LLM
 from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.llms.mistralai import MistralAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
@@ -79,6 +80,13 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             temperature=0.0,
             base_url=info.endpoint,
             api_key=info.api_key,
+        )
+    elif info.provider is ModelProvider.HUGGINGFACE_API:
+        llm = HuggingFaceInferenceAPI(
+            model=completion_model,
+            temperature=0.1,
+            base_url=info.endpoint,
+            token=info.api_key,
         )
     elif info.provider is ModelProvider.MISTRAL:
         llm = MistralAI(

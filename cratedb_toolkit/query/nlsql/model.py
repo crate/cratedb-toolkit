@@ -12,6 +12,7 @@ class ModelProvider(Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     AZURE = "azure"
+    HUGGINGFACE_API = "huggingface_api"
     MISTRAL = "mistral"
     OLLAMA = "ollama"
 
@@ -47,6 +48,8 @@ class ModelInfo:
                 llm_name = "claude-sonnet-4-0"
             elif provider in [ModelProvider.MISTRAL]:
                 llm_name = "mistral-medium-latest"
+            elif provider in [ModelProvider.HUGGINGFACE_API]:
+                llm_name = "HuggingFaceH4/zephyr-7b-alpha"
             else:
                 raise ValueError("LLM completion model not defined")
 
@@ -74,6 +77,12 @@ class ModelInfo:
                 raise ValueError(
                     "Azure OpenAI API version not defined. Use either CLI/API parameter or "
                     "OPENAI_API_VERSION environment variable."
+                )
+        elif provider is ModelProvider.HUGGINGFACE_API:
+            llm_api_key = llm_api_key or os.getenv("HF_TOKEN")
+            if not llm_api_key:
+                raise ValueError(
+                    "LLM API token not defined. Use either CLI/API parameter or HF_TOKEN environment variable."
                 )
         elif provider is ModelProvider.MISTRAL:
             llm_api_key = llm_api_key or os.getenv("MISTRAL_API_KEY")

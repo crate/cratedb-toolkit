@@ -26,6 +26,12 @@ export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
+export LLM_PROVIDER=huggingface_api
+export HUGGING_FACE_TOKEN=<YOUR_HUGGINGFACE_API_TOKEN>
+```
+
+```shell
+export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=mistral
 export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>
 ```
@@ -65,6 +71,12 @@ dataquery = DataQuery(
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OLLAMA, name="gemma3:1b"),
+)
+
+# Use Zephyr via Hugging Face API.
+dataquery = DataQuery(
+    db=DatabaseInfo(engine=engine, schema=schema),
+    model=ModelInfo(provider=ModelProvider.HUGGINGFACE_API, name="zephyr-7b-alpha"),
 )
 
 # Use Mistral Medium.
