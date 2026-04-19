@@ -1,3 +1,4 @@
+import contextlib
 from typing import Optional
 
 from llama_index.core import MockEmbedding, set_global_handler, settings
@@ -16,12 +17,33 @@ from llama_index.llms.openai import OpenAI
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
 
 
-def resolve_embed_model(
+def _mock_embed_model(
     embed_model: Optional[EmbedType] = None,
     callback_manager: Optional[CallbackManager] = None,
 ) -> BaseEmbedding:
-    """Stub function for disabling embeddings without the `print` and other side effects."""
+    """Stub that suppresses embedding resolution without print/side effects."""
     return MockEmbedding(embed_dim=1)
+
+
+@contextlib.contextmanager
+def disable_embeddings():
+    """
+    Temporarily suppress LlamaIndex's embedding resolver.
+
+    ``NLSQLTableQueryEngine`` does not require embeddings, but LlamaIndex may
+    still invoke ``resolve_embed_model`` during construction.  This context
+    manager replaces both resolution hooks with a no-op stub and guarantees
+    the originals are restored on exit, even if an exception is raised.
+    """
+    original_utils = utils.resolve_embed_model
+    original_settings = settings.resolve_embed_model
+    try:
+        utils.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
+        settings.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
+        yield
+    finally:
+        utils.resolve_embed_model = original_utils  # ty: ignore[invalid-assignment]
+        settings.resolve_embed_model = original_settings  # ty: ignore[invalid-assignment]
 
 
 def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
@@ -32,10 +54,6 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
     """
 
     completion_model = info.name
-
-    # Disable embeddings.
-    utils.resolve_embed_model = resolve_embed_model  # ty: ignore[invalid-assignment]
-    settings.resolve_embed_model = resolve_embed_model  # ty: ignore[invalid-assignment]
 
     if not info.provider:
         raise ValueError("LLM model provider not defined")

@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo
+from cratedb_toolkit.query.nlsql.util import disable_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +72,11 @@ class DataQuery:
             ignore_tables=self.db.ignore_tables,
             include_tables=self.db.include_tables,
         )
-        self.query_engine = NLSQLTableQueryEngine(
-            sql_database=sql_database,
-            llm=llm,
-        )
+        with disable_embeddings():
+            self.query_engine = NLSQLTableQueryEngine(
+                sql_database=sql_database,
+                llm=llm,
+            )
 
     def ask(self, question: str) -> "RESPONSE_TYPE":
         """Invoke an inquiry to the LLM."""
