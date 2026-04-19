@@ -26,6 +26,12 @@ export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
+export LLM_PROVIDER=mistral
+export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>
+```
+
+```shell
+export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=ollama
 export LLM_ENDPOINT="http://100.83.17.54:11434/"
 ```
@@ -59,6 +65,12 @@ dataquery = DataQuery(
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OLLAMA, name="gemma3:1b"),
+)
+
+# Use Mistral Medium.
+dataquery = DataQuery(
+    db=DatabaseInfo(engine=engine, schema=schema),
+    model=ModelInfo(provider=ModelProvider.MISTRAL, name="mistral-medium-latest"),
 )
 
 response = dataquery.ask("What is the average value for sensor 1?")
