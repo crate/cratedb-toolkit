@@ -36,6 +36,7 @@ jobs:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
     # https://docs.github.com/en/actions/using-containerized-services/about-service-containers

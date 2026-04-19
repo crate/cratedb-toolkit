@@ -51,14 +51,11 @@ class DataQuery:
 
     def setup(self):
         """Configure database connection and query engine."""
-        logger.info("Connecting to CrateDB")
+        from cratedb_toolkit.query.nlsql.util import configure_llm
 
         # Configure model.
         logger.info("Configuring LLM model")
-        llm: LLM
-        from cratedb_toolkit.query.nlsql.util import configure_llm
-
-        llm = configure_llm(self.model)
+        llm: LLM = configure_llm(self.model)
 
         # Configure query engine.
         logger.info("Creating query engine")

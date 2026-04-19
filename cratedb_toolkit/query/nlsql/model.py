@@ -10,6 +10,7 @@ class ModelProvider(Enum):
     """Model provider choices."""
 
     OPENAI = "openai"
+    ANTHROPIC = "anthropic"
     AZURE = "azure"
     OLLAMA = "ollama"
 
@@ -41,6 +42,8 @@ class ModelInfo:
                 llm_name = "gpt-4.1"
             elif provider in [ModelProvider.OLLAMA]:
                 llm_name = "gemma3:1b"
+            elif provider in [ModelProvider.ANTHROPIC]:
+                llm_name = "claude-sonnet-4-0"
             else:
                 raise ValueError("LLM completion model not defined")
         if not llm_api_key:
@@ -49,6 +52,12 @@ class ModelInfo:
                 if not llm_api_key:
                     raise ValueError(
                         "LLM API key not defined. Use either API option or OPENAI_API_KEY environment variable."
+                    )
+            elif provider in [ModelProvider.ANTHROPIC]:
+                llm_api_key = os.getenv("ANTHROPIC_API_KEY")
+                if not llm_api_key:
+                    raise ValueError(
+                        "LLM API key not defined. Use either API option or ANTHROPIC_API_KEY environment variable."
                     )
         return cls(
             provider=provider,

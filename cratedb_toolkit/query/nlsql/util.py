@@ -1,10 +1,25 @@
-import llama_index.core
+from typing import Optional
+
+from llama_index.core import MockEmbedding, set_global_handler, settings
+from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.callbacks import CallbackManager
+from llama_index.core.embeddings import utils
+from llama_index.core.embeddings.utils import EmbedType
 from llama_index.core.llms import LLM
+from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
 
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
+
+
+def resolve_embed_model(
+    embed_model: Optional[EmbedType] = None,
+    callback_manager: Optional[CallbackManager] = None,
+) -> BaseEmbedding:
+    """Stub function for disabling embeddings without the `print` and other side effects."""
+    return MockEmbedding(embed_dim=1)
 
 
 def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
@@ -16,6 +31,10 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
 
     completion_model = info.name
 
+    # Disable embeddings.
+    utils.resolve_embed_model = resolve_embed_model  # ty: ignore[invalid-assignment]
+    settings.resolve_embed_model = resolve_embed_model  # ty: ignore[invalid-assignment]
+
     if not info.provider:
         raise ValueError("LLM model provider not defined")
     if not completion_model:
@@ -23,7 +42,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
 
     # https://docs.llamaindex.ai/en/stable/understanding/tracing_and_debugging/tracing_and_debugging/
     if debug:
-        llama_index.core.set_global_handler("simple")
+        set_global_handler("simple")
 
     # Select completions model.
     if info.provider is ModelProvider.OPENAI:
@@ -53,7 +72,14 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             request_timeout=120.0,
             keep_alive=-1,
         )
+    elif info.provider is ModelProvider.ANTHROPIC:
+        llm = Anthropic(
+            model=completion_model,
+            temperature=0.0,
+            base_url=info.endpoint,
+            api_key=info.api_key,
+        )
     else:
-        raise ValueError(f"LLM model provider not found: {info.provider}")
+        raise ValueError(f"LLM model provider not implemented: {info.provider}")
 
     return llm

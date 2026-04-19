@@ -14,7 +14,7 @@ if sys.version_info < (3, 10):
 @pytest.fixture
 def provision_db(cratedb):
     sql_ddl = """
-CREATE TABLE IF NOT EXISTS time_series_data (
+CREATE TABLE IF NOT EXISTS testdrive.time_series_data (
     timestamp TIMESTAMP,
     value DOUBLE,
     location STRING,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS time_series_data (
 );
 """
     sql_dml = """
-INSERT INTO time_series_data (timestamp, value, location, sensor_id)
+INSERT INTO testdrive.time_series_data (timestamp, value, location, sensor_id)
 VALUES
     ('2023-09-14T00:00:00', 10.5, 'Sensor A', 1),
     ('2023-09-14T01:00:00', 15.2, 'Sensor A', 1),
@@ -42,14 +42,15 @@ VALUES
 
 
 @pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set")
-def test_query_llm(cratedb, provision_db):
+def test_query_nlsql_openai(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...`.
+    Verify `ctk query nlsql ...` with Open AI.
     """
 
     runner = CliRunner(
         env={
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": "testdrive",
             "LLM_PROVIDER": "openai",
         }
     )
@@ -64,3 +65,29 @@ def test_query_llm(cratedb, provision_db):
     output = json.loads(result.output)
     assert output["answer"] == "The average value for sensor 1 is approximately 17.03."
     assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1"
+
+
+@pytest.mark.skipif("ANTHROPIC_API_KEY" not in os.environ, reason="ANTHROPIC_API_KEY not set")
+def test_query_nlsql_anthropic(cratedb, provision_db):
+    """
+    Verify `ctk query nlsql ...` with Anthropic.
+    """
+
+    runner = CliRunner(
+        env={
+            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": "testdrive",
+            "LLM_PROVIDER": "anthropic",
+        }
+    )
+
+    result = runner.invoke(
+        cli,
+        input="What is the average value for sensor 1?",
+        args="nlsql -",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    output = json.loads(result.output)
+    assert "the average value for sensor 1 is approximately **17.03**" in output["answer"]
+    assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1;"

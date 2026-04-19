@@ -20,6 +20,12 @@ export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
+export LLM_PROVIDER=anthropic
+export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+```
+
+```shell
+export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=ollama
 export LLM_ENDPOINT="http://100.83.17.54:11434/"
 ```
@@ -38,16 +44,25 @@ engine = sa.create_engine("crate://")
 schema = "doc"
 
 # Use Open AI GPT-4.
-dq = DataQuery(
+dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OPENAI, name="gpt-4.1"),
 )
 
-# Use Gemma3 via Ollama.
-dq = DataQuery(
+# Use Anthropic Claude Sonnet.
+dataquery = DataQuery(
+    db=DatabaseInfo(engine=engine, schema=schema),
+    model=ModelInfo(provider=ModelProvider.ANTHROPIC, name="claude-sonnet-4-0"),
+)
+
+# Use Google Gemma3 via Ollama.
+dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OLLAMA, name="gemma3:1b"),
 )
+
+response = dataquery.ask("What is the average value for sensor 1?")
+print(response)
 ```
 
 ## Example
