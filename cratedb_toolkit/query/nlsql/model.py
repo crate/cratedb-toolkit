@@ -49,35 +49,44 @@ class ModelInfo:
                 llm_name = "mistral-medium-latest"
             else:
                 raise ValueError("LLM completion model not defined")
-        if not llm_api_key:
-            if provider is ModelProvider.OPENAI:
-                llm_api_key = os.getenv("OPENAI_API_KEY")
-                if not llm_api_key:
-                    raise ValueError(
-                        "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
-                    )
-            elif provider is ModelProvider.AZURE:
-                llm_endpoint = llm_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
-                llm_api_key = os.getenv("AZURE_OPENAI_API_KEY")
-                llm_api_version = llm_api_version or os.getenv("OPENAI_API_VERSION")
-                if not llm_api_key:
-                    raise ValueError(
-                        "LLM API key not defined. Use either CLI/API parameter or "
-                        "AZURE_OPENAI_API_KEY environment variable."
-                    )
-            elif provider is ModelProvider.ANTHROPIC:
-                llm_api_key = os.getenv("ANTHROPIC_API_KEY")
-                if not llm_api_key:
-                    raise ValueError(
-                        "LLM API key not defined. Use either CLI/API parameter or "
-                        "ANTHROPIC_API_KEY environment variable."
-                    )
-            elif provider is ModelProvider.MISTRAL:
-                llm_api_key = os.getenv("MISTRAL_API_KEY")
-                if not llm_api_key:
-                    raise ValueError(
-                        "LLM API key not defined. Use either CLI/API parameter or MISTRAL_API_KEY environment variable."
-                    )
+
+        if provider is ModelProvider.ANTHROPIC:
+            llm_api_key = llm_api_key or os.getenv("ANTHROPIC_API_KEY")
+            if not llm_api_key:
+                raise ValueError(
+                    "LLM API key not defined. Use either CLI/API parameter or ANTHROPIC_API_KEY environment variable."
+                )
+        elif provider is ModelProvider.AZURE:
+            llm_endpoint = llm_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
+            llm_api_key = llm_api_key or os.getenv("AZURE_OPENAI_API_KEY")
+            llm_api_version = llm_api_version or os.getenv("OPENAI_API_VERSION")
+            if not llm_api_key:
+                raise ValueError(
+                    "LLM API key not defined. Use either CLI/API parameter or "
+                    "AZURE_OPENAI_API_KEY environment variable."
+                )
+            if not llm_endpoint:
+                raise ValueError(
+                    "Azure OpenAI endpoint not defined. Use either CLI/API parameter or "
+                    "AZURE_OPENAI_ENDPOINT environment variable."
+                )
+            if not llm_api_version:
+                raise ValueError(
+                    "Azure OpenAI API version not defined. Use either CLI/API parameter or "
+                    "OPENAI_API_VERSION environment variable."
+                )
+        elif provider is ModelProvider.MISTRAL:
+            llm_api_key = llm_api_key or os.getenv("MISTRAL_API_KEY")
+            if not llm_api_key:
+                raise ValueError(
+                    "LLM API key not defined. Use either CLI/API parameter or MISTRAL_API_KEY environment variable."
+                )
+        elif provider is ModelProvider.OPENAI:
+            llm_api_key = llm_api_key or os.getenv("OPENAI_API_KEY")
+            if not llm_api_key:
+                raise ValueError(
+                    "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
+                )
         return cls(
             provider=provider,
             endpoint=llm_endpoint,
