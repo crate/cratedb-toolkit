@@ -99,6 +99,15 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             base_url=info.endpoint,
             api_key=info.api_key,
         )
+    elif info.provider is ModelProvider.GOOGLE:
+        from llama_index.llms.gemini import Gemini
+
+        llm = Gemini(
+            model=completion_model,
+            temperature=0.0,
+            base_url=info.endpoint,
+            api_key=info.api_key,
+        )
     elif info.provider is ModelProvider.HUGGINGFACE_API:
         llm = HuggingFaceInferenceAPI(
             model=completion_model,
