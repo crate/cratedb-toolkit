@@ -47,17 +47,27 @@ class ModelInfo:
             else:
                 raise ValueError("LLM completion model not defined")
         if not llm_api_key:
-            if provider in [ModelProvider.OPENAI, ModelProvider.AZURE]:
+            if provider is ModelProvider.OPENAI:
                 llm_api_key = os.getenv("OPENAI_API_KEY")
                 if not llm_api_key:
                     raise ValueError(
-                        "LLM API key not defined. Use either API option or OPENAI_API_KEY environment variable."
+                        "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
                     )
-            elif provider in [ModelProvider.ANTHROPIC]:
+            elif provider is ModelProvider.AZURE:
+                llm_endpoint = llm_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
+                llm_api_key = os.getenv("AZURE_OPENAI_API_KEY")
+                llm_api_version = llm_api_version or os.getenv("OPENAI_API_VERSION")
+                if not llm_api_key:
+                    raise ValueError(
+                        "LLM API key not defined. Use either CLI/API parameter or "
+                        "AZURE_OPENAI_API_KEY environment variable."
+                    )
+            elif provider is ModelProvider.ANTHROPIC:
                 llm_api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not llm_api_key:
                     raise ValueError(
-                        "LLM API key not defined. Use either API option or ANTHROPIC_API_KEY environment variable."
+                        "LLM API key not defined. Use either CLI/API parameter or "
+                        "ANTHROPIC_API_KEY environment variable."
                     )
         return cls(
             provider=provider,

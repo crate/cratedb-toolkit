@@ -8,13 +8,13 @@ from click.testing import CliRunner
 from cratedb_toolkit.query.cli import cli
 
 if sys.version_info < (3, 10):
-    pytest.skip("Only available for Python 3.10+", allow_module_level=True)
+    pytest.skip("Only available for Python 3.10+", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture
 def provision_db(cratedb):
     sql_ddl = """
-CREATE TABLE IF NOT EXISTS testdrive.time_series_data (
+CREATE TABLE testdrive.time_series_data (
     timestamp TIMESTAMP,
     value DOUBLE,
     location STRING,

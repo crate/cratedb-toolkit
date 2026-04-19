@@ -11,14 +11,15 @@ from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo
 
 logger = logging.getLogger(__name__)
 
+llama_index_import_error: Optional[ImportError] = None
 
 try:
     from llama_index.core.base.response.schema import RESPONSE_TYPE
     from llama_index.core.llms import LLM
     from llama_index.core.query_engine import NLSQLTableQueryEngine
     from llama_index.core.utilities.sql_wrapper import SQLDatabase
-except ImportError:
-    pass
+except ImportError as exc:
+    llama_index_import_error = exc
 
 
 @dataclasses.dataclass
@@ -52,6 +53,11 @@ class DataQuery:
     def setup(self):
         """Configure database connection and query engine."""
         from cratedb_toolkit.query.nlsql.util import configure_llm
+
+        if llama_index_import_error:
+            raise ImportError(
+                "NLSQL support requires installing `cratedb-toolkit[nlsql]`"
+            ) from llama_index_import_error
 
         # Configure model.
         logger.info("Configuring LLM model")
