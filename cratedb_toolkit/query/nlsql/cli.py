@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 
 from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.query.nlsql.api import DataQuery
-from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo, ModelProvider
+from cratedb_toolkit.query.nlsql.model import DatabaseInfo
+from cratedb_toolkit.query.nlsql.util import read_llm_options
 from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -62,19 +63,10 @@ def llm_cli(
         question = sys.stdin.read().strip()
 
     schema = schema or os.getenv("CRATEDB_SCHEMA") or "doc"
-    llm_provider = llm_provider or os.getenv("LLM_PROVIDER")
-    llm_endpoint = llm_endpoint or os.getenv("LLM_ENDPOINT")
-    llm_instance = llm_instance or os.getenv("LLM_INSTANCE")
-    llm_name = llm_name or os.getenv("LLM_NAME")
-    llm_api_key = llm_api_key or os.getenv("LLM_API_KEY")
-    llm_api_version = llm_api_version or os.getenv("LLM_API_VERSION")
-    if not llm_provider:
-        raise click.UsageError("LLM provider name is required")
 
     # Connect to database and configure LLM.
     dc = DatabaseCluster.from_options(ctx.meta["address"])
     engine = dc.adapter.engine
-    provider = ModelProvider(llm_provider)
 
     # Configure natural language query machinery.
     dataquery = DataQuery(
@@ -82,8 +74,8 @@ def llm_cli(
             engine=engine,
             schema=schema,
         ),
-        model=ModelInfo.from_options(
-            provider=provider,
+        model=read_llm_options(
+            llm_provider=llm_provider,
             llm_name=llm_name,
             llm_endpoint=llm_endpoint,
             llm_instance=llm_instance,

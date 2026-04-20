@@ -1,4 +1,5 @@
 import contextlib
+import os
 from typing import Optional
 
 from llama_index.core import MockEmbedding, set_global_handler, settings
@@ -7,16 +8,6 @@ from llama_index.core.callbacks import CallbackManager
 from llama_index.core.embeddings import utils
 from llama_index.core.embeddings.utils import EmbedType
 from llama_index.core.llms import LLM
-from llama_index.llms.anthropic import Anthropic
-from llama_index.llms.azure_openai import AzureOpenAI
-from llama_index.llms.bedrock import Bedrock
-from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
-from llama_index.llms.llamafile import Llamafile
-from llama_index.llms.mistralai import MistralAI
-from llama_index.llms.ollama import Ollama
-from llama_index.llms.openai import OpenAI
-from llama_index.llms.rungpt import RunGptLLM
 
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
 
@@ -50,6 +41,108 @@ def disable_embeddings():
         settings.resolve_embed_model = original_settings  # ty: ignore[invalid-assignment]
 
 
+# https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+DEFAULT_MODEL_MAP = {
+    ModelProvider.AMAZON_BEDROCK: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    # ModelProvider.AMAZON_BEDROCK_CONVERSE: "amazon.nova-micro-v1:0",  # noqa: ERA001
+    ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.amazon.nova-2-lite-v1:0",
+    # ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.anthropic.claude-haiku-4-5-20251001-v1:0",  # noqa: ERA001
+    ModelProvider.ANTHROPIC: "claude-sonnet-4-0",
+    ModelProvider.AZURE: "gpt-4.1",
+    ModelProvider.GOOGLE: "gemini-2.5-flash",
+    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",
+    ModelProvider.OLLAMA: "gemma3:1b",
+    ModelProvider.OPENAI: "gpt-4.1",
+    ModelProvider.LLAMAFILE: "n/a",
+    ModelProvider.MISTRAL: "mistral-medium-latest",
+    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",
+}
+
+
+def read_llm_options(
+    llm_provider: Optional[str],
+    llm_endpoint: Optional[str],
+    llm_instance: Optional[str],
+    llm_name: Optional[str],
+    llm_api_key: Optional[str],
+    llm_api_version: Optional[str],
+) -> ModelInfo:
+    """Read options and apply parameter sanity checks and heuristics."""
+
+    llm_provider = llm_provider or os.getenv("LLM_PROVIDER")
+    llm_endpoint = llm_endpoint or os.getenv("LLM_ENDPOINT")
+    llm_instance = llm_instance or os.getenv("LLM_INSTANCE")
+    llm_name = llm_name or os.getenv("LLM_NAME")
+    llm_api_key = llm_api_key or os.getenv("LLM_API_KEY")
+    llm_api_version = llm_api_version or os.getenv("LLM_API_VERSION")
+    if not llm_provider:
+        raise ValueError("LLM provider name is required")
+
+    provider = ModelProvider(llm_provider)
+
+    if not llm_name:
+        llm_name = DEFAULT_MODEL_MAP.get(provider)
+        if not llm_name:
+            raise ValueError("LLM completion model name is required")
+
+    if provider is ModelProvider.ANTHROPIC:
+        llm_api_key = llm_api_key or os.getenv("ANTHROPIC_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or ANTHROPIC_API_KEY environment variable."
+            )
+    elif provider is ModelProvider.AZURE:
+        llm_endpoint = llm_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
+        llm_api_key = llm_api_key or os.getenv("AZURE_OPENAI_API_KEY")
+        llm_api_version = llm_api_version or os.getenv("OPENAI_API_VERSION")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or AZURE_OPENAI_API_KEY environment variable."
+            )
+        if not llm_endpoint:
+            raise ValueError(
+                "Azure OpenAI endpoint not defined. Use either CLI/API parameter or "
+                "AZURE_OPENAI_ENDPOINT environment variable."
+            )
+        if not llm_api_version:
+            raise ValueError(
+                "Azure OpenAI API version not defined. Use either CLI/API parameter or "
+                "OPENAI_API_VERSION environment variable."
+            )
+    elif provider is ModelProvider.GOOGLE:
+        llm_api_key = llm_api_key or os.getenv("GOOGLE_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or GOOGLE_API_KEY environment variable."
+            )
+    elif provider is ModelProvider.HUGGINGFACE_API:
+        llm_api_key = llm_api_key or os.getenv("HF_TOKEN")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API token not defined. Use either CLI/API parameter or HF_TOKEN environment variable."
+            )
+    elif provider is ModelProvider.MISTRAL:
+        llm_api_key = llm_api_key or os.getenv("MISTRAL_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or MISTRAL_API_KEY environment variable."
+            )
+    elif provider is ModelProvider.OPENAI:
+        llm_api_key = llm_api_key or os.getenv("OPENAI_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
+            )
+    return ModelInfo(
+        provider=provider,
+        endpoint=llm_endpoint,
+        instance=llm_instance,
+        name=llm_name,
+        api_key=llm_api_key,
+        api_version=llm_api_version,
+    )
+
+
 def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
     """
     Configure LLM access and model types. Use either vanilla Open AI, Azure Open AI, or Ollama.
@@ -69,14 +162,35 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
         set_global_handler("simple")
 
     # Select completions model.
-    if info.provider is ModelProvider.OPENAI:
-        llm = OpenAI(
+    if info.provider is ModelProvider.AMAZON_BEDROCK:
+        from llama_index.llms.bedrock import Bedrock
+        from llama_index.llms.bedrock_converse.utils import bedrock_modelname_to_context_size
+
+        llm = Bedrock(
             model=completion_model,
             temperature=0.0,
+            context_size=bedrock_modelname_to_context_size(completion_model),
+        )
+    elif info.provider is ModelProvider.AMAZON_BEDROCK_CONVERSE:
+        from llama_index.llms.bedrock_converse import BedrockConverse
+
+        llm = BedrockConverse(
+            model=completion_model,
+            temperature=0.0,
+            region_name="us-east-1",
+        )
+    elif info.provider is ModelProvider.ANTHROPIC:
+        from llama_index.llms.anthropic import Anthropic
+
+        llm = Anthropic(
+            model=completion_model,
+            temperature=0.0,
+            base_url=info.endpoint,
             api_key=info.api_key,
-            api_version=info.api_version,
         )
     elif info.provider is ModelProvider.AZURE:
+        from llama_index.llms.azure_openai import AzureOpenAI
+
         if not info.instance:
             raise ValueError("Azure OpenAI deployment/engine instance name not defined")
         llm = AzureOpenAI(
@@ -87,36 +201,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             api_key=info.api_key,
             api_version=info.api_version,
         )
-    elif info.provider is ModelProvider.OLLAMA:
-        # https://docs.llamaindex.ai/en/stable/api_reference/llms/ollama/
-        llm = Ollama(
-            base_url=info.endpoint or "http://localhost:11434",
-            model=completion_model,
-            temperature=0.0,
-            request_timeout=120.0,
-            keep_alive=-1,
-        )
-    elif info.provider is ModelProvider.AMAZON_BEDROCK:
-        from llama_index.llms.bedrock_converse.utils import bedrock_modelname_to_context_size
 
-        llm = Bedrock(
-            model=completion_model,
-            temperature=0.0,
-            context_size=bedrock_modelname_to_context_size(completion_model),
-        )
-    elif info.provider is ModelProvider.AMAZON_BEDROCK_CONVERSE:
-        llm = BedrockConverse(
-            model=completion_model,
-            temperature=0.0,
-            region_name="us-east-1",
-        )
-    elif info.provider is ModelProvider.ANTHROPIC:
-        llm = Anthropic(
-            model=completion_model,
-            temperature=0.0,
-            base_url=info.endpoint,
-            api_key=info.api_key,
-        )
     elif info.provider is ModelProvider.GOOGLE:
         from llama_index.llms.gemini import Gemini
 
@@ -127,25 +212,55 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             api_key=info.api_key,
         )
     elif info.provider is ModelProvider.HUGGINGFACE_API:
+        from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
+
         llm = HuggingFaceInferenceAPI(
             model=completion_model,
             temperature=0.1,
             base_url=info.endpoint,
             token=info.api_key,
         )
+
     elif info.provider is ModelProvider.LLAMAFILE:
+        from llama_index.llms.llamafile import Llamafile
+
         llm = Llamafile(
             base_url=info.endpoint or "http://localhost:8080",
             temperature=0.0,
         )
     elif info.provider is ModelProvider.MISTRAL:
+        from llama_index.llms.mistralai import MistralAI
+
         llm = MistralAI(
             model=completion_model,
             temperature=0.0,
             endpoint=info.endpoint,
             api_key=info.api_key,
         )
+
+    elif info.provider is ModelProvider.OLLAMA:
+        # https://docs.llamaindex.ai/en/stable/api_reference/llms/ollama/
+        from llama_index.llms.ollama import Ollama
+
+        llm = Ollama(
+            base_url=info.endpoint or "http://localhost:11434",
+            model=completion_model,
+            temperature=0.0,
+            request_timeout=120.0,
+            keep_alive=-1,
+        )
+    elif info.provider is ModelProvider.OPENAI:
+        from llama_index.llms.openai import OpenAI
+
+        llm = OpenAI(
+            model=completion_model,
+            temperature=0.0,
+            api_key=info.api_key,
+            api_version=info.api_version,
+        )
     elif info.provider is ModelProvider.RUNGPT:
+        from llama_index.llms.rungpt import RunGptLLM
+
         llm = RunGptLLM(
             model=info.name,
             endpoint=info.endpoint or "localhost:51002",

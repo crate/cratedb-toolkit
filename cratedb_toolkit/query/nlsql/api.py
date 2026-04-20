@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo
-from cratedb_toolkit.query.nlsql.util import disable_embeddings
+from cratedb_toolkit.query.nlsql.util import configure_llm, disable_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +53,6 @@ class DataQuery:
 
     def setup(self):
         """Configure database connection and query engine."""
-        from cratedb_toolkit.query.nlsql.util import configure_llm
-
         if llama_index_import_error:
             raise ImportError(
                 "NLSQL support requires installing `cratedb-toolkit[nlsql]`"
