@@ -19,6 +19,7 @@ class ModelProvider(Enum):
     LLAMAFILE = "llamafile"
     MISTRAL = "mistral"
     OLLAMA = "ollama"
+    RUNGPT = "rungpt"
 
 
 @dataclasses.dataclass
@@ -66,6 +67,8 @@ class ModelInfo:
             elif provider in [ModelProvider.HUGGINGFACE_API]:
                 llm_name = "HuggingFaceH4/zephyr-7b-alpha"
             elif provider in [ModelProvider.LLAMAFILE]:
+                llm_name = "n/a"
+            elif provider in [ModelProvider.RUNGPT]:
                 llm_name = "n/a"
             else:
                 raise ValueError("LLM completion model not defined")

@@ -75,6 +75,11 @@ wget "wget https://huggingface.co/Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF/resolve/m
 Text_to_SQL-q2_k.gguf?download=true"
 ```
 
+```shell
+uvx --python=3.11 --with="setuptools<82" --with="numpy<2" rungpt serve stabilityai/stablelm-tuned-alpha-3b --precision fp16 --device_map balanced
+```
+
+
 ### API
 
 ```python
@@ -175,8 +180,8 @@ Answer: The average value for sensor 1 is approximately 17.03.
 LlamaIndex provides access to many LLM models via Python packages available
 on PyPI prefixed with `llama-index-llms-`.
 
-Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,vllm
+Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,rungpt,vllm
 API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
 API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
-Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud,rungpt
+Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud
 More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF

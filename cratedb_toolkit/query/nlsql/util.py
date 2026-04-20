@@ -16,6 +16,7 @@ from llama_index.llms.llamafile import Llamafile
 from llama_index.llms.mistralai import MistralAI
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
+from llama_index.llms.rungpt import RunGptLLM
 
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
 
@@ -143,6 +144,12 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             temperature=0.0,
             endpoint=info.endpoint,
             api_key=info.api_key,
+        )
+    elif info.provider is ModelProvider.RUNGPT:
+        llm = RunGptLLM(
+            model=info.name,
+            endpoint=info.endpoint or "localhost:51002",
+            temperature=0.0,
         )
     else:
         raise ValueError(f"LLM model provider not implemented: {info.provider}")
