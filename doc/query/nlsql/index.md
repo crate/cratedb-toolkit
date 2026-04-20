@@ -53,6 +53,23 @@ ollama pull qwen2.5:0.5b # 400 MB
 ollama pull qwen3:0.6b   # 520 MB
 ```
 
+```shell
+export CRATEDB_CLUSTER_URL=crate://localhost:4200/
+export LLM_PROVIDER=llamafile
+export LLM_ENDPOINT=http://localhost:8080/
+```
+```shell
+wget https://huggingface.co/mozilla-ai/Llama-3.2-1B-Instruct-llamafile/resolve/main/Llama-3.2-1B-Instruct-Q6_K.llamafile
+wget https://huggingface.co/mozilla-ai/llamafile_0.10.0/resolve/main/Qwen3.5-0.8B-Q8_0.llamafile
+./Llama-3.2-1B-Instruct-Q6_K.llamafile
+./Qwen3.5-0.8B-Q8_0.llamafile
+```
+```shell
+wget "https://github.com/mozilla-ai/llamafile/releases/download/0.10.0/llamafile-0.10.0"
+wget "wget https://huggingface.co/Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF/resolve/main/Qwen-3-4b-
+Text_to_SQL-q2_k.gguf?download=true"
+```
+
 ### API
 
 ```python

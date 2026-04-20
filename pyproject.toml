@@ -227,6 +227,7 @@ optional-dependencies.nlsql = [
   "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
   "llama-index-llms-gemini<0.7; python_version>='3.10'",
   "llama-index-llms-huggingface-api<0.8; python_version>='3.10'",
+  "llama-index-llms-llamafile<0.6; python_version>='3.10'",
   "llama-index-llms-mistralai<0.11; python_version>='3.10'",
   "llama-index-llms-ollama<0.11; python_version>='3.10'",
   "llama-index-llms-openai<0.8; python_version>='3.10'",

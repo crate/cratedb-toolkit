@@ -14,6 +14,7 @@ class ModelProvider(Enum):
     AZURE = "azure"
     GOOGLE = "google"
     HUGGINGFACE_API = "huggingface_api"
+    LLAMAFILE = "llamafile"
     MISTRAL = "mistral"
     OLLAMA = "ollama"
 
@@ -53,6 +54,8 @@ class ModelInfo:
                 llm_name = "gemini-2.5-flash"
             elif provider in [ModelProvider.HUGGINGFACE_API]:
                 llm_name = "HuggingFaceH4/zephyr-7b-alpha"
+            elif provider in [ModelProvider.LLAMAFILE]:
+                llm_name = "n/a"
             else:
                 raise ValueError("LLM completion model not defined")
 
