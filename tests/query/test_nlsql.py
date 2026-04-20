@@ -97,3 +97,32 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
     output = json.loads(result.output)
     assert "The average value for sensor 1 is **17.03**" in output["answer"]
     assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1"
+
+
+@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+def test_query_nlsql_openrouter(cratedb, provision_db):
+    """
+    Verify `ctk query nlsql ...` with Gemma3 by Google via OpenRouter.
+    https://ai.google.dev/gemma/docs/core/model_card_3
+    """
+
+    runner = CliRunner(
+        env={
+            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": "testdrive",
+            "LLM_PROVIDER": "openrouter",
+            # "LLM_NAME": "google/gemma-3n-e4b-it:free",  # noqa: ERA001
+            "LLM_NAME": "gryphe/mythomax-l2-13b",
+        }
+    )
+
+    result = runner.invoke(
+        cli,
+        input="What is the average value for sensor 1?",
+        args="nlsql -",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    output = json.loads(result.output)
+    assert "The average value for sensor 1 is 17.03" in output["answer"]
+    assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;"
