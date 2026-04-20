@@ -8,7 +8,6 @@ import logging
 from typing import Optional
 
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo
-from cratedb_toolkit.query.nlsql.util import configure_llm, disable_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +57,8 @@ class DataQuery:
                 "NLSQL support requires installing `cratedb-toolkit[nlsql]`"
             ) from llama_index_import_error
 
+        from cratedb_toolkit.query.nlsql.util import configure_llm, disable_embeddings
+
         # Configure model.
         logger.info("Configuring LLM: provider=%s, name=%s", self.model.provider.name, self.model.name)
         llm: LLM = configure_llm(self.model)
@@ -81,5 +82,4 @@ class DataQuery:
         """Invoke an inquiry to the LLM."""
         if not self.query_engine:
             raise ValueError("Query engine not configured")
-        logger.debug("Running query: %s", question)
         return self.query_engine.query(question)

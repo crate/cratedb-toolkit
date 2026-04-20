@@ -1,5 +1,6 @@
 import contextlib
 import os
+import threading
 from typing import Optional
 
 from llama_index.core import MockEmbedding, set_global_handler, settings
@@ -10,6 +11,8 @@ from llama_index.core.embeddings.utils import EmbedType
 from llama_index.core.llms import LLM
 
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
+
+_embedding_resolver_lock = threading.RLock()
 
 
 def _mock_embed_model(
@@ -30,33 +33,34 @@ def disable_embeddings():
     manager replaces both resolution hooks with a no-op stub and guarantees
     the originals are restored on exit, even if an exception is raised.
     """
-    original_utils = utils.resolve_embed_model
-    original_settings = settings.resolve_embed_model
-    try:
-        utils.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
-        settings.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
-        yield
-    finally:
-        utils.resolve_embed_model = original_utils  # ty: ignore[invalid-assignment]
-        settings.resolve_embed_model = original_settings  # ty: ignore[invalid-assignment]
+    with _embedding_resolver_lock:
+        original_utils = utils.resolve_embed_model
+        original_settings = settings.resolve_embed_model
+        try:
+            utils.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
+            settings.resolve_embed_model = _mock_embed_model  # ty: ignore[invalid-assignment]
+            yield
+        finally:
+            utils.resolve_embed_model = original_utils  # ty: ignore[invalid-assignment]
+            settings.resolve_embed_model = original_settings  # ty: ignore[invalid-assignment]
 
 
-# https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
 DEFAULT_MODEL_MAP = {
+    # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
     ModelProvider.AMAZON_BEDROCK: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
     # ModelProvider.AMAZON_BEDROCK_CONVERSE: "amazon.nova-micro-v1:0",  # noqa: ERA001
     ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.amazon.nova-2-lite-v1:0",
     # ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.anthropic.claude-haiku-4-5-20251001-v1:0",  # noqa: ERA001
-    ModelProvider.ANTHROPIC: "claude-sonnet-4-0",
-    ModelProvider.AZURE: "gpt-4.1",
-    ModelProvider.GOOGLE: "gemini-2.5-flash",
-    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",
+    ModelProvider.ANTHROPIC: "claude-haiku-4-5",
+    ModelProvider.AZURE: "gpt-4.1",  # TODO: Not evaluated yet.
+    ModelProvider.GOOGLE: "gemini-2.5-flash",  # TODO: Not evaluated yet.
+    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not evaluated yet.
     ModelProvider.OLLAMA: "gemma3:1b",
     ModelProvider.OPENAI: "gpt-4.1",
     ModelProvider.OPENROUTER: "google/gemma-3-4b-it:free",  # Default: "gryphe/mythomax-l2-13b" as of 2026-04
     ModelProvider.LLAMAFILE: "n/a",
-    ModelProvider.MISTRAL: "mistral-medium-latest",
-    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",
+    ModelProvider.MISTRAL: "mistral-medium-latest",  # TODO: Not evaluated yet.
+    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",  # TODO: Not evaluated yet.
     ModelProvider.RUNPOD_SERVERLESS: "gemma3:270m",
 }
 
@@ -145,6 +149,11 @@ def read_llm_options(
             raise ValueError(
                 "LLM API key not defined. Use either CLI/API parameter or RUNPOD_API_KEY environment variable."
             )
+        if not llm_endpoint:
+            raise ValueError(
+                "Runpod serverless endpoint not defined. "
+                "Use either CLI/API parameter or LLM_ENDPOINT environment variable."
+            )
     return ModelInfo(
         provider=provider,
         endpoint=llm_endpoint,
@@ -157,9 +166,11 @@ def read_llm_options(
 
 def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
     """
-    Configure LLM access and model types. Use either vanilla Open AI, Azure Open AI, or Ollama.
+    Configure LLM inference, local or remote.
 
-    TODO: What about Hugging Face, Runpod, vLLM, and others?
+    Supports Amazon Bedrock (+ Converse), Anthropic, Azure OpenAI, Google Gemini,
+    Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI, OpenRouter,
+    RunGPT, and Runpod Serverless (OpenAI-compatible).
     """
 
     completion_model = info.name
@@ -193,6 +204,10 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
         )
     elif info.provider is ModelProvider.ANTHROPIC:
         from llama_index.llms.anthropic import Anthropic
+        from llama_index.llms.anthropic.utils import CLAUDE_MODELS
+
+        # TODO: Add new model types to upstream `llama-index-llms-anthropic`.
+        CLAUDE_MODELS.update({"claude-opus-4-7": 200000, "claude-sonnet-4-6": 1000000, "claude-haiku-4-5": 200000})
 
         llm = Anthropic(
             model=completion_model,
@@ -292,6 +307,8 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
 
         if not info.name:
             raise ValueError("LLM model name is required")
+        if not info.endpoint:
+            raise ValueError("Runpod serverless endpoint is required")
 
         llm = OpenAILike(
             model=info.name,

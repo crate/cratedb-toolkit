@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.query.nlsql.api import DataQuery
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo
-from cratedb_toolkit.query.nlsql.util import read_llm_options
 from cratedb_toolkit.util.common import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -55,6 +54,8 @@ def llm_cli(
     """
     Use an LLM to query a database in human language.
     """
+    from cratedb_toolkit.query.nlsql.util import read_llm_options
+
     setup_logging()
     load_dotenv()
 

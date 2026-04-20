@@ -36,7 +36,7 @@ export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=huggingface_api
-export HUGGING_FACE_TOKEN=<YOUR_HUGGINGFACE_API_TOKEN>
+export HF_TOKEN=<YOUR_HUGGINGFACE_API_TOKEN>
 ```
 
 ```shell
@@ -61,24 +61,26 @@ ollama pull qwen3:0.6b   # 520 MB
 ```shell
 export LLM_PROVIDER=openrouter
 export LLM_NAME=google/gemma-3-4b-it:free
-export LLM_NAME=google/gemma-3n-e2b-it:free
-export LLM_NAME=google/gemini-2.0-flash-lite-001
-export LLM_NAME=google/gemini-2.5-flash-lite
-export LLM_NAME=gryphe/mythomax-l2-13b
-export LLM_NAME=ibm-granite/granite-4.0-h-micro
-export LLM_NAME=liquid/lfm-2.5-1.2b-instruct:free
-export LLM_NAME=meta-llama/llama-3.2-3b-instruct
-export LLM_NAME=mistralai/mistral-nemo
-export LLM_NAME=mistralai/mistral-small-24b-instruct-2501
-export LLM_NAME=openai/gpt-oss-20b:free
-export LLM_NAME=openai/gpt-oss-120b:free
-export OPENROUTER_API_KEY=sk-or-v1-cf4a824865...
+# Alternative model names:
+# google/gemma-3n-e2b-it:free
+# google/gemini-2.0-flash-lite-001
+# google/gemini-2.5-flash-lite
+# gryphe/mythomax-l2-13b
+# ibm-granite/granite-4.0-h-micro
+# liquid/lfm-2.5-1.2b-instruct:free
+# meta-llama/llama-3.2-3b-instruct
+# mistralai/mistral-nemo
+# mistralai/mistral-small-24b-instruct-2501
+# openai/gpt-oss-20b:free
+# openai/gpt-oss-120b:free
+export OPENROUTER_API_KEY=<YOUR_OPENROUTER_API_KEY>
 ```
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=runpod_serverless
-export LLM_ENDPOINT="https://api.runpod.ai/v2/xegmy5drf9glbv/openai/v1"
+export LLM_ENDPOINT="https://api.runpod.ai/v2/<YOUR_RUNPOD_ENDPOINT_ID>/openai/v1"
+export RUNPOD_API_KEY=<YOUR_RUNPOD_API_KEY>
 ```
 
 ```shell
@@ -94,8 +96,7 @@ wget https://huggingface.co/mozilla-ai/llamafile_0.10.0/resolve/main/Qwen3.5-0.8
 ```
 ```shell
 wget "https://github.com/mozilla-ai/llamafile/releases/download/0.10.0/llamafile-0.10.0"
-wget "wget https://huggingface.co/Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF/resolve/main/Qwen-3-4b-
-Text_to_SQL-q2_k.gguf?download=true"
+wget "https://huggingface.co/Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF/resolve/main/Qwen-3-4b-Text_to_SQL-q2_k.gguf?download=true"
 ```
 
 ```shell
@@ -146,7 +147,7 @@ dataquery = DataQuery(
 # Use Zephyr via Hugging Face API.
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.HUGGINGFACE_API, name="zephyr-7b-alpha"),
+    model=ModelInfo(provider=ModelProvider.HUGGINGFACE_API, name="HuggingFaceH4/zephyr-7b-alpha"),
 )
 
 # Use Mistral Medium.
@@ -161,8 +162,8 @@ dataquery = DataQuery(
     model=ModelInfo(
         provider=ModelProvider.RUNPOD_SERVERLESS,
         name="gemma3:270m",
-        endpoint="https://api.runpod.ai/v2/xegmy5drf9glbv/openai/v1",
-        api_key="rpa_A81R2ODATWL....",
+        endpoint="https://api.runpod.ai/v2/<YOUR_RUNPOD_ENDPOINT_ID>/openai/v1",
+        api_key="<YOUR_RUNPOD_API_KEY>",
     ),
 )
 
