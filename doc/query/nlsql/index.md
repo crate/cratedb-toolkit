@@ -18,6 +18,11 @@ export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
+export LLM_PROVIDER=amazon_bedrock_converse
+```
+
+```shell
+export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=anthropic
 export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
 ```
@@ -84,6 +89,12 @@ schema = "doc"
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OPENAI, name="gpt-4.1"),
+)
+
+# Use Amazon Nova on Bedrock Converse.
+dataquery = DataQuery(
+    db=DatabaseInfo(engine=engine, schema=schema),
+    model=ModelInfo(provider=ModelProvider.AMAZON_BEDROCK_CONVERSE, name="global.amazon.nova-2-lite-v1:0"),
 )
 
 # Use Anthropic Claude Sonnet.
@@ -167,5 +178,5 @@ on PyPI prefixed with `llama-index-llms-`.
 Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,vllm
 API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
 API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
-Router: bedrock,bedrock-converse,cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud,rungpt
+Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud,rungpt
 More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF

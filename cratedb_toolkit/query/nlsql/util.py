@@ -9,6 +9,8 @@ from llama_index.core.embeddings.utils import EmbedType
 from llama_index.core.llms import LLM
 from llama_index.llms.anthropic import Anthropic
 from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.llms.bedrock import Bedrock
+from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.llms.llamafile import Llamafile
 from llama_index.llms.mistralai import MistralAI
@@ -92,6 +94,20 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             temperature=0.0,
             request_timeout=120.0,
             keep_alive=-1,
+        )
+    elif info.provider is ModelProvider.AMAZON_BEDROCK:
+        from llama_index.llms.bedrock_converse.utils import bedrock_modelname_to_context_size
+
+        llm = Bedrock(
+            model=completion_model,
+            temperature=0.0,
+            context_size=bedrock_modelname_to_context_size(completion_model),
+        )
+    elif info.provider is ModelProvider.AMAZON_BEDROCK_CONVERSE:
+        llm = BedrockConverse(
+            model=completion_model,
+            temperature=0.0,
+            region_name="us-east-1",
         )
     elif info.provider is ModelProvider.ANTHROPIC:
         llm = Anthropic(

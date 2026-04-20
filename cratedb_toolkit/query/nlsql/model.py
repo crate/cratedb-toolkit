@@ -10,6 +10,8 @@ class ModelProvider(Enum):
     """Model provider choices."""
 
     OPENAI = "openai"
+    AMAZON_BEDROCK = "amazon_bedrock"
+    AMAZON_BEDROCK_CONVERSE = "amazon_bedrock_converse"
     ANTHROPIC = "anthropic"
     AZURE = "azure"
     GOOGLE = "google"
@@ -46,6 +48,15 @@ class ModelInfo:
                 llm_name = "gpt-4.1"
             elif provider in [ModelProvider.OLLAMA]:
                 llm_name = "gemma3:1b"
+
+            # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+            elif provider in [ModelProvider.AMAZON_BEDROCK]:
+                llm_name = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+            elif provider in [ModelProvider.AMAZON_BEDROCK_CONVERSE]:
+                # llm_name = "amazon.nova-micro-v1:0"  # noqa: ERA001
+                llm_name = "global.amazon.nova-2-lite-v1:0"
+                # llm_name = "global.anthropic.claude-haiku-4-5-20251001-v1:0"  # noqa: ERA001
+
             elif provider in [ModelProvider.ANTHROPIC]:
                 llm_name = "claude-sonnet-4-0"
             elif provider in [ModelProvider.MISTRAL]:
