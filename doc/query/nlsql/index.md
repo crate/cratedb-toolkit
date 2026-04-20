@@ -59,6 +59,23 @@ ollama pull qwen3:0.6b   # 520 MB
 ```
 
 ```shell
+export LLM_PROVIDER=openrouter
+export LLM_NAME=google/gemma-3-4b-it:free
+export LLM_NAME=google/gemma-3n-e2b-it:free
+export LLM_NAME=google/gemini-2.0-flash-lite-001
+export LLM_NAME=google/gemini-2.5-flash-lite
+export LLM_NAME=gryphe/mythomax-l2-13b
+export LLM_NAME=ibm-granite/granite-4.0-h-micro
+export LLM_NAME=liquid/lfm-2.5-1.2b-instruct:free
+export LLM_NAME=meta-llama/llama-3.2-3b-instruct
+export LLM_NAME=mistralai/mistral-nemo
+export LLM_NAME=mistralai/mistral-small-24b-instruct-2501
+export LLM_NAME=openai/gpt-oss-20b:free
+export LLM_NAME=openai/gpt-oss-120b:free
+export OPENROUTER_API_KEY=sk-or-v1-cf4a824865...
+```
+
+```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
 export LLM_PROVIDER=runpod_serverless
 export LLM_ENDPOINT="https://api.runpod.ai/v2/xegmy5drf9glbv/openai/v1"
@@ -197,8 +214,8 @@ Answer: The average value for sensor 1 is approximately 17.03.
 LlamaIndex provides access to many LLM models via Python packages available
 on PyPI prefixed with `llama-index-llms-`.
 
-Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,rungpt,vllm
-API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
-API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
-Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud
-More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF
+- Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,rungpt,vllm
+- API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
+- API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
+- Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,ovhcloud
+- More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF

@@ -234,6 +234,7 @@ optional-dependencies.nlsql = [
   "llama-index-llms-ollama<0.11; python_version>='3.10'",
   "llama-index-llms-openai<0.8; python_version>='3.10'",
   "llama-index-llms-openai-like<0.8; python_version>='3.10'",
+  "llama-index-llms-openrouter<0.6; python_version>='3.10'",
   "llama-index-llms-rungpt<0.6; python_version>='3.10'",
   "mistralai<2",
 ]

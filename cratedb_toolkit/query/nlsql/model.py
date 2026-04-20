@@ -18,6 +18,7 @@ class ModelProvider(Enum):
     LLAMAFILE = "llamafile"
     MISTRAL = "mistral"
     OLLAMA = "ollama"
+    OPENROUTER = "openrouter"
     RUNGPT = "rungpt"
     RUNPOD_SERVERLESS = "runpod_serverless"
 
@@ -27,7 +28,7 @@ class ModelInfo:
     """Information about the model."""
 
     provider: ModelProvider
-    name: str
+    name: Optional[str] = None
     endpoint: Optional[str] = None
     instance: Optional[str] = None
     api_key: Optional[str] = None

@@ -53,6 +53,7 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",
     ModelProvider.OLLAMA: "gemma3:1b",
     ModelProvider.OPENAI: "gpt-4.1",
+    ModelProvider.OPENROUTER: "google/gemma-3-4b-it:free",  # Default: "gryphe/mythomax-l2-13b" as of 2026-04
     ModelProvider.LLAMAFILE: "n/a",
     ModelProvider.MISTRAL: "mistral-medium-latest",
     ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",
@@ -83,8 +84,6 @@ def read_llm_options(
 
     if not llm_name:
         llm_name = DEFAULT_MODEL_MAP.get(provider)
-        if not llm_name:
-            raise ValueError("LLM completion model name is required")
 
     if provider is ModelProvider.ANTHROPIC:
         llm_api_key = llm_api_key or os.getenv("ANTHROPIC_API_KEY")
@@ -133,6 +132,12 @@ def read_llm_options(
         if not llm_api_key:
             raise ValueError(
                 "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
+            )
+    elif provider is ModelProvider.OPENROUTER:
+        llm_api_key = llm_api_key or os.getenv("OPENROUTER_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or OPENROUTER_API_KEY environment variable."
             )
     elif provider is ModelProvider.RUNPOD_SERVERLESS:
         llm_api_key = llm_api_key or os.getenv("RUNPOD_API_KEY")
@@ -265,6 +270,15 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             api_key=info.api_key,
             api_version=info.api_version,
         )
+    elif info.provider is ModelProvider.OPENROUTER:
+        from llama_index.llms.openrouter.base import DEFAULT_API_BASE, DEFAULT_MODEL, OpenRouter
+
+        llm = OpenRouter(
+            model=completion_model or DEFAULT_MODEL,
+            temperature=0.0,
+            api_base=info.endpoint or DEFAULT_API_BASE,
+            api_key=info.api_key,
+        )
     elif info.provider is ModelProvider.RUNGPT:
         from llama_index.llms.rungpt import RunGptLLM
 
@@ -275,6 +289,9 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
         )
     elif info.provider is ModelProvider.RUNPOD_SERVERLESS:
         from llama_index.llms.openai_like import OpenAILike
+
+        if not info.name:
+            raise ValueError("LLM model name is required")
 
         llm = OpenAILike(
             model=info.name,
