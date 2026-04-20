@@ -230,9 +230,9 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
         )
 
     elif info.provider is ModelProvider.GOOGLE:
-        from llama_index.llms.gemini import Gemini
+        from llama_index.llms.google_genai import GoogleGenAI
 
-        llm = Gemini(
+        llm = GoogleGenAI(
             model=completion_model,
             temperature=0.0,
             base_url=info.endpoint,
