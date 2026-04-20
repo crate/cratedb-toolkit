@@ -56,7 +56,7 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.GOOGLE: "gemini-2.5-flash",  # TODO: Not evaluated yet.
     ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not evaluated yet.
     ModelProvider.OLLAMA: "gemma3:1b",
-    ModelProvider.OPENAI: "gpt-4.1",
+    ModelProvider.OPENAI: "gpt-4o-mini",
     ModelProvider.OPENROUTER: "google/gemma-3-4b-it:free",  # Default: "gryphe/mythomax-l2-13b" as of 2026-04
     ModelProvider.LLAMAFILE: "n/a",
     ModelProvider.MISTRAL: "mistral-medium-latest",  # TODO: Not evaluated yet.

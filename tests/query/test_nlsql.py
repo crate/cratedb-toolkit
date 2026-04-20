@@ -52,6 +52,7 @@ def test_query_nlsql_openai(cratedb, provision_db):
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
             "CRATEDB_SCHEMA": "testdrive",
             "LLM_PROVIDER": "openai",
+            "LLM_NAME": "gpt-4o-mini",
         }
     )
 
@@ -64,7 +65,11 @@ def test_query_nlsql_openai(cratedb, provision_db):
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
     assert output["answer"] == "The average value for sensor 1 is approximately 17.03."
-    assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1"
+    assert output["sql_query"] in [
+        "SELECT AVG(time_series_data.value) AS average_value "
+        "FROM time_series_data WHERE time_series_data.sensor_id = 1;",
+        "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1",
+    ]
 
 
 @pytest.mark.skipif("ANTHROPIC_API_KEY" not in os.environ, reason="ANTHROPIC_API_KEY not set")
@@ -78,6 +83,7 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
             "CRATEDB_SCHEMA": "testdrive",
             "LLM_PROVIDER": "anthropic",
+            "LLM_NAME": "claude-haiku-4-5",
         }
     )
 
@@ -89,5 +95,5 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
     )
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
-    assert "the average value for sensor 1 is approximately **17.03**" in output["answer"]
-    assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1;"
+    assert "The average value for sensor 1 is **17.03**" in output["answer"]
+    assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1"
