@@ -52,15 +52,15 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.amazon.nova-2-lite-v1:0",
     # ModelProvider.AMAZON_BEDROCK_CONVERSE: "global.anthropic.claude-haiku-4-5-20251001-v1:0",  # noqa: ERA001
     ModelProvider.ANTHROPIC: "claude-haiku-4-5",
-    ModelProvider.AZURE: "gpt-4.1",  # TODO: Not evaluated yet.
-    ModelProvider.GOOGLE: "gemini-2.5-flash",  # TODO: Not evaluated yet.
-    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not evaluated yet.
+    ModelProvider.AZURE: "gpt-4.1",  # TODO: Not validated yet.
+    ModelProvider.GOOGLE: "gemini-2.5-flash",  # TODO: Not validated yet.
+    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not validated yet.
     ModelProvider.OLLAMA: "gemma3:1b",
     ModelProvider.OPENAI: "gpt-4o-mini",
-    ModelProvider.OPENROUTER: "google/gemma-3-4b-it:free",  # Default: "gryphe/mythomax-l2-13b" as of 2026-04
-    ModelProvider.LLAMAFILE: "n/a",
-    ModelProvider.MISTRAL: "mistral-medium-latest",  # TODO: Not evaluated yet.
-    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",  # TODO: Not evaluated yet.
+    ModelProvider.OPENROUTER: "gryphe/mythomax-l2-13b",
+    ModelProvider.LLAMAFILE: "n/a",  # Only one model per process.
+    ModelProvider.MISTRAL: "mistral-medium-latest",  # TODO: Not validated yet.
+    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",  # TODO: Not validated yet.
     ModelProvider.RUNPOD_SERVERLESS: "gemma3:270m",
 }
 

@@ -1,8 +1,10 @@
 import dataclasses
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union, cast
 
 import sqlalchemy as sa
+import sqlalchemy.event
+from sqlalchemy_cratedb.support import quote_relation_name
 
 
 class ModelProvider(Enum):
@@ -39,7 +41,32 @@ class ModelInfo:
 class DatabaseInfo:
     """Information about the database."""
 
-    engine: sa.engine.Engine
+    dburi: Optional[str] = None
+    engine: Optional[sa.engine.Engine] = None
     schema: Optional[str] = None
     ignore_tables: Optional[List[str]] = None
     include_tables: Optional[List[str]] = None
+
+    def setup(self):
+        """Set up SQLAlchemy engine and schema."""
+
+        if self.engine is None:
+            if self.dburi is None:
+                raise ValueError("Either SQLAlchemy connection URL or database engine object required")
+            self.engine = sa.create_engine(self.dburi, echo=False)
+
+        def receive_engine_connect(conn):
+            """Configure search path."""
+            if self.schema is not None:
+                conn.execute(sa.text(f"SET search_path={quote_relation_name(self.schema)};"))
+                conn.commit()
+
+        sqlalchemy.event.listen(self.engine, "engine_connect", receive_engine_connect)
+
+    def get_engine(self) -> sa.engine.Engine:
+        """Return SQLAlchemy engine object."""
+        return cast(sa.engine.Engine, self.engine)
+
+    def get_schema(self) -> Union[str, None]:
+        """Return database schema."""
+        return self.schema and quote_relation_name(self.schema) or None

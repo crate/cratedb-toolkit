@@ -7,10 +7,10 @@ from typing import Optional
 import click
 from dotenv import load_dotenv
 
-from cratedb_toolkit import DatabaseCluster
 from cratedb_toolkit.query.nlsql.api import DataQuery
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo
 from cratedb_toolkit.util.common import setup_logging
+from cratedb_toolkit.util.data import asbool
 
 logger = logging.getLogger(__name__)
 
@@ -64,15 +64,15 @@ def llm_cli(
         question = sys.stdin.read().strip()
 
     schema = schema or os.getenv("CRATEDB_SCHEMA") or "doc"
+    permit_all_statements = asbool(os.getenv("NLSQL_PERMIT_ALL_STATEMENTS"))
 
     # Connect to database and configure LLM.
-    dc = DatabaseCluster.from_options(ctx.meta["address"])
-    engine = dc.adapter.engine
+    dburi = ctx.meta["address"].cluster_url
 
     # Configure natural language query machinery.
     dataquery = DataQuery(
         db=DatabaseInfo(
-            engine=engine,
+            dburi=dburi,
             schema=schema,
         ),
         model=read_llm_options(
@@ -83,6 +83,7 @@ def llm_cli(
             llm_api_key=llm_api_key,
             llm_api_version=llm_api_version,
         ),
+        permit_all_statements=permit_all_statements,
     )
 
     # Submit query.

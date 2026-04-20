@@ -3,6 +3,7 @@ Use an LLM to query a database in human language via NLSQLTableQueryEngine.
 Example code using LlamaIndex with vanilla Open AI, Azure Open AI, or Ollama.
 """
 
+import contextlib
 import dataclasses
 import logging
 from typing import Optional
@@ -45,6 +46,7 @@ class DataQuery:
     db: DatabaseInfo
     model: ModelInfo
     query_engine: Optional["NLSQLTableQueryEngine"] = None
+    permit_all_statements: bool = False
 
     def __post_init__(self):
         if self.query_engine is None:
@@ -64,11 +66,14 @@ class DataQuery:
         llm: LLM = configure_llm(self.model)
         logger.info("Selected LLM: %s", llm.metadata.model_dump_json())
 
-        # Configure query engine.
+        # Configure database.
+        self.db.setup()
+
+        # Configure NLSQL query engine.
         logger.info("Creating query engine")
         sql_database = SQLDatabase(
-            self.db.engine,
-            schema=self.db.schema,
+            self.db.get_engine(),
+            schema=self.db.get_schema(),
             ignore_tables=self.db.ignore_tables,
             include_tables=self.db.include_tables,
         )
@@ -80,6 +85,13 @@ class DataQuery:
 
     def ask(self, question: str) -> "RESPONSE_TYPE":
         """Invoke an inquiry to the LLM."""
+        from cratedb_toolkit.query.nlsql.sqlgate import enable_sql_gateway
+
         if not self.query_engine:
             raise ValueError("Query engine not configured")
-        return self.query_engine.query(question)
+        if self.permit_all_statements:
+            sql_gateway = contextlib.nullcontext
+        else:
+            sql_gateway = enable_sql_gateway
+        with sql_gateway():
+            return self.query_engine.query(question)

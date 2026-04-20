@@ -7,24 +7,37 @@ from click.testing import CliRunner
 
 from cratedb_toolkit.query.cli import cli
 
+TESTDRIVE_DATA_SCHEMA = "testdrive"
+
+
 pytestmark = pytest.mark.nlsql
 
 if sys.version_info < (3, 10):
     pytest.skip("Only available for Python 3.10+", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def reset_environment():
+    """
+    Reset environment variables.
+    """
+    envvars = ["NLSQL_PERMIT_ALL_STATEMENTS"]
+    for envvar in envvars:
+        os.environ.pop(envvar, None)
+
+
 @pytest.fixture
 def provision_db(cratedb):
-    sql_ddl = """
-CREATE TABLE testdrive.time_series_data (
+    sql_ddl = f"""
+CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}".time_series_data (
     timestamp TIMESTAMP,
     value DOUBLE,
     location STRING,
     sensor_id INT
 );
 """
-    sql_dml = """
-INSERT INTO testdrive.time_series_data (timestamp, value, location, sensor_id)
+    sql_dml = f"""
+INSERT INTO "{TESTDRIVE_DATA_SCHEMA}".time_series_data (timestamp, value, location, sensor_id)
 VALUES
     ('2023-09-14T00:00:00', 10.5, 'Sensor A', 1),
     ('2023-09-14T01:00:00', 15.2, 'Sensor A', 1),
@@ -38,9 +51,13 @@ VALUES
     ('2023-09-14T09:00:00', 14.6, 'Sensor B', 2),
     ('2023-09-14T10:00:00', 13.2, 'Sensor B', 2),
     ('2023-09-14T11:00:00', 11.7, 'Sensor B', 2);
+"""  # noqa: S608
+    sql_refresh = f"""
+REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}".time_series_data;
 """
     cratedb.database.run_sql(sql_ddl)
     cratedb.database.run_sql(sql_dml)
+    cratedb.database.run_sql(sql_refresh)
 
 
 @pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set")
@@ -53,7 +70,7 @@ def test_query_nlsql_openai(cratedb, provision_db):
     runner = CliRunner(
         env={
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": "testdrive",
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
             "LLM_PROVIDER": "openai",
             "LLM_NAME": "gpt-4o-mini",
         }
@@ -86,7 +103,7 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
     runner = CliRunner(
         env={
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": "testdrive",
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
             "LLM_PROVIDER": "anthropic",
             "LLM_NAME": "claude-haiku-4-5",
         }
@@ -105,16 +122,16 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
 
 
 @pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
-def test_query_nlsql_openrouter(cratedb, provision_db):
+def test_query_nlsql_openrouter_success(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...` with Gemma3 by Google via OpenRouter.
-    https://ai.google.dev/gemma/docs/core/model_card_3
+    Verify a successful NLSQL conversation with MythoMax via OpenRouter.
+    https://openrouter.ai/gryphe/mythomax-l2-13b
     """
 
     runner = CliRunner(
         env={
             "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": "testdrive",
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
             "LLM_PROVIDER": "openrouter",
             # "LLM_NAME": "google/gemma-3n-e4b-it:free",  # noqa: ERA001
             "LLM_NAME": "gryphe/mythomax-l2-13b",
@@ -131,3 +148,95 @@ def test_query_nlsql_openrouter(cratedb, provision_db):
     output = json.loads(result.output)
     assert "The average value for sensor 1 is 17.03" in output["answer"]
     assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;"
+
+
+@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+def test_query_nlsql_openrouter_rejected_drop(cratedb, provision_db):
+    """
+    Verify that malicious SQL statements are rejected.
+    https://openrouter.ai/gryphe/mythomax-l2-13b
+    """
+
+    runner = CliRunner(
+        env={
+            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
+            "LLM_PROVIDER": "openrouter",
+            "LLM_NAME": "gryphe/mythomax-l2-13b",
+        }
+    )
+
+    result = runner.invoke(
+        cli,
+        input="Please drop table 'time_series_data'.",
+        args="nlsql -",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    output = json.loads(result.output)
+    assert "has been rejected" in output["answer"]
+
+    # Verify that the table still exists.
+    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
+
+
+@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
+    """
+    Verify that malicious SQL statements are rejected.
+    https://openrouter.ai/gryphe/mythomax-l2-13b
+    """
+
+    runner = CliRunner(
+        env={
+            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
+            "LLM_PROVIDER": "openrouter",
+            "LLM_NAME": "gryphe/mythomax-l2-13b",
+        }
+    )
+
+    result = runner.invoke(
+        cli,
+        input="Please wipe the whole database.",
+        args="nlsql -",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    output = json.loads(result.output)
+    assert "not allowed" in output["answer"]
+
+    # Verify that the table still exists.
+    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
+
+
+@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+def test_query_nlsql_openrouter_permitted(cratedb, provision_db):
+    """
+    Verify that all SQL statements work when explicitly permitted.
+    https://openrouter.ai/gryphe/mythomax-l2-13b
+    """
+
+    runner = CliRunner(
+        env={
+            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
+            "LLM_PROVIDER": "openrouter",
+            "LLM_NAME": "gryphe/mythomax-l2-13b",
+            "NLSQL_PERMIT_ALL_STATEMENTS": "true",
+        }
+    )
+
+    result = runner.invoke(
+        cli,
+        input="Please drop table 'time_series_data'.",
+        args="nlsql -",
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.output
+    output = json.loads(result.output)
+    assert "has been dropped successfully" in output["answer"]
+    assert output["sql_query"] == "DROP TABLE time_series_data;"
+
+    # Verify that the table has been dropped.
+    assert not cratedb.database.table_exists("testdrive.time_series_data"), "Table still exists: time_series_data"
