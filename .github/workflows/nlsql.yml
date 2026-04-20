@@ -1,15 +1,25 @@
 ---
-name: "Tests: Main"
+name: "Tests: NLSQL"
 
 on:
   pull_request:
+    paths:
+    - '.github/workflows/nlsql.yml'
+    - 'cratedb_toolkit/query/nlsql/**'
+    - 'tests/query/*nlsql*'
+    - 'pyproject.toml'
   push:
     branches: [ main ]
+    paths:
+    - '.github/workflows/nlsql.yml'
+    - 'cratedb_toolkit/query/nlsql/**'
+    - 'tests/query/*nlsql*'
+    - 'pyproject.toml'
 
   # Allow job to be triggered manually.
   workflow_dispatch:
 
-  # Run job each night after CrateDB nightly has been published.
+  # Run the job each night after CrateDB nightly has been published.
   schedule:
     - cron: '0 3 * * *'
 
@@ -28,7 +38,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: [
-          "3.9",
+          "3.10",
           "3.14",
         ]
 
@@ -37,22 +47,15 @@ jobs:
       PYTHON: ${{ matrix.python-version }}
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
-    # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
-    services:
-      cratedb:
-        image: crate/crate:nightly
-        ports:
-          - 4200:4200
-          - 5432:5432
 
-    name: "Python ${{ matrix.python-version }} on OS ${{ matrix.os }}"
+    name: Python ${{ matrix.python-version }} on OS ${{ matrix.os }}
     steps:
 
     - name: Acquire sources
       uses: actions/checkout@v6
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v8.1.0
+      uses: astral-sh/setup-uv@v7
       with:
         activate-environment: 'true'
         cache-suffix: ${{ matrix.python-version }}
@@ -61,29 +64,20 @@ jobs:
 
     - name: Set up project
       run: |
-
-        # Install sponge.
-        sudo apt-get install moreutils
-        # More
-        uv pip install pip
-
         # Install package in editable mode.
-        uv pip install --editable='.[full,test,develop]'
+        uv pip install --editable='.[nlsql,test]'
 
-    - name: Run linter and software tests
+    - name: Run software tests
       env:
-        KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-        KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: |
-        poe check
+        pytest -m nlsql
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v6
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
-        files: ./coverage.xml
-        flags: main
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
         fail_ci_if_error: true

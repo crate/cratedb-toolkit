@@ -19,9 +19,10 @@
 
 [![ci-main][ci-main-badge]][ci-main-workflow]
 [![ci-cloud][ci-cloud-badge]][ci-cloud-workflow]
+[![ci-nlsql][ci-nlsql-badge]][ci-nlsql-workflow]
+
 [![ci-dynamodb][ci-dynamodb-badge]][ci-dynamodb-workflow]
 [![ci-influxdb][ci-influxdb-badge]][ci-influxdb-workflow]
-
 [![ci-kinesis][ci-kinesis-badge]][ci-kinesis-workflow]
 [![ci-mongodb][ci-mongodb-badge]][ci-mongodb-workflow]
 [![ci-postgresql][ci-postgresql-badge]][ci-postgresql-workflow]
@@ -99,6 +100,8 @@ pip install 'cratedb-toolkit[full]==0.0.38'
 [ci-kinesis-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/kinesis.yml
 [ci-mongodb-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/mongodb.yml/badge.svg
 [ci-mongodb-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/mongodb.yml
+[ci-nlsql-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/nlsql.yml/badge.svg
+[ci-nlsql-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/nlsql.yml
 [ci-postgresql-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml/badge.svg
 [ci-postgresql-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml
 [ci-pymongo-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/pymongo.yml/badge.svg

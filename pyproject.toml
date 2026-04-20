@@ -396,6 +396,7 @@ ini_options.markers = [
   "influxdb",
   "kinesis",
   "mongodb",
+  "nlsql",
   "postgresql",
   "pymongo",
   "python",

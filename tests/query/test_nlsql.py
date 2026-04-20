@@ -7,6 +7,8 @@ from click.testing import CliRunner
 
 from cratedb_toolkit.query.cli import cli
 
+pytestmark = pytest.mark.nlsql
+
 if sys.version_info < (3, 10):
     pytest.skip("Only available for Python 3.10+", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
@@ -44,7 +46,8 @@ VALUES
 @pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set")
 def test_query_nlsql_openai(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...` with Open AI.
+    Verify `ctk query nlsql ...` with GPT‑4o mini by Open AI.
+    https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/
     """
 
     runner = CliRunner(
@@ -68,6 +71,7 @@ def test_query_nlsql_openai(cratedb, provision_db):
     assert output["sql_query"] in [
         "SELECT AVG(time_series_data.value) AS average_value "
         "FROM time_series_data WHERE time_series_data.sensor_id = 1;",
+        "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1;",
         "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1",
     ]
 
@@ -75,7 +79,8 @@ def test_query_nlsql_openai(cratedb, provision_db):
 @pytest.mark.skipif("ANTHROPIC_API_KEY" not in os.environ, reason="ANTHROPIC_API_KEY not set")
 def test_query_nlsql_anthropic(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...` with Anthropic.
+    Verify `ctk query nlsql ...` with Claude Haiku 4.5 by Anthropic.
+    https://www.anthropic.com/claude/haiku
     """
 
     runner = CliRunner(
