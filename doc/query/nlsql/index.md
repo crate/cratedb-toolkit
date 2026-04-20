@@ -1,7 +1,5 @@
 # Text-to-SQL query adapter
 
-
-
 ## Install
 
 ```shell
@@ -48,7 +46,11 @@ export LLM_PROVIDER=ollama
 export LLM_ENDPOINT="http://100.83.17.54:11434/"
 ```
 ```shell
-ollama pull gemma3:1b
+ollama pull gemma3:270m  # 290 MB
+ollama pull gemma3:1b    # 820 MB
+ollama pull llama3.2:1b  # 1.3 GB
+ollama pull qwen2.5:0.5b # 400 MB
+ollama pull qwen3:0.6b   # 520 MB
 ```
 
 ### API
@@ -134,3 +136,19 @@ ctk query nlsql "What is the average value for sensor 1?"
 ```text
 Answer: The average value for sensor 1 is approximately 17.03.
 ```
+
+## Local inference
+
+:Llama-3.2-1B-Instruct: License LLaMA 3.2, Size 1.1 GB
+:Qwen3.5-0.8B: License Apache 2.0, Size 1.6 GB
+
+## Backlog
+
+LlamaIndex provides access to many LLM models via Python packages available
+on PyPI prefixed with `llama-index-llms-`.
+
+Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,vllm
+API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
+API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
+Router: bedrock,bedrock-converse,cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,openrouter,ovhcloud,rungpt
+More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF

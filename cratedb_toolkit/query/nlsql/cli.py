@@ -91,7 +91,6 @@ def llm_cli(
             llm_api_version=llm_api_version,
         ),
     )
-    logger.info("Selected LLM: completion=%s", dataquery.model.name)
 
     # Submit query.
     response = dataquery.ask(question)

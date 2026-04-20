@@ -61,8 +61,9 @@ class DataQuery:
             ) from llama_index_import_error
 
         # Configure model.
-        logger.info("Configuring LLM model")
+        logger.info("Configuring LLM: provider=%s, name=%s", self.model.provider.name, self.model.name)
         llm: LLM = configure_llm(self.model)
+        logger.info("Selected LLM: %s", llm.metadata.model_dump_json())
 
         # Configure query engine.
         logger.info("Creating query engine")
