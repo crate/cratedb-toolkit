@@ -19,6 +19,7 @@ class ModelProvider(Enum):
     MISTRAL = "mistral"
     OLLAMA = "ollama"
     RUNGPT = "rungpt"
+    RUNPOD_SERVERLESS = "runpod_serverless"
 
 
 @dataclasses.dataclass

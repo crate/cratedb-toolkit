@@ -59,6 +59,12 @@ ollama pull qwen3:0.6b   # 520 MB
 ```
 
 ```shell
+export CRATEDB_CLUSTER_URL=crate://localhost/
+export LLM_PROVIDER=runpod_serverless
+export LLM_ENDPOINT="https://api.runpod.ai/v2/xegmy5drf9glbv/openai/v1"
+```
+
+```shell
 export CRATEDB_CLUSTER_URL=crate://localhost:4200/
 export LLM_PROVIDER=llamafile
 export LLM_ENDPOINT=http://localhost:8080/
@@ -130,6 +136,17 @@ dataquery = DataQuery(
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.MISTRAL, name="mistral-medium-latest"),
+)
+
+# Use Gemma3 on Runpod serverless.
+dataquery = DataQuery(
+    db=DatabaseInfo(engine=engine, schema=schema),
+    model=ModelInfo(
+        provider=ModelProvider.RUNPOD_SERVERLESS,
+        name="gemma3:270m",
+        endpoint="https://api.runpod.ai/v2/xegmy5drf9glbv/openai/v1",
+        api_key="rpa_A81R2ODATWL....",
+    ),
 )
 
 response = dataquery.ask("What is the average value for sensor 1?")

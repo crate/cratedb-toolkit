@@ -56,6 +56,7 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.LLAMAFILE: "n/a",
     ModelProvider.MISTRAL: "mistral-medium-latest",
     ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",
+    ModelProvider.RUNPOD_SERVERLESS: "gemma3:270m",
 }
 
 
@@ -132,6 +133,12 @@ def read_llm_options(
         if not llm_api_key:
             raise ValueError(
                 "LLM API key not defined. Use either CLI/API parameter or OPENAI_API_KEY environment variable."
+            )
+    elif provider is ModelProvider.RUNPOD_SERVERLESS:
+        llm_api_key = llm_api_key or os.getenv("RUNPOD_API_KEY")
+        if not llm_api_key:
+            raise ValueError(
+                "LLM API key not defined. Use either CLI/API parameter or RUNPOD_API_KEY environment variable."
             )
     return ModelInfo(
         provider=provider,
@@ -265,6 +272,15 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
             model=info.name,
             endpoint=info.endpoint or "localhost:51002",
             temperature=0.0,
+        )
+    elif info.provider is ModelProvider.RUNPOD_SERVERLESS:
+        from llama_index.llms.openai_like import OpenAILike
+
+        llm = OpenAILike(
+            model=info.name,
+            temperature=0.0,
+            api_base=info.endpoint,
+            api_key=info.api_key,
         )
     else:
         raise ValueError(f"LLM model provider not implemented: {info.provider}")
