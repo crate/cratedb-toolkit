@@ -1,53 +1,179 @@
-# Text-to-SQL query adapter
+(nlsql)=
+
+# Natural language (NLSQL)
+
+:::{div} sd-text-muted
+Talk to your data in natural language.
+:::
+
+The CrateDB NLSQL package helps agents turn natural language into database queries,
+like [Vanna AI] or Google's [QueryData] but tailored to CrateDB.
+
+## About
+
+NLSQL provides a straightforward way to turn natural language into executable
+SQL by combining an LLM with explicit database context. It positions itself as
+an execution layer for data agents: agents handle reasoning and orchestration,
+while the NLSQL layer reliably generates, checks, and runs SQL against
+databases, returning results for downstream actions.
+
+The trade-off is explicit: you shift effort from prompt tuning to context
+engineering and maintenance, but gain near-100% accuracy, stronger guardrails,
+and production reliability—especially for multistep or mission-critical
+workflows where probabilistic errors are unacceptable.
 
 ## Install
 
 ```shell
-uv pip install 'cratedb-toolkit[nlsql]'
+uv pip install --upgrade 'cratedb-toolkit[nlsql]'
 ```
+
+## Synopsis
+
+```shell
+ctk query nlsql \
+    --cluster-url="crate://crate@localhost:4200/?ssl=false" \
+    --llm-provider="<provider-name>" \
+    --llm-model="<model-name>" \
+    --llm-api-key="<your-api-key>" \
+    "What is the average value for sensor 1?"
+```
+
+## Coverage
+
+:::{rubric} Providers
+:::
+
+Supports a range of providers
+Amazon Bedrock (+ Converse), Anthropic, Azure OpenAI, Google AI,
+Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI,
+OpenRouter, RunGPT, or Runpod Serverless (OpenAI-compatible).
+
+:::{rubric} Models
+:::
+
+A wide range of models can be selected from the enumerated providers.
+We recommend Gemini, Gemma3, Llama 3.1, Qwen 2.5, or later,
+for example Gemma-3-1B, Llama-3.2-1B-Instruct, or Qwen3.5-0.8B.
+
+:::{rubric} Multiple languages
+:::
+
+> Q: What is the average value for sensor 1?
+>
+> A: The average value for sensor 1 is approximately 17.03.
+
+> Q: ¿Cuál es el valor medio del sensor 1?
+>
+> A: El valor medio del sensor 1 es 17.0333.
+
+> Q: Quelle est la valeur moyenne du capteur 1 ?
+>
+> A: La valeur moyenne du capteur 1 est de 17,0333.
+
+> Q: Wie lautet der Durchschnittswert für Sensor 1?
+>
+> A: Der Durchschnittswert für Sensor 1 beträgt 17,0333.
+
+> Q: Qual è il valore medio del sensore 1?
+>
+> A: Il valore medio del sensore 1 è pari a 17,0333.
+
+## Details
+
+NLSQL works by wrapping a SQL database and exposing a query interface where
+plain-language questions are translated into SQL, executed, and returned as
+answers. Developers configure the engine with a database connection and a
+bounded set of tables, ensuring the model generates queries only within a
+known schema and avoids context overflow.
+
+The procedure follows a schema-grounded approach: the engine injects table
+structure (and optionally examples or retrieved context) into the prompt so
+the LLM can synthesize accurate queries instead of guessing. It can also
+integrate with retrieval components to dynamically select relevant tables
+or augment prompts at query time for more complex setups.
+
+The engine acts as a thin orchestration layer for Text-to-SQL purposes,
+and for building NLSQL systems:
+it handles prompt construction, query generation, execution,
+and result formatting, while leaving control, safety (e.g., read-only
+roles), and schema design to the developer.
+
+## Security
+
+Any Text-to-SQL application should be aware that executing
+arbitrary SQL queries can be a security risk. It is recommended to
+take precautions as needed, such as using restricted roles, read-only
+databases, sandboxing, etc.
+
+While we recommend to use a dedicated read-only user/role to guarantee
+100% safety, CrateDB NLSQL also prevents [Prompt-to-SQL Injections] by
+default, by classifying the SQL statement and only permitting access
+for `SELECT` statements.
+
+The `permit_all_statements` API argument or the `NLSQL_PERMIT_ALL_STATEMENTS`
+environment variable can be used to relax that default when set to a boolean
+value, to allow all types of statements. Only enable this flag when you are
+sure about this behaviour.
 
 ## Usage
 
+You can use CrateDB NLSQL from the command line and as a Python API.
+
 ### CLI
 
+When using `ctk query nlsql` on the command line, we recommend to use
+environment variables to configure database and LLM connectivity.
+
+For connecting to CrateDB on localhost, use a connection string like this:
 ```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=openai
-export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+export CRATEDB_CLUSTER_URL="crate://crate:crate@localhost:4200/?ssl=false"
+```
+For connecting to CrateDB Cloud, use a connection string like this:
+```shell
+export CRATEDB_CLUSTER_URL="crate://admin:dZ...6LqB@example.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true"
 ```
 
+Configure LLM provider. Use one of amazon_bedrock, amazon_bedrock_converse,
+anthropic, azure, google, huggingface_api, llamafile, mistral, ollama,
+openai, openrouter, rungpt, runpod_serverless.
 ```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=amazon_bedrock_converse
+export LLM_PROVIDER="openai"
+```
+Configure LLM model. The label format depends on the provider's conventions.
+It is an optional configuration setting: By default, each provider will
+select a standard model that is suitable for Text-to-SQL, yet cost-effective.
+```shell
+export LLM_NAME="google/gemma-3-4b-it:free"
 ```
 
+To authenticate with LLM APIs, use corresponding environment variables like
+outlined below.
 ```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=anthropic
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+export OPENAI_API_KEY="<YOUR_OPENAI_API_KEY>"
+```
+```shell
+export ANTHROPIC_API_KEY="<YOUR_ANTHROPIC_API_KEY>"
+```
+```shell
+export GOOGLE_API_KEY="<YOUR_GOOGLE_API_KEY>"
+```
+```shell
+export HF_TOKEN="<YOUR_HUGGINGFACE_API_TOKEN>"
+```
+```shell
+export MISTRAL_API_KEY="<YOUR_MISTRAL_API_KEY>"
 ```
 
-```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=google
-export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
-```
+(llm-ollama)=
 
-```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=huggingface_api
-export HF_TOKEN=<YOUR_HUGGINGFACE_API_TOKEN>
-```
+:::{rubric} Ollama
+:::
 
+For connecting to dedicated LLM instances, use the `LLM_ENDPOINT` environment
+variable. For example, to connect to a self-managed Ollama instance:
 ```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=mistral
-export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>
-```
-
-```shell
-export CRATEDB_CLUSTER_URL=crate://localhost/
-export LLM_PROVIDER=ollama
+export LLM_PROVIDER="ollama"
 export LLM_ENDPOINT="http://100.83.17.54:11434/"
 ```
 ```shell
@@ -114,7 +240,7 @@ from cratedb_toolkit.query.nlsql.model import DatabaseInfo, ModelInfo, ModelProv
 engine = sa.create_engine("crate://")
 schema = "doc"
 
-# Use Open AI GPT-4.
+# Use OpenAI GPT-4.
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OPENAI, name="gpt-4.1"),
@@ -205,18 +331,7 @@ ctk query nlsql "What is the average value for sensor 1?"
 Answer: The average value for sensor 1 is approximately 17.03.
 ```
 
-## Local inference
 
-:Llama-3.2-1B-Instruct: License LLaMA 3.2, Size 1.1 GB
-:Qwen3.5-0.8B: License Apache 2.0, Size 1.6 GB
-
-## Backlog
-
-LlamaIndex provides access to many LLM models via Python packages available
-on PyPI prefixed with `llama-index-llms-`.
-
-- Inference: anyscale,llamafile,localai,mistral-rs,openllm,rapid-mlx,rungpt,vllm
-- API I: databricks,deepseek,huggingface,ibm,litellm,llama-api,llama-cpp,openai-like
-- API II: azure-inference,cortex,google-genai,grok,groq,meta,minimax,mlx,octoai,perplexity
-- Router: cloudflare-ai-gateway,featherlessai,modelscope,nano-gpt,neutrino,ovhcloud
-- More: Dolly, Pythia, Nano-GPT (litellm), DuckDB-NSQL, nsql-llama-2-7B, pip-sql-1.3b-GGUF, SQLCoder-7B, Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF
+[Prompt-to-SQL Injections]: https://syssec.dpss.inesc-id.pt/papers/pedro_icse25.pdf
+[QueryData]: https://cloud.google.com/blog/products/databases/introducing-querydata-for-near-100-percent-accurate-data-agents
+[Vanna AI]: https://vanna.ai/
