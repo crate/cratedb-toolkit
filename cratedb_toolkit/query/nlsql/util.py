@@ -1,24 +1,38 @@
 import contextlib
 import os
 import threading
-from typing import Optional
-
-from llama_index.core import MockEmbedding, set_global_handler, settings
-from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.callbacks import CallbackManager
-from llama_index.core.embeddings import utils
-from llama_index.core.embeddings.utils import EmbedType
-from llama_index.core.llms import LLM
+from typing import TYPE_CHECKING, Optional
 
 from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
+
+if TYPE_CHECKING:
+    from llama_index.core.base.embeddings.base import BaseEmbedding
+    from llama_index.core.callbacks import CallbackManager
+    from llama_index.core.embeddings import utils
+    from llama_index.core.embeddings.utils import EmbedType
+    from llama_index.core.llms import LLM
+
+llama_index_import_error: Optional[ImportError] = None
+
+try:
+    from llama_index.core import MockEmbedding, set_global_handler, settings
+    from llama_index.core.embeddings import utils
+except ImportError as exc:
+    llama_index_import_error = exc
+
+
+def ensure_llama_index() -> None:
+    if llama_index_import_error is not None:
+        raise ImportError("NLSQL support requires installing `cratedb-toolkit[nlsql]`") from llama_index_import_error
+
 
 _embedding_resolver_lock = threading.RLock()
 
 
 def _mock_embed_model(
-    embed_model: Optional[EmbedType] = None,
-    callback_manager: Optional[CallbackManager] = None,
-) -> BaseEmbedding:
+    embed_model: Optional["EmbedType"] = None,
+    callback_manager: Optional["CallbackManager"] = None,
+) -> "BaseEmbedding":
     """Stub that suppresses embedding resolution without print/side effects."""
     return MockEmbedding(embed_dim=1)
 
@@ -33,6 +47,7 @@ def disable_embeddings():
     manager replaces both resolution hooks with a no-op stub and guarantees
     the originals are restored on exit, even if an exception is raised.
     """
+    ensure_llama_index()
     with _embedding_resolver_lock:
         original_utils = utils.resolve_embed_model
         original_settings = settings.resolve_embed_model
@@ -164,7 +179,7 @@ def read_llm_options(
     )
 
 
-def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
+def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
     """
     Configure LLM inference, local or remote.
 
@@ -172,6 +187,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> LLM:
     Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI, OpenRouter,
     RunGPT, and Runpod Serverless (OpenAI-compatible).
     """
+    ensure_llama_index()
 
     completion_model = info.name
 

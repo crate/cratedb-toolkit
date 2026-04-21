@@ -91,4 +91,4 @@ def llm_cli(
     output = {"question": question, "answer": str(response)}
     if response.metadata:
         output.update(next(iter(response.metadata.values())))
-    print(json.dumps(output, indent=2), file=sys.stdout)  # noqa: T201
+    print(json.dumps(output, indent=2, default=str), file=sys.stdout)  # noqa: T201

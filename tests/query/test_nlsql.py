@@ -60,7 +60,7 @@ REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}".time_series_data;
     cratedb.database.run_sql(sql_refresh)
 
 
-@pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not defined")
 def test_query_nlsql_openai(cratedb, provision_db):
     """
     Verify `ctk query nlsql ...` with GPT‑4o mini by Open AI.
@@ -93,7 +93,7 @@ def test_query_nlsql_openai(cratedb, provision_db):
     ]
 
 
-@pytest.mark.skipif("ANTHROPIC_API_KEY" not in os.environ, reason="ANTHROPIC_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not defined")
 def test_query_nlsql_anthropic(cratedb, provision_db):
     """
     Verify `ctk query nlsql ...` with Claude Haiku 4.5 by Anthropic.
@@ -121,7 +121,7 @@ def test_query_nlsql_anthropic(cratedb, provision_db):
     assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1"
 
 
-@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
 def test_query_nlsql_openrouter_success(cratedb, provision_db):
     """
     Verify a successful NLSQL conversation with MythoMax via OpenRouter.
@@ -150,7 +150,7 @@ def test_query_nlsql_openrouter_success(cratedb, provision_db):
     assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;"
 
 
-@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
 def test_query_nlsql_openrouter_rejected_drop(cratedb, provision_db):
     """
     Verify that malicious SQL statements are rejected.
@@ -180,7 +180,7 @@ def test_query_nlsql_openrouter_rejected_drop(cratedb, provision_db):
     assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
 
 
-@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
 def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
     """
     Verify that malicious SQL statements are rejected.
@@ -210,7 +210,7 @@ def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
     assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
 
 
-@pytest.mark.skipif("OPENROUTER_API_KEY" not in os.environ, reason="OPENROUTER_API_KEY not set")
+@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
 def test_query_nlsql_openrouter_permitted(cratedb, provision_db):
     """
     Verify that all SQL statements work when explicitly permitted.

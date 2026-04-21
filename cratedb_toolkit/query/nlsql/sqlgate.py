@@ -54,9 +54,9 @@ def sql_is_permitted(expression: str) -> bool:
     """
     is_dql = SqlStatementClassifier(expression=expression).is_dql
     if is_dql:
-        logger.info(f"Permitted SQL expression: {expression and expression[:50]}...")
+        logger.info("Permitted SQL expression: %s", expression and expression[:50])
     else:
-        logger.warning(f"Denied SQL expression: {expression and expression[:50]}...")
+        logger.warning("Denied SQL expression: %s", expression and expression[:50])
     return is_dql
 
 

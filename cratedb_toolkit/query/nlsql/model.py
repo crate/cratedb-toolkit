@@ -69,4 +69,4 @@ class DatabaseInfo:
 
     def get_schema(self) -> Union[str, None]:
         """Return database schema."""
-        return self.schema and quote_relation_name(self.schema) or None
+        return quote_relation_name(self.schema) if self.schema else None
