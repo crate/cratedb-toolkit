@@ -6,11 +6,15 @@ orphan: true
 
 ## Iteration +1
 
-- Document `--include-tables`
+- Document `--include-tables`.
+- Use as agentic tool?
+- Exercise example that draws a table from database results.
+- Exercise example that draws a graph from database results.
 - Exercise example that uses time ranges.
 - Exercise example that needs SQL JOINs.
 - Exercise example that uses vector database features.
-- Is the machinery using pgvector-specific instructions that should be adjusted for CrateDB?
+- Is the machinery using pgvector-specific prompt instructions
+  that should be adjusted for CrateDB?
 
 ## Iteration +2
 

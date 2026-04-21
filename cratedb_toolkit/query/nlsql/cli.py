@@ -7,8 +7,14 @@ from typing import Optional
 import click
 from dotenv import load_dotenv
 
-from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_cluster_url, option_username, \
-    option_password, option_schema
+from cratedb_toolkit.option import (
+    option_cluster_id,
+    option_cluster_name,
+    option_cluster_url,
+    option_password,
+    option_schema,
+    option_username,
+)
 from cratedb_toolkit.query.nlsql.api import DataQuery
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo
 from cratedb_toolkit.util.common import setup_logging
