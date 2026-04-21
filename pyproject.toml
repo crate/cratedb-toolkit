@@ -157,7 +157,7 @@ optional-dependencies.docs = [
 ]
 optional-dependencies.docs-api = [
   "beautifulsoup4",
-  "rich>=3.3.2,<15",
+  "rich>=3.3.2,<16",
 ]
 optional-dependencies.dynamodb = [
   "boto3",
@@ -221,7 +221,7 @@ optional-dependencies.mongodb = [
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.17",
   "python-bsonjs<0.8",
-  "rich>=3.3.2,<15",
+  "rich>=3.3.2,<16",
   "undatum<1.2",
 ]
 optional-dependencies.pymongo = [
