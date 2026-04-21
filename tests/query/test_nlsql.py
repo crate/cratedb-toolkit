@@ -63,7 +63,7 @@ REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}".time_series_data;
 @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not defined")
 def test_query_nlsql_openai(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...` with GPT‑4o mini by Open AI.
+    Verify `ctk query nlsql ...` with GPT‑4o mini by OpenAI.
     https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/
     """
 

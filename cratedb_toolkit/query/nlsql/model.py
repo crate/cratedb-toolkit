@@ -10,7 +10,6 @@ from sqlalchemy_cratedb.support import quote_relation_name
 class ModelProvider(Enum):
     """Model provider choices."""
 
-    OPENAI = "openai"
     AMAZON_BEDROCK = "amazon_bedrock"
     AMAZON_BEDROCK_CONVERSE = "amazon_bedrock_converse"
     ANTHROPIC = "anthropic"
@@ -20,6 +19,7 @@ class ModelProvider(Enum):
     LLAMAFILE = "llamafile"
     MISTRAL = "mistral"
     OLLAMA = "ollama"
+    OPENAI = "openai"
     OPENROUTER = "openrouter"
     RUNGPT = "rungpt"
     RUNPOD_SERVERLESS = "runpod_serverless"

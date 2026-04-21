@@ -7,6 +7,8 @@ from typing import Optional
 import click
 from dotenv import load_dotenv
 
+from cratedb_toolkit.option import option_cluster_id, option_cluster_name, option_cluster_url, option_username, \
+    option_password, option_schema
 from cratedb_toolkit.query.nlsql.api import DataQuery
 from cratedb_toolkit.query.nlsql.model import DatabaseInfo
 from cratedb_toolkit.util.common import setup_logging
@@ -30,7 +32,12 @@ def help_llm():
 
 @click.command()
 @click.argument("question")
-@click.option("--schema", type=str, required=False, help="Database schema where to operate on")
+@option_cluster_id
+@option_cluster_name
+@option_cluster_url
+@option_username
+@option_password
+@option_schema
 @click.option("--llm-provider", type=str, required=False, help="LLM provider name")
 @click.option("--llm-endpoint", type=str, required=False, help="LLM endpoint URL")
 @click.option(
@@ -43,7 +50,12 @@ def help_llm():
 def llm_cli(
     ctx: click.Context,
     question: str,
-    schema: Optional[str],
+    cluster_id: str,
+    cluster_name: str,
+    cluster_url: str,
+    username: str,
+    password: str,
+    schema: str,
     llm_provider: Optional[str],
     llm_endpoint: Optional[str],
     llm_instance: Optional[str],
@@ -63,7 +75,7 @@ def llm_cli(
     if question == "-":
         question = sys.stdin.read().strip()
 
-    schema = schema or os.getenv("CRATEDB_SCHEMA") or "doc"
+    schema = schema or "doc"
     permit_all_statements = asbool(os.getenv("NLSQL_PERMIT_ALL_STATEMENTS"))
 
     # Connect to database and configure LLM.
