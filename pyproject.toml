@@ -242,7 +242,7 @@ optional-dependencies.release-cfr = [
 ]
 optional-dependencies.service = [
   "fastapi<0.137",
-  "uvicorn<0.45",
+  "uvicorn<0.46",
 ]
 optional-dependencies.settings = [
   "cratedb-toolkit[docs-api]",
