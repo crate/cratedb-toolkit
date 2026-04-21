@@ -1,6 +1,6 @@
 import dataclasses
 from enum import Enum
-from typing import List, Optional, Union, cast
+from typing import List, Optional, cast
 
 import sqlalchemy as sa
 import sqlalchemy.event
@@ -46,6 +46,7 @@ class DatabaseInfo:
     schema: Optional[str] = None
     ignore_tables: Optional[List[str]] = None
     include_tables: Optional[List[str]] = None
+    _listener_registered: bool = dataclasses.field(default=False, init=False, repr=False)
 
     def setup(self):
         """Set up SQLAlchemy engine and schema."""
@@ -61,12 +62,10 @@ class DatabaseInfo:
                 conn.execute(sa.text(f"SET search_path={quote_relation_name(self.schema)};"))
                 conn.commit()
 
-        sqlalchemy.event.listen(self.engine, "engine_connect", receive_engine_connect)
+        if not self._listener_registered:
+            sqlalchemy.event.listen(self.engine, "engine_connect", receive_engine_connect)
+            self._listener_registered = True
 
     def get_engine(self) -> sa.engine.Engine:
         """Return SQLAlchemy engine object."""
         return cast(sa.engine.Engine, self.engine)
-
-    def get_schema(self) -> Union[str, None]:
-        """Return database schema."""
-        return quote_relation_name(self.schema) if self.schema else None

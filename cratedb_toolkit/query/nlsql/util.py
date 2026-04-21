@@ -8,7 +8,6 @@ from cratedb_toolkit.query.nlsql.model import ModelInfo, ModelProvider
 if TYPE_CHECKING:
     from llama_index.core.base.embeddings.base import BaseEmbedding
     from llama_index.core.callbacks import CallbackManager
-    from llama_index.core.embeddings import utils
     from llama_index.core.embeddings.utils import EmbedType
     from llama_index.core.llms import LLM
 

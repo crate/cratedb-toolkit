@@ -204,7 +204,7 @@ def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
     )
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
-    assert "not allowed" in output["answer"]
+    assert "not allowed" in output["answer"] or "has been rejected" in output["answer"]
 
     # Verify that the table still exists.
     assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"

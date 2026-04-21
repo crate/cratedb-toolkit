@@ -34,7 +34,7 @@ uv pip install --upgrade 'cratedb-toolkit[nlsql]'
 ctk query nlsql \
     --cluster-url="crate://crate@localhost:4200/?ssl=false" \
     --llm-provider="<provider-name>" \
-    --llm-model="<model-name>" \
+    --llm-name="<model-name>" \
     --llm-api-key="<your-api-key>" \
     "What is the average value for sensor 1?"
 ```
@@ -44,7 +44,7 @@ ctk query nlsql \
 :::{rubric} Providers
 :::
 
-Supports a range of providers
+Supports a range of providers:
 Amazon Bedrock (+ Converse), Anthropic, Azure OpenAI, Google AI,
 Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI,
 OpenRouter, RunGPT, or Runpod Serverless (OpenAI-compatible).

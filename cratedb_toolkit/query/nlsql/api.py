@@ -68,11 +68,13 @@ class DataQuery:
         # Configure database.
         self.db.setup()
 
+        # schema = quote_relation_name(self.db.schema) if self.db.schema else None  # noqa: ERA001
+
         # Configure NLSQL query engine.
         logger.info("Creating query engine")
         sql_database = SQLDatabase(
             self.db.get_engine(),
-            schema=self.db.get_schema(),
+            schema=self.db.schema,
             ignore_tables=self.db.ignore_tables,
             include_tables=self.db.include_tables,
         )
