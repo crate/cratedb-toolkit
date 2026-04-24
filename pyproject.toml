@@ -130,7 +130,7 @@ optional-dependencies.cfr = [
 ]
 optional-dependencies.datasets = [
   "datasets<5",
-  "kaggle<2.1",
+  "kaggle<2.2",
 ]
 optional-dependencies.deltalake = [
   "cratedb-toolkit[io]",
