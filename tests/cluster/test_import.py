@@ -59,7 +59,7 @@ def test_parquet_import_remote(cloud_environment, caplog):
     assert result.exit_code == 0, f"ERROR: {result.output}"
 
     assert "Loading data." in caplog.text
-    assert "target=TableAddress(schema=None, table='basic')" in caplog.text
+    assert "target=TableAddress(schema=None, table='basic'" in caplog.text
     assert "Import succeeded (status: SUCCEEDED)" in caplog.text
 
     with ManagedCluster.from_env() as cluster:

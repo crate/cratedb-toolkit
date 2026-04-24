@@ -40,9 +40,10 @@ def polars_to_cratedb(frame: pl.LazyFrame, target_url, chunk_size: int) -> bool:
     """
     Write a Polars LazyFrame to a CrateDB table, in batches/chunks.
     """
-    cratedb_address = DatabaseAddress.from_string(target_url)
+    target_url_obj = URL(target_url)
+    if_exists = target_url_obj.query_params.pop("if-exists", "fail")
+    cratedb_address = DatabaseAddress.from_string(str(target_url_obj))
     cratedb_url, cratedb_table = cratedb_address.decode()
-    if_exists = URL(target_url).query_params.get("if-exists") or "fail"
     if cratedb_table.table is None:
         raise ValueError("Table name is missing. Please adjust CrateDB database URL.")
     logger.info("Target address: %s", cratedb_address)

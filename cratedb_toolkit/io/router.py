@@ -107,6 +107,19 @@ class IoRouter:
                     progress=True,
                 )
 
+        elif (
+            source_url_obj.scheme.startswith("csv")
+            or source_url_obj.scheme.endswith("csv")
+            or source_url_obj.path.endswith(".csv")
+        ):
+            from cratedb_toolkit.io.file.csv import from_csv
+
+            adjusted_url = str(source_url_obj)
+            if source_url_obj.scheme.startswith("csv"):
+                source_url_obj.scheme = None
+
+            return from_csv(adjusted_url, target_url)
+
         elif source_url_obj.scheme.startswith("deltalake") or source_url_obj.scheme.endswith("deltalake"):
             from cratedb_toolkit.io.deltalake import from_deltalake
 

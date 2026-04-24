@@ -142,6 +142,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         """
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
+        #       Connection.__init__() got an unexpected keyword argument 'table'
         return super()._create_connection_url(
             dialect=dialect,
             username=self.CRATEDB_USER,

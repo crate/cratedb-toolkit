@@ -202,6 +202,7 @@ optional-dependencies.io-opentable = [
   "cratedb-toolkit[deltalake,iceberg]",
 ]
 optional-dependencies.io-recipe = [
+  "macropipe[geo]==0.0.0",
   "tikray>=0.2,<0.4",
 ]
 optional-dependencies.kinesis = [
@@ -292,6 +293,7 @@ line-length = 120
 line-length = 120
 extend-exclude = [
   "amqp-to-mqtt.py",
+  "examples",
   "workbench.py",
 ]
 lint.select = [

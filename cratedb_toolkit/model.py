@@ -203,6 +203,17 @@ class DatabaseAddress:
         """
         return self.uri.query_params.get("schema") or self.uri.path.lstrip("/")
 
+    def with_table_address(self, table_address: "TableAddress") -> "DatabaseAddress":
+        cp = deepcopy(self)
+        cp.uri.path = f"/{table_address.schema}/{table_address.table}"
+        # Use `if-exists` from table address.
+        if table_address.if_exists:
+            cp.uri.query_params["if-exists"] = table_address.if_exists
+        # When not supplied, don't let existing spots leak.
+        else:
+            cp.uri.query_params.pop("if-exists", None)
+        return cp
+
 
 @dataclasses.dataclass
 class TableAddress:
@@ -212,6 +223,7 @@ class TableAddress:
 
     schema: t.Optional[str] = None
     table: t.Optional[str] = None
+    if_exists: t.Optional[str] = None
 
     def __bool__(self):
         return bool(self.table)
