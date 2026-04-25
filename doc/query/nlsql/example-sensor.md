@@ -1,12 +1,14 @@
 (nlsql-example-sensor)=
 
-# NLSQL sensor data example
+# NLSQL with sensor data
+
+Let's use a single `time_series_data` database table
+and populate it with a few records worth of time series data.
 
 :::{rubric} Provision
 :::
 
-Add data to the database. Let's use a very basic table schema and
-just a few records worth of time series data.
+Create table and insert data.
 
 ```sql
 CREATE TABLE IF NOT EXISTS time_series_data (
@@ -47,14 +49,14 @@ ctk query nlsql "What is the average value for sensor 1?"
 :::
 
 The model figures out the SQL statement, the engine runs it, and
-uses the model again to come back with an answer in human language.
-
-```sql
-SQL:    SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;
+uses the model again to come back with an answer in human language:
+```text
+The average value for sensor 1 is approximately 17.03.
 ```
 
-```text
-Answer: The average value for sensor 1 is approximately 17.03.
+The SQL statement was:
+```sql
+SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;
 ```
 
 :::{rubric} Multiple languages

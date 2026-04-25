@@ -27,6 +27,9 @@ orphan: true
 - Demonstrate Gemma3 on Bedrock
   - https://aws.amazon.com/bedrock/pricing/
   - https://github.com/run-llama/llama_index/pull/21380
+- Extract NLSQL from LlamaIndex into nlsql2?
+  - https://pypi.org/project/nlsql/
+  - https://pypi.org/project/nlsql-api/
 
 ## Iteration +3
 

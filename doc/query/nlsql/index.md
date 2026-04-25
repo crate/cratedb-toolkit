@@ -393,12 +393,19 @@ The {ref}`nlsql-example-sensor` demonstrates a basic database inquiry
 using the question »What is the average value for sensor 1?« to acquire
 information from a single table.
 
+{ref}`nlsql-example-employee`, {ref}`nlsql-example-product`, and
+{ref}`nlsql-example-weather` explore and demonstrate other kinds
+of query variants.
+
 
 ```{toctree}
 :maxdepth: 1
 :hidden:
 
+Employee data example <example-employee>
+Product orders example <example-product>
 Sensor data example <example-sensor>
+Weather data example <example-weather>
 ```
 
 
