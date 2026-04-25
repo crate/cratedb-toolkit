@@ -1,6 +1,6 @@
 import dataclasses
 from enum import Enum
-from typing import List, Optional, cast
+from typing import List, Optional
 
 import sqlalchemy as sa
 import sqlalchemy.event
@@ -67,4 +67,6 @@ class DatabaseInfo:
 
     def get_engine(self) -> sa.engine.Engine:
         """Return SQLAlchemy engine object."""
-        return cast(sa.engine.Engine, self.engine)
+        if self.engine is None:
+            raise RuntimeError("Engine is not configured. Call setup() first.")
+        return self.engine

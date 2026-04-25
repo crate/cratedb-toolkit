@@ -249,7 +249,6 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
         llm = GoogleGenAI(
             model=completion_model,
             temperature=0.0,
-            base_url=info.endpoint,
             api_key=info.api_key,
         )
     elif info.provider is ModelProvider.HUGGINGFACE_SERVERLESS:

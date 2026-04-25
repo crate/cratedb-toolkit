@@ -159,7 +159,7 @@ Use GPT on [Azure OpenAI].
 ```shell
 export LLM_PROVIDER="azure"
 export LLM_NAME="gpt-4.1"
-export LLM_INSTANCE="my_embedding-model"
+export LLM_INSTANCE="my-gpt4-deployment"
 export AZURE_OPENAI_ENDPOINT="https://acme-openai.openai.azure.com/"
 export AZURE_OPENAI_API_KEY="<YOUR_AZURE_OPENAI_API_KEY>"
 ```
@@ -310,7 +310,7 @@ dataquery = DataQuery(
     model=ModelInfo(
         provider=ModelProvider.AZURE, 
         name="gpt-4.1", 
-        instance="my_embedding-model",
+        instance="my-gpt4-deployment",
         endpoint="https://acme-openai.openai.azure.com/",
         api_key="<YOUR_AZURE_OPENAI_API_KEY>",
     ),
