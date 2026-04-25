@@ -30,6 +30,15 @@ orphan: true
 - Extract NLSQL from LlamaIndex into nlsql2?
   - https://pypi.org/project/nlsql/
   - https://pypi.org/project/nlsql-api/
+- Bug: `WARNING : Denied SQL expression: SELECT DISTINCT c.customer_id, c.name`,
+  but not because of `SELECT DISTINCT`, but because Amazon's `amazon.nova-2-lite`
+  adds an explanation like this to the SQL statement, not protected by an SQL
+  comment or any such.
+  > This query selects customers who do not have any corresponding entries in
+  > the `orders` table. It uses a `LEFT JOIN` to combine `customers` with
+  > `orders`, and filters for rows where `order_id` is `NULL`, indicating no
+  > orders were placed by that customer. The `DISTINCT` keyword ensures each
+  > customer is listed only once.
 
 ## Iteration +3
 
