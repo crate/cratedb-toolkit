@@ -65,21 +65,21 @@ SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;
 The NLSQL conversation works well in multiple languages.
 
 > Q: ¿Cuál es el valor medio del sensor 1?
->
+> <br>
 > A: El valor medio del sensor 1 es 17.0333.
 
 > Q: Quelle est la valeur moyenne du capteur 1 ?
->
+> <br>
 > A: La valeur moyenne du capteur 1 est de 17,0333.
 
 > Q: What is the average value for sensor 1?
->
+> <br>
 > A: The average value for sensor 1 is approximately 17.03.
 
 > Q: Wie lautet der Durchschnittswert für Sensor 1?
->
+> <br>
 > A: Der Durchschnittswert für Sensor 1 beträgt 17,0333.
 
 > Q: Qual è il valore medio del sensore 1?
->
+> <br>
 > A: Il valore medio del sensore 1 è pari a 17,0333.

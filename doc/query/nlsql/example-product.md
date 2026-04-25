@@ -4,6 +4,13 @@
 
 Let's use a basic products / orders / customers database.
 
+```sql
+CREATE TABLE customers (customer_id INTEGER, name VARCHAR, city VARCHAR, email_address VARCHAR, gender_code VARCHAR);
+CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, amount INTEGER);
+CREATE TABLE products (product_id INTEGER, name VARCHAR, price NUMERIC(2), size VARCHAR);
+CREATE TABLE order_items (order_id INTEGER, product_id INTEGER);
+```
+
 ## Basic JOINs and filtering
 
 :::{rubric} Provision
@@ -13,11 +20,6 @@ Create table and insert data.
 Populate the table using a few records worth of example data.
 
 ```sql
-CREATE TABLE customers (customer_id INTEGER, name VARCHAR, city VARCHAR); 
-CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, amount INTEGER);
-CREATE TABLE products (product_id INTEGER, name VARCHAR);
-CREATE TABLE order_items (order_id INTEGER, product_id INTEGER);
-
 -- customers
 INSERT INTO customers (customer_id, name, city) VALUES
 (1, 'Alice', 'Berlin'),
@@ -83,11 +85,6 @@ Add a few customers in New York and others elsewhere.
 Synthesize orders with amounts both above and below the average.
 
 ```sql
-CREATE TABLE customers (customer_id INTEGER, name VARCHAR, city VARCHAR); 
-CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, amount INTEGER);
-CREATE TABLE products (product_id INTEGER, name VARCHAR);
-CREATE TABLE order_items (order_id INTEGER, product_id INTEGER);
-
 INSERT INTO customers (customer_id, name, city) VALUES
 (1, 'Alice Johnson', 'New York'),
 (2, 'Bob Smith', 'Los Angeles'),
@@ -157,11 +154,6 @@ ORDER BY
 :::
 
 ```sql
-CREATE TABLE customers (customer_id INTEGER, name VARCHAR, city VARCHAR, email_address VARCHAR, gender_code VARCHAR); 
-CREATE TABLE orders (order_id INTEGER, customer_id INTEGER, amount INTEGER);
-CREATE TABLE products (product_id INTEGER, name VARCHAR, price NUMERIC(2), size VARCHAR);
-CREATE TABLE order_items (order_id INTEGER, product_id INTEGER);
-
 INSERT INTO customers (customer_id, name, city, email_address, gender_code) VALUES
 (1, 'Alice Johnson', 'New York', 'alice@example.com', 'F'),
 (2, 'Bob Smith', 'Los Angeles', 'bob@example.com', 'M'),

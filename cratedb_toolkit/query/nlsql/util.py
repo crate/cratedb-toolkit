@@ -211,10 +211,11 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
     elif info.provider is ModelProvider.AMAZON_BEDROCK_CONVERSE:
         from llama_index.llms.bedrock_converse import BedrockConverse
 
+        region_name = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
         llm = BedrockConverse(
             model=completion_model,
             temperature=0.0,
-            region_name="us-east-1",
+            region_name=region_name,
         )
     elif info.provider is ModelProvider.ANTHROPIC:
         from llama_index.llms.anthropic import Anthropic

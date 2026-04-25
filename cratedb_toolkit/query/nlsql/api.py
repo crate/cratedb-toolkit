@@ -48,6 +48,7 @@ class DataQuery:
     permit_all_statements: bool = False
 
     def __post_init__(self):
+        """Initialize query engine."""
         if self.query_engine is None:
             self.setup()
 

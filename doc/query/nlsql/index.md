@@ -364,7 +364,7 @@ dataquery = DataQuery(
 :::
 :::{tab-item} OpenRouter
 Choose from many models available via [OpenRouter], for example Gemma3.
-```shell
+```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
     model=ModelInfo(provider=ModelProvider.OPENROUTER, name="google/gemma-3-4b-it:free"),
