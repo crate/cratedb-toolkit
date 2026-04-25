@@ -15,7 +15,7 @@ class ModelProvider(Enum):
     ANTHROPIC = "anthropic"
     AZURE = "azure"
     GOOGLE = "google"
-    HUGGINGFACE_API = "huggingface_api"
+    HUGGINGFACE_SERVERLESS = "huggingface_serverless"
     LLAMAFILE = "llamafile"
     MISTRAL = "mistral"
     OLLAMA = "ollama"

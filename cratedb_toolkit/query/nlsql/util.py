@@ -68,7 +68,7 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.ANTHROPIC: "claude-haiku-4-5",
     ModelProvider.AZURE: "gpt-4.1",  # TODO: Not validated yet.
     ModelProvider.GOOGLE: "gemini-2.5-flash",  # TODO: Not validated yet.
-    ModelProvider.HUGGINGFACE_API: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not validated yet.
+    ModelProvider.HUGGINGFACE_SERVERLESS: "HuggingFaceH4/zephyr-7b-alpha",  # TODO: Not validated yet.
     ModelProvider.OLLAMA: "gemma3:1b",
     ModelProvider.OPENAI: "gpt-4o-mini",
     ModelProvider.OPENROUTER: "gryphe/mythomax-l2-13b",
@@ -132,7 +132,7 @@ def read_llm_options(
             raise ValueError(
                 "LLM API key not defined. Use either CLI/API parameter or GOOGLE_API_KEY environment variable."
             )
-    elif provider is ModelProvider.HUGGINGFACE_API:
+    elif provider is ModelProvider.HUGGINGFACE_SERVERLESS:
         llm_api_key = llm_api_key or os.getenv("HF_TOKEN")
         if not llm_api_key:
             raise ValueError(
@@ -252,7 +252,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
             base_url=info.endpoint,
             api_key=info.api_key,
         )
-    elif info.provider is ModelProvider.HUGGINGFACE_API:
+    elif info.provider is ModelProvider.HUGGINGFACE_SERVERLESS:
         from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 
         llm = HuggingFaceInferenceAPI(
