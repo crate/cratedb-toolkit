@@ -74,7 +74,6 @@ DEFAULT_MODEL_MAP = {
     ModelProvider.OPENROUTER: "gryphe/mythomax-l2-13b",
     ModelProvider.LLAMAFILE: "n/a",  # Only one model per process.
     ModelProvider.MISTRAL: "mistral-medium-latest",  # TODO: Not validated yet.
-    ModelProvider.RUNGPT: "stabilityai/stablelm-tuned-alpha-3b",  # TODO: Not validated yet.
     ModelProvider.RUNPOD_SERVERLESS: "gemma3:270m",
 }
 
@@ -184,7 +183,7 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
 
     Supports Amazon Bedrock (+ Converse), Anthropic, Azure OpenAI, Google Gemini,
     Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI, OpenRouter,
-    RunGPT, and Runpod Serverless (OpenAI-compatible).
+    and Runpod Serverless (OpenAI-compatible).
     """
     ensure_llama_index()
 
@@ -308,14 +307,6 @@ def configure_llm(info: ModelInfo, debug: bool = False) -> "LLM":
             temperature=0.0,
             api_base=info.endpoint or DEFAULT_API_BASE,
             api_key=info.api_key,
-        )
-    elif info.provider is ModelProvider.RUNGPT:
-        from llama_index.llms.rungpt import RunGptLLM
-
-        llm = RunGptLLM(
-            model=info.name,
-            endpoint=info.endpoint or "localhost:51002",
-            temperature=0.0,
         )
     elif info.provider is ModelProvider.RUNPOD_SERVERLESS:
         from llama_index.llms.openai_like import OpenAILike

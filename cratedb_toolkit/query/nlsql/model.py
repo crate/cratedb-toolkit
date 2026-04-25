@@ -21,7 +21,6 @@ class ModelProvider(Enum):
     OLLAMA = "ollama"
     OPENAI = "openai"
     OPENROUTER = "openrouter"
-    RUNGPT = "rungpt"
     RUNPOD_SERVERLESS = "runpod_serverless"
 
 

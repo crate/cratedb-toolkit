@@ -46,8 +46,8 @@ ctk query nlsql \
 
 Supports a range of providers:
 Amazon Bedrock (+ Converse), Anthropic, Azure OpenAI, Google AI,
-Hugging Face Inference API, Llamafile, Mistral, Ollama, OpenAI,
-OpenRouter, RunGPT, or Runpod Serverless (OpenAI-compatible).
+Hugging Face Inference API, llamafile, Mistral, Ollama, OpenAI,
+OpenRouter, or Runpod Serverless (OpenAI-compatible).
 
 :::{rubric} Models
 :::
@@ -226,7 +226,6 @@ wget "https://huggingface.co/Ellbendls/Qwen-3-4b-Text_to_SQL-GGUF/resolve/main/Q
 ```
 
 ```shell
-uvx --python=3.11 --with="setuptools<82" --with="numpy<2" rungpt serve stabilityai/stablelm-tuned-alpha-3b --precision fp16 --device_map balanced
 ```
 
 
