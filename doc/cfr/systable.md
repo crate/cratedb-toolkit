@@ -1,4 +1,5 @@
 (cfr-systable)=
+
 # System table exporter
 
 CFR's `sys-export` and `sys-import` commands support collecting and analyzing
@@ -6,6 +7,7 @@ information about CrateDB clusters for support requests and self-service
 debugging.
 
 ## Install
+
 ```shell
 pip install --upgrade 'cratedb-toolkit[cfr]'
 ```
@@ -14,58 +16,35 @@ Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`.
 For more information about installing CrateDB Toolkit, see {ref}`install`.
 :::
 
-
 ## Synopsis
 
-Define CrateDB database cluster address using the `CRATEDB_CLUSTER_URL`
-environment variable.
+Export system table information into timestamped directory using
+the pattern `cfr/{clustername}/{timestamp}/sys`.
+By default, the working directory is used as the parent folder.
+```shell
+ctk cfr --cluster-url="crate://localhost:4200/" \
+    sys-export file:///var/ctk/cfr
+```
+
+Import system table information from directory into given schema.
+```shell
+ctk cfr --cluster-url="crate://localhost:4200/?schema=case0815" \
+    sys-import file://./cfr/crate/2024-04-18T01-13-41/sys
+```
+
+## Configuration
+
+Alternatively to command-line options, you can use the
+`CRATEDB_CLUSTER_URL`, `CFR_SOURCE`, and `CFR_TARGET`
+environment variables.
+
+Define CrateDB database cluster address using the
+`CRATEDB_CLUSTER_URL` environment variable.
 ```shell
 export CRATEDB_CLUSTER_URL=crate://localhost/
 ```
-
-Export system table information into timestamped file, by default into the
-current working directory, into a directory using the pattern
-`cfr/{clustername}/{timestamp}/sys` directory.
-```shell
-ctk cfr sys-export
-```
-
-Import system table information from given directory.
-```shell
-ctk cfr sys-import file://./cfr/crate/2024-04-18T01-13-41/sys
-```
-
-
-## Usage
-
-### Target and source directories
-
-The target directory on the export operation, and the source directory on the
-import operation, can be specified using a single positional argument on the
-command line.
-
-Export system table information into given directory.
-```shell
-ctk cfr sys-export file:///var/ctk/cfr
-```
-
-Import system table information from given directory.
-```shell
-ctk cfr sys-import file:///var/ctk/cfr/crate/2024-04-18T01-13-41/sys
-```
-
-Alternatively, you can use the `CFR_TARGET` and `CFR_SOURCE` environment
-variables.
-
-### CrateDB database address
-
-The CrateDB database address can be defined on the command line, using the
-`--cluster-url` option, or by using the `CRATEDB_CLUSTER_URL`
-environment variable.
-```shell
-ctk cfr --cluster-url=crate://localhost/ sys-export
-```
-
+Alternatively, use `CRATEDB_CLUSTER_NAME` or `CRATEDB_CLUSTER_ID`
+to address a CrateDB Cloud database cluster.
 
 ## OCI
 
