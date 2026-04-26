@@ -67,8 +67,9 @@ jobs:
         run: |
           compose_file="release/oci-full/test.yml"
           if [[ -f "${compose_file}" ]]; then
-            export DOCKER_BUILDKIT=1
+            export BUILDKIT_PROGRESS=plain
             export COMPOSE_DOCKER_CLI_BUILD=1
+            export DOCKER_BUILDKIT=1
             docker compose --file "${compose_file}" build
             docker compose --file "${compose_file}" run --rm sut
             docker compose --file "${compose_file}" down --volumes --remove-orphans
