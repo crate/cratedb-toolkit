@@ -22,6 +22,8 @@ jobs:
 
   tests:
 
+    if: ${{ ! github.event.pull_request.head.repo.fork }}
+
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
