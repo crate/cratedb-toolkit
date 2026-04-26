@@ -19,17 +19,12 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Type, Union
 
-from bs4 import BeautifulSoup
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-
 from cratedb_toolkit.docs.model import DocsItem
 from cratedb_toolkit.docs.util import GenericProcessor
 from cratedb_toolkit.util.format import FlexibleFormatter, OutputFormat
 
 # Configure logging.
 logger = logging.getLogger(__name__)
-console = Console(stderr=True)
 
 # Constants
 DOCS_ITEM = DocsItem(
@@ -41,6 +36,18 @@ DOCS_ITEM = DocsItem(
 SET_CLUSTER = "SET GLOBAL PERSISTENT"
 
 
+console = None
+
+
+def get_console():
+    global console
+    from rich.console import Console
+
+    if console is None:
+        console = Console(stderr=True)
+    return console
+
+
 def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     """
     Extract CrateDB settings from the documentation website.
@@ -48,6 +55,11 @@ def extract_cratedb_settings() -> Dict[str, Dict[str, Any]]:
     Returns:
         Dict[str, Dict[str, Any]]: Dictionary of settings with their properties
     """
+    from bs4 import BeautifulSoup
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+
+    console = get_console()
+
     settings = {}
 
     logger.info(f"Extracting CrateDB settings from {DOCS_ITEM.source_url}")
@@ -433,6 +445,7 @@ def write_markdown_table(settings: Dict[str, Dict[str, Any]]) -> str:
     Args:
         settings: Dictionary of settings
     """
+    console = get_console()
     f = io.StringIO()
     with console.status("[bold green]Generating Markdown"):
         # Write header with metadata
@@ -481,6 +494,7 @@ def generate_sql_statements(settings: Dict[str, Dict[str, Any]]) -> None:
     Args:
         settings: Dictionary of settings
     """
+    console = get_console()
     with console.status("[bold green]Generating SQL statements..."):
         count = 0
         for setting_key, setting_info in settings.items():
