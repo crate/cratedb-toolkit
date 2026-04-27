@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and
-  `prune-checkpoints` commands for checkpoint table maintenance
+  `prune-checkpoints` commands for checkpoint table maintenance.
+  Thanks, @hampsterx.
 - Dependencies: Permitted installation of click 8.3
 - DataQuery: Help agents turn natural language into SQL queries
 
