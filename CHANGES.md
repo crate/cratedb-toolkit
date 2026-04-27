@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Installed `curl` into the OCI image, for Compose health checks
 
 ## 2026/04/27 v0.0.47
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and
