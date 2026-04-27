@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## 2026/04/27 v0.0.47
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and
   `prune-checkpoints` commands for checkpoint table maintenance.
   Thanks, @hampsterx.
