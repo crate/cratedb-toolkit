@@ -140,7 +140,7 @@ Select and configure the LLM of your choice.
 
 ::::{tab-set}
 :::{tab-item} Amazon
-Use Amazon Nova on [Amazon Bedrock].
+Use Amazon Nova on [Amazon Bedrock]. Authentication works via `~/.aws/credentials`.
 ```shell
 export LLM_PROVIDER="amazon_bedrock_converse"
 export LLM_NAME="global.amazon.nova-2-lite-v1:0"
@@ -269,7 +269,10 @@ schema = "doc"
 # Configure an LLM-based query engine.
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.ACME, name="foo-frontier-7.1"),
+    model=ModelInfo(
+        provider=ModelProvider.ACME,
+        name="foo-frontier-7.1",
+    ),
 )
 
 # Query database.
@@ -281,11 +284,14 @@ Select and configure the LLM of your choice.
 
 ::::{tab-set}
 :::{tab-item} Amazon
-Use Amazon Nova on [Amazon Bedrock].
+Use Amazon Nova on [Amazon Bedrock]. Authentication works via `~/.aws/credentials`.
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.AMAZON_BEDROCK_CONVERSE, name="global.amazon.nova-2-lite-v1:0"),
+    model=ModelInfo(
+        provider=ModelProvider.AMAZON_BEDROCK_CONVERSE,
+        name="global.amazon.nova-2-lite-v1:0",
+    ),
 )
 ```
 :::
@@ -322,7 +328,10 @@ Use [Gemini Flash] from Google.
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.GOOGLE, name="gemini-2.5-flash"),
+    model=ModelInfo(
+        provider=ModelProvider.GOOGLE,
+        name="gemini-2.5-flash",
+    ),
 )
 ```
 :::
@@ -331,7 +340,10 @@ Use Zephyr on the [Hugging Face Serverless Inference API].
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.HUGGINGFACE_SERVERLESS, name="HuggingFaceH4/zephyr-7b-alpha"),
+    model=ModelInfo(
+        provider=ModelProvider.HUGGINGFACE_SERVERLESS,
+        name="HuggingFaceH4/zephyr-7b-alpha",
+    ),
 )
 ```
 :::
@@ -340,7 +352,10 @@ Use models from [Mistral AI].
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.MISTRAL, name="mistral-medium-latest"),
+    model=ModelInfo(
+        provider=ModelProvider.MISTRAL,
+        name="mistral-medium-latest",
+    ),
 )
 ```
 :::
@@ -349,7 +364,10 @@ Use [Ollama] to run models on your own machines, for example Gemma3.
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.OLLAMA, name="gemma3:1b"),
+    model=ModelInfo(
+        provider=ModelProvider.OLLAMA,
+        name="gemma3:1b",
+    ),
 )
 ```
 :::
@@ -358,7 +376,10 @@ Use [GPT‑4o mini] from [OpenAI].
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.OPENAI, name="gpt-4o-mini"),
+    model=ModelInfo(
+        provider=ModelProvider.OPENAI,
+        name="gpt-4o-mini",
+    ),
 )
 ```
 :::
@@ -367,7 +388,10 @@ Choose from many models available via [OpenRouter], for example Gemma3.
 ```python
 dataquery = DataQuery(
     db=DatabaseInfo(engine=engine, schema=schema),
-    model=ModelInfo(provider=ModelProvider.OPENROUTER, name="google/gemma-3-4b-it:free"),
+    model=ModelInfo(
+        provider=ModelProvider.OPENROUTER,
+        name="google/gemma-3-4b-it:free",
+    ),
 )
 ```
 :::
