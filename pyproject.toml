@@ -206,7 +206,7 @@ optional-dependencies.io-recipe = [
 optional-dependencies.kinesis = [
   "aiobotocore<3.6",
   "async-kinesis>=2.4.0,<3",
-  "botocore<1.43",
+  "botocore<1.44",
   "commons-codec>=0.0.24",
   "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
