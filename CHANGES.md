@@ -3,6 +3,7 @@
 ## Unreleased
 - Installed `curl` into the OCI image, for Compose health checks
 - Added `session_id` attribute to `SysJobsLog`, to accompany newer CrateDB versions
+- I/O: Added option to submit workloads to remote Dask clusters
 
 ## 2026/04/27 v0.0.47
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and
