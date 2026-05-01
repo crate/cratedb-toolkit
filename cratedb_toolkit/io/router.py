@@ -14,6 +14,7 @@ from pathlib import Path
 
 from boltons.urlutils import URL
 
+from cratedb_toolkit.cluster import compute
 from cratedb_toolkit.exception import (
     OperationFailed,
 )
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class IoRouter:
+    @compute.function
     def load_table(
         self,
         source: InputOutputResource,
@@ -127,6 +129,7 @@ class IoRouter:
         else:
             raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
 
+    @compute.function
     def save_table(
         self,
         source: DatabaseAddress,
