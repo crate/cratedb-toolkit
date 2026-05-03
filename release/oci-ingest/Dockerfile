@@ -131,6 +131,15 @@ RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/ca
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes curl
 
+# Install Supercronic, for scheduling periodic tasks.
+# Latest releases available at https://github.com/aptible/supercronic/releases.
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.45/supercronic-linux-${TARGETARCH} \
+    SUPERCRONIC=supercronic-linux-${TARGETARCH}
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+ && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
+
 # Copy `selftest.sh` to the image.
 COPY release/oci-ingest/selftest.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/selftest.sh

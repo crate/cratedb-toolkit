@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased
-- Installed `curl` into the OCI image, for Compose health checks
+- OCI: Installed `curl`, for Compose health checks
+- OCI: Installed Supercronic, for scheduling periodic tasks
 - Added `session_id` attribute to `SysJobsLog`, to accompany newer CrateDB versions
 - I/O: Added option to submit workloads to remote Dask clusters
 
