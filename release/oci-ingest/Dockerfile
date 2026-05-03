@@ -125,7 +125,6 @@ RUN \
     && uv pip install --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
 
 # Install curl, for running Compose health checks.
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
     --mount=type=cache,id=apt-lists-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
