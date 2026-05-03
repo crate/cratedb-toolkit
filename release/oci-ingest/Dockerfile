@@ -122,7 +122,7 @@ RUN \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv pip install --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
+    && uv pip install --upgrade --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
 
 # Install curl, for running Compose health checks.
 RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \

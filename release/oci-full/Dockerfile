@@ -76,7 +76,7 @@ RUN \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv tool install --upgrade "cratedb-toolkit[full] @ file://${WHEEL}"
+    && uv pip install --upgrade "cratedb-toolkit[full] @ file://${WHEEL}"
 
 # Install curl, for running Compose health checks.
 RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
