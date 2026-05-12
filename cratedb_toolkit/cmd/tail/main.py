@@ -30,6 +30,7 @@ class SysJobsLog:
     error: str
     node: t.Dict[str, t.Any]
     username: str
+    session_id: t.Optional[str]
 
     @property
     def template(self) -> str:
