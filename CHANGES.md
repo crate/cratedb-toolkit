@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## 2026/05/12 v0.0.48
 - OCI: Installed `curl`, for Compose health checks
 - OCI: Installed Supercronic, for scheduling periodic tasks
 - Added `session_id` attribute to `SysJobsLog`, to accompany newer CrateDB versions
