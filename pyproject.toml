@@ -452,7 +452,7 @@ tasks.release = [
   { cmd = "python -m build" },
   { cmd = "twine upload --skip-existing dist/*" },
 ]
-tasks.test = { cmd = "pytest -m 'not postgresql'" }
+tasks.test = { cmd = "pytest -m 'not (influxdb or postgresql)'" }
 tasks.build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }
 
 [tool.versioningit]
