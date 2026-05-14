@@ -1,14 +1,14 @@
 import dataclasses
 import datetime as dt
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import docutils.nodes
 from docutils import nodes
 from docutils.examples import internals
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.admonitions import Note
-from docutils.parsers.rst.roles import normalized_role_options, register_canonical_role
+from docutils.parsers.rst.roles import normalize_options, register_canonical_role
 
 from cratedb_toolkit.docs.model import DocsItem
 from cratedb_toolkit.docs.util import GenericProcessor
@@ -73,10 +73,12 @@ class FunctionRegistry:
 
 
 def sphinx_ref_role(role, rawtext, text=None, lineno=None, inliner=None, options=None, content=None):
+    if text is None:
+        raise ValueError("text must be provided")
     if inliner is None:
         raise ValueError("inliner must be provided")
-    options = normalized_role_options(options)
-    text = nodes.unescape(text, True)  # ty: ignore[unresolved-attribute]
+    options = normalize_options(options)
+    text = nodes.unescape(text, restore_backslashes=True)  # ty: ignore[unresolved-attribute]
     label = text.split(" ", 1)[0]
     node = nodes.raw(rawtext, label, **options)
     node.source, node.line = inliner.reporter.get_source_and_line(lineno)
@@ -109,15 +111,22 @@ class FunctionsExtractor(GenericProcessor):
         """
         register_canonical_role("ref", sphinx_ref_role)
         register_directive("seealso", Note)
+        document: Union[docutils.nodes.document, None]
         document, pub = internals(DOCS_ITEM.fetch())
 
-        item: docutils.nodes.Element
-        function: docutils.nodes.Element
-        for item in document:
-            if item.tagname == "section":
+        if document is None:
+            logger.error(f"Unable to acquire document. URL: {DOCS_ITEM.source_url}")
+            return self
+
+        item: docutils.nodes.Node
+        function: docutils.nodes.Node
+        for item in document.children:
+            item_tagname = item.__class__.__name__
+            if item_tagname == "section":
                 category_title = item.children[0].astext()
                 for function in item.children:
-                    if function.tagname == "section":
+                    function_tagname = function.__class__.__name__
+                    if function_tagname == "section":
                         function_title = function.children[0].astext()
                         function_body = function.children[1].astext()
                         fun = Function(
