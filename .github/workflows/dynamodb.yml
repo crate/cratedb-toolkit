@@ -6,7 +6,7 @@ on:
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
-    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
@@ -15,7 +15,7 @@ on:
     paths:
     - '.github/workflows/dynamodb.yml'
     - 'cratedb_toolkit/io/dynamodb/**'
-    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/dynamodb/**'
     - 'pyproject.toml'
@@ -45,19 +45,19 @@ jobs:
           "3.10",
           "3.14",
         ]
-        localstack-version:
-          - "4.14"
+        floci-version:
+          - "1.5.11"
 
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
-      LOCALSTACK_VERSION: ${{ matrix.localstack-version }}
+      FLOCI_VERSION: ${{ matrix.floci-version }}
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
     name: "
     Python ${{ matrix.python-version }}, 
-    LocalStack ${{ matrix.localstack-version }}, 
+    Floci ${{ matrix.floci-version }},
     OS ${{ matrix.os }}
     "
     steps:

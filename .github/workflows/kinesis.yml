@@ -6,7 +6,7 @@ on:
     paths:
     - '.github/workflows/kinesis.yml'
     - 'cratedb_toolkit/io/kinesis/**'
-    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
     - 'pyproject.toml'
@@ -15,7 +15,7 @@ on:
     paths:
     - '.github/workflows/kinesis.yml'
     - 'cratedb_toolkit/io/kinesis/**'
-    - 'cratedb_toolkit/testing/testcontainers/localstack.py'
+    - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
     - 'pyproject.toml'

@@ -26,15 +26,15 @@ RESET_TABLES = [
 
 class DynamoDBFixture:
     """
-    A little helper wrapping Testcontainer's ``LocalStackContainer``.
+    A little helper wrapping Testcontainer's Floci container.
 
-    TODO: Generalize into ``LocalStackFixture``, see also ``tests.io.kinesis.conftest.KinesisFixture``.
+    TODO: Generalize into ``FlociFixture``, see also ``tests.io.kinesis.conftest.KinesisFixture``.
     """
 
     def __init__(self):
-        from cratedb_toolkit.testing.testcontainers.localstack import LocalStackContainerWithKeepalive
+        from cratedb_toolkit.testing.testcontainers.floci import FlociContainerWithKeepalive
 
-        self.container: LocalStackContainerWithKeepalive
+        self.container: FlociContainerWithKeepalive
         self.url = None
         self.dynamodb_adapter: DynamoDBAdapter
         self._stream_name = f"demo-{uuid.uuid4().hex[:8]}"
@@ -42,10 +42,9 @@ class DynamoDBFixture:
 
     def setup(self):
         # TODO: Make image name configurable.
-        from cratedb_toolkit.testing.testcontainers.localstack import LocalStackContainerWithKeepalive
+        from cratedb_toolkit.testing.testcontainers.floci import FlociContainerWithKeepalive
 
-        self.container = LocalStackContainerWithKeepalive()
-        self.container.with_services("dynamodb", "kinesis")
+        self.container = FlociContainerWithKeepalive()
         self.container.start()
 
         self.dynamodb_adapter = DynamoDBAdapter(URL(f"{self.get_connection_url_dynamodb()}?region=us-east-1"))
@@ -58,7 +57,7 @@ class DynamoDBFixture:
         """
         Provide each test case with a fresh canvas by assigning a unique stream name.
 
-        This avoids the delete/recreate race condition with LocalStack's eventual
+        This avoids the delete/recreate race condition with emulator eventual
         consistency, where ``create_stream`` can fail if called too soon after
         ``delete_stream`` completes.
         """
@@ -81,11 +80,11 @@ class DynamoDBFixture:
 
     def get_connection_url_dynamodb(self):
         url = URL(self.container.get_url())
-        return f"dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}"
+        return f"dynamodb://AKIAIOSFODNN7EXAMPLE:dummy@{url.host}:{url.port}"
 
     def get_connection_url_kinesis_dynamodb_cdc(self):
         url = URL(self.container.get_url())
-        return f"kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@{url.host}:{url.port}/{self._stream_name}"
+        return f"kinesis+dynamodb+cdc://AKIAIOSFODNN7EXAMPLE:dummy@{url.host}:{url.port}/{self._stream_name}"
 
 
 @pytest.fixture(scope="session")

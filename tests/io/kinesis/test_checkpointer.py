@@ -21,7 +21,7 @@ from tests.io.test_awslambda import wrap_kinesis
 TRANSFORMATION_FILE = Path("./examples/cdc/aws/dms-load-schema-universal.yaml")
 
 
-# -- Unit tests: CrateDB container only, no LocalStack --
+# -- Unit tests: CrateDB container only, no Floci --
 
 
 def test_cratedb_checkpointer_table_creation(cratedb):
@@ -207,7 +207,7 @@ def test_cratedb_checkpointer_get_all_checkpoints(cratedb):
         engine.dispose()
 
 
-# -- Integration tests: CrateDB + LocalStack --
+# -- Integration tests: CrateDB + Floci --
 
 
 def test_checkpointer_url_param_wiring(cratedb, kinesis):

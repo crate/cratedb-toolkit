@@ -13,7 +13,7 @@ Load data from Amazon Kinesis into CrateDB.
 
 Use Docker or Podman to run all components. This approach works consistently
 across Linux, macOS, and Windows.
-The tutorial uses [LocalStack] to spin up a local instance of Amazon Kinesis so
+The tutorial uses [Floci] to spin up a local instance of Amazon Kinesis so
 you don't need an AWS account to exercise the pipeline.
 
 ## Install
@@ -30,11 +30,11 @@ to work with Amazon Kinesis and CrateDB.
 
 ### Services
 
-Run Kinesis from LocalStack and CrateDB using Docker or Podman.
+Run Kinesis from Floci and CrateDB using Docker or Podman.
 ```shell
-docker run --rm --name=localstack \
+docker run --rm --name=floci \
   --publish=4566:4566 \
-  docker.io/localstack/localstack:latest
+  docker.io/floci/floci:1.5.11
 ```
 ```shell
 docker run --rm --name=cratedb \
@@ -44,7 +44,7 @@ docker run --rm --name=cratedb \
 
 ### Configure AWS clients
 
-LocalStack's default region is `us-east-1`. Let's use it.
+Floci's default region is `us-east-1`. Let's use it.
 ```shell
 export AWS_DEFAULT_REGION=us-east-1
 export AWS_ENDPOINT_URL="http://localhost:4566"
@@ -262,7 +262,7 @@ AND "updated_at" < NOW() - INTERVAL '30 days';
 [ARN]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html
 [awscli]: https://pypi.org/project/awscli/
 [cratedb-toolkit]: https://pypi.org/project/cratedb-toolkit/
-[LocalStack]: https://www.localstack.cloud/
+[Floci]: https://github.com/floci-io/floci
 [StartingPosition]: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_StartingPosition.html
 [streams]: https://aws.amazon.com/what-is/streaming-data/
 [StreamARN]: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_StreamDescription.html#Streams-Type-StreamDescription-StreamARN
