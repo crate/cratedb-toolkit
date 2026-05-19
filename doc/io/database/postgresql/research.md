@@ -2,7 +2,7 @@
 
 ## Full-load
 
-This subsystem is already covered by ingestr/dlt.
+This subsystem is already covered by omniload/dlt (ex. ingestr/dlt).
 
 ## CDC
 

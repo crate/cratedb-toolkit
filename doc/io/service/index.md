@@ -473,19 +473,19 @@ ctk load \
 ```
 
 
-[Anthropic entities]: https://bruin-data.github.io/ingestr/supported-sources/anthropic.html#available-tables
-[Asana entities]: https://bruin-data.github.io/ingestr/supported-sources/asana.html#tables
-[Attio entities]: https://bruin-data.github.io/ingestr/supported-sources/attio.html#tables
-[Facebook Ads entities]: https://bruin-data.github.io/ingestr/supported-sources/facebook-ads.html#tables
-[GitHub entities]: https://bruin-data.github.io/ingestr/supported-sources/github.html#tables
-[Google Ads entities]: https://bruin-data.github.io/ingestr/supported-sources/google-ads.html#tables
-[Google Analytics entities]: https://bruin-data.github.io/ingestr/supported-sources/google_analytics.html#available-tables
-[HubSpot entities]: https://bruin-data.github.io/ingestr/supported-sources/hubspot.html#tables
-[Jira entities]: https://bruin-data.github.io/ingestr/supported-sources/jira.html#tables
-[Salesforce entities]: https://bruin-data.github.io/ingestr/supported-sources/salesforce.html#tables
-[Shopify entities]: https://bruin-data.github.io/ingestr/supported-sources/shopify.html#tables
-[Slack entities]: https://bruin-data.github.io/ingestr/supported-sources/slack.html#tables
-[Stripe entities]: https://bruin-data.github.io/ingestr/supported-sources/stripe.html#all-endpoints
-[Wise entities]: https://bruin-data.github.io/ingestr/supported-sources/wise.html#tables
-[Zendesk entities]: https://bruin-data.github.io/ingestr/supported-sources/zendesk.html#tables
-[Zoom entities]: https://bruin-data.github.io/ingestr/supported-sources/zoom.html#uri-format
+[Anthropic entities]: https://omniload.readthedocs.io/supported-sources/anthropic.html#available-tables
+[Asana entities]: https://omniload.readthedocs.io/supported-sources/asana.html#tables
+[Attio entities]: https://omniload.readthedocs.io/supported-sources/attio.html#tables
+[Facebook Ads entities]: https://omniload.readthedocs.io/supported-sources/facebook-ads.html#tables
+[GitHub entities]: https://omniload.readthedocs.io/supported-sources/github.html#tables
+[Google Ads entities]: https://omniload.readthedocs.io/supported-sources/google-ads.html#tables
+[Google Analytics entities]: https://omniload.readthedocs.io/supported-sources/google_analytics.html#available-tables
+[HubSpot entities]: https://omniload.readthedocs.io/supported-sources/hubspot.html#tables
+[Jira entities]: https://omniload.readthedocs.io/supported-sources/jira.html#tables
+[Salesforce entities]: https://omniload.readthedocs.io/supported-sources/salesforce.html#tables
+[Shopify entities]: https://omniload.readthedocs.io/supported-sources/shopify.html#tables
+[Slack entities]: https://omniload.readthedocs.io/supported-sources/slack.html#tables
+[Stripe entities]: https://omniload.readthedocs.io/supported-sources/stripe.html#all-endpoints
+[Wise entities]: https://omniload.readthedocs.io/supported-sources/wise.html#tables
+[Zendesk entities]: https://omniload.readthedocs.io/supported-sources/zendesk.html#tables
+[Zoom entities]: https://omniload.readthedocs.io/supported-sources/zoom.html#uri-format
