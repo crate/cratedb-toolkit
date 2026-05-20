@@ -195,7 +195,7 @@ optional-dependencies.io-ingest = [
   "cratedb-toolkit[io-base]",
   "dlt>=1.10,<1.27",
   "dlt-cratedb>=0.0.1",
-  "ingestr>=0.13.61,<0.15",
+  "ingestr>=0.13.61,<0.16",
   "sqlalchemy>=1,<2",
 ]
 optional-dependencies.io-opentable = [
