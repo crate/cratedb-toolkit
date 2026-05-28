@@ -22,4 +22,4 @@ ctk load "protocol://?table=query:SELECT * FROM sys.summits WHERE height > 4000"
 ```
 
 
-[custom queries for SQL sources]: https://bruin-data.github.io/ingestr/supported-sources/custom_queries.html
+[custom queries for SQL sources]: https://omniload.readthedocs.io/supported-sources/custom_queries.html

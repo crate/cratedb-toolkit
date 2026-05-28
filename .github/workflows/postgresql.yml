@@ -5,19 +5,19 @@ on:
   pull_request:
     paths:
     - '.github/workflows/postgresql.yml'
-    - 'cratedb_toolkit/io/ingestr/**'
+    - 'cratedb_toolkit/io/omniload/**'
     - 'cratedb_toolkit/testing/testcontainers/postgresql.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
-    - 'tests/io/ingestr/*postgresql*'
+    - 'tests/io/omniload/*postgresql*'
     - 'pyproject.toml'
   push:
     branches: [ main ]
     paths:
     - '.github/workflows/postgresql.yml'
-    - 'cratedb_toolkit/io/ingestr/**'
+    - 'cratedb_toolkit/io/omniload/**'
     - 'cratedb_toolkit/testing/testcontainers/postgresql.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
-    - 'tests/io/ingestr/*postgresql*'
+    - 'tests/io/omniload/*postgresql*'
     - 'pyproject.toml'
 
   # Allow job to be triggered manually.

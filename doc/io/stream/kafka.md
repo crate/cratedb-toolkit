@@ -147,6 +147,6 @@ Kafka+CrateDB-in-a-box example rig using {Docker,Podman} Compose.
 
 [Apache Kafka]: https://kafka.apache.org/
 [cratedb-toolkit]: https://pypi.org/project/cratedb-toolkit/
-[kafka-compose.yml]: https://github.com/crate/cratedb-examples/blob/main/application/ingestr/kafka-compose.yml
-[kafka-demo.xsh]: https://github.com/crate/cratedb-examples/blob/main/application/ingestr/kafka-demo.xsh
+[kafka-compose.yml]: https://github.com/crate/cratedb-examples/blob/main/application/omniload/kafka-compose.yml
+[kafka-demo.xsh]: https://github.com/crate/cratedb-examples/blob/main/application/omniload/kafka-demo.xsh
 [kcat]: https://github.com/edenhill/kcat

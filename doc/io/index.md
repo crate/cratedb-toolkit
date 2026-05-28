@@ -262,7 +262,7 @@ managed/index
 [Databricks]: https://www.databricks.com/
 [DuckDB]: https://github.com/duckdb/duckdb
 [DynamoDB]: https://aws.amazon.com/dynamodb/
-[incremental loading]: https://bruin-data.github.io/ingestr/getting-started/incremental-loading.html
+[incremental loading]: https://omniload.readthedocs.io/getting-started/incremental-loading.html
 [InfluxDB]: https://github.com/influxdata/influxdb
 [MongoDB]: https://github.com/mongodb/mongo
 [MongoDB Atlas]: https://www.mongodb.com/atlas

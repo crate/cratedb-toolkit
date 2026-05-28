@@ -12,7 +12,7 @@ build
 coverage.xml
 node_modules
 /cfr
-/doc/_build
+/doc/_build/*
 /tmp
 /var
 /DOWNLOAD

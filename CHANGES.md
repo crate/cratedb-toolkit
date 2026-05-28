@@ -7,6 +7,7 @@
 - Dependency: Update sqlalchemy-crate version to 0.43.1
 - Removed support for Rockset
 - Fixed a bug in `cfr jobstats ui` where slider will pick an initial value too large
+- I/O: Migrated from `ingestr` to `omniload`
 
 ## 2026/06/17 v0.0.49
 - Stopped leaking password to log output in `ctk cfr jobstats collect`.

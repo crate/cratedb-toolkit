@@ -17,7 +17,7 @@ ctk load \
     "s3://?access_key_id=${AWS_ACCESS_KEY_ID}&secret_access_key=${AWS_SECRET_ACCESS_KEY}&table=openaq-fetches/realtime/2023-02-25/1677351953_eea_2aa299a7-b688-4200-864a-8df7bac3af5b.ndjson#jsonl" \
     "crate://crate:na@localhost:4200/testdrive/s3_ndjson"
 ```
-See documentation about [ingestr and Amazon S3] about details of the URI format,
+See documentation about [omniload and Amazon S3] about details of the URI format,
 file globbing patterns, compression options, and file type hinting options.
 :::{div}
 :style: font-size: small
@@ -43,4 +43,4 @@ ctk load \
 ```
 
 
-[ingestr and Amazon S3]: https://bruin-data.github.io/ingestr/supported-sources/s3.html
+[omniload and Amazon S3]: https://omniload.readthedocs.io/supported-sources/s3.html
