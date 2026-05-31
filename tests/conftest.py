@@ -99,11 +99,11 @@ def reset_environment():
 
     TODO: Possibly synchronize with `prune_environment()`, as suggested.
     """
-    envvars = []
+    envvars: t.List[str] = []
     specs = ManagedClusterSettings.settings_spec
     for spec in specs:
-        if spec.click.envvar:
-            envvars.append(spec.click.envvar)
+        if spec.click.envvar is not None:
+            envvars.append(t.cast(str, spec.click.envvar))
     for envvar in envvars:
         os.environ.pop(envvar, None)
 

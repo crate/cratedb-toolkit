@@ -52,9 +52,9 @@ def batches(
     Generate batches of documents.
     """
     count = 0
-    buffer = []
+    buffer: Documents = []
     for item in data:
-        buffer.append(item)
+        buffer.append(t.cast(DocumentDict, item))
         count += 1
         if count >= batch_size:
             yield buffer
