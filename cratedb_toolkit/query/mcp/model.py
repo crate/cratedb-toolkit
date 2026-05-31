@@ -5,8 +5,8 @@ import asyncio
 import dataclasses
 import io
 import logging
-import os
 import shlex
+import subprocess
 import textwrap
 import typing as t
 from contextlib import redirect_stdout
@@ -60,9 +60,9 @@ class McpServer:
         Install MCP server, triggering both pre-install and main-install procedures.
         """
         if cmd := self.preinstall:
-            os.system(cmd)  # noqa: S605
+            subprocess.check_call(cmd)  # noqa: S603
         if cmd := self.install_command:
-            os.system(cmd)  # noqa: S605
+            subprocess.check_call(cmd)  # noqa: S603
 
     def launch(self):
         """
