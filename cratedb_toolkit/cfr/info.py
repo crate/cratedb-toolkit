@@ -31,14 +31,36 @@ class InfoRecorder:
         jobinfo_sample = JobInfoContainer(adapter=self.adapter, scrub=self.scrub)
 
         for table, sample in ((self.clusterinfo_table, clusterinfo_sample), (self.jobinfo_table, jobinfo_sample)):
-            self.adapter.connection.execute(
-                sa.text(
-                    f"""
+            if table.endswith("jobinfo"):
+                sql = """
+                CREATE TABLE IF NOT EXISTS "ext"."jobinfo" (
+                   "time" TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+                   "info" OBJECT(DYNAMIC) AS (
+                      "running" ARRAY(OBJECT(DYNAMIC) AS (
+                         "stmt" TEXT INDEX OFF STORAGE WITH (columnstore = false)
+                      )),
+                      "top100_duration_individual" ARRAY(OBJECT(DYNAMIC) AS (
+                         "stmt" TEXT INDEX OFF STORAGE WITH (columnstore = false)
+                      )),
+                      "top100_count" ARRAY(OBJECT(DYNAMIC) AS (
+                         "stmt" TEXT INDEX OFF STORAGE WITH (columnstore = false)
+                      )),
+                      "top100_duration_total" ARRAY(OBJECT(DYNAMIC) AS (
+                         "stmt" TEXT INDEX OFF STORAGE WITH (columnstore = false)
+                      )),
+                      "history" ARRAY(OBJECT(DYNAMIC) AS (
+                         "stmt" TEXT INDEX OFF STORAGE WITH (columnstore = false)
+                      ))
+                   )
+                )
+                """
+            else:
+                sql = f"""
                     CREATE TABLE IF NOT EXISTS {table}
                     (time TIMESTAMP DEFAULT NOW(), info OBJECT)
                 """
-                )
-            )
+
+            self.adapter.connection.execute(sa.text(sql))
             self.adapter.connection.execute(
                 sa.text(f"INSERT INTO {table} (info) VALUES (:info)"),  # noqa: S608
                 {"info": sample.to_dict()["data"]},
