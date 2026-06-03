@@ -87,7 +87,7 @@ def boot(
     last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{schema}".jobstats_last')
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    logger.info(f"Connecting to {address.httpuri}")
+    logger.info(f"Connecting to {address.safe}")
     conn = client.connect(
         address.httpuri,
         username=address.username,
