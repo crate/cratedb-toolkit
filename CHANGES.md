@@ -3,6 +3,8 @@
 ## Unreleased
 - Stopped leaking password to log output in `ctk cfr jobstats collect`.
   Thanks, @hammerhead.
+- Stopped failing `ctk cfr jobstats ui` when job statistics recordings are empty.
+  Thanks, @hammerhead.
 
 ## 2026/05/12 v0.0.48
 - OCI: Installed `curl`, for Compose health checks

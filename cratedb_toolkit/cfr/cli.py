@@ -196,6 +196,7 @@ def job_statistics_report(ctx: click.Context):
     import cratedb_toolkit.cfr.marimo
 
     address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
+    probe_database_schema(address, schema_name="stats")
     os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     cratedb_toolkit.cfr.marimo.app.run()
 
@@ -213,6 +214,7 @@ def job_statistics_ui(ctx: click.Context):
     import cratedb_toolkit.cfr.marimo
 
     address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
+    probe_database_schema(address, schema_name="stats")
     os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     server = marimo.create_asgi_app()
     server = server.with_app(path="/", root=cratedb_toolkit.cfr.marimo.__file__)
@@ -245,6 +247,18 @@ def record(ctx: click.Context, once: bool):
         recorder.record_once()
     else:
         recorder.record_forever()
+
+
+def probe_database_schema(address: DatabaseAddress, schema_name: str):
+    import sqlalchemy as sa
+
+    adapter = DatabaseAdapter(dburi=address.dburi, echo=False)
+    inspector = sa.inspect(adapter.engine)
+    if not inspector.has_schema(schema_name):
+        raise FileNotFoundError(
+            f"Schema `{schema_name}` missing. No job statistics recorded. "
+            "Please collect statistics using `ctk cfr jobstats collect` first."
+        )
 
 
 if getattr(sys, "frozen", False):
