@@ -140,7 +140,7 @@ class SystemTableExporter(PathProvider):
         return pl.read_database(
             query=sql,  # noqa: S608
             connection=self.adapter.connection,
-            infer_schema_length=1000,
+            infer_schema_length=100_000,
         )
 
     def dump_table(self, frame: "pl.DataFrame", file: t.Union[t.TextIO, None] = None):

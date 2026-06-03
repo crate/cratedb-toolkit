@@ -9,6 +9,8 @@
   Thanks, @hammerhead.
 - Fixed `ctk info cluster` to report correct shard rebalancing progress.
   Thanks, @hammerhead.
+- Attempted to improve `ctk cfr sys-export` on very active/large clusters
+  by increasing `infer_schema_length` from 1_000 to 100_000. Thanks, @hammerhead.
 
 ## 2026/05/12 v0.0.48
 - OCI: Installed `curl`, for Compose health checks
