@@ -7,6 +7,8 @@
   Thanks, @hammerhead.
 - Fixed `ctk cfr info record` re. `Document contains at least one immense term in field`.
   Thanks, @hammerhead.
+- Fixed `ctk info cluster` to report correct shard rebalancing progress.
+  Thanks, @hammerhead.
 
 ## 2026/05/12 v0.0.48
 - OCI: Installed `curl`, for Compose health checks
