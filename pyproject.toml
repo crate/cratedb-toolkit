@@ -118,6 +118,7 @@ dependencies = [
   "yarl<1.25",
 ]
 optional-dependencies.cfr = [
+  "cratedb-toolkit[service]",
   "duckdb<2",
   "marimo<0.24",
   "matplotlib<3.11",
