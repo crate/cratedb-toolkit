@@ -129,7 +129,7 @@ optional-dependencies.cfr = [
   "queryanonymizer<1.2",
 ]
 optional-dependencies.datasets = [
-  "datasets<5",
+  "datasets<6",
   "kaggle<2.3",
 ]
 optional-dependencies.deltalake = [
