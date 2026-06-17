@@ -28,7 +28,7 @@ On branch `main`:
   This will trigger a GitHub action which releases the new version to PyPi.
   ```shell
   git tag v0.0.14
-  git git push && push --tags
+  git push --tags origin main
   ```
 - On GitHub, designate a new release, copying in the relevant section
   from the CHANGELOG.
