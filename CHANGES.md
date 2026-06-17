@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 2026/06/17 v0.0.49 
 - Stopped leaking password to log output in `ctk cfr jobstats collect`.
   Thanks, @hammerhead.
