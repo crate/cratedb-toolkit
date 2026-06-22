@@ -5,6 +5,8 @@ import os.path
 import re
 import shutil
 import tarfile
+from importlib.resources import files
+from pathlib import Path
 
 import pytest
 from verlib2 import Version
@@ -13,13 +15,9 @@ import tests.cfr
 
 pymongo = pytest.importorskip("polars", reason="Skipping tests because polars is not installed")
 
-import tests
-
-from importlib.resources import files
-from pathlib import Path
-
 from click.testing import CliRunner
 
+import tests
 from cratedb_toolkit.cfr.cli import cli
 
 pytestmark = pytest.mark.cfr
