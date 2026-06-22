@@ -209,6 +209,7 @@ def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
 
 
 @pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
+@pytest.mark.xfail(strict=False, reason="gryphe/mythomax-l2-13b unreliably generates valid SQL")
 def test_query_nlsql_openrouter_permitted(cratedb, provision_db):
     """
     Verify that all SQL statements work when explicitly permitted.
