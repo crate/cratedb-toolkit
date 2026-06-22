@@ -65,6 +65,7 @@ def test_mongodb_copy_server_database(caplog, cratedb, mongodb):
     assert results[0]["data"] == data_out
 
 
+@pytest.mark.skip(reason="proves [issue 221](https://github.com/crate/cratedb-toolkit/issues/221) is fixed")
 def test_mongodb_copy_server_collection_rename(caplog, cratedb, mongodb):
     """
     Verify a single MongoDB collection loads into a CrateDB table with a *different* name.
@@ -103,6 +104,7 @@ def test_mongodb_copy_server_collection_rename(caplog, cratedb, mongodb):
     assert cratedb.database.table_exists("testdrive.source_collection") is False
     results = cratedb.database.run_sql("SELECT * FROM testdrive.target_table;", records=True)
     assert results[0]["data"] == data_out
+
 
 def test_mongodb_copy_server_collection_with_filter_timestamp(caplog, cratedb, mongodb):
     """
