@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 import pytest
 from click.testing import CliRunner
@@ -11,9 +10,6 @@ TESTDRIVE_DATA_SCHEMA = "testdrive"
 
 
 pytestmark = pytest.mark.nlsql
-
-if sys.version_info < (3, 10):
-    pytest.skip("Only available for Python 3.10+", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture(scope="session", autouse=True)

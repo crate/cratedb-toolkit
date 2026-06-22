@@ -4,7 +4,6 @@ import json
 import os.path
 import re
 import shutil
-import sys
 import tarfile
 
 import pytest
@@ -16,10 +15,7 @@ pymongo = pytest.importorskip("polars", reason="Skipping tests because polars is
 
 import tests
 
-if sys.version_info < (3, 9):
-    from importlib_resources import files
-else:
-    from importlib.resources import files
+from importlib.resources import files
 from pathlib import Path
 
 from click.testing import CliRunner
