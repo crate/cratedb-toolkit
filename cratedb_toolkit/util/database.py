@@ -7,6 +7,7 @@ import logging
 import os
 import typing as t
 from pathlib import Path
+from typing import Literal
 
 import sqlalchemy as sa
 import sqlparse
@@ -20,8 +21,6 @@ from sqlalchemy_cratedb.dialect import CrateDialect
 from cratedb_toolkit.model import DatabaseAddress, TableAddress
 from cratedb_toolkit.util.client import jwt_token_patch
 from cratedb_toolkit.util.data import str_contains
-
-from typing import Literal
 
 if t.TYPE_CHECKING:
     from cratedb_toolkit.cluster.model import JwtResponse

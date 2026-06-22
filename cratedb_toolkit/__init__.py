@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from importlib.metadata import PackageNotFoundError, version
 
 __appname__ = "cratedb-toolkit"
