@@ -115,7 +115,7 @@ optional-dependencies.cfr = [
   "cratedb-toolkit[service]",
   "duckdb<2",
   "marimo<0.24",
-  "matplotlib<3.11",
+  "matplotlib<3.12",
   "numpy<2.5",
   "pandas<3.1",
   "polars<1.41",
