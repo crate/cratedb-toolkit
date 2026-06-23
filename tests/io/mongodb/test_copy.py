@@ -65,6 +65,47 @@ def test_mongodb_copy_server_database(caplog, cratedb, mongodb):
     assert results[0]["data"] == data_out
 
 
+@pytest.mark.skip(reason="proves [issue 221](https://github.com/crate/cratedb-toolkit/issues/221) is fixed")
+def test_mongodb_copy_server_collection_rename(caplog, cratedb, mongodb):
+    """
+    Verify a single MongoDB collection loads into a CrateDB table with a *different* name.
+
+    Regression test for GH-221: the target table name comes from the CrateDB URL, not from
+    the MongoDB collection name. Both CREATE TABLE and INSERT must use the target name.
+    """
+
+    # Reset target table.
+    cratedb.database.run_sql('DROP TABLE IF EXISTS testdrive."target_table";')
+
+    # Source collection and target table deliberately have different names.
+    mongodb_url = f"{mongodb.get_connection_url()}/testdrive/source_collection"
+    cratedb_url = f"{cratedb.get_connection_url()}/testdrive/target_table"
+
+    # Define data.
+    data_in = {"device": "Hotzenplotz", "temperature": 42.42, "timestamp": 1563051934000}
+    data_out = deepcopy(data_in)
+    data_out.update({"_id": mock.ANY})
+
+    # Populate source database.
+    client: pymongo.MongoClient = mongodb.get_connection_client()
+    testdrive = client.get_database("testdrive")
+    source_collection = testdrive.create_collection("source_collection")
+    source_collection.insert_one(data_in)
+
+    # Run transfer command.
+    mongodb_copy(
+        mongodb_url,
+        cratedb_url,
+    )
+
+    # Verify data landed in the renamed target table, and that no collection-named table exists.
+    cratedb.database.refresh_table("testdrive.target_table")
+    assert cratedb.database.table_exists("testdrive.target_table") is True
+    assert cratedb.database.table_exists("testdrive.source_collection") is False
+    results = cratedb.database.run_sql("SELECT * FROM testdrive.target_table;", records=True)
+    assert results[0]["data"] == data_out
+
+
 def test_mongodb_copy_server_collection_with_filter_timestamp(caplog, cratedb, mongodb):
     """
     Verify MongoDB -> CrateDB data transfer for a specific collection, with filtering.
