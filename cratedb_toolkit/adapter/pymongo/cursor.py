@@ -1,5 +1,4 @@
-# Compansate pymongo<>4.9 woes.
-# Make Python 3.7 and 3.8 support generic types like `dict` instead of `typing.Dict`.
+# Compensate pymongo<>4.9 woes.
 from __future__ import annotations
 
 import copy

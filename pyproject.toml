@@ -30,7 +30,7 @@ maintainers = [
 authors = [
   { name = "The CrateDB Developers" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -49,8 +49,6 @@ classifiers = [
   "Operating System :: Unix",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -92,15 +90,12 @@ dependencies = [
   "boltons<26",
   "cattrs<27",
   "click<8.5",
-  "click-aliases<=1.0.5; python_version<'3.10'",
-  "click-aliases>=1.0.6,<2; python_version>='3.10'",
+  "click-aliases>=1.0.6,<2",
   "colorama<1",
   "colorlog",
   "crash",
   "cratedb-sqlparse==0.0.17",
   "croud>=1.13,<1.16",
-  "importlib-metadata; python_version<'3.8'",
-  "importlib-resources; python_version<'3.9'",
   "keyrings-cryptfile<2",
   "orjsonl<2",
   "pympler<1.2",
@@ -112,7 +107,6 @@ dependencies = [
   "sqlalchemy-cratedb>=0.41.0",
   "sqlparse<0.6",
   "tqdm<5",
-  "typing-extensions<5; python_version<='3.7'",
   "vasuki<0.8",
   "verlib2<0.4",
   "yarl<1.25",
@@ -215,31 +209,30 @@ optional-dependencies.kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.mcp = [
-  "mcp<1.28; python_version>='3.10'",
+  "mcp<1.28",
 ]
 optional-dependencies.mongodb = [
   "commons-codec[mongodb]>=0.0.22",
   "cratedb-toolkit[io,io-recipe]",
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.17",
-  "pyorc<0.11; python_version<'3.10'",
   "python-bsonjs<0.8",
   "rich>=3.3.2,<16",
   "undatum<1.2",
 ]
 optional-dependencies.nlsql = [
-  "llama-index-llms-anthropic<0.12; python_version>='3.10'",
-  "llama-index-llms-azure-openai<0.6; python_version>='3.10'",
-  "llama-index-llms-bedrock<0.6; python_version>='3.10'",
-  "llama-index-llms-bedrock-converse<0.15; python_version>='3.10'",
-  "llama-index-llms-google-genai<0.10; python_version>='3.10'",
-  "llama-index-llms-huggingface-api<0.8; python_version>='3.10'",
-  "llama-index-llms-llamafile<0.6; python_version>='3.10'",
-  "llama-index-llms-mistralai<0.11; python_version>='3.10'",
-  "llama-index-llms-ollama<0.11; python_version>='3.10'",
-  "llama-index-llms-openai<0.8; python_version>='3.10'",
-  "llama-index-llms-openai-like<0.8; python_version>='3.10'",
-  "llama-index-llms-openrouter<0.6; python_version>='3.10'",
+  "llama-index-llms-anthropic<0.12",
+  "llama-index-llms-azure-openai<0.6",
+  "llama-index-llms-bedrock<0.6",
+  "llama-index-llms-bedrock-converse<0.15",
+  "llama-index-llms-google-genai<0.10",
+  "llama-index-llms-huggingface-api<0.8",
+  "llama-index-llms-llamafile<0.6",
+  "llama-index-llms-mistralai<0.11",
+  "llama-index-llms-ollama<0.11",
+  "llama-index-llms-openai<0.8",
+  "llama-index-llms-openai-like<0.8",
+  "llama-index-llms-openrouter<0.6",
 ]
 optional-dependencies.pymongo = [
   "jessiql==1.0.0rc1",
