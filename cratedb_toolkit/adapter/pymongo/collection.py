@@ -84,7 +84,7 @@ def collection_factory(cratedb: DatabaseAdapter):
                 # Invoke amended insert operation, returning the record
                 # identifier as surrogate to MongoDB's `ObjectId`.
                 cursor = conn._dbapi_connection.cursor()
-                cursor.execute(sql=sql + " RETURNING _id", parameters=data[0])
+                cursor.execute(sql=sql + " RETURNING _id", parameters=dict(zip(keys, data[0])))
                 outcome = cursor.fetchone()
                 object_id_cratedb = outcome[0]
                 cursor.close()
