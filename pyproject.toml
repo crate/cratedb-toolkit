@@ -94,7 +94,6 @@ dependencies = [
   "colorama<1",
   "colorlog",
   "crash",
-  "cratedb-sqlparse==0.0.17",
   "croud>=1.13,<1.16",
   "keyrings-cryptfile<2",
   "orjsonl<2",
@@ -107,7 +106,6 @@ dependencies = [
   "sqlalchemy-cratedb>=0.43.1",
   "sqlparse<0.6",
   "tqdm<5",
-  "vasuki<0.8",
   "verlib2<0.4",
   "yarl<1.25",
 ]

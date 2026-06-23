@@ -12,7 +12,6 @@ from typing import Literal
 import sqlalchemy as sa
 import sqlparse
 from boltons.urlutils import URL
-from cratedb_sqlparse import sqlparse as sqlparse_cratedb
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 from sqlalchemy_cratedb import insert_bulk
@@ -472,17 +471,3 @@ def decode_database_table(url: str) -> t.Tuple[t.Union[str, None], t.Union[str, 
         raise ValueError("Database and table must be specified")
 
     return database, table
-
-
-def get_table_names(sql: str) -> t.List[t.List[str]]:
-    """
-    Decode table names from SQL statements.
-    """
-    names = []
-    statements = sqlparse_cratedb(sql)
-    for statement in statements:
-        local_names = []
-        for table in statement.metadata.tables:
-            local_names.append(table.name)
-        names.append(local_names)
-    return names
