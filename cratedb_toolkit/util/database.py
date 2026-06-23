@@ -483,6 +483,6 @@ def get_table_names(sql: str) -> t.List[t.List[str]]:
     for statement in statements:
         local_names = []
         for table in statement.metadata.tables:
-            local_names.append(table.name)
+            local_names.append(table.fqn)
         names.append(local_names)
     return names
