@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Breaking change: Dropped support for Python 3.8 and 3.9, which have reached
+  end-of-life. The minimum supported Python version is now 3.10.
 - Fixed a failing SQL statement during `ctk info cluster`
 
 ## 2026/06/17 v0.0.49
