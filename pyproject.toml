@@ -212,11 +212,11 @@ optional-dependencies.mcp = [
 optional-dependencies.mongodb = [
   "commons-codec[mongodb]>=0.0.22",
   "cratedb-toolkit[io,io-recipe]",
+  "iterabledata<2",
   "orjson>=3.3.1,<4",
   "pymongo>=3.10.1,<4.17",
   "python-bsonjs<0.8",
   "rich>=3.3.2,<16",
-  "undatum<1.2",
 ]
 optional-dependencies.nlsql = [
   "llama-index-llms-anthropic<0.12",
@@ -360,6 +360,7 @@ analysis.allowed-unresolved-imports = [
   "importlib_metadata.**",
   "importlib_resources.**",
   "ingestr.**",
+  "iterable.**",
   "jessiql.**",
   "kaggle.**",
   "kinesis.**",
@@ -369,7 +370,6 @@ analysis.allowed-unresolved-imports = [
   "pymongo.**",
   "sqlalchemy.**",
   "tikray.**",
-  "undatum.**",
 ]
 
 [tool.pytest]

@@ -17,7 +17,7 @@ import yarl
 from attrs import define, field
 from boltons.urlutils import URL
 from bson.raw_bson import RawBSONDocument
-from undatum.common.iterable import IterableData
+from iterable.helpers.detect import open_iterable
 
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.util import batches
@@ -138,7 +138,7 @@ class MongoDBFilesystemAdapter(MongoDBAdapterBase):
         if self._path.suffix in [".json", ".jsonl", ".ndjson"]:
             data = read_json(str(self._path))
         elif ".bson" in str(self._path):
-            data = IterableData(str(self._path), options={"format_in": "bson"}).iter()
+            data = open_iterable(str(self._path))
         else:
             raise ValueError(f"Unsupported file type: {self._path.suffix}")
         return batches(data, self.batch_size)
