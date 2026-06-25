@@ -100,12 +100,12 @@ RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target
     true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes libaio1
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/lib /opt/oracle11/lib
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/log /opt/oracle11/log
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/network /opt/oracle11/network
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/nls /opt/oracle11/nls
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/oracore /opt/oracle11/oracore
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/rdbms /opt/oracle11/rdbms
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/lib /opt/oracle11/lib
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/log /opt/oracle11/log
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/network /opt/oracle11/network
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/nls /opt/oracle11/nls
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/oracore /opt/oracle11/oracore
+COPY --from=docker.io/gvenzl/oracle-xe:21-slim /u01/app/oracle/product/11.2.0/xe/rdbms /opt/oracle11/rdbms
 ENV ORACLE_HOME=/opt/oracle11
 RUN if [ "${TARGETARCH}" = "amd64" ]; then \
     echo /opt/oracle11/lib > /etc/ld.so.conf.d/oracle.conf && ldconfig; \
