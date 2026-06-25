@@ -7,5 +7,4 @@ mostly for demonstration purposes.
 :maxdepth: 3
 
 PyMongo Adapter <pymongo>
-Rockset Adapter <rockset>
 ```
