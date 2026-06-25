@@ -141,9 +141,9 @@ class DatabaseAddress:
         uri.port = port
         return uri
 
-    def to_ingestr_url(self, port: int = 5432) -> URL:
+    def to_omniload_url(self, port: int = 5432) -> URL:
         """
-        Return the `cratedb://` variant of the database URI, suitable for `ingestr`.
+        Return the `cratedb://` variant of the database URI, suitable for `omniload`.
         """
         uri = deepcopy(self.to_postgresql_url(port))
         uri.scheme = "cratedb"

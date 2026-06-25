@@ -17,17 +17,17 @@ def test_postgresql_load_table(caplog, cratedb):
     """
     # postgresql_url = f"{postgresql.get_connection_url(driver=None)}?sslmode=disable&table=information_schema.tables"  # noqa: ERA001, E501
     # cratedb_url = f"{cratedb.get_connection_url()}/testdrive/demo"  # noqa: ERA001
-    ingestr_postgresql_url = (
+    omniload_postgresql_url = (
         "postgresql://postgres:postgres@localhost:5433?sslmode=disable&table=information_schema.tables"
     )
-    ingestr_cratedb_url = "cratedb://crate:crate@localhost:5432/testdrive/demo"
+    omniload_cratedb_url = "cratedb://crate:crate@localhost:5432/testdrive/demo"
     cratedb_sqlalchemy_url = "crate://crate:crate@localhost:4200/"
 
     # Run transfer command.
-    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": ingestr_cratedb_url})
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": omniload_cratedb_url})
     result = runner.invoke(
         cli,
-        args=f"load {ingestr_postgresql_url}",
+        args=f"load {omniload_postgresql_url}",
         catch_exceptions=False,
     )
     assert result.exit_code == 0

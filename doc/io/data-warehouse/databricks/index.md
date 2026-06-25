@@ -152,5 +152,5 @@ See also the documentation about [SQLAlchemy's Databricks dialect].
 
 [cratedb-toolkit]: https://pypi.org/project/cratedb-toolkit/
 [Databricks]: https://www.databricks.com/
-[Databricks OAuth M2M authentication]: https://getbruin.com/docs/ingestr/supported-sources/databricks.html
+[Databricks OAuth M2M authentication]: https://omniload.readthedocs.io/supported-sources/databricks.html
 [SQLAlchemy's Databricks dialect]: https://docs.databricks.com/aws/en/dev-tools/sqlalchemy

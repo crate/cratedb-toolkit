@@ -1,8 +1,6 @@
 # Main Backlog
 
 ## Iteration +0
-- Exercise data imports from AWS S3 and other Object Storage providers.
-  Evaluate the new `ingestr` subsystem.
 - A new item for the datasets API
   https://github.com/dr5hn/countries-states-cities-database
 

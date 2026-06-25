@@ -54,7 +54,7 @@ wget https://cdn.crate.io/downloads/datasets/cratedb-datasets/academy/chicago-da
 ```
 Import data into Elasticsearch.
 ```shell
-ingestr ingest --yes \
+omniload ingest --yes \
   --source-uri "csv://taxi_details.csv" \
   --source-table "data" \
   --dest-uri "elasticsearch://localhost:9200?secure=false" \
