@@ -207,7 +207,7 @@ optional-dependencies.kinesis = [
   "lorrystream[carabas]>=0.0.6",
 ]
 optional-dependencies.mcp = [
-  "mcp<1.28",
+  "mcp<1.29",
 ]
 optional-dependencies.mongodb = [
   "commons-codec[mongodb]>=0.0.22",
