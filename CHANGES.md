@@ -1,7 +1,30 @@
 # Changelog
 
 ## Unreleased
-- Installed `curl` into the OCI image, for Compose health checks
+- Breaking change: Dropped support for Python 3.8 and 3.9, which have reached
+  end-of-life. The minimum supported Python version is now 3.10.
+- Fixed a failing SQL statement during `ctk info cluster`
+- Dependency: Update sqlalchemy-crate version to 0.43.1
+- Removed support for Rockset
+- Fixed a bug in `cfr jobstats ui` where slider will pick an initial value too large
+
+## 2026/06/17 v0.0.49
+- Stopped leaking password to log output in `ctk cfr jobstats collect`.
+  Thanks, @hammerhead.
+- Stopped failing `ctk cfr jobstats ui` when job statistics recordings are empty.
+  Thanks, @hammerhead.
+- Fixed `ctk cfr info record` re. `Document contains at least one immense term in field`.
+  Thanks, @hammerhead.
+- Fixed `ctk info cluster` to report correct shard rebalancing progress.
+  Thanks, @hammerhead.
+- Attempted to improve `ctk cfr sys-export` on very active/large clusters
+  by increasing `infer_schema_length` from 1_000 to 100_000. Thanks, @hammerhead.
+
+## 2026/05/12 v0.0.48
+- OCI: Installed `curl`, for Compose health checks
+- OCI: Installed Supercronic, for scheduling periodic tasks
+- Added `session_id` attribute to `SysJobsLog`, to accompany newer CrateDB versions
+- I/O: Added option to submit workloads to remote Dask clusters
 
 ## 2026/04/27 v0.0.47
 - Kinesis: Added `ctk kinesis` CLI group with `list-checkpoints` and

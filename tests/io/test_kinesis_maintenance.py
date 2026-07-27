@@ -5,7 +5,7 @@ Tests for Kinesis checkpoint maintenance operations.
 
 Placed outside ``tests/io/kinesis/`` to avoid the ``importorskip("kinesis")``
 gate in that package's conftest. These tests only need CrateDB (via
-testcontainer), not LocalStack or async-kinesis.
+testcontainer), not Floci or async-kinesis.
 """
 
 import typing as t

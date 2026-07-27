@@ -273,7 +273,8 @@ def _(mo):
 @app.cell
 def _(df2_next, mo):
     max_value = len(df2_next)
-    slowq = mo.ui.slider(1, max_value, step=20, value=10)
+    val = 10 if max_value > 10 else max_value
+    slowq = mo.ui.slider(1, max_value, step=20, value=val)
     slowq
     return max_value, slowq
 

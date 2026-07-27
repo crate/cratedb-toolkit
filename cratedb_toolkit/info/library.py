@@ -504,6 +504,7 @@ class Library:
                     COUNT(*) AS count
                 FROM
                     sys.shards
+                WHERE recovery['stage'] != 'DONE'
                 GROUP BY table_name, schema_name, recovery_stage;
             """,
             description="Information about rebalancing progress.",

@@ -15,46 +15,56 @@ import re
 
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 from testcontainers.core.waiting_utils import wait_for_logs
-from testcontainers.localstack import LocalStackContainer
 
 from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer
 
 
-class LocalStackContainerWithKeepalive(KeepaliveContainer, LocalStackContainer):
+class FlociContainerWithKeepalive(KeepaliveContainer):
     """
-    A Testcontainer for LocalStack with improved configurability.
+    A Testcontainer for Floci with improved configurability.
 
-    It honors the `TC_KEEPALIVE` and `LOCALSTACK_VERSION` environment variables.
+    It honors the `TC_KEEPALIVE` and `FLOCI_VERSION` environment variables.
 
     Defining `TC_KEEPALIVE` sets a signal to not shut down the container
     after running the test cases, to speed up later invocations.
 
-    `LOCALSTACK_VERSION` defines the designated LocalStack version, which is
-    useful when used within a test matrix.
+    `FLOCI_VERSION` defines the designated Floci version, which is useful when
+    used within a test matrix.
     """
 
-    LOCALSTACK_VERSION = os.environ.get("LOCALSTACK_VERSION", "4.14")
+    FLOCI_PORT = 4566
+    # Pinned to a released tag rather than `latest`. Floci is a young project;
+    # bump after verifying the Kinesis and DynamoDB suites pass against the new image.
+    FLOCI_VERSION = os.environ.get("FLOCI_VERSION", "1.5.11")
 
     def __init__(
         self,
-        image: str = f"localstack/localstack:{LOCALSTACK_VERSION}",
+        image: str = f"floci/floci:{FLOCI_VERSION}",
         **kwargs,
     ) -> None:
         super().__init__(image=image, **kwargs)
-        self.with_name("testcontainers-localstack")
+        self.with_name("testcontainers-floci")
+        self.with_exposed_ports(self.FLOCI_PORT)
 
     def _configure(self):
-        self.waiting_for(LogMessageWaitStrategy(re.compile(r"Ready\.\n")))
+        self.waiting_for(LogMessageWaitStrategy(re.compile(r"AWS Local Emulator Ready")))
 
     def _connect(self):
         """
-        Wait for LocalStack to be fully ready.
+        Wait for Floci to be fully ready.
 
         ``KeepaliveContainer.start()`` calls ``_configure()`` and ``_connect()``
-        hooks, bypassing ``LocalStackContainer.start()`` which normally waits for
-        the "Ready" log message. Without this, Kinesis and other service APIs
-        receive requests before LocalStack is ready.
+        hooks. Without this, Kinesis and DynamoDB service APIs can receive
+        requests before Floci is ready.
         """
         if not self._wait_strategy:
             raise ValueError("No wait strategy defined")
         wait_for_logs(self, predicate=self._wait_strategy, timeout=60)
+
+    def get_url(self) -> str:
+        """
+        Return the mapped Floci edge endpoint.
+        """
+        host = self.get_container_host_ip()
+        port = self.get_exposed_port(self.FLOCI_PORT)
+        return f"http://{host}:{port}"

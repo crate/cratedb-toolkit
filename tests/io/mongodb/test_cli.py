@@ -1,4 +1,6 @@
-import os
+import shutil
+import subprocess
+import typing as t
 from copy import deepcopy
 from pathlib import Path
 from unittest import mock
@@ -31,8 +33,7 @@ def test_version():
     """
     CLI test: Invoke `migr8 --version`.
     """
-    exitcode = os.system("migr8 --version")  # noqa: S605,S607
-    assert exitcode == 0
+    subprocess.check_call([t.cast(str, shutil.which("migr8")), "--version"])  # noqa: S603,S605,S607
 
 
 DATETIME = dateutil.parser.parse("2020-06-19T15:03:53.727Z")

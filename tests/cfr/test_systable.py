@@ -4,8 +4,9 @@ import json
 import os.path
 import re
 import shutil
-import sys
 import tarfile
+from importlib.resources import files
+from pathlib import Path
 
 import pytest
 from verlib2 import Version
@@ -14,16 +15,9 @@ import tests.cfr
 
 pymongo = pytest.importorskip("polars", reason="Skipping tests because polars is not installed")
 
-import tests
-
-if sys.version_info < (3, 9):
-    from importlib_resources import files
-else:
-    from importlib.resources import files
-from pathlib import Path
-
 from click.testing import CliRunner
 
+import tests
 from cratedb_toolkit.cfr.cli import cli
 
 pytestmark = pytest.mark.cfr
@@ -184,8 +178,8 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
     data_path = tmp_path / "data"
     schema_path.mkdir()
     data_path.mkdir()
-    shutil.copy(sys_operations_schema, schema_path)
-    shutil.copy(sys_operations_data, data_path)
+    shutil.copy(str(sys_operations_schema), schema_path)
+    shutil.copy(str(sys_operations_data), data_path)
 
     # Invoke command.
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)})

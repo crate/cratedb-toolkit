@@ -76,15 +76,31 @@ RUN \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv tool install --upgrade "cratedb-toolkit[full] @ file://${WHEEL}"
+    && uv pip install --upgrade "cratedb-toolkit[full] @ file://${WHEEL}"
 
 # Install curl, for running Compose health checks.
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
     --mount=type=cache,id=apt-lists-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes curl
+
+# Install Supercronic, for scheduling periodic tasks.
+# Latest releases available at https://github.com/aptible/supercronic/releases.
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.45/supercronic-linux-${TARGETARCH} \
+    SUPERCRONIC=supercronic-linux-${TARGETARCH}
+RUN case "${TARGETARCH}" in \
+      amd64)  SUPERCRONIC_SHA1SUM=e894b193bea75a5ee644e700c59e30eedc804cf7 ;; \
+      386)    SUPERCRONIC_SHA1SUM=9389486a0727197fd37573adfe0575f520253de2 ;; \
+      arm)    SUPERCRONIC_SHA1SUM=dce6c3ab96923780f6ca9ad26a5406a1a8fcb04b ;; \
+      arm64)  SUPERCRONIC_SHA1SUM=20ce6dace414a64f0632f4092d6d3745db6085ad ;; \
+      *)      echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
+    esac \
+    && curl -fsSLO "$SUPERCRONIC_URL" \
+    && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+    && chmod +x "$SUPERCRONIC" \
+    && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+    && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
 # Copy `selftest.sh` to the image.
 COPY release/oci-full/selftest.sh /usr/local/bin

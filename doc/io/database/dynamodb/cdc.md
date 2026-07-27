@@ -122,39 +122,36 @@ looks like that.
 export CRATEDB_CLUSTER_URL='crate://admin:dZ...6LqB@testdrive.eks1.eu-west-1.aws.cratedb.net:4200/?ssl=true'
 ```
 
-### LocalStack
+### Floci
 In order to exercise data transfers exclusively on your workstation, you can
-use LocalStack to run DynamoDB and Kinesis service surrogates locally. See
-also the [Get started with Kinesis on LocalStack] tutorial.
+use Floci to run DynamoDB and Kinesis service surrogates locally. See also the
+[Floci Kinesis documentation].
 
-For addressing a Kinesis Data Stream on LocalStack, use a command of that shape.
-See [Credentials for accessing LocalStack AWS API] for further information.
+For addressing a Kinesis Data Stream on Floci, use a command of that shape.
 ```shell
-ctk load "kinesis+dynamodb+cdc://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/cdc-stream?region=eu-central-1"
+ctk load "kinesis+dynamodb+cdc://AKIAIOSFODNN7EXAMPLE:dummy@localhost:4566/cdc-stream?region=eu-central-1"
 ```
 
 :::{tip}
-LocalStack is a cloud service emulator that runs in a single container on your
-laptop or in your CI environment. With LocalStack, you can run your AWS
+Floci is a cloud service emulator that runs in a single container on your
+laptop or in your CI environment. With Floci, you can run your AWS
 applications or Lambdas entirely on your local machine without connecting to
 a remote cloud provider.
 
-In order to invoke LocalStack on your workstation, you can use this Docker
+In order to invoke Floci on your workstation, you can use this Docker
 command.
 ```shell
 docker run \
   --rm -it \
+  --name floci \
   -p 127.0.0.1:4566:4566 \
-  -p 127.0.0.1:4510-4559:4510-4559 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  localstack/localstack:latest
+  floci/floci:1.5.11
 ```
 :::
 
 
 [Change data capture for DynamoDB Streams]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html
-[Credentials for accessing LocalStack AWS API]: https://docs.localstack.cloud/references/credentials/
-[Get started with Kinesis on LocalStack]: https://docs.localstack.cloud/user-guide/aws/kinesis/
+[Floci Kinesis documentation]: https://floci.io/floci/services/kinesis/
 [Kinesis Data Streams]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/kds.html
 [SequenceNumber]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html#DDB-streams_GetShardIterator-request-SequenceNumber
 [ShardIteratorType]: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html#DDB-streams_GetShardIterator-request-ShardIteratorType

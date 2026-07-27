@@ -11,3 +11,6 @@ ctk cfr jobstats view
 ctk cfr jobstats report
 ctk cfr jobstats ui
 ```
+
+Note: Please collect statistics first using `ctk cfr jobstats collect`,
+then use the other commands to display or explore them.

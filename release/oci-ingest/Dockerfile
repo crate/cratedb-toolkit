@@ -122,15 +122,23 @@ RUN \
     --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     true \
     && WHEEL="$(ls /tmp/*.whl)" \
-    && uv pip install --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
+    && uv pip install --upgrade --overrides="/tmp/overrides.txt" "ingestr[oracle,odbc]" "cratedb-toolkit[io-ingest] @ file://${WHEEL}"
 
 # Install curl, for running Compose health checks.
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,id=apt-cache-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
     --mount=type=cache,id=apt-lists-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
     true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests --yes curl
+
+# Install Supercronic, for scheduling periodic tasks.
+# Latest releases available at https://github.com/aptible/supercronic/releases.
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.45/supercronic-linux-${TARGETARCH} \
+    SUPERCRONIC=supercronic-linux-${TARGETARCH}
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+ && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
 # Copy `selftest.sh` to the image.
 COPY release/oci-ingest/selftest.sh /usr/local/bin

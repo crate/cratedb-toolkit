@@ -1,15 +1,11 @@
 import dataclasses
 import typing as t
+from typing import Literal
 
 import requests
 import sqlparse
 
 from cratedb_toolkit.util.database import DatabaseAdapter
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
 
 
 @dataclasses.dataclass

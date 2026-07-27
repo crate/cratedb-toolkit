@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 import pytest
 from click.testing import CliRunner
@@ -11,9 +10,6 @@ TESTDRIVE_DATA_SCHEMA = "testdrive"
 
 
 pytestmark = pytest.mark.nlsql
-
-if sys.version_info < (3, 10):
-    pytest.skip("Only available for Python 3.10+", allow_module_level=True)  # ty: ignore[invalid-argument-type,too-many-positional-arguments]
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -213,6 +209,7 @@ def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
 
 
 @pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
+@pytest.mark.xfail(strict=False, reason="gryphe/mythomax-l2-13b unreliably generates valid SQL")
 def test_query_nlsql_openrouter_permitted(cratedb, provision_db):
     """
     Verify that all SQL statements work when explicitly permitted.

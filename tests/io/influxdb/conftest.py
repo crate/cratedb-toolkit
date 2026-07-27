@@ -4,6 +4,8 @@ import pytest
 
 from cratedb_toolkit.testing.testcontainers.util import PytestTestcontainerAdapter
 
+pytestmark = pytest.mark.influxdb
+
 logger = logging.getLogger(__name__)
 
 

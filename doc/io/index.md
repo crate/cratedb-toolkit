@@ -193,6 +193,15 @@ to load the entire table every time you run the data migration procedure.
 This comes at a minor cost that a few bookkeeping columns exist in the target
 table, however that is rarely an issue.
 
+:::{rubric} Remote scheduling
+:::
+
+To schedule your workload on a remote dask cluster, define the
+`DASK_SCHEDULER_ADDRESS` environment variable.
+```shell
+export DASK_SCHEDULER_ADDRESS='tcp://127.0.0.1:8786'
+```
+
 (io-coverage)=
 ## Coverage
 

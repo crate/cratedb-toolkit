@@ -17,7 +17,7 @@ def dynamodb_copy(source_url, target_url, progress: bool = False):
     ctk load dynamodb://arn:aws:dynamodb:us-east-1:000000000000:table/ProductCatalog
     ctk load dynamodb://arn:aws:dynamodb:us-east-1:841394475918:table/stream-demo
 
-    ctk load dynamodb://LSIAQAAAAAAVNCBMPNSG:dummy@localhost:4566/ProductCatalog?region=eu-central-1
+    ctk load dynamodb://AKIAIOSFODNN7EXAMPLE:dummy@localhost:4566/ProductCatalog?region=eu-central-1
 
     Resources
     ---------

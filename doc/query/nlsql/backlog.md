@@ -12,6 +12,10 @@ orphan: true
   - https://huggingface.co/Ellbendls/Qwen-2.5-3b-Text_to_SQL-GGUF
   - https://github.com/distil-labs/distil-text2sql#usage-examples
   - https://app.readytensor.ai/publications/generating-sql-from-natural-language-using-llama-32-jOImvIBGCfwt
+- Validate models / providers / backends:
+  - Azure, Google, Hugging Face, Mistral
+  - IBM Granite: https://huggingface.co/collections/ibm-granite/
+  - Docker Model Runner: https://docs.docker.com/ai/model-runner/
 
 ## Iteration +2
 
@@ -43,7 +47,6 @@ orphan: true
 ## Iteration +3
 
 - Add providers: anyscale,openllm,vllm
-- Validate providers: Azure, Google, Hugging Face, Mistral
 - Tests: When using the vanilla schema `testdrive-data` with `from tests.conftest import TESTDRIVE_DATA_SCHEMA`,
   the LLM gets confused, and thinks the table is called `sensor_data`. The error message is:
   » The error indicates that the specified table, "sensor_data," is not recognized in the "testdrive-data" schema.

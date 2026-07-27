@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 def import_ingestr():
     """Import ingestr with CrateDB destination adapter."""
     try:
-        with mock.patch("ingestr.src.telemetry.event.track"), mock.patch(
-            "dlt.common.runtime.telemetry._TELEMETRY_STARTED", True
+        with (
+            mock.patch("ingestr.src.telemetry.event.track"),
+            mock.patch("dlt.common.runtime.telemetry._TELEMETRY_STARTED", True),
         ):
             import dlt_cratedb  # noqa: F401
             import ingestr.main

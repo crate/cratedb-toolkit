@@ -23,7 +23,7 @@ Resources:
 # 3rd party libraries, defined using inline script metadata.
 #
 # /// script
-# requires-python = ">=3.9"
+# requires-python = ">=3.10"
 # dependencies = [
 #   "commons-codec>=0.0.20",
 #   "sqlalchemy-cratedb==0.38.0",
