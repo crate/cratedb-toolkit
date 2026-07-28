@@ -5,7 +5,7 @@
 # - https://github.com/FernandoMiguel/Buildkit#mounttypecache
 
 # Stage 1: Build wheel package
-FROM python:3.13-slim-bookworm AS build
+FROM python:3.14-slim-bookworm AS build
 
 # Configure operating system.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -35,7 +35,7 @@ RUN pip install build
 RUN python -m build --wheel ${BUILD}
 
 
-FROM python:3.13-slim-bookworm AS package
+FROM python:3.14-slim-bookworm AS package
 
 LABEL org.opencontainers.image.source="https://github.com/crate/cratedb-toolkit" \
       org.opencontainers.image.title="cratedb-toolkit (full)" \
