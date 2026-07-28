@@ -6,6 +6,9 @@ CFR's `sys-export` and `sys-import` commands support collecting and analyzing
 information about CrateDB clusters for support requests and self-service
 debugging.
 
+Output is a true raw copy of every `sys.*` table.
+See {ref}`cluster-info` for the curated alternatives.
+
 ## Install
 
 ```shell
