@@ -186,10 +186,10 @@ optional-dependencies.io-curated = [
 ]
 optional-dependencies.io-ingest = [
   "cratedb-toolkit[io-base]",
-  "dlt>=1.10,<1.28",
+  "dlt>=1.10",
   "dlt-cratedb>=0.0.1",
-  "ingestr>=0.13.61,<0.15",
-  "sqlalchemy>=1,<2",
+  "psycopg2-binary",
+  "sqlalchemy>=2",
 ]
 optional-dependencies.io-opentable = [
   "cratedb-toolkit[deltalake,iceberg]",
@@ -359,7 +359,6 @@ analysis.allowed-unresolved-imports = [
   "fastapi.**",
   "importlib_metadata.**",
   "importlib_resources.**",
-  "ingestr.**",
   "jessiql.**",
   "kaggle.**",
   "kinesis.**",
