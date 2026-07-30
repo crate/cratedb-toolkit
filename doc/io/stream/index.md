@@ -38,19 +38,6 @@ streaming services and brokers.
 Amazon Kinesis
 ::::
 
-::::{grid-item-card}
-:link: kafka
-:link-type: ref
-:class-item: sd-fs-1 sd-text-center
-:class-footer: sd-fs-5 sd-font-weight-bold
-```{image} /_static/logo/kafka.png
-:height: 80px
-:alt:
-```
-+++
-Apache Kafka
-::::
-
 :::::
 
 ## Synopsis
@@ -62,18 +49,10 @@ uvx 'cratedb-toolkit[io-ingest]' load \
     "crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```
 
-Load data from Apache Kafka topic `testdrive` into CrateDB table `testdrive.kafka`.
-```shell
-uvx 'cratedb-toolkit[io-ingest]' load \
-    "kafka:?bootstrap_servers=localhost:9092&group_id=test&table=testdrive" \
-    "crate://crate:na@localhost:4200/testdrive/kafka"
-```
-
 
 ```{toctree}
 :maxdepth: 1
 :hidden:
 
 kinesis
-kafka
 ```
