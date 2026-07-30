@@ -141,14 +141,6 @@ class DatabaseAddress:
         uri.port = port
         return uri
 
-    def to_ingestr_url(self, port: int = 5432) -> URL:
-        """
-        Return the `cratedb://` variant of the database URI, suitable for `ingestr`.
-        """
-        uri = deepcopy(self.to_postgresql_url(port))
-        uri.scheme = "cratedb"
-        return uri
-
     @property
     def verify_ssl(self) -> bool:
         return self.uri.query_params.get("sslmode", "disable") not in ["disable", "require"]
