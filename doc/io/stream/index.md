@@ -44,7 +44,7 @@ Amazon Kinesis
 
 Load data from Amazon Kinesis stream `testdrive` into CrateDB table `testdrive.kinesis`.
 ```shell
-uvx 'cratedb-toolkit[io-ingest]' load \
+uvx 'cratedb-toolkit[kinesis]' load \
     "kinesis:?aws_access_key_id=${AWS_ACCESS_KEY_ID}&aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}&region_name=eu-central-1&table=arn:aws:kinesis:eu-central-1:831394476016:stream/testdrive" \
     "crate://crate:crate@localhost:4200/testdrive/kinesis"
 ```

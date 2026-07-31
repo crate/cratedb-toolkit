@@ -20,7 +20,7 @@ you don't need an AWS account to exercise the pipeline.
 Install the most recent Python packages [awscli] and [cratedb-toolkit],
 or evaluate {ref}`alternative installation methods <install>`.
 ```shell
-uv tool install --upgrade 'awscli' 'cratedb-toolkit[io-ingest]'
+uv tool install --upgrade 'awscli' 'cratedb-toolkit[kinesis]'
 ```
 
 ## Tutorial

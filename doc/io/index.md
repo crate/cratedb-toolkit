@@ -22,8 +22,8 @@ data warehouse or database to [CrateDB] or [CrateDB Cloud], to consolidate
 infrastructure and save operational costs.
 
 The polyglot pipeline subsystem covers data transfer from and to
-[AWS DMS], [DynamoDB], [InfluxDB], [MongoDB], [MongoDB Atlas],
-and [PostgreSQL], with [CrateDB] and [CrateDB Cloud].
+[AWS DMS], [DynamoDB], [InfluxDB], [MongoDB], and [MongoDB Atlas],
+with [CrateDB] and [CrateDB Cloud].
 For a full list of integrations,
 see {ref}`I/O adapter coverage <io-coverage>`.
 :::
@@ -76,17 +76,17 @@ with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.exampl
 
 Individual I/O adapters need different sets of dependency packages, please
 consult relevant installation notes in the corresponding documentation
-sections. Support for I/O adapter types is currently divided into two
-families defined by Python package extras `io-curated` and `io-ingest`.
+sections. Support for the curated I/O adapter types is bundled into the
+Python package extra `io-curated`.
 
 Support for files, open table formats, InfluxDB, and MongoDB.
 ```shell
 uv tool install --upgrade 'cratedb-toolkit[io-curated]'
 ```
 
-Support for other databases, streams, platforms, and services.
+Support for streaming data via Amazon Kinesis (see {ref}`Streams <io-stream>`).
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
+uv tool install --upgrade 'cratedb-toolkit[kinesis]'
 ```
 
 Alternatively, use Docker or Podman to invoke the container image.
@@ -180,8 +180,8 @@ i.e. transfer table by table.
 :::
 
 Incremental loading (appending, merging, or delete+insert of only the new rows
-from the source table) is currently not supported. The `io-ingest` family of
-adapters is full-load only for now; incremental loading is tracked as backlog.
+from the source table) is currently not supported. The I/O adapters are
+full-load only for now; incremental loading is tracked as backlog.
 
 :::{rubric} Remote scheduling
 :::
@@ -207,7 +207,7 @@ Supported data formats, database types, data platforms, and analytics engines.
  Amazon S3, Azure Cloud Storage, Google Cloud Storage (GCS)
 
 :**Databases**:
-  InfluxDB, MongoDB, MongoDB Atlas, PostgreSQL
+  InfluxDB, MongoDB, MongoDB Atlas
 
 :**Streams**:
   Amazon Kinesis (via AWS DMS)
@@ -215,18 +215,18 @@ Supported data formats, database types, data platforms, and analytics engines.
 :::{note}
 Until recently, this list also advertised a much wider catalog of databases,
 data warehouses, streams, and services (Salesforce, Snowflake, BigQuery, MySQL,
-Kafka, Elasticsearch, Databricks, and about 50 more), reachable through a bundled
-`ingestr` dependency. Auditing that integration found real, tested `cratedb-toolkit`
-code for exactly one of them: PostgreSQL. The rest only appeared to work because
-`ingestr`'s own source factory silently accepted the URL scheme, without any
-`cratedb-toolkit`-specific code or tests behind it.
+PostgreSQL, Kafka, Elasticsearch, Databricks, and about 50 more), reachable
+through a bundled `ingestr` dependency. Auditing that integration found real,
+tested `cratedb-toolkit` code for exactly one of them: PostgreSQL. The rest only
+appeared to work because `ingestr`'s own source factory silently accepted the URL
+scheme, without any `cratedb-toolkit`-specific code or tests behind it.
 
 `ingestr` has since been removed, along with the documentation pages for those
-never-implemented sources. PostgreSQL now loads through a direct `dlt` pipeline
-(`dlt`'s `sql_database` source against the `dlt-cratedb` destination). The wider
-catalog is backlog: a dlt-based adapter (and its documentation) will be built for
-a given source once a real request comes in, rather than ported speculatively
-ahead of time.
+never-implemented sources. Generic SQL-source ingest — including the PostgreSQL
+full-load that `ingestr` used to provide — was dropped with it and not rebuilt.
+The whole catalog is backlog: a dedicated adapter (and its documentation) will be
+built for a given source once a real request comes in, rather than ported
+speculatively ahead of time.
 :::
 
 
@@ -252,4 +252,3 @@ managed/index
 [InfluxDB]: https://github.com/influxdata/influxdb
 [MongoDB]: https://github.com/mongodb/mongo
 [MongoDB Atlas]: https://www.mongodb.com/atlas
-[PostgreSQL]: https://www.postgresql.org/
