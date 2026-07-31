@@ -65,4 +65,4 @@ class TestSqlStatementClassifier:
         assert SqlStatementClassifier(expression="DELETE FROM t").is_dql is False
 
     def test_none_expression_is_denied(self):
-        assert SqlStatementClassifier(expression=None).is_dql is False
+        assert SqlStatementClassifier(expression=None).is_dql is False  # ty: ignore[invalid-argument-type]
