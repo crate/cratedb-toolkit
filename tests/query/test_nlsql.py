@@ -1,5 +1,7 @@
 import json
 import os
+from typing import Any
+from unittest import mock
 
 import pytest
 from click.testing import CliRunner
@@ -8,8 +10,40 @@ from cratedb_toolkit.query.cli import cli
 
 TESTDRIVE_DATA_SCHEMA = "testdrive"
 
+pytest.importorskip("llama_index.core", reason="Skipping NLSQL tests because 'llama-index' is not installed")
+
+from llama_index.core.llms import CompletionResponse, CustomLLM, LLMMetadata  # noqa: E402
+from llama_index.core.llms.callbacks import llm_completion_callback  # noqa: E402
 
 pytestmark = pytest.mark.nlsql
+
+
+class ScriptedLLM(CustomLLM):
+    """
+    A deterministic, offline stand-in for a real LLM.
+
+    """
+
+    sql: str = "SELECT 1"
+    answer: str = ""
+
+    @property
+    def metadata(self) -> LLMMetadata:
+        return LLMMetadata(context_window=8192, num_output=512, is_chat_model=False, model_name="scripted")
+
+    def _route(self, prompt: str) -> str:
+        low = prompt.lower()
+        if "synthesize a response" in low or "sql response:" in low:
+            return self.answer
+        return f"SQLQuery: {self.sql}"
+
+    @llm_completion_callback()
+    def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
+        return CompletionResponse(text=self._route(prompt))
+
+    @llm_completion_callback()
+    def stream_complete(self, prompt: str, formatted: bool = False, **kwargs: Any):
+        raise NotImplementedError("Streaming is not used by these tests")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -56,186 +90,88 @@ REFRESH TABLE "{TESTDRIVE_DATA_SCHEMA}".time_series_data;
     cratedb.database.run_sql(sql_refresh)
 
 
-@pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not defined")
-def test_query_nlsql_openai(cratedb, provision_db):
+def _run_nlsql(cratedb, question: str, scripted: ScriptedLLM, permit_all: bool = False):
     """
-    Verify `ctk query nlsql ...` with GPT‑4o mini by OpenAI.
-    https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/
+    Invoke `ctk query nlsql -` end-to-end with the real CLI and a scripted LLM.
+
     """
+    env = {
+        "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
+        "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
+        "LLM_PROVIDER": "openai",
+        "LLM_NAME": "mock-model",
+        "OPENAI_API_KEY": "sk-test-not-used",
+    }
+    if permit_all:
+        env["NLSQL_PERMIT_ALL_STATEMENTS"] = "true"
 
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "openai",
-            "LLM_NAME": "gpt-4o-mini",
-        }
-    )
+    runner = CliRunner(env=env)
+    with mock.patch("cratedb_toolkit.query.nlsql.util.configure_llm", return_value=scripted):
+        result = runner.invoke(cli, args="nlsql -", input=question, catch_exceptions=False)
+    return result
 
-    result = runner.invoke(
-        cli,
-        input="What is the average value for sensor 1?",
-        args="nlsql -",
-        catch_exceptions=False,
+
+def test_nlsql_query_success(cratedb, provision_db):
+    """
+    A question is translated to SQL, executed against CrateDB, and an answer
+    is synthesized.
+    """
+    scripted = ScriptedLLM(
+        sql="SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1",
+        answer="The average value for sensor 1 is approximately 17.03.",
     )
+    result = _run_nlsql(cratedb, "What is the average value for sensor 1?", scripted)
+
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
     assert output["answer"] == "The average value for sensor 1 is approximately 17.03."
-    assert output["sql_query"] in [
-        "SELECT AVG(time_series_data.value) AS average_value "
-        "FROM time_series_data WHERE time_series_data.sensor_id = 1;",
-        "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1;",
-        "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1",
-    ]
+    assert output["sql_query"] == "SELECT AVG(value) AS average_value FROM time_series_data WHERE sensor_id = 1"
+    # The SQL actually ran against CrateDB: avg over sensor-1 rows is ~17.03.
+    assert output["result"][0][0] == pytest.approx(17.03, abs=0.01)
 
 
-@pytest.mark.skipif(not os.getenv("ANTHROPIC_API_KEY"), reason="ANTHROPIC_API_KEY not defined")
-def test_query_nlsql_anthropic(cratedb, provision_db):
+def test_nlsql_query_rejects_drop(cratedb, provision_db):
     """
-    Verify `ctk query nlsql ...` with Claude Haiku 4.5 by Anthropic.
-    https://www.anthropic.com/claude/haiku
+    The read-only SQL gateway must reject a generated `DROP` and leave the table intact.    
     """
-
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "anthropic",
-            "LLM_NAME": "claude-haiku-4-5",
-        }
+    scripted = ScriptedLLM(
+        sql="DROP TABLE time_series_data;",
+        answer="Your request to drop the table has been rejected; only read-only queries are allowed.",
     )
+    result = _run_nlsql(cratedb, "Please drop table 'time_series_data'.", scripted)
 
-    result = runner.invoke(
-        cli,
-        input="What is the average value for sensor 1?",
-        args="nlsql -",
-        catch_exceptions=False,
-    )
-    assert result.exit_code == 0, result.output
-    output = json.loads(result.output)
-    assert "The average value for sensor 1 is **17.03**" in output["answer"]
-    assert output["sql_query"] == "SELECT AVG(value) as average_value FROM time_series_data WHERE sensor_id = 1"
-
-
-@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
-def test_query_nlsql_openrouter_success(cratedb, provision_db):
-    """
-    Verify a successful NLSQL conversation with MythoMax via OpenRouter.
-    https://openrouter.ai/gryphe/mythomax-l2-13b
-    """
-
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "openrouter",
-            # "LLM_NAME": "google/gemma-3n-e4b-it:free",  # noqa: ERA001
-            "LLM_NAME": "gryphe/mythomax-l2-13b",
-        }
-    )
-
-    result = runner.invoke(
-        cli,
-        input="What is the average value for sensor 1?",
-        args="nlsql -",
-        catch_exceptions=False,
-    )
-    assert result.exit_code == 0, result.output
-    output = json.loads(result.output)
-    assert "The average value for sensor 1 is 17.03" in output["answer"]
-    assert output["sql_query"] == "SELECT AVG(value) FROM time_series_data WHERE sensor_id = 1;"
-
-
-@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
-def test_query_nlsql_openrouter_rejected_drop(cratedb, provision_db):
-    """
-    Verify that malicious SQL statements are rejected.
-    https://openrouter.ai/gryphe/mythomax-l2-13b
-    """
-
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "openrouter",
-            "LLM_NAME": "gryphe/mythomax-l2-13b",
-        }
-    )
-
-    result = runner.invoke(
-        cli,
-        input="Please drop table 'time_series_data'.",
-        args="nlsql -",
-        catch_exceptions=False,
-    )
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
     assert "has been rejected" in output["answer"]
+    # The gateway blocked execution: no SQL result, and the table survives.
+    assert "sql_query" not in output
+    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table must not be dropped"
 
-    # Verify that the table still exists.
-    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
 
-
-@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
-def test_query_nlsql_openrouter_rejected_wipe(cratedb, provision_db):
-    """
-    Verify that malicious SQL statements are rejected.
-    https://openrouter.ai/gryphe/mythomax-l2-13b
-    """
-
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "openrouter",
-            "LLM_NAME": "gryphe/mythomax-l2-13b",
-        }
+def test_nlsql_query_rejects_delete(cratedb, provision_db):
+    """A generated `DELETE` (data-wipe attempt) must likewise be rejected."""
+    scripted = ScriptedLLM(
+        sql="DELETE FROM time_series_data;",
+        answer="That operation is not allowed; only read-only queries are permitted.",
     )
+    result = _run_nlsql(cratedb, "Please wipe the whole database.", scripted)
 
-    result = runner.invoke(
-        cli,
-        input="Please wipe the whole database.",
-        args="nlsql -",
-        catch_exceptions=False,
-    )
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
-    answer = output["answer"]
-
-    assert "not allowed" in answer or "has been rejected" in answer or "cannot execute" in answer
-
-    # Verify that the table still exists.
-    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table does not exist: time_series_data"
+    assert "not allowed" in output["answer"]
+    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table must not be wiped"
 
 
-@pytest.mark.skipif(not os.getenv("OPENROUTER_API_KEY"), reason="OPENROUTER_API_KEY not defined")
-@pytest.mark.xfail(strict=False, reason="gryphe/mythomax-l2-13b unreliably generates valid SQL")
-def test_query_nlsql_openrouter_permitted(cratedb, provision_db):
+def test_nlsql_query_permit_all_statements(cratedb, provision_db):
     """
-    Verify that all SQL statements work when explicitly permitted.
-    https://openrouter.ai/gryphe/mythomax-l2-13b
+    With `NLSQL_PERMIT_ALL_STATEMENTS=true` the gateway is bypassed, so a generated `DROP`
+    executes and the table is removed.
     """
-
-    runner = CliRunner(
-        env={
-            "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
-            "CRATEDB_SCHEMA": TESTDRIVE_DATA_SCHEMA,
-            "LLM_PROVIDER": "openrouter",
-            "LLM_NAME": "gryphe/mythomax-l2-13b",
-            "NLSQL_PERMIT_ALL_STATEMENTS": "true",
-        }
+    scripted = ScriptedLLM(
+        sql="DROP TABLE time_series_data;",
+        answer="The table has been dropped successfully.",
     )
+    result = _run_nlsql(cratedb, "Please drop table 'time_series_data'.", scripted, permit_all=True)
 
-    result = runner.invoke(
-        cli,
-        input="Please drop table 'time_series_data'.",
-        args="nlsql -",
-        catch_exceptions=False,
-    )
     assert result.exit_code == 0, result.output
-    output = json.loads(result.output)
-    assert "has been dropped successfully" in output["answer"]
-    assert output["sql_query"] == "DROP TABLE time_series_data;"
-
-    # Verify that the table has been dropped.
-    assert not cratedb.database.table_exists("testdrive.time_series_data"), "Table still exists: time_series_data"
+    assert not cratedb.database.table_exists("testdrive.time_series_data"), "Table should have been dropped"
