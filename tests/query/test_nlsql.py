@@ -132,7 +132,7 @@ def test_nlsql_query_success(cratedb, provision_db):
 
 def test_nlsql_query_rejects_drop(cratedb, provision_db):
     """
-    The read-only SQL gateway must reject a generated `DROP` and leave the table intact.    
+    The read-only SQL gateway must reject a generated `DROP` and leave the table intact.
     """
     scripted = ScriptedLLM(
         sql="DROP TABLE time_series_data;",
