@@ -61,3 +61,19 @@ def test_router_load_influxdb_scheme_conversion(source_url, expected_scheme):
         actual_url = mock_copy.call_args[0][0]
         assert actual_url.startswith(f"{expected_scheme}://")
         assert "localhost:8086" in actual_url
+
+
+@pytest.mark.parametrize(
+    "source_url",
+    [
+        "mysql://root@localhost:3306/db?table=foo",
+        "kafka://localhost:9092/topic?group.id=foo&auto.offset.reset=earliest",
+    ],
+)
+def test_router_load_unsupported_scheme_raises_not_implemented(source_url):
+
+    router = IoRouter()
+    source = InputOutputResource(url=source_url)
+    target = DatabaseAddress.from_string(CRATEDB_URL)
+    with pytest.raises(NotImplementedError, match="Importing resource not implemented yet"):
+        router.load_table(source=source, target=target)

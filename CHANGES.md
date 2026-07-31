@@ -7,6 +7,11 @@
 - Dependency: Update sqlalchemy-crate version to 0.43.1
 - Removed support for Rockset
 - Fixed a bug in `cfr jobstats ui` where slider will pick an initial value too large
+- Breaking change: Dropped the `ingestr` dependency and, with it, the generic
+  SQL-source ingest path. The purpose-built I/O adapters: Kinesis (`kinesis+dms`,
+  `kinesis+dynamodb`), DynamoDB, InfluxDB, MongoDB, DeltaLake, and Iceberg are
+  unaffected. The `io-ingest` extra no longer pins `sqlalchemy<2`, so it no longer
+  needs to be mutually exclusive with `io`/`io-curated` for that reason.
 
 ## 2026/06/17 v0.0.49
 - Stopped leaking password to log output in `ctk cfr jobstats collect`.
