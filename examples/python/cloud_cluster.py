@@ -36,7 +36,7 @@ Synopsis
     croud clusters list
 
     # Run an example SQL command.
-    ctk shell --command "SELECT * from sys.summits LIMIT 2;"
+    ctk shell --command "SELECT * from sys.summits ORDER BY height DESC LIMIT 2;"
 
 Usage
 =====
@@ -91,7 +91,7 @@ def workload_procedural():
     pprint(cluster.info, stream=sys.stderr)  # noqa: T201
 
     # Run database workload.
-    results = cluster.query("SELECT * from sys.summits LIMIT 2;")
+    results = cluster.query("SELECT * from sys.summits ORDER BY height DESC LIMIT 2;")
     pprint(results, stream=sys.stderr)  # noqa: T201
 
     # Stop the cluster again.
@@ -109,7 +109,7 @@ def workload_contextmanager():
 
     # Acquire a database cluster handle, and run database workload.
     with ManagedCluster.from_env(stop_on_exit=False) as cluster:
-        pprint(cluster.query("SELECT * from sys.summits LIMIT 2;"), stream=sys.stderr)  # noqa: T201
+        pprint(cluster.query("SELECT * from sys.summits ORDER BY height DESC LIMIT 2;"), stream=sys.stderr)  # noqa: T201
 
 
 def main():
@@ -117,7 +117,7 @@ def main():
     Run a workload on a CrateDB database cluster on CrateDB Cloud.
 
         ctk cluster start --cluster-name '<YOUR_CLUSTER_NAME_HERE>'
-        ctk shell --command "SELECT * from sys.summits LIMIT 2;"
+        ctk shell --command "SELECT * from sys.summits ORDER BY height DESC LIMIT 2;"
     """
     workload_procedural()
     workload_contextmanager()
