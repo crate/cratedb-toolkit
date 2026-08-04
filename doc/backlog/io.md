@@ -1,16 +1,6 @@
 # Backlog for `ctk {load,save}`
 
 ## General
-- ingestr: Educate about batch size (`page_size`)
-- ingestr: More parameters for Kinesis
-  - https://getbruin.com/docs/ingestr/commands/ingest.html
-  - https://getbruin.com/docs/ingestr/supported-sources/kinesis.html
-  - ```python
-    # incremental_strategy="delete+insert",
-    # mask=["temperature:noise:0.35", "temperature:round:100"],
-    # full_refresh=True,
-    # progress="interactive",  # log, interactive
-    ```
 
 ## Apache Iceberg
 

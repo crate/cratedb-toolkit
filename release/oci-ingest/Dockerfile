@@ -66,51 +66,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Configure runtime environment.
 ENV PATH=/root/.local/bin:$PATH
 
-# Install PyODBC drivers for MSSQL and PostgreSQL.
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
-    --mount=type=cache,id=apt-lists-package-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
-    true \
-    && apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests --yes curl gpg
-RUN \
-  curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-prod.gpg && \
-  curl -sSL https://packages.microsoft.com/config/debian/12/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
-RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
-    --mount=type=cache,id=apt-lists-package-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
-    true \
-    && export ACCEPT_EULA='Y' \
-    && apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests --yes build-essential libpq-dev unixodbc-dev msodbcsql18 odbc-postgresql
-
-# Update `odbcinst.ini` to make sure full path to driver is listed, and set CommLog to 0.
-# i.e disables any communication logs to be written to files
-RUN \
-    set -euo; \
-    ARCH="$(dpkg-architecture -q DEB_HOST_MULTIARCH)"; \
-    DRIVER="/usr/lib/${ARCH}/odbc/psqlodbcw.so"; \
-    test -f "${DRIVER}" && \
-    sed -E "s|^Driver=.*$|Driver=${DRIVER}|; s|^CommLog=1$|CommLog=0|" /etc/odbcinst.ini > /tmp/temp.ini && \
-    mv -f /tmp/temp.ini /etc/odbcinst.ini
-
-# Install Oracle driver.
-# TODO: Only enable for x64?
-RUN --mount=type=cache,id=apt-cache-package-${TARGETARCH}${TARGETVARIANT},target=/var/cache/apt \
-    --mount=type=cache,id=apt-lists-package-${TARGETARCH}${TARGETVARIANT},target=/var/lib/apt \
-    true \
-    && apt-get update \
-    && apt-get install --no-install-recommends --no-install-suggests --yes libaio1
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/lib /opt/oracle11/lib
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/log /opt/oracle11/log
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/network /opt/oracle11/network
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/nls /opt/oracle11/nls
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/oracore /opt/oracle11/oracore
-COPY --from=docker.io/gvenzl/oracle-xe:11-slim /u01/app/oracle/product/11.2.0/xe/rdbms /opt/oracle11/rdbms
-ENV ORACLE_HOME=/opt/oracle11
-RUN if [ "${TARGETARCH}" = "amd64" ]; then \
-    echo /opt/oracle11/lib > /etc/ld.so.conf.d/oracle.conf && ldconfig; \
-    fi
-
 # Provide wheel package.
 ARG BUILD=/usr/src
 COPY --from=build ${BUILD}/dist/*.whl /tmp
