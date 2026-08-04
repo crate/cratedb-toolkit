@@ -12,6 +12,8 @@
   `kinesis+dynamodb`), DynamoDB, InfluxDB, MongoDB, DeltaLake, and Iceberg are
   unaffected. The `io-ingest` extra no longer pins `sqlalchemy<2`, so it no longer
   needs to be mutually exclusive with `io`/`io-curated` for that reason.
+- OCI: The `cratedb-toolkit-ingest` image no longer bundles the ODBC and Oracle
+  Instant Client drivers.
 
 ## 2026/06/17 v0.0.49
 - Stopped leaking password to log output in `ctk cfr jobstats collect`.
