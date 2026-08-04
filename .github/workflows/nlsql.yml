@@ -7,6 +7,7 @@ on:
     - '.github/workflows/nlsql.yml'
     - 'cratedb_toolkit/query/nlsql/**'
     - 'tests/query/*nlsql*'
+    - 'tests/query/test_sqlgate.py'
     - 'pyproject.toml'
   push:
     branches: [ main ]
@@ -14,6 +15,7 @@ on:
     - '.github/workflows/nlsql.yml'
     - 'cratedb_toolkit/query/nlsql/**'
     - 'tests/query/*nlsql*'
+    - 'tests/query/test_sqlgate.py'
     - 'pyproject.toml'
 
   # Allow job to be triggered manually.
@@ -68,10 +70,6 @@ jobs:
         uv pip install --editable='.[nlsql,test]'
 
     - name: Run software tests
-      env:
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       run: |
         pytest -m nlsql
 
