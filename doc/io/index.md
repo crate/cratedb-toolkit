@@ -14,12 +14,11 @@ Import and export data into/from CrateDB.
 
 :::{div}
 A versatile data I/O framework and command-line application to copy
-data between any source and any destination. It supports many data
-sources, destinations, and data loading strategies out of the box.
+data between CrateDB and a curated set of sources and destinations,
+with support for multiple data loading strategies out of the box.
 
-Adapters for CrateDB let you migrate data from any proprietary enterprise
-data warehouse or database to [CrateDB] or [CrateDB Cloud], to consolidate
-infrastructure and save operational costs.
+The curated adapters let you migrate data into [CrateDB] or [CrateDB Cloud]
+to consolidate infrastructure and save operational costs.
 
 The polyglot pipeline subsystem covers data transfer from and to
 [AWS DMS], [DynamoDB], [InfluxDB], [MongoDB], and [MongoDB Atlas],
@@ -180,8 +179,10 @@ i.e. transfer table by table.
 :::
 
 Incremental loading (appending, merging, or delete+insert of only the new rows
-from the source table) is currently not supported. The I/O adapters are
-full-load only for now; incremental loading is tracked as backlog.
+from the source table) is currently not supported. The table-oriented I/O adapters
+are full-load only for now; incremental loading is tracked as backlog. This does not
+apply to the streaming adapters (see {ref}`Streams <io-stream>`), which process records
+continuously rather than as a one-shot full load.
 
 :::{rubric} Remote scheduling
 :::

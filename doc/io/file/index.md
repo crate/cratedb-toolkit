@@ -23,6 +23,20 @@ the tested, code-level way to load a CSV file into CrateDB:
 ```python
 from cratedb_toolkit.util.database import DatabaseAdapter
 
-adapter = DatabaseAdapter(dburi="crate://crate:na@localhost:4200/")
-adapter.import_csv_pandas(filepath="./examples/cdc/postgresql/diamonds.csv", tablename="testdrive.csv_diamonds")
+adapter = DatabaseAdapter(dburi="crate://crate:na@localhost:4200/?schema=testdrive")
+adapter.import_csv_pandas(
+    filepath="./examples/cdc/postgresql/diamonds.csv",
+    tablename="csv_diamonds",
+    if_exists="replace",
+)
 ```
+
+:::{note}
+The `tablename` argument is passed straight to `pandas.DataFrame.to_sql` as the table
+name, so a value like `"testdrive.csv_diamonds"` would create a table literally named
+`testdrive.csv_diamonds` rather than table `csv_diamonds` in schema `testdrive`. Select
+the target schema through the `?schema=` query parameter on the adapter URL instead.
+
+`if_exists` defaults to `"replace"`, which **drops** an existing target table before
+loading. Pass `if_exists="fail"` or `"append"` if you do not want the table replaced.
+:::
