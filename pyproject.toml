@@ -132,7 +132,7 @@ optional-dependencies.develop = [
   "black[jupyter]<27",
   "poethepoet<1",
   "pyproject-fmt<3",
-  "ruff<0.16",
+  "ruff<0.17",
   "ty==0.0.44",
   "validate-pyproject<1",
 ]
