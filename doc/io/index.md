@@ -14,18 +14,15 @@ Import and export data into/from CrateDB.
 
 :::{div}
 A versatile data I/O framework and command-line application to copy
-data between any source and any destination. It supports many data
-sources, destinations, and data loading strategies out of the box.
+data between CrateDB and a curated set of sources and destinations,
+with support for multiple data loading strategies out of the box.
 
-Adapters for CrateDB let you migrate data from any proprietary enterprise
-data warehouse or database to [CrateDB] or [CrateDB Cloud], to consolidate
-infrastructure and save operational costs.
+The curated adapters let you migrate data into [CrateDB] or [CrateDB Cloud]
+to consolidate infrastructure and save operational costs.
 
 The polyglot pipeline subsystem covers data transfer from and to
-[AWS DMS], [Databricks], [DuckDB], [DynamoDB], [InfluxDB],
-[MongoDB], [MongoDB Atlas], [MotherDuck], [PostgreSQL],
-and many more streaming sources, databases, and data platforms or
-services with [CrateDB] and [CrateDB Cloud].
+[AWS DMS], [DynamoDB], [InfluxDB], [MongoDB], and [MongoDB Atlas],
+with [CrateDB] and [CrateDB Cloud].
 For a full list of integrations,
 see {ref}`I/O adapter coverage <io-coverage>`.
 :::
@@ -78,18 +75,17 @@ with DatabaseCluster.from_params(cluster_url="crate://crate:crate@cratedb.exampl
 
 Individual I/O adapters need different sets of dependency packages, please
 consult relevant installation notes in the corresponding documentation
-sections. Support for I/O adapter types is currently divided into two
-families defined by Python package extras `io-curated` and `io-ingest`,
-which are mutually exclusive to each other.
+sections. Support for the curated I/O adapter types is bundled into the
+Python package extra `io-curated`.
 
 Support for files, open table formats, InfluxDB, and MongoDB.
 ```shell
 uv tool install --upgrade 'cratedb-toolkit[io-curated]'
 ```
 
-Support for other databases, streams, platforms, and services.
+Support for streaming data via Amazon Kinesis (see {ref}`Streams <io-stream>`).
 ```shell
-uv tool install --upgrade 'cratedb-toolkit[io-ingest]'
+uv tool install --upgrade 'cratedb-toolkit[kinesis]'
 ```
 
 Alternatively, use Docker or Podman to invoke the container image.
@@ -182,16 +178,11 @@ i.e. transfer table by table.
 :::{rubric} Incremental loading
 :::
 
-Adapters of the `io-ingest` family support [incremental loading], which means
-you can choose to append, merge, or delete+insert data into the destination
-table using different strategies.
-
-Incremental loading allows you to ingest only the new rows from the source
-table into the destination table, which means that you do not have
-to load the entire table every time you run the data migration procedure.
-
-This comes at a minor cost that a few bookkeeping columns exist in the target
-table, however that is rarely an issue.
+Incremental loading (appending, merging, or delete+insert of only the new rows
+from the source table) is currently not supported. The table-oriented I/O adapters
+are full-load only for now; incremental loading is tracked as backlog. This does not
+apply to the streaming adapters (see {ref}`Streams <io-stream>`), which process records
+continuously rather than as a one-shot full load.
 
 :::{rubric} Remote scheduling
 :::
@@ -205,8 +196,7 @@ export DASK_SCHEDULER_ADDRESS='tcp://127.0.0.1:8786'
 (io-coverage)=
 ## Coverage
 
-Supported data formats, database types, data platforms, analytics engines,
-and other services.
+Supported data formats, database types, data platforms, and analytics engines.
 
 :**File formats**:
   CSV, JSONL/NDJSON, Parquet
@@ -218,24 +208,27 @@ and other services.
  Amazon S3, Azure Cloud Storage, Google Cloud Storage (GCS)
 
 :**Databases**:
-  Actian Data Platform, Actian X, Amazon Athena, Amazon Redshift,
-  Apache Drill, Apache Druid, Apache Hive and Presto, Apache Solr,
-  Clickhouse, CockroachDB, CrateDB, Databend, Databricks, Denodo, DuckDB, EXASOL DB,
-  Elasticsearch, Firebird, Firebolt, Google BigQuery, Google Sheets, Greenplum,
-  HyperSQL (hsqldb), IBM DB2 and Informix, IBM Netezza Performance Server, Impala, Ingres,
-  Kinetica, Microsoft Access, Microsoft SQL Server, MonetDB, MongoDB, MySQL and MariaDB,
-  OpenGauss, OpenSearch, Oracle, PostgreSQL, Rockset, SAP ASE, SAP HANA,
-  SAP Sybase SQL Anywhere, Snowflake, SQLite, Teradata Vantage, TiDB, Vector, YDB,
-  YugabyteDB
+  InfluxDB, MongoDB, MongoDB Atlas
 
 :**Streams**:
-  Amazon Kinesis, Apache Kafka (Amazon MSK, Confluent Kafka, Redpanda, RobustMQ, WarpStream)
+  Amazon Kinesis (via AWS DMS)
 
-:**Services**:
-  Airtable, Asana, Facebook Ads, GitHub, Google Ads, Google Analytics,
-  Google Sheets, Jira, HubSpot, Linear, LinkedIn Ads, Mailchimp, Mixpanel,
-  Notion, Personio, Pinterest, Pipedrive, Salesforce, Shopify, Slack, Stripe,
-  TikTok Ads, Zendesk, Zoom, etc.
+:::{note}
+Until recently, this list also advertised a much wider catalog of databases,
+data warehouses, streams, and services (Salesforce, Snowflake, BigQuery, MySQL,
+PostgreSQL, Kafka, Elasticsearch, Databricks, and about 50 more), reachable
+through a bundled `ingestr` dependency. Auditing that integration found real,
+tested `cratedb-toolkit` code for exactly one of them: PostgreSQL. The rest only
+appeared to work because `ingestr`'s own source factory silently accepted the URL
+scheme, without any `cratedb-toolkit`-specific code or tests behind it.
+
+`ingestr` has since been removed, along with the documentation pages for those
+never-implemented sources. Generic SQL-source ingest — including the PostgreSQL
+full-load that `ingestr` used to provide — was dropped with it and not rebuilt.
+The whole catalog is backlog: a dedicated adapter (and its documentation) will be
+built for a given source once a real request comes in, rather than ported
+speculatively ahead of time.
+:::
 
 
 
@@ -245,10 +238,7 @@ and other services.
 
 file/index
 database/index
-data-warehouse/index
-search-engine/index
 stream/index
-service/index
 open-table/index
 ```
 ```{toctree}
@@ -259,12 +249,7 @@ managed/index
 
 
 [AWS DMS]: https://aws.amazon.com/dms/
-[Databricks]: https://www.databricks.com/
-[DuckDB]: https://github.com/duckdb/duckdb
 [DynamoDB]: https://aws.amazon.com/dynamodb/
-[incremental loading]: https://bruin-data.github.io/ingestr/getting-started/incremental-loading.html
 [InfluxDB]: https://github.com/influxdata/influxdb
 [MongoDB]: https://github.com/mongodb/mongo
 [MongoDB Atlas]: https://www.mongodb.com/atlas
-[MotherDuck]: https://motherduck.com/
-[PostgreSQL]: https://www.postgresql.org/

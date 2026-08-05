@@ -186,10 +186,6 @@ optional-dependencies.io-curated = [
 ]
 optional-dependencies.io-ingest = [
   "cratedb-toolkit[io-base]",
-  "dlt>=1.10,<1.28",
-  "dlt-cratedb>=0.0.1",
-  "ingestr>=0.13.61,<0.15",
-  "sqlalchemy>=1,<2",
 ]
 optional-dependencies.io-opentable = [
   "cratedb-toolkit[deltalake,iceberg]",
@@ -265,7 +261,7 @@ optional-dependencies.test = [
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.27",
-  "testcontainers[azurite,minio,postgres]",
+  "testcontainers[azurite,minio]",
   "types-docutils<0.23",
 ]
 optional-dependencies.test-mongodb = [
@@ -354,12 +350,9 @@ analysis.allowed-unresolved-imports = [
   "bson.**",
   "bsonjs.**",
   "datasets.**",
-  "dlt.**",
-  "dlt_cratedb.**",
   "fastapi.**",
   "importlib_metadata.**",
   "importlib_resources.**",
-  "ingestr.**",
   "jessiql.**",
   "kaggle.**",
   "kinesis.**",
@@ -388,7 +381,6 @@ ini_options.markers = [
   "kinesis",
   "mongodb",
   "nlsql",
-  "postgresql",
   "pymongo",
   "python",
   "shell",
@@ -447,7 +439,7 @@ tasks.release = [
   { cmd = "python -m build" },
   { cmd = "twine upload --skip-existing dist/*" },
 ]
-tasks.test = { cmd = "pytest -m 'not (influxdb or postgresql)'" }
+tasks.test = { cmd = "pytest -m 'not influxdb'" }
 tasks.build-cfr = { cmd = "pyinstaller cratedb_toolkit/cfr/cli.py --onefile --name cratedb-cfr" }
 
 [tool.versioningit]

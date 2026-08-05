@@ -77,5 +77,7 @@ set -e
 # Start or resume the CrateDB Cloud cluster.
 ctk cluster start
 
-# Query the first 5 rows from a built-in table.
-ctk shell --command "SELECT * from sys.summits LIMIT 5;"
+# Query the top 5 highest summits from a built-in table.
+# `ORDER BY height DESC` keeps the result deterministic (Mont Blanc, the highest
+# summit, is always included)
+ctk shell --command "SELECT * from sys.summits ORDER BY height DESC LIMIT 5;"

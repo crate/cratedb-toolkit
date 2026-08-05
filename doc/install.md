@@ -29,9 +29,9 @@ ctk --version
 ## Container
 
 Alternatively, use a container image from GHCR. Use `ghcr.io/crate/cratedb-toolkit`
-for the default toolset. To use the "ingest" image (which includes the `io-ingest`
-extras and the ingestr-based I/O adapters), use `ghcr.io/crate/cratedb-toolkit-ingest`.
-The default image does not include these extras or drivers.
+for the default toolset. The "ingest" image `ghcr.io/crate/cratedb-toolkit-ingest`
+is a slimmer variant carrying the `io-ingest` extra that additionally bundles a task
+scheduler (Supercronic) for running periodic ingest jobs.
 
 Run with Docker or Podman.
 ```shell

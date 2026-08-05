@@ -119,15 +119,7 @@ class IoRouter:
 
             return from_iceberg(str(source_url_obj), target_url)
 
-        from cratedb_toolkit.io.ingestr.api import ingestr_copy, ingestr_select
-
-        source_url = str(source_url_obj)
-
-        if ingestr_select(source_url):
-            return ingestr_copy(source_url, target, progress=True)
-
-        else:
-            raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
+        raise NotImplementedError(f"Importing resource not implemented yet: {source_url_obj}")
 
     @compute.function
     def save_table(

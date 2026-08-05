@@ -3,44 +3,40 @@
 # Files
 
 :::{div} sd-text-muted
-Import and export data into/from files on filesystem and cloud storage.
+Import data from files on filesystem and cloud storage into CrateDB.
 :::
 
-:::{include} ../_install-ingest.md
+:::{note}
+The former `ctk load "<scheme>://..."` CLI examples for files (Amazon S3, Google Cloud
+Storage, and the `csv://` scheme) were reachable only through a bundled `ingestr`
+dependency, which has since been removed (see {ref}`I/O adapter coverage <io-coverage>`).
+None of them had `cratedb-toolkit`-specific code or tests behind them, so they have been
+dropped rather than carried over as non-working documentation.
 :::
 
-## Cloud storage
+## CSV
 
-### Amazon S3
-```shell
-ctk load \
-    "s3://?access_key_id=${AWS_ACCESS_KEY_ID}&secret_access_key=${AWS_SECRET_ACCESS_KEY}&table=openaq-fetches/realtime/2023-02-25/1677351953_eea_2aa299a7-b688-4200-864a-8df7bac3af5b.ndjson#jsonl" \
-    "crate://crate:na@localhost:4200/testdrive/s3_ndjson"
+CSV loading is available through the Python API. Use
+`cratedb_toolkit.util.database.DatabaseAdapter.import_csv_pandas` or `import_csv_dask` --
+the tested, code-level way to load a CSV file into CrateDB:
+
+```python
+from cratedb_toolkit.util.database import DatabaseAdapter
+
+adapter = DatabaseAdapter(dburi="crate://crate:na@localhost:4200/?schema=testdrive")
+adapter.import_csv_pandas(
+    filepath="./examples/cdc/postgresql/diamonds.csv",
+    tablename="csv_diamonds",
+    if_exists="replace",
+)
 ```
-See documentation about [ingestr and Amazon S3] about details of the URI format,
-file globbing patterns, compression options, and file type hinting options.
-:::{div}
-:style: font-size: small
 
-Source URL template: `s3://?access_key_id=<aws-access-key-id>&secret_access_key=<aws-secret-access-key>&table=<bucket-name>/<file-glob>`
+:::{note}
+The `tablename` argument is passed straight to `pandas.DataFrame.to_sql` as the table
+name, so a value like `"testdrive.csv_diamonds"` would create a table literally named
+`testdrive.csv_diamonds` rather than table `csv_diamonds` in schema `testdrive`. Select
+the target schema through the `?schema=` query parameter on the adapter URL instead.
+
+`if_exists` defaults to `"replace"`, which **drops** an existing target table before
+loading. Pass `if_exists="fail"` or `"append"` if you do not want the table replaced.
 :::
-
-### Google Cloud Storage (GCS)
-```shell
-ctk load \
-    "gs://?credentials_path=/path/to/service-account.json&table=<bucket-name>/<file-glob>" \
-    "crate://crate:na@localhost:4200/testdrive/gcs"
-```
-
-
-## File formats
-
-### CSV
-```shell
-ctk load \
-    "csv://./examples/cdc/postgresql/diamonds.csv?table=sample" \
-    "crate://crate:na@localhost:4200/testdrive/csv_diamonds"
-```
-
-
-[ingestr and Amazon S3]: https://bruin-data.github.io/ingestr/supported-sources/s3.html

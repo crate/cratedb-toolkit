@@ -25,7 +25,6 @@
 [![ci-influxdb][ci-influxdb-badge]][ci-influxdb-workflow]
 [![ci-kinesis][ci-kinesis-badge]][ci-kinesis-workflow]
 [![ci-mongodb][ci-mongodb-badge]][ci-mongodb-workflow]
-[![ci-postgresql][ci-postgresql-badge]][ci-postgresql-workflow]
 [![ci-pymongo][ci-pymongo-badge]][ci-pymongo-workflow]
 
 
@@ -102,7 +101,5 @@ pip install 'cratedb-toolkit[full]==0.0.38'
 [ci-mongodb-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/mongodb.yml
 [ci-nlsql-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/nlsql.yml/badge.svg
 [ci-nlsql-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/nlsql.yml
-[ci-postgresql-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml/badge.svg
-[ci-postgresql-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/postgresql.yml
 [ci-pymongo-badge]: https://github.com/crate/cratedb-toolkit/actions/workflows/pymongo.yml/badge.svg
 [ci-pymongo-workflow]: https://github.com/crate/cratedb-toolkit/actions/workflows/pymongo.yml
