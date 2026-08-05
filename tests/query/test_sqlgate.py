@@ -12,6 +12,8 @@ pytest.importorskip("sqlparse")
 
 from cratedb_toolkit.query.nlsql.sqlgate import SqlStatementClassifier, sql_is_permitted  # noqa: E402
 
+pytestmark = pytest.mark.nlsql
+
 
 @pytest.mark.parametrize(
     "expression",

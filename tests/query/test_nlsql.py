@@ -158,8 +158,9 @@ def test_nlsql_query_rejects_delete(cratedb, provision_db):
 
     assert result.exit_code == 0, result.output
     output = json.loads(result.output)
-    assert "not allowed" in output["answer"]
-    assert cratedb.database.table_exists("testdrive.time_series_data"), "Table must not be wiped"
+    # The gateway blocked execution: no SQL result, and the rows survive.
+    assert "sql_query" not in output
+    assert cratedb.database.count_records("testdrive.time_series_data") == 12, "Rows must not be deleted"
 
 
 def test_nlsql_query_permit_all_statements(cratedb, provision_db):
