@@ -183,7 +183,7 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
 
     # Verify log output.
     assert "Importing system tables from" in caplog.text
-    assert re.search(r"Successfully imported \d+ tables", caplog.text), "Log message missing"
+    assert re.search(r"Successfully imported \d+ system tables", caplog.text), "Log message missing"
 
     # Verify the outcome.
     results = cratedb.database.run_sql("SHOW TABLES", records=True)
