@@ -2,12 +2,19 @@
 
 # System table exporter
 
-CFR's `sys-export` and `sys-import` commands support collecting and analyzing
-information about CrateDB clusters for support requests and self-service
-debugging.
+:::{important}
+**`ctk cfr sys-export` is the recommended command for collecting diagnostics for
+a CrateDB support case.** Run it, then attach the resulting file to your case.
 
-Output is a true raw copy of every `sys.*` table.
-See {ref}`cluster-info` for the curated alternatives.
+It collects raw, uninterpreted data only. The other commands under {ref}`cfr` 
+and {ref}`cluster-info` present curated or interpreted views for your own use.
+:::
+
+`sys-export` produces a **diagnostics bundle**: a raw copy of every `sys.*` and
+`information_schema` table, together with your own table and view definitions,
+and a `manifest.json` describing exactly what was and was not collected.
+`sys-import` loads the raw tables from such a bundle back into a cluster for
+analysis, one schema subtree at a time.
 
 ## Install
 
@@ -19,21 +26,63 @@ Alternatively, use the Docker image per `ghcr.io/crate/cratedb-toolkit`.
 For more information about installing CrateDB Toolkit, see {ref}`install`.
 :::
 
+## Collecting diagnostics for a support case
+
+```shell
+ctk cfr --cluster-url="crate://localhost:4200/" \
+    sys-export ./diagnostics.tgz
+```
+
+Attach the resulting file to your support case. The log output tells where
+it was written.
+
 ## Synopsis
 
-Export system table information into timestamped directory using
-the pattern `cfr/{clustername}/{timestamp}/sys`.
+Export system table information into a timestamped directory using
+the pattern `cfr/{clustername}/{timestamp}`.
 By default, the working directory is used as the parent folder.
 ```shell
 ctk cfr --cluster-url="crate://localhost:4200/" \
     sys-export file:///var/ctk/cfr
 ```
 
-Import system table information from directory into given schema.
+Give the target a `.tgz` or `.tar.gz` name to receive a single archive file
+instead.
+
+Import a bundle's raw tables back into a cluster for analysis. Point `sys-import`
+at one per-schema subdirectory of the bundle — `sys` or `information_schema` —
+and give it a target schema to restore into.
 ```shell
 ctk cfr --cluster-url="crate://localhost:4200/?schema=case0815" \
     sys-import file://./cfr/crate/2024-04-18T01-13-41/sys
 ```
+
+Table names keep their bundle prefix, so `sys.jobs_log` is restored as
+`"case0815"."sys-jobs_log"`, and `information_schema.columns` as
+`"case0815"."is-columns"`. The `ddl/` subtree is plain SQL for you to read or
+replay yourself; `sys-import` does not consume it.
+
+## Bundle layout
+
+```text
+{clustername}/{timestamp}/
+├── manifest.json            # what this bundle is, and anything that failed
+├── sys/                     # raw `sys.*` tables
+│   ├── schema/
+│   └── data/
+├── information_schema/      # raw `information_schema` tables
+│   ├── schema/
+│   └── data/
+└── ddl/
+    ├── tables/              # your tables, per `SHOW CREATE TABLE`
+    └── views/               # your views
+```
+
+`manifest.json` identifies the collection: cluster name, the cluster's CrateDB
+version, the toolkit version, and the timestamp. Lists anything that could
+not be collected: `schema_failures` for tables whose `.sql` file is missing, and
+`data_failures` for tables whose data could not be read, each with the reason.
+
 
 ## Configuration
 

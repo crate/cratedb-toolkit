@@ -10,9 +10,11 @@ A bundle of information inquiry utilities, for diagnostics and more.
 - `ctk cfr info record` — the same snapshot, persisted over time. See {ref}`cfr-info`.
 - `ctk cfr jobstats collect` / `view` — a separate, continuously-collected time series of
   query statistics, not the same data as `ctk info jobs`. See {ref}`cfr-jobstats`.
-- `ctk cfr sys-export` — a true raw dump of every system table, no interpretation. This is
-  the one to reach for when collecting diagnostics for a CrateDB support case.
-  See {ref}`cfr-systable`.
+- `ctk cfr sys-export` - A raw dump of every system table plus your own table and 
+  view definitions, with a manifest describing what was collected, delivered as 
+  one shareable file. No interpretation — that happens on the support side. 
+  This is the recommended entry point, and none of the commands below are a substitute 
+  for it. See {ref}`cfr-systable`.
 :::
 
 ## Install
