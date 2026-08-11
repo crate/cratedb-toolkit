@@ -6,7 +6,7 @@
 **`ctk cfr sys-export` is the recommended command for collecting diagnostics for
 a CrateDB support case.** Run it, then attach the resulting file to your case.
 
-It collects raw, uninterpreted data only. The other commands under {ref}`cfr` 
+It collects raw, uninterpreted data only. The other commands under {ref}`cfr`
 and {ref}`cluster-info` present curated or interpreted views for your own use.
 :::
 
@@ -83,6 +83,34 @@ version, the toolkit version, and the timestamp. Lists anything that could
 not be collected: `schema_failures` for tables whose `.sql` file is missing, and
 `data_failures` for tables whose data could not be read, each with the reason.
 
+## What the bundle contains
+
+A bundle contains cluster metadata, not the contents of your tables.
+**No rows from your own tables are exported** — the `ddl/` subtree holds table
+and view *definitions* only.
+
+Credentials never reach the bundle. CrateDB itself returns
+`sys.users.password`, and `access_key` / `secret_key` in
+`sys.repositories.settings`, already redacted; JWT entries carry issuer,
+audience, and username, but no token material.
+
+One category does warrant a look before sharing: **`sys.jobs_log`, `sys.jobs`,
+`sys.operations_log`, and `sys.sessions` record SQL statements as they were
+executed, including literal values.** If your queries embed personal or
+otherwise sensitive values, those values appear in the bundle. This is the only
+place where data from your tables can be present.
+
+Beyond that, the bundle describes your cluster rather than its contents: schema
+names, table and column names and comments; user, role, and privilege names;
+client addresses of active sessions; and node hostnames, filesystem paths, and
+OS details. `manifest.json` lists exactly which schemas and tables were
+collected, so a bundle can be reviewed before it is passed on.
+
+:::{note}
+The `--scrub` option does not apply to `sys-export`. It blanks out information
+about the local machine environment in `ctk cfr info record`, not data collected
+from the cluster.
+:::
 
 ## Configuration
 
