@@ -49,12 +49,16 @@ def _(limitsl):
     import pandas as pd
     import sqlalchemy as sa
 
+    from cratedb_toolkit.model import DatabaseAddress
+
     sqlalchemy_url = os.getenv("CRATEDB_CLUSTER_URL", "crate://?schema=stats")
     engine = sa.create_engine(sqlalchemy_url)
+
+    schema = DatabaseAddress.from_string(sqlalchemy_url).schema or "stats"
     df = pd.read_sql(
         sql=f"""
         SELECT stmt, username, query_type, last_used, avg_duration, bucket
-        FROM stats.jobstats_statements
+        FROM "{schema}".jobstats_statements
         ORDER BY last_used, avg_duration DESC
         LIMIT {limitsl.value}""",
         con=engine,
