@@ -170,7 +170,7 @@ class Library:
                     sys.jobs_log;
             """,
             transform=get_single_value("job_count"),
-            description="Total number of queries on this node.",
+            description="Total number of queries recorded in `sys.jobs_log`.",
         )
         performance15min = InfoElement(
             name="performance15min",
@@ -230,7 +230,7 @@ class Library:
                   MAX((ended::LONG - started::LONG) ) AS max_duration,
                   MIN((ended::LONG - started::LONG) ) AS min_duration,
                   AVG((ended::LONG - started::LONG) ) AS avg_duration,
-                  PERCENTILE((ended::LONG - started::LONG), 0.99) AS p90
+                  PERCENTILE((ended::LONG - started::LONG), 0.99) AS p99
                 FROM sys.jobs_log
                 GROUP BY stmt
                 ORDER BY stmt_count DESC
