@@ -60,7 +60,7 @@ def test_job_info_container_elements():
     """
     Verify `ctk info jobs` emits exactly the well-known set of elements.
     """
-    
+
     container = JobInfoContainer(adapter=FakeAdapter())
     assert sorted(container.elements.index) == JOB_ELEMENT_NAMES
     assert len(container.elements.items) == len(JOB_ELEMENT_NAMES)

@@ -2,11 +2,14 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 
 # ruff: noqa: S608
+import hashlib
+import io
 import json
 import logging
 import os
 import time
 import typing as t
+from contextlib import redirect_stdout
 from uuid import uuid4
 
 import urllib3
@@ -19,9 +22,11 @@ logger = logging.getLogger(__name__)
 
 TRACING = False
 
+# How far back to look for jobs when no watermark has been recorded yet, in seconds.
+INITIAL_LOOKBACK_SECONDS = 600
 
 last_execution_ts = 0
-sys_jobs_log = {}
+sys_jobs_log: t.Dict[str, t.Dict[str, t.Any]] = {}
 bucket_list = [10, 50, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000]
 bucket_dict = {
     "10": 0,
@@ -45,7 +50,21 @@ last_scrape: int
 interval: float
 anonymize_sql: bool = False
 deanonymize_sql: bool = False  # Added global flag for deanonymization
-decoder_dict_path: str
+decoder_dict_path: str = ""
+
+
+def reset_state():
+    """
+    Discard all accumulated in-memory statistics.
+
+    The collector keeps its statistics in module-global state. Without resetting it,
+    a second `boot()` within the same process starts off with statements flagged as
+    already stored (`in_db=True`), which makes `write_stats_to_db` issue an `UPDATE`
+    against a table that has no such row, silently dropping the statistics.
+    """
+    global last_execution_ts
+    last_execution_ts = 0
+    sys_jobs_log.clear()
 
 
 def boot(
@@ -66,6 +85,7 @@ def boot(
         anonymize_sql, \
         deanonymize_sql, \
         decoder_dict_path
+    reset_state()
     anonymize_sql = anonymize_statements
     deanonymize_sql = deanonymize_statements
 
@@ -83,6 +103,7 @@ def boot(
         logger.info(f"SQL deanonymization is enabled, using dictionary: {decoder_dict_path}")
 
     interval = float(os.getenv("INTERVAL", 10))
+    initial_lookback = float(os.getenv("INITIAL_LOOKBACK_SECONDS", INITIAL_LOOKBACK_SECONDS))
     stmt_log_table = os.getenv("STMT_TABLE", f'"{schema}".jobstats_statements')
     last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{schema}".jobstats_last')
 
@@ -116,24 +137,45 @@ def boot(
         # If no separate reporting DB, use the same cursor for both
         report_cursor = cursor
 
-    last_scrape = int(time.time() * 1000) - int(interval * 60000)
-
     dbinit()
+
+    # Resume from the recorded watermark, so a restarted collector neither re-counts jobs
+    # it has already processed, nor misses jobs which ran while it was not running.
+    if isinstance(last_execution_ts, (int, float)) and last_execution_ts > 0:
+        last_scrape = int(last_execution_ts)
+        logger.info(f"Resuming from recorded watermark: {last_scrape}")
+    else:
+        last_scrape = int(time.time() * 1000) - int(initial_lookback * 1000)
+        logger.info(f"No watermark recorded yet, looking back {initial_lookback} seconds")
+
+
+def redacted_statement(statement: str) -> str:
+    """
+    Return a placeholder for a statement which could not be anonymized.
+    """
+    digest = hashlib.sha256(statement.encode("utf-8")).hexdigest()[:16]
+    return f"<redacted: {digest}>"
 
 
 def anonymize_statement(statement: str) -> str:
-    """Anonymize SQL statement using queryanonymizer."""
-    if anonymize_sql and anonymize is not None:
-        try:
-            # Load dictionary file each time
-            encoder_dict = {}
-            try:
-                with open(decoder_dict_path, "r") as f:
-                    encoder_dict = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError) as e:
-                logger.warning(f"Could not load encoder dictionary: {e}")
+    """
+    Anonymize SQL statement using queryanonymizer.
 
-            # Call anonymize and extract only the anonymized statement (first item)
+    When anonymization fails, the statement is redacted rather than stored in clear text.
+    """
+    if not anonymize_sql:
+        return statement
+    try:
+        # Load dictionary file each time
+        encoder_dict = {}
+        try:
+            with open(decoder_dict_path, "r") as f:
+                encoder_dict = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.warning(f"Could not load encoder dictionary: {e}")
+
+        # Call anonymize and extract only the anonymized statement (first item).
+        with redirect_stdout(io.StringIO()):
             result = anonymize(
                 query=statement,
                 keywords_group="SQL",
@@ -143,13 +185,13 @@ def anonymize_statement(statement: str) -> str:
                 path_to_decoder_dictionary_file=decoder_dict_path,
                 custom_encoder_dictionary=encoder_dict,
             )
-            # Return only the anonymized statement string
-            if isinstance(result, tuple) and len(result) > 0:
-                return result[0]
-            return result
-        except Exception as e:
-            logger.warning(f"Failed to anonymize statement: {e}")
-    return statement
+        # Return only the anonymized statement string
+        if isinstance(result, tuple) and len(result) > 0:
+            return result[0]
+        return result
+    except Exception as e:
+        logger.warning(f"Failed to anonymize statement, redacting it instead: {e}")
+        return redacted_statement(statement)
 
 
 def deanonymize_statement(statement: str) -> str:
@@ -161,11 +203,16 @@ def deanonymize_statement(statement: str) -> str:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logger.warning(f"Could not load decoder dictionary: {e}")
 
-        # Call anonymize to decode the statement
-        result = deanonymize(
-            statement,
-            path_to_decoder_dictionary_file=decoder_dict_path,
-        )
+        # Call anonymize to decode the statement, again discarding its output on stdout.
+        try:
+            with redirect_stdout(io.StringIO()):
+                result = deanonymize(
+                    statement,
+                    path_to_decoder_dictionary_file=decoder_dict_path,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to deanonymize statement: {e}")
+            return statement
 
         # Return only the deanonymized statement string
         if isinstance(result, tuple) and len(result) > 0:
@@ -181,11 +228,14 @@ def dbinit():
         f"username TEXT, query_type TEXT, avg_duration FLOAT, nodes ARRAY(TEXT))"
     )
     report_cursor.execute(stmt)
+    # Refresh before reading, so statistics written by a previous run are seen.
+    report_cursor.execute(f"REFRESH TABLE {stmt_log_table}")
     stmt = f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used FROM {stmt_log_table}"
     report_cursor.execute(stmt)
     init_stmts(report_cursor.fetchall())
     stmt = f"CREATE TABLE IF NOT EXISTS {last_exec_table} (last_execution TIMESTAMP)"
     report_cursor.execute(stmt)
+    report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
     stmt = f"SELECT last_execution FROM {last_exec_table}"
     report_cursor.execute(stmt)
     init_last_execution(report_cursor.fetchall())
@@ -197,6 +247,8 @@ def init_last_execution(last_execution):
         last_execution_ts = 0
         stmt = f"INSERT INTO {last_exec_table} (last_execution) VALUES (?)"
         report_cursor.execute(stmt, (0,))
+        # Refresh, so the `UPDATE` of `write_stats_to_db` finds the record just inserted.
+        report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
     else:
         last_execution_ts = last_execution[0][0]
 
@@ -296,6 +348,9 @@ def read_stats():
             deanonymized_results.append(tuple(row_list))
         results = deanonymized_results
 
+    # The records just read are authoritative. Without discarding what `dbinit` has read
+    # before, deanonymized statements would be reported next to their anonymized form.
+    sys_jobs_log.clear()
     init_stmts(results)
     return sys_jobs_log
 
