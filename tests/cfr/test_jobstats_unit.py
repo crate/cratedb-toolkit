@@ -5,6 +5,8 @@ The collector accumulates its statistics in Python, not in SQL, so the bucket
 assignment and the average computation are verified here explicitly.
 """
 
+import typing as t
+
 import pytest
 
 from cratedb_toolkit.cfr import jobstats
@@ -32,6 +34,42 @@ def job(started=1_000, duration=50, stmt="SELECT 1", query_type="SELECT", userna
     Produce a single `sys.jobs_log` record, in the shape `scrape_db` yields it.
     """
     return (started, started + duration, {"type": query_type}, stmt, username, {"id": "n1", "name": node_name})
+
+
+def db_record(stmt="SELECT 1", **overrides):
+    """
+    Produce a single record of the statistics table, in the shape `fetch_records` yields it.
+    """
+    record = {
+        "id": "id-1",
+        "stmt": stmt,
+        "calls": 99,
+        "bucket": dict(jobstats.bucket_dict),
+        "username": "crate",
+        "query_type": "SELECT",
+        "avg_duration": 1.5,
+        "nodes": ["n1"],
+        "last_used": 1_000,
+    }
+    record.update(overrides)
+    return record
+
+
+class FakeCursor:
+    """
+    Record statements instead of executing them, and reply with canned records.
+    """
+
+    def __init__(self, column_names=None, rows=None):
+        self.description = [(name,) for name in column_names or []]
+        self.rows = rows or []
+        self.statements: t.List[str] = []
+
+    def execute(self, statement, parameters=None):
+        self.statements.append(statement)
+
+    def fetchall(self):
+        return self.rows
 
 
 # Bucket assignment.
@@ -166,21 +204,21 @@ def test_reset_state():
 
 def test_init_stmts_keeps_accumulated_statistics():
     """
-    Verify reading rows from the database does not clobber freshly accumulated statistics.
+    Verify reading records from the database does not clobber freshly accumulated statistics.
     """
     jobstats.update_statistics([job(duration=50)])
-    jobstats.init_stmts([("id-1", "SELECT 1", 99, dict(jobstats.bucket_dict), "crate", "SELECT", 1.0, [], 1_000)])
+    jobstats.init_stmts([db_record()])
 
     entry = jobstats.sys_jobs_log["SELECT 1"]
     assert entry["calls"] == 1
     assert entry["in_db"] is False
 
 
-def test_init_stmts_adopts_database_rows():
+def test_init_stmts_adopts_database_records():
     """
-    Verify rows read from the database are adopted as already persisted.
+    Verify records read from the database are adopted as already persisted.
     """
-    jobstats.init_stmts([("id-1", "SELECT 1", 99, dict(jobstats.bucket_dict), "crate", "SELECT", 1.5, ["n1"], 1_000)])
+    jobstats.init_stmts([db_record()])
 
     entry = jobstats.sys_jobs_log["SELECT 1"]
     assert entry["id"] == "id-1"
@@ -188,6 +226,94 @@ def test_init_stmts_adopts_database_rows():
     assert entry["avg_duration"] == 1.5
     assert entry["in_db"] is True
     assert entry["changed"] is False
+
+
+def test_init_stmts_maps_columns_by_name():
+    """
+    Verify each column ends up in its own field.
+
+    The readers of the statistics table use different `SELECT` orders. Addressing the
+    columns by position made `jobstats view` report the average duration as the duration
+    histogram, the histogram as the user, the user as the query type, and so on.
+    """
+    jobstats.init_stmts(
+        [
+            db_record(
+                bucket={"10": 7},
+                username="hotzenplotz",
+                query_type="DDL",
+                avg_duration=12.5,
+                nodes=["node-1"],
+                last_used=1_700_000_000_000,
+            )
+        ]
+    )
+
+    entry = jobstats.sys_jobs_log["SELECT 1"]
+    assert entry["bucket"] == {"10": 7}
+    assert entry["user"] == "hotzenplotz"
+    assert entry["type"] == "DDL"
+    assert entry["avg_duration"] == 12.5
+    assert entry["nodes"] == ["node-1"]
+    assert entry["last_used"] == 1_700_000_000_000
+
+
+def test_fetch_records():
+    """
+    Verify query results are keyed by column name.
+    """
+    cursor = FakeCursor(column_names=["id", "stmt"], rows=[("id-1", "SELECT 1"), ("id-2", "SELECT 2")])
+    assert jobstats.fetch_records(cursor) == [
+        {"id": "id-1", "stmt": "SELECT 1"},
+        {"id": "id-2", "stmt": "SELECT 2"},
+    ]
+
+
+def test_init_last_execution_adopts_watermark(mocker):
+    """
+    Verify a recorded watermark is adopted, without touching the table.
+    """
+    cursor = FakeCursor()
+    mocker.patch.object(jobstats, "report_cursor", cursor)
+    mocker.patch.object(jobstats, "last_exec_table", '"testdrive".jobstats_last')
+
+    jobstats.init_last_execution({"last_execution": 1_700_000_000_000, "record_count": 1})
+
+    assert jobstats.last_execution_ts == 1_700_000_000_000
+    assert cursor.statements == []
+
+
+def test_init_last_execution_creates_watermark(mocker):
+    """
+    Verify a missing watermark record is created, so it can be updated later on.
+    """
+    cursor = FakeCursor()
+    mocker.patch.object(jobstats, "report_cursor", cursor)
+    mocker.patch.object(jobstats, "last_exec_table", '"testdrive".jobstats_last')
+
+    jobstats.init_last_execution({"last_execution": None, "record_count": 0})
+
+    assert jobstats.last_execution_ts == 0
+    assert [statement.split()[0] for statement in cursor.statements] == ["INSERT", "REFRESH"]
+
+
+def test_scrape_db_uses_half_open_interval(mocker):
+    """
+    Verify the collection window excludes the watermark, and includes the current moment.
+
+    An inclusive lower bound would count a job ending exactly on the watermark twice.
+    """
+    cursor = FakeCursor()
+    mocker.patch.object(jobstats, "cursor", cursor)
+    mocker.patch.object(jobstats, "last_scrape", 1_700_000_000_000)
+
+    jobstats.scrape_db()
+
+    statement = cursor.statements[0]
+    assert "ended > 1700000000000" in statement
+    assert f"ended <= {jobstats.last_scrape}" in statement
+    assert "BETWEEN" not in statement
+    assert jobstats.last_scrape > 1_700_000_000_000
 
 
 # Anonymization.

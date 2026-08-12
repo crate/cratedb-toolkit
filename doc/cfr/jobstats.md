@@ -51,7 +51,8 @@ into per-statement statistics. Statements against `sys.*` and `information_schem
 skipped, so the collector does not account for its own queries.
 
 How far the collector has come is recorded as a watermark, so a restarted collector picks
-up where it left off, instead of counting the same jobs again.
+up where it left off, instead of counting the same jobs again. Each cycle considers jobs
+which ended after the watermark, up to and including the current moment.
 
 Per distinct statement, the collector maintains:
 - `calls` — how often the statement has been executed
@@ -119,8 +120,10 @@ variables are recognized.
 - `--deanonymize` — path to the decoder dictionary file used to reverse `--anonymize`,
   to view statements in their original form
 
-`ctk cfr jobstats report` and `ctk cfr jobstats ui` read the statistics from the same
-schema `collect` wrote them to. `ui` serves the dashboard on `localhost:7777`.
+`ctk cfr jobstats report` and `ctk cfr jobstats ui` read the statistics from the schema of
+the cluster URL. They do not accept `--reportdb`, so when `collect --reportdb` was used,
+address that database per `--cluster-url` here. `ui` serves the dashboard on
+`localhost:7777`.
 
 ## Anonymization
 
@@ -137,8 +140,7 @@ ctk cfr jobstats view --deanonymize ./decoder_dictionary.json
 
 :::{warning}
 The decoder dictionary maps anonymized tokens back to the original identifiers and string
-literals. Treat it as confidential, and do not ship it together with the collected
-statistics.
+literals. Treat it as confidential, do not ship it together with the collected statistics.
 :::
 
 :::{note}

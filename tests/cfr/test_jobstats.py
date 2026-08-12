@@ -13,6 +13,7 @@ pytestmark = pytest.mark.cfr
 
 STATEMENTS_TABLE = f"{TESTDRIVE_EXT_SCHEMA}.jobstats_statements"
 LAST_TABLE = f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last"
+BUCKET_KEYS = ["10", "50", "100", "500", "1000", "2000", "5000", "10000", "15000", "20000", "INF"]
 
 
 @pytest.fixture
@@ -196,6 +197,43 @@ def test_cfr_jobstats_view(cratedb):
 
     data_keys = list(info["data"].keys())
     assert "stats" in data_keys
+
+
+def test_cfr_jobstats_view_values(cratedb, runner):
+    """
+    Verify `ctk cfr jobstats view` reports each value in its own field.
+    """
+
+    marker = marker_statement(cratedb, "jobstats-view-values")
+
+    result = runner.invoke(cli, args="jobstats collect --once", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    result = runner.invoke(cli, args="jobstats view", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    entry = json.loads(result.output)["data"]["stats"][f"SELECT '{marker}' AS marker"]
+
+    assert isinstance(entry["calls"], int)
+    assert isinstance(entry["avg_duration"], (int, float))
+    assert isinstance(entry["bucket"], dict)
+    assert sorted(entry["bucket"]) == sorted(BUCKET_KEYS)
+    assert entry["user"] == "crate"
+    assert entry["type"] == "SELECT"
+    assert isinstance(entry["nodes"], list)
+    assert isinstance(entry["last_used"], int)
+
+    # Verify outcome: The reported values are the stored ones.
+    cratedb.database.refresh_table(STATEMENTS_TABLE)
+    quoted = cratedb.database.quote_relation_name(STATEMENTS_TABLE)
+    records = cratedb.database.run_sql(
+        f"SELECT id, calls, avg_duration, username, query_type FROM {quoted}", records=True
+    )
+    stored = {record["id"]: record for record in records}[entry["id"]]
+    assert stored["calls"] == entry["calls"]
+    assert stored["avg_duration"] == entry["avg_duration"]
+    assert stored["username"] == entry["user"]
+    assert stored["query_type"] == entry["type"]
 
 
 def test_cfr_jobstats_collect_records_statements(cratedb, runner):

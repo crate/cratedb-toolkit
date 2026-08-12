@@ -42,12 +42,13 @@ bucket_dict = {
     "INF": 0,
 }
 
-stmt_log_table: str
-last_exec_table: str
-cursor: t.Any
-report_cursor: t.Any
-last_scrape: int
-interval: float
+# All of those are assigned by `boot()`.
+stmt_log_table: str = ""
+last_exec_table: str = ""
+cursor: t.Any = None
+report_cursor: t.Any = None
+last_scrape: int = 0
+interval: float = 10.0
 anonymize_sql: bool = False
 deanonymize_sql: bool = False  # Added global flag for deanonymization
 decoder_dict_path: str = ""
@@ -232,51 +233,56 @@ def dbinit():
     report_cursor.execute(f"REFRESH TABLE {stmt_log_table}")
     stmt = f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used FROM {stmt_log_table}"
     report_cursor.execute(stmt)
-    init_stmts(report_cursor.fetchall())
+    init_stmts(fetch_records(report_cursor))
     stmt = f"CREATE TABLE IF NOT EXISTS {last_exec_table} (last_execution TIMESTAMP)"
     report_cursor.execute(stmt)
     report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
-    stmt = f"SELECT last_execution FROM {last_exec_table}"
+    # Aggregate, so the outcome does not depend on the order records are returned in.
+    # The table can hold more than one record, for example after an interrupted startup.
+    stmt = f"SELECT MAX(last_execution) AS last_execution, COUNT(*) AS record_count FROM {last_exec_table}"
     report_cursor.execute(stmt)
-    init_last_execution(report_cursor.fetchall())
+    init_last_execution(fetch_records(report_cursor)[0])
 
 
-def init_last_execution(last_execution):
+def fetch_records(db_cursor) -> t.List[t.Dict[str, t.Any]]:
+    """
+    Return the result of the most recent query as records, keyed by column name.
+    """
+    column_names = [column[0] for column in db_cursor.description]
+    return [dict(zip(column_names, row)) for row in db_cursor.fetchall()]
+
+
+def init_last_execution(watermark: t.Dict[str, t.Any]):
+    """
+    Adopt the recorded watermark, and create it when it does not exist yet.
+    """
     global last_execution_ts
-    if len(last_execution) == 0:
-        last_execution_ts = 0
+    last_execution_ts = watermark.get("last_execution") or 0
+    if not watermark.get("record_count"):
         stmt = f"INSERT INTO {last_exec_table} (last_execution) VALUES (?)"
-        report_cursor.execute(stmt, (0,))
+        report_cursor.execute(stmt, (last_execution_ts,))
         # Refresh, so the `UPDATE` of `write_stats_to_db` finds the record just inserted.
         report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
-    else:
-        last_execution_ts = last_execution[0][0]
 
 
-def init_stmts(stmts):
-    for stmt in stmts:
-        stmt_id = stmt[0]
-        stmt_column = stmt[1]
-        calls = stmt[2]
-        bucket = stmt[3]
-        user = stmt[4]
-        stmt_type = stmt[5]
-        avg_duration = stmt[6]
-        nodes = stmt[7]
-        last_used = stmt[8]
-
+def init_stmts(records: t.Iterable[t.Dict[str, t.Any]]):
+    """
+    Adopt statistics read from the database, without clobbering accumulated ones.
+    """
+    for record in records:
+        stmt_column = record["stmt"]
         if stmt_column not in sys_jobs_log:
             sys_jobs_log[stmt_column] = {
-                "id": stmt_id,
+                "id": record["id"],
                 "size": 0,
                 "info": [],
-                "calls": calls,
-                "bucket": bucket,
-                "user": user,
-                "type": stmt_type,
-                "avg_duration": avg_duration,
-                "nodes": nodes,
-                "last_used": last_used,
+                "calls": record["calls"],
+                "bucket": record["bucket"],
+                "user": record["username"],
+                "type": record["query_type"],
+                "avg_duration": record["avg_duration"],
+                "nodes": record["nodes"],
+                "last_used": record["last_used"],
                 "in_db": True,
                 "changed": False,
             }
@@ -332,21 +338,17 @@ def write_stats_to_db():
 
 def read_stats():
     stmt = (
-        f"SELECT id, stmt, calls, avg_duration, bucket, username, query_type, nodes, last_used "
+        f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used "
         f"FROM {stmt_log_table} ORDER BY calls DESC, avg_duration DESC;"
     )
     report_cursor.execute(stmt)
-    results = report_cursor.fetchall()
+    results = fetch_records(report_cursor)
 
     # Deanonymize statements if needed
     if deanonymize_sql and decoder_dict_path:
-        deanonymized_results = []
-        for row in results:
-            row_list = list(row)
-            if row_list[1]:  # Check if stmt (at index 1) exists
-                row_list[1] = deanonymize_statement(row_list[1])
-            deanonymized_results.append(tuple(row_list))
-        results = deanonymized_results
+        for record in results:
+            if record["stmt"]:
+                record["stmt"] = deanonymize_statement(record["stmt"])
 
     # The records just read are authoritative. Without discarding what `dbinit` has read
     # before, deanonymized statements would be reported next to their anonymized form.
@@ -417,7 +419,9 @@ def scrape_db():
         f"WHERE "
         f"stmt NOT LIKE '%sys.%' AND "
         f"stmt NOT LIKE '%information_schema.%' "
-        f"AND ended BETWEEN {last_scrape} AND {next_scrape} "
+        # Half-open interval: The watermark itself has been processed already, so a job
+        # ending exactly on it must not be counted a second time.
+        f"AND ended > {last_scrape} AND ended <= {next_scrape} "
         f"ORDER BY ended DESC"
     )
 
