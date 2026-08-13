@@ -10,7 +10,7 @@ It collects raw, uninterpreted data only. The other commands under {ref}`cfr`
 and {ref}`cluster-info` present curated or interpreted views for your own use.
 :::
 
-`sys-export` produces a **diagnostics bundle**: a raw copy of every `sys.*` and
+`sys-export` produces a **diagnostics bundle**: a raw copy of every `sys` and
 `information_schema` table, together with your own table and view definitions,
 and a `manifest.json` describing exactly what was and was not collected.
 `sys-import` loads the raw tables from such a bundle back into a cluster for
@@ -67,7 +67,7 @@ replay yourself; `sys-import` does not consume it.
 ```text
 {clustername}/{timestamp}/
 ├── manifest.json            # what this bundle is, and anything that failed
-├── sys/                     # raw `sys.*` tables
+├── sys/                     # raw `sys` tables
 │   ├── schema/
 │   └── data/
 ├── information_schema/      # raw `information_schema` tables
@@ -79,32 +79,53 @@ replay yourself; `sys-import` does not consume it.
 ```
 
 `manifest.json` identifies the collection: cluster name, the cluster's CrateDB
-version, the toolkit version, and the timestamp. Lists anything that could
-not be collected: `schema_failures` for tables whose `.sql` file is missing, and
-`data_failures` for tables whose data could not be read, each with the reason.
+version, the toolkit version, and an ISO 8601 timestamp with a UTC offset, so a
+bundle can be lined up against server logs. It also accounts for everything that
+is not in the bundle: `schema_failures` for tables whose `.sql` file is missing,
+`data_failures` for tables whose data could not be read, `definition_failures`
+for definitions that could not be captured, `data_skipped` for tables whose data
+is deliberately not collected, and `redactions` for values that were blanked out.
 
 ## What the bundle contains
 
 A bundle contains cluster metadata, not the contents of your tables.
 **No rows from your own tables are exported** — the `ddl/` subtree holds table
-and view *definitions* only.
+and view *definitions* only. It covers every schema outside `sys`,
+`information_schema`, `pg_catalog`, and `blob`, which on a managed cluster
+includes schemas created by the platform itself.
 
-Credentials never reach the bundle. CrateDB itself returns
+Stored credentials are kept out of the bundle. CrateDB itself returns
 `sys.users.password`, and `access_key` / `secret_key` in
 `sys.repositories.settings`, already redacted; JWT entries carry issuer,
 audience, and username, but no token material.
 
+Foreign data wrappers are the exception CrateDB does *not* handle for you:
+`information_schema.user_mapping_options` returns a mapping's `password` in
+cleartext to superusers, and `foreign_server_options` returns the connection
+URL, which for JDBC routinely embeds `user=` and `password=`. `sys-export`
+therefore replaces `option_value` in both tables with a redaction marker before
+writing them. `option_name` and every other column are kept, so the bundle still
+shows which servers and mappings exist. `manifest.json` states what was redacted.
+
 One category does warrant a look before sharing: **`sys.jobs_log`, `sys.jobs`,
-`sys.operations_log`, and `sys.sessions` record SQL statements as they were
-executed, including literal values.** If your queries embed personal or
-otherwise sensitive values, those values appear in the bundle. This is the only
-place where data from your tables can be present.
+and `sys.sessions` record SQL statements as they were executed, including
+literal values.** If your queries embed personal or otherwise sensitive values,
+those values appear in the bundle.
+
+That includes statements which *set* a credential. A recent
+`CREATE USER MAPPING ... OPTIONS (password '...')` or
+`CREATE USER ... WITH (password = '...')` is retained in `sys.jobs_log` with the
+literal in place, and no amount of redaction elsewhere changes that. the
+redaction above covers the stored option value, not the statement that wrote it.
+If such a statement may still be in the log, rotate the credential or review
+`sys/data/sys-jobs_log.jsonl` before passing the bundle on.
 
 Beyond that, the bundle describes your cluster rather than its contents: schema
 names, table and column names and comments; user, role, and privilege names;
 client addresses of active sessions; and node hostnames, filesystem paths, and
-OS details. `manifest.json` lists exactly which schemas and tables were
-collected, so a bundle can be reviewed before it is passed on.
+OS details. `manifest.json` records which schemas were collected, how many
+tables and data files were written, and every failure, skip, and redaction, so a
+bundle can be reviewed before it is passed on.
 
 :::{note}
 The `--scrub` option does not apply to `sys-export`. It blanks out information

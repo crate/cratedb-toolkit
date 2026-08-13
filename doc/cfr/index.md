@@ -11,7 +11,7 @@ It is the recommended entry point, and produces one shareable file. See
 :::
 
 The three areas differ in how raw vs. interpreted their output is:
-- `sys-export` / `sys-import` — a raw copy of every `sys.*` and
+- `sys-export` / `sys-import` — a raw copy of every `sys` and
   `information_schema` table, plus your own table and view definitions and a
   manifest describing the collection. **This is the support-case command.**
   See {ref}`cfr-systable`.
