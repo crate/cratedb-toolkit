@@ -76,9 +76,7 @@ class SystemTableKnowledge:
 
     # Tables whose data is deliberately not collected
     DATA_SKIPLIST: t.Dict[t.Tuple[str, str], str] = {
-        (SYS_SCHEMA, "summits"): (
-            "static dataset shipped with the server"
-        ),
+        (SYS_SCHEMA, "summits"): ("static dataset shipped with the server"),
     }
 
 
