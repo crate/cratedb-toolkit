@@ -65,6 +65,22 @@ class SystemTableKnowledge:
     # `SHOW CREATE TABLE` only works on those, not on views or system relations.
     BASE_TABLE_TYPE = "BASE TABLE"
 
+    # Columns CrateDB hands out in the clear that must never reach a bundle.
+    REDACTED_COLUMNS: t.Dict[t.Tuple[str, str], t.Tuple[str, ...]] = {
+        (INFORMATION_SCHEMA, "user_mapping_options"): ("option_value",),
+        (INFORMATION_SCHEMA, "foreign_server_options"): ("option_value",),
+    }
+
+    # What a redacted value is replaced with.
+    REDACTION_MARKER = "[redacted by cratedb-toolkit]"
+
+    # Tables whose data is deliberately not collected
+    DATA_SKIPLIST: t.Dict[t.Tuple[str, str], str] = {
+        (SYS_SCHEMA, "summits"): (
+            "static dataset shipped with the server"
+        ),
+    }
+
 
 class ExportSettings:
     """
@@ -222,6 +238,8 @@ class SystemTableExporter(PathProvider):
         self.schema_capture = SchemaCapture(adapter=self.adapter)
         self.schema_failures: t.List[t.Dict[str, str]] = []
         self.data_failures: t.List[t.Dict[str, str]] = []
+        self.definition_failures: t.List[t.Dict[str, str]] = []
+        self.data_skipped: t.List[t.Dict[str, str]] = []
         self.table_count = 0
         self.data_file_count = 0
 
@@ -249,6 +267,24 @@ class SystemTableExporter(PathProvider):
             infer_schema_length=100_000,
         )
 
+    def redact(self, frame: "pl.DataFrame", schema: str, tablename: str) -> "pl.DataFrame":
+        """
+        Blank out values CrateDB returns in the clear, but a bundle must not carry.
+
+        """
+        import polars as pl
+
+        columns = SystemTableKnowledge.REDACTED_COLUMNS.get((schema, tablename))
+        if not columns:
+            return frame
+        marker = SystemTableKnowledge.REDACTION_MARKER
+        replacements = [
+            pl.when(pl.col(column).is_null()).then(None).otherwise(pl.lit(marker)).alias(column)
+            for column in columns
+            if column in frame.columns
+        ]
+        return frame.with_columns(replacements) if replacements else frame
+
     def dump_table(self, frame: "pl.DataFrame", file: t.Union[t.TextIO, None] = None):
         if self.data_format == "csv":
             # polars.exceptions.ComputeError: CSV format does not support nested data
@@ -265,7 +301,8 @@ class SystemTableExporter(PathProvider):
         import cratedb_toolkit
 
         self.path.mkdir(exist_ok=True, parents=True)
-        timestamp = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+        now = dt.datetime.now().astimezone()
+        timestamp = now.strftime("%Y-%m-%dT%H-%M-%S")
         # The bundle root. `sys-import` consumes the per-schema subdirectories
         bundle_path = self.path / self.info.cluster_name / timestamp
         logger.info(f"Exporting system tables to: {bundle_path}")
@@ -278,15 +315,16 @@ class SystemTableExporter(PathProvider):
                 bundle_path,
                 cratedb_version=self.cratedb_version(),
                 toolkit_version=cratedb_toolkit.__version__,
-                timestamp=timestamp,
+                collected_at=now.isoformat(timespec="seconds"),
                 definitions=definitions,
             )
 
         schemas = ", ".join(SystemTableKnowledge.EXPORT_SCHEMAS)
         logger.info(
             f"Successfully exported {self.table_count} tables from {schemas} "
-            f"({self.data_file_count} with data, "
-            f"{len(self.schema_failures)} schema and {len(self.data_failures)} data failures)"
+            f"({self.data_file_count} with data, {len(self.data_skipped)} skipped, "
+            f"{len(self.schema_failures)} schema and {len(self.data_failures)} data failures, "
+            f"{len(self.definition_failures)} definition failures)"
         )
         return bundle_path
 
@@ -295,7 +333,7 @@ class SystemTableExporter(PathProvider):
         bundle_path: Path,
         cratedb_version: str,
         toolkit_version: str,
-        timestamp: str,
+        collected_at: str,
         definitions: t.Dict[str, int],
     ) -> Path:
         """
@@ -305,13 +343,19 @@ class SystemTableExporter(PathProvider):
             "cluster_name": self.info.cluster_name,
             "cratedb_version": cratedb_version,
             "toolkit_version": toolkit_version,
-            "collected_at": timestamp,
+            "collected_at": collected_at,
             "schemas_exported": list(SystemTableKnowledge.EXPORT_SCHEMAS),
             "tables_exported": self.table_count,
             "data_files_written": self.data_file_count,
             "definitions_captured": definitions,
             "schema_failures": self.schema_failures,
             "data_failures": self.data_failures,
+            "definition_failures": self.definition_failures,
+            "data_skipped": self.data_skipped,
+            "redactions": [
+                {"schema": schema, "table": table, "columns": list(columns)}
+                for (schema, table), columns in SystemTableKnowledge.REDACTED_COLUMNS.items()
+            ],
         }
         target = bundle_path / ExportSettings.MANIFEST_FILENAME
         target.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -364,8 +408,14 @@ class SystemTableExporter(PathProvider):
             logger.warning(f"Could not generate schema for {schema}.{tablename}: {ex}")
             self.schema_failures.append({"schema": schema, "table": tablename, "reason": f"{type(ex).__name__}: {ex}"})
 
+        skip_reason = SystemTableKnowledge.DATA_SKIPLIST.get((schema, tablename))
+        if skip_reason is not None:
+            logger.debug(f"Not collecting data of {schema}.{tablename}: {skip_reason}")
+            self.data_skipped.append({"schema": schema, "table": tablename, "reason": skip_reason})
+            return
+
         try:
-            frame = self.read_table(tablename=tablename, schema=schema)
+            frame = self.redact(self.read_table(tablename=tablename, schema=schema), schema, tablename)
             if frame.is_empty():
                 return
             mode = "wb" if self.data_format in ["parquet", "pq"] else "w"
@@ -390,6 +440,7 @@ class SystemTableExporter(PathProvider):
             relations = self.schema_capture.relations()
         except Exception as ex:
             logger.warning(f"Could not discover user relations: {ex}")
+            self.definition_failures.append({"kind": "relations", "reason": f"{type(ex).__name__}: {ex}"})
             return counts
 
         for relation in tqdm(relations, desc="Capturing definitions", disable=None):
@@ -405,11 +456,15 @@ class SystemTableExporter(PathProvider):
                 counts["tables"] += 1
             except Exception as ex:
                 logger.warning(f"Could not capture definition of {schema}.{name}: {ex}")
+                self.definition_failures.append(
+                    {"kind": "table", "schema": schema, "name": name, "reason": f"{type(ex).__name__}: {ex}"}
+                )
 
         try:
             views = self.schema_capture.views()
         except Exception as ex:
             logger.warning(f"Could not read view definitions: {ex}")
+            self.definition_failures.append({"kind": "views", "reason": f"{type(ex).__name__}: {ex}"})
             return counts
 
         for view in views:
@@ -419,10 +474,15 @@ class SystemTableExporter(PathProvider):
             if not definition:
                 continue
             try:
-                (path_views / f"{schema}.{name}.sql").write_text(definition.rstrip() + "\n")
+                relation = self.adapter.quote_relation_name(f"{schema}.{name}")
+                statement = f"CREATE OR REPLACE VIEW {relation} AS\n{definition.rstrip()};\n"
+                (path_views / f"{schema}.{name}.sql").write_text(statement)
                 counts["views"] += 1
             except Exception as ex:
                 logger.warning(f"Could not capture view {schema}.{name}: {ex}")
+                self.definition_failures.append(
+                    {"kind": "view", "schema": schema, "name": name, "reason": f"{type(ex).__name__}: {ex}"}
+                )
 
         return counts
 

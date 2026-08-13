@@ -7,6 +7,7 @@ These assert against what the cluster itself reports, rather than absolute table
 counts, so they do not become version-specific.
 """
 
+import datetime as dt
 import json
 import tarfile
 from pathlib import Path
@@ -18,7 +19,10 @@ pytest.importorskip("polars", reason="Skipping tests because polars is not insta
 from click.testing import CliRunner  # noqa: E402
 
 from cratedb_toolkit.cfr.cli import cli  # noqa: E402
-from cratedb_toolkit.cfr.systable import SystemTableExporter  # noqa: E402
+from cratedb_toolkit.cfr.systable import SchemaCapture, SystemTableExporter, SystemTableKnowledge  # noqa: E402
+from tests.cfr.conftest import FDW_PASSWORD  # noqa: E402
+
+REDACTION_MARKER = SystemTableKnowledge.REDACTION_MARKER
 
 pytestmark = pytest.mark.cfr
 
@@ -57,19 +61,23 @@ def test_reported_path_is_the_bundle_root(cratedb, click_kwargs, tmp_path):
         assert (path / entry).exists(), f"not reachable from the reported path: {entry}"
 
 
-def test_unrepresentable_schema_does_not_cost_the_data(cratedb, click_kwargs, tmp_path):
+def test_summits_data_is_skipped_but_stated(cratedb, click_kwargs, tmp_path):
     """
-    A table whose schema cannot be represented still has its data exported.
+    `sys.summits` data is not collected because it is a static dataset, but the manifest states that.
+
     """
     bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
 
-    assert (bundle_path / "sys" / "data" / "sys-summits.jsonl").exists(), "summits data was dropped"
+    assert not (bundle_path / "sys" / "data" / "sys-summits.jsonl").exists()
 
-    # If the schema could not be generated, the bundle says so.
+    skipped = {(item["schema"], item["table"]): item["reason"] for item in manifest["data_skipped"]}
+    assert ("sys", "summits") in skipped
+    assert skipped[("sys", "summits")], "a skip without a reason is a silent skip"
+
     if not (bundle_path / "sys" / "schema" / "sys-summits.sql").exists():
-        failures = {item["table"] for item in manifest["schema_failures"]}
+        failures = {item["table"]: item["reason"] for item in manifest["schema_failures"]}
         assert "summits" in failures
-        assert manifest["schema_failures"][0]["reason"]
+        assert failures["summits"]
 
 
 def test_information_schema_is_exported(cratedb, click_kwargs, tmp_path):
@@ -131,11 +139,84 @@ def test_view_definitions_are_captured(cfr_validation_schema, cratedb, click_kwa
 
     view_file = bundle_path / "ddl" / "views" / "doc.cfr_view.sql"
     assert view_file.exists()
-    assert "cfr_simple" in view_file.read_text()
+    definition = view_file.read_text()
+
+    assert definition.startswith("CREATE OR REPLACE VIEW doc.cfr_view AS\n")
+    assert definition.rstrip().endswith(";")
+    assert "cfr_simple" in definition
     assert manifest["definitions_captured"]["views"] >= 1
 
     # A view must never be written as a table definition.
     assert not (bundle_path / "ddl" / "tables" / "doc.cfr_view.sql").exists()
+
+
+def test_captured_view_replays(cfr_validation_schema, cratedb, click_kwargs, tmp_path):
+    """
+    The captured file is runnable as it stands, and produces a view that returns rows.
+    """
+    bundle_path, _ = export_bundle(cratedb, click_kwargs, tmp_path)
+    definition = (bundle_path / "ddl" / "views" / "doc.cfr_view.sql").read_text()
+
+    cratedb.database.run_sql(definition)
+    assert cratedb.database.run_sql('SELECT id FROM "doc"."cfr_view"', records=True)
+
+
+def test_fdw_credentials_are_redacted(cfr_foreign_data_wrapper, cratedb, click_kwargs, tmp_path):
+    """
+    FDW credentials must not reach the bundle.
+
+    CrateDB returns `user_mapping_options.option_value` in cleartext to
+    superusers, and the exporter usually runs as one. `foreign_server_options`
+    carries the connection URL, which for JDBC routinely embeds credentials.
+    """
+    bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
+
+    # The statement logs record every statement as it was executed, so the
+    # `CREATE USER MAPPING` that set up this fixture is in them verbatim.
+    statement_carriers = {"sys-jobs_log.jsonl", "sys-jobs.jsonl", "sys-sessions.jsonl"}
+
+    for path in bundle_path.rglob("*"):
+        if not path.is_file() or path.name in statement_carriers:
+            continue
+        assert FDW_PASSWORD not in path.read_text(errors="replace"), f"credential leaked into {path}"
+
+    mappings = (bundle_path / "information_schema" / "data" / "is-user_mapping_options.jsonl").read_text()
+    assert REDACTION_MARKER in mappings
+    assert "password" in mappings
+
+    redacted = {(item["schema"], item["table"]): item["columns"] for item in manifest["redactions"]}
+    assert redacted[("information_schema", "user_mapping_options")] == ["option_value"]
+    assert redacted[("information_schema", "foreign_server_options")] == ["option_value"]
+
+
+def test_definition_failures_are_recorded_in_the_manifest(
+    cfr_validation_schema, cratedb, click_kwargs, tmp_path, monkeypatch
+):
+    """
+    A definition that could not be captured is named in the manifest.
+    """
+    monkeypatch.setattr(
+        SchemaCapture,
+        "table_ddl",
+        lambda self, schema, table: (_ for _ in ()).throw(PermissionError("simulated definition failure")),
+    )
+    _, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
+
+    assert manifest["definitions_captured"]["tables"] == 0
+    failures = {(item.get("schema"), item.get("name")): item["reason"] for item in manifest["definition_failures"]}
+    assert ("doc", "cfr_simple") in failures
+    assert "PermissionError" in failures[("doc", "cfr_simple")]
+
+
+def test_collected_at_is_an_iso8601_instant(cratedb, click_kwargs, tmp_path):
+    """
+    A bundle is read alongside server logs, so its timestamp must be a real
+    instant with an offset, not just a filesystem-safe string.
+    """
+    _, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
+
+    collected_at = dt.datetime.fromisoformat(manifest["collected_at"])
+    assert collected_at.tzinfo is not None, "timestamp cannot be correlated without an offset"
 
 
 def test_definitions_cover_all_non_system_schemas(cfr_validation_schema, cratedb, click_kwargs, tmp_path):
@@ -212,7 +293,7 @@ def test_data_failures_are_recorded_in_the_manifest(cratedb, click_kwargs, tmp_p
     original_read_table = SystemTableExporter.read_table
 
     def failing_read_table(self, tablename, schema=None):
-        if tablename == "summits":
+        if tablename == "nodes":
             raise PermissionError("simulated read failure")
         return original_read_table(self, tablename=tablename, schema=schema)
 
@@ -220,9 +301,9 @@ def test_data_failures_are_recorded_in_the_manifest(cratedb, click_kwargs, tmp_p
     bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
 
     failures = {(item["schema"], item["table"]): item["reason"] for item in manifest["data_failures"]}
-    assert ("sys", "summits") in failures
-    assert "PermissionError" in failures[("sys", "summits")]
-    assert not (bundle_path / "sys" / "data" / "sys-summits.jsonl").exists()
+    assert ("sys", "nodes") in failures
+    assert "PermissionError" in failures[("sys", "nodes")]
+    assert not (bundle_path / "sys" / "data" / "sys-nodes.jsonl").exists()
 
 
 def test_information_schema_subtree_imports(cratedb, click_kwargs, tmp_path):
