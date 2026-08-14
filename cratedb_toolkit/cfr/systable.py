@@ -396,6 +396,12 @@ class SystemTableExporter(PathProvider):
         path_table_data = path_data / f"{tablename_out}.{self.data_format}"
         self.table_count += 1
 
+        skip_reason = SystemTableKnowledge.DATA_SKIPLIST.get((schema, tablename))
+        if skip_reason is not None:
+            logger.debug(f"Not collecting {schema}.{tablename}: {skip_reason}")
+            self.data_skipped.append({"schema": schema, "table": tablename, "reason": skip_reason})
+            return
+
         # Schema. Not every CrateDB column type can be represented in SQLAlchemy
         # DDL, so reflection can fail per table.
         try:
@@ -405,12 +411,6 @@ class SystemTableExporter(PathProvider):
         except Exception as ex:
             logger.warning(f"Could not generate schema for {schema}.{tablename}: {ex}")
             self.schema_failures.append({"schema": schema, "table": tablename, "reason": f"{type(ex).__name__}: {ex}"})
-
-        skip_reason = SystemTableKnowledge.DATA_SKIPLIST.get((schema, tablename))
-        if skip_reason is not None:
-            logger.debug(f"Not collecting data of {schema}.{tablename}: {skip_reason}")
-            self.data_skipped.append({"schema": schema, "table": tablename, "reason": skip_reason})
-            return
 
         try:
             frame = self.redact(self.read_table(tablename=tablename, schema=schema), schema, tablename)

@@ -63,21 +63,19 @@ def test_reported_path_is_the_bundle_root(cratedb, click_kwargs, tmp_path):
 
 def test_summits_data_is_skipped_but_stated(cratedb, click_kwargs, tmp_path):
     """
-    `sys.summits` data is not collected because it is a static dataset, but the manifest states that.
+    `sys.summits` is not collected because it is a static dataset, but the manifest states that.
 
     """
     bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path)
 
     assert not (bundle_path / "sys" / "data" / "sys-summits.jsonl").exists()
+    assert not (bundle_path / "sys" / "schema" / "sys-summits.sql").exists()
 
     skipped = {(item["schema"], item["table"]): item["reason"] for item in manifest["data_skipped"]}
     assert ("sys", "summits") in skipped
     assert skipped[("sys", "summits")], "a skip without a reason is a silent skip"
 
-    if not (bundle_path / "sys" / "schema" / "sys-summits.sql").exists():
-        failures = {item["table"]: item["reason"] for item in manifest["schema_failures"]}
-        assert "summits" in failures
-        assert failures["summits"]
+    assert "summits" not in {item["table"] for item in manifest["schema_failures"]}
 
 
 def test_information_schema_is_exported(cratedb, click_kwargs, tmp_path):
