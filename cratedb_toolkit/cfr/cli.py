@@ -30,6 +30,13 @@ def sys_export(ctx: click.Context, target: str):
     Export CrateDB system tables.
     """
     cluster_url = ctx.meta["cluster_url"]
+
+    if ctx.meta.get("scrub", False):
+        logger.warning(
+            "`--scrub` has no effect on `sys-export`: it blanks out information about the "
+            "local machine environment, not data collected from the cluster."
+        )
+
     try:
         target_path = path_from_url(target)
         stc = SystemTableExporter(dburi=cluster_url, target=target_path)
@@ -41,7 +48,7 @@ def sys_export(ctx: click.Context, target: str):
         path = stc.save()
 
         if archive is not None:
-            path = archive.make_tarfile()
+            path = archive.make_tarfile(source_path=path, arcname=f"{stc.info.cluster_name}-{path.name}")
             archive.close()
             logger.info(f"Created archive file {target}")
 

@@ -1,5 +1,4 @@
 # ruff: noqa: E402
-import importlib.metadata
 import json
 import os.path
 import re
@@ -9,7 +8,6 @@ from importlib.resources import files
 from pathlib import Path
 
 import pytest
-from verlib2 import Version
 
 import tests.cfr
 
@@ -27,16 +25,7 @@ def filenames(path: Path):
     return sorted([item.name for item in path.iterdir()])
 
 
-@pytest.fixture(scope="session")
-def click_kwargs():
-    """
-    Click 8.2 no longer understands `mix_stderr`.
-    """
-    kwargs = {}
-    click_version = importlib.metadata.version("click")
-    if Version(click_version) < Version("8.2"):
-        kwargs = {"mix_stderr": False}
-    return kwargs
+EXPORT_SUMMARY_PATTERN = r"Successfully exported \d+ tables from sys, information_schema"
 
 
 def test_cfr_sys_export_success(cratedb, click_kwargs, tmp_path, caplog):
@@ -55,14 +44,16 @@ def test_cfr_sys_export_success(cratedb, click_kwargs, tmp_path, caplog):
 
     # Verify log output.
     assert "Exporting system tables to" in caplog.text
-    assert re.search(r"Successfully exported \d+ system tables", caplog.text), "Log message missing"
+    assert re.search(EXPORT_SUMMARY_PATTERN, caplog.text), "Log message missing"
 
-    # Verify the outcome.
+    # Verify the outcome. The reported path is the bundle root, so everything
+    # the bundle carries is reachable from it.
     path = Path(json.loads(result.stdout)["path"])
-    assert filenames(path) == ["data", "schema"]
+    assert filenames(path) == ["ddl", "information_schema", "manifest.json", "sys"]
+    assert filenames(path / "sys") == ["data", "schema"]
 
-    schema_files = filenames(path / "schema")
-    data_files = filenames(path / "data")
+    schema_files = filenames(path / "sys" / "schema")
+    data_files = filenames(path / "sys" / "data")
 
     assert len(schema_files) >= 19
     assert len(data_files) >= 10
@@ -86,20 +77,20 @@ def test_cfr_sys_export_to_archive_file(cratedb, click_kwargs, tmp_path, caplog)
 
     # Verify log output.
     assert "Exporting system tables to" in caplog.text
-    assert re.search(r"Successfully exported \d+ system tables", caplog.text), "Log message missing"
+    assert re.search(EXPORT_SUMMARY_PATTERN, caplog.text), "Log message missing"
 
     # Verify the outcome.
     path = Path(json.loads(result.stdout)["path"])
     assert "cluster-data.tgz" in path.name
 
+    # Classify by the `sys/` subtree's own directories, not by substring match.
     data_files = []
     schema_files = []
     with tarfile.open(path, "r") as tar:
-        name_list = tar.getnames()
-        for name in name_list:
-            if "data" in name:
+        for name in tar.getnames():
+            if "/sys/data/" in name:
                 data_files.append(name)
-            elif "schema" in name:
+            elif "/sys/schema/" in name:
                 schema_files.append(name)
 
     assert len(schema_files) >= 19
@@ -135,7 +126,7 @@ def test_cfr_sys_export_ensure_table_name_is_quoted(cratedb, click_kwargs, tmp_p
     assert result.exit_code == 0, result.output
 
     path = Path(json.loads(result.stdout)["path"])
-    sys_cluster_table_schema = path / "schema" / "sys-cluster.sql"
+    sys_cluster_table_schema = path / "sys" / "schema" / "sys-cluster.sql"
     with open(sys_cluster_table_schema, "r") as f:
         content = f.read()
         assert '"sys-cluster"' in content, "Table name missing or not quoted"
