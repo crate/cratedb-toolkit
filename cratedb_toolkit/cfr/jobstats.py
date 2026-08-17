@@ -333,7 +333,7 @@ def write_stats_to_db():
             sys_jobs_log[key]["changed"] = False
     if len(write_params) > 0:
         results = report_cursor.executemany(write_query_stmt, write_params) or []
-       
+
         outcomes = list(results) + [None] * (len(write_params) - len(results))
         for key, outcome in zip(write_keys, outcomes):
             if outcome is not None and outcome.get("rowcount", 0) < 0:
