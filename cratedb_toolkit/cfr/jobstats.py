@@ -172,8 +172,10 @@ def anonymize_statement(statement: str) -> str:
         try:
             with open(decoder_dict_path, "r") as f:
                 encoder_dict = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.warning(f"Could not load encoder dictionary: {e}")
+        except FileNotFoundError:
+            logger.info(f"No decoder dictionary found yet, creating a new one: {decoder_dict_path}")
+        except json.JSONDecodeError as e:
+            logger.warning(f"Could not load encoder dictionary, continuing without it: {e}")
 
         # Call anonymize and extract only the anonymized statement (first item).
         with redirect_stdout(io.StringIO()):
@@ -299,6 +301,7 @@ def write_stats_to_db():
         f"UPDATE {stmt_log_table} SET calls = ?, avg_duration = ?, nodes = ?, bucket = ?, last_used = ? WHERE id = ?"
     )
     write_params = []
+    write_keys = []
     for key in sys_jobs_log.keys():
         if not sys_jobs_log[key]["in_db"]:
             write_params.append(
@@ -314,8 +317,7 @@ def write_stats_to_db():
                     sys_jobs_log[key]["last_used"],
                 ]
             )
-            sys_jobs_log[key]["in_db"] = True
-            sys_jobs_log[key]["changed"] = False
+            write_keys.append(key)
         elif sys_jobs_log[key]["changed"]:
             report_cursor.execute(
                 update_query_stmt,
@@ -330,7 +332,17 @@ def write_stats_to_db():
             )
             sys_jobs_log[key]["changed"] = False
     if len(write_params) > 0:
-        report_cursor.executemany(write_query_stmt, write_params)
+        results = report_cursor.executemany(write_query_stmt, write_params) or []
+       
+        outcomes = list(results) + [None] * (len(write_params) - len(results))
+        for key, outcome in zip(write_keys, outcomes):
+            if outcome is not None and outcome.get("rowcount", 0) < 0:
+                logger.warning(
+                    f"Storing statistics failed, retrying on the next cycle: {outcome.get('error_message') or outcome}"
+                )
+                continue
+            sys_jobs_log[key]["in_db"] = True
+            sys_jobs_log[key]["changed"] = False
 
     stmt = f"UPDATE {last_exec_table} SET last_execution = ?"
     report_cursor.execute(stmt, (last_scrape,))
@@ -400,7 +412,8 @@ def update_statistics(query_results):
         sys_jobs_log[stmt]["changed"] = True
         sys_jobs_log[stmt]["avg_duration"] = (sys_jobs_log[stmt]["avg_duration"] + duration) / 2
         sys_jobs_log[stmt]["bucket"] = assign_to_bucket(sys_jobs_log[stmt]["bucket"], duration)
-        sys_jobs_log[stmt]["last_used"] = started
+        # Keep the most recent execution, independently of the order records arrive in.
+        sys_jobs_log[stmt]["last_used"] = max(sys_jobs_log[stmt]["last_used"] or 0, started)
         sys_jobs_log[stmt]["calls"] += 1
         sys_jobs_log[stmt]["nodes"].append(node)
         sys_jobs_log[stmt]["nodes"] = list(set(sys_jobs_log[stmt]["nodes"]))  # only save unique nodes
@@ -422,7 +435,9 @@ def scrape_db():
         # Half-open interval: The watermark itself has been processed already, so a job
         # ending exactly on it must not be counted a second time.
         f"AND ended > {last_scrape} AND ended <= {next_scrape} "
-        f"ORDER BY ended DESC"
+        # Oldest first, so the *decaying* average of `update_statistics` ends up weighing
+        # the most recent execution most heavily.
+        f"ORDER BY ended ASC"
     )
 
     cursor.execute(stmt)

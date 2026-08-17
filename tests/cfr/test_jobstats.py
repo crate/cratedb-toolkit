@@ -1,6 +1,7 @@
 # ruff: noqa: S608
 import json
 import os
+import time
 import uuid
 
 import pytest
@@ -66,7 +67,7 @@ def test_cfr_jobstats_collect_self(cratedb, caplog):
     # Configure database URI.
     dburi = cratedb.database.dburi + f"?schema={TESTDRIVE_EXT_SCHEMA}"
 
-    marker_statement(cratedb, "jobstats-collect-self-marker")
+    marker = marker_statement(cratedb, "jobstats-collect-self-marker")
 
     # Invoke command.
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": dburi})
@@ -89,6 +90,9 @@ def test_cfr_jobstats_collect_self(cratedb, caplog):
     # How many statements are collected depends on the activity on the cluster.
     cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_statements")
     assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_statements") >= 1
+
+    # The record count alone is satisfied by unrelated cluster activity.
+    assert any(marker in stmt for stmt in collected_statements(cratedb))
 
     cratedb.database.refresh_table(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last")
     assert cratedb.database.count_records(f"{TESTDRIVE_EXT_SCHEMA}.jobstats_last") == 1
@@ -352,6 +356,146 @@ def test_cfr_jobstats_collect_resumes_from_watermark(cratedb, runner, caplog):
         "last_execution"
     ]
     assert second_watermark > first_watermark
+
+
+def test_cfr_jobstats_collect_last_used_is_most_recent_execution(cratedb, runner):
+    """
+    Verify `last_used` reports the most recent execution, also within a single cycle.
+
+    A cycle hands all its jobs to `update_statistics` in one batch. Assigning `last_used`
+    per record unconditionally leaves the value of whichever record is processed last,
+    which is not the most recent execution.
+    """
+
+    marker = f"jobstats-last-used-{uuid.uuid4().hex[:8]}"
+    statement = f"SELECT '{marker}' AS marker"
+    escaped = statement.replace("'", "''")
+
+    # Several executions of the very same statement, all within one collection cycle.
+    for _ in range(3):
+        cratedb.database.run_sql(statement)
+        time.sleep(0.2)
+
+    result = runner.invoke(cli, args="jobstats collect --once", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    # Ground truth, as recorded by CrateDB itself. Compare the statement exactly: the
+    # verification queries mention the marker as well, but are not equal to it.
+    executions = cratedb.database.run_sql(
+        f"SELECT MIN(started) AS first_started, MAX(started) AS last_started, COUNT(*) AS execution_count "
+        f"FROM sys.jobs_log WHERE stmt = '{escaped}'",
+        records=True,
+    )[0]
+    assert executions["execution_count"] == 3
+    assert executions["last_started"] > executions["first_started"]
+
+    cratedb.database.refresh_table(STATEMENTS_TABLE)
+    quoted = cratedb.database.quote_relation_name(STATEMENTS_TABLE)
+    stored = cratedb.database.run_sql(f"SELECT calls, last_used FROM {quoted} WHERE stmt = '{escaped}'", records=True)[
+        0
+    ]
+
+    assert stored["calls"] == 3
+    assert stored["last_used"] == executions["last_started"]
+
+
+def test_cfr_jobstats_last_used_does_not_move_backwards(mocker):
+    """
+    Verify `last_used` does not regress when a later cycle reports an older execution.
+
+    A long-running job may start before the watermark and only end after it, so it is
+    collected one cycle later than shorter jobs which started after it. Ordering the
+    records of a cycle is therefore not sufficient on its own.
+    """
+
+    from cratedb_toolkit.cfr import jobstats
+
+    mocker.patch.object(jobstats, "anonymize_sql", False)
+    statement = "SELECT 'backwards'"
+    classification = {"type": "SELECT"}
+    node = {"id": "n1"}
+
+    # One cycle, holding a short job.
+    jobstats.update_statistics([(5000, 5050, classification, statement, "crate", node)])
+    assert jobstats.sys_jobs_log[statement]["last_used"] == 5000
+
+    # The next cycle, holding a job which started earlier, but only ended now.
+    jobstats.update_statistics([(4000, 6000, classification, statement, "crate", node)])
+    assert jobstats.sys_jobs_log[statement]["last_used"] == 5000
+
+
+def pending_statistics(identifier: str) -> dict:
+    """
+    Return an in-memory statistics record which has not been stored yet.
+    """
+    return {
+        "id": identifier,
+        "calls": 1,
+        "bucket": dict.fromkeys(BUCKET_KEYS, 0),
+        "user": "crate",
+        "type": "SELECT",
+        "avg_duration": 1.0,
+        "nodes": [],
+        "last_used": 1,
+        "in_db": False,
+        "changed": True,
+    }
+
+
+def test_cfr_jobstats_write_stats_keeps_failed_records_pending(mocker):
+    """
+    Verify statistics are only flagged as stored once the record has really been written.
+
+    A bulk operation does not raise when individual records fail, it reports a negative
+    `rowcount` for them. Flagging such a statement as stored anyway would downgrade it to
+    an `UPDATE` from the next cycle on, which matches no record, so its statistics would
+    be dropped silently.
+    """
+
+    from cratedb_toolkit.cfr import jobstats
+
+    cursor = mocker.Mock()
+    cursor.executemany.return_value = [{"rowcount": 1}, {"rowcount": -2, "error_message": "nope"}]
+    mocker.patch.object(jobstats, "report_cursor", cursor)
+    mocker.patch.object(jobstats, "stmt_log_table", '"testdrive".jobstats_statements')
+    mocker.patch.object(jobstats, "last_exec_table", '"testdrive".jobstats_last')
+
+    jobstats.sys_jobs_log["SELECT 'stored'"] = pending_statistics("id-stored")
+    jobstats.sys_jobs_log["SELECT 'failed'"] = pending_statistics("id-failed")
+
+    jobstats.write_stats_to_db()
+
+    stored = jobstats.sys_jobs_log["SELECT 'stored'"]
+    assert stored["in_db"] is True
+    assert stored["changed"] is False
+
+    # Still pending, so the next cycle inserts it again instead of updating nothing.
+    failed = jobstats.sys_jobs_log["SELECT 'failed'"]
+    assert failed["in_db"] is False
+    assert failed["changed"] is True
+
+
+def test_cfr_jobstats_write_stats_without_record_outcomes(mocker):
+    """
+    Verify statistics are flagged as stored when the driver reports no per-record outcome.
+
+    Assuming failure instead would insert the very same record again on each cycle.
+    """
+
+    from cratedb_toolkit.cfr import jobstats
+
+    cursor = mocker.Mock()
+    cursor.executemany.return_value = None
+    mocker.patch.object(jobstats, "report_cursor", cursor)
+    mocker.patch.object(jobstats, "stmt_log_table", '"testdrive".jobstats_statements')
+    mocker.patch.object(jobstats, "last_exec_table", '"testdrive".jobstats_last')
+
+    jobstats.sys_jobs_log["SELECT 'unknown'"] = pending_statistics("id-unknown")
+
+    jobstats.write_stats_to_db()
+
+    assert jobstats.sys_jobs_log["SELECT 'unknown'"]["in_db"] is True
+    assert jobstats.sys_jobs_log["SELECT 'unknown'"]["changed"] is False
 
 
 def test_cfr_jobstats_view_without_data(cratedb):

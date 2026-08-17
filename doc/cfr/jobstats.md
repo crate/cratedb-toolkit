@@ -24,16 +24,26 @@ The collector stores its statistics in the schema of the cluster URL, `stats` by
 export CRATEDB_CLUSTER_URL=crate://crate@localhost:4200/?schema=stats
 ```
 
-Collect statistics, then display or explore them.
+Collects statistics on an ongoing basis:
+
 ```shell
 ctk cfr jobstats collect
 ```
+
+Prints collected statistics as a JSON document:
+
 ```shell
 ctk cfr jobstats view
 ```
+
+Shows the top 10 collected statements, sorted by runtime descending:
+
 ```shell
 ctk cfr jobstats report
 ```
+
+Launches a web interface with visualisations for interactive exploration of statistics:
+
 ```shell
 ctk cfr jobstats ui
 ```
@@ -48,7 +58,18 @@ result means nothing has been collected into that schema yet.
 
 `collect` polls `sys.jobs_log` for jobs which finished since the last poll, and folds them
 into per-statement statistics. Statements against `sys.*` and `information_schema.*` are
-skipped, so the collector does not account for its own queries.
+skipped, which excludes the collector's own poll query, but not its writes.
+
+:::{note}
+The collector observes itself. Reading `sys.jobs_log` is filtered out, however the
+statements which store the statistics are regular DDL and DML against the tables below,
+so the next cycle collects them like any other query. On a quiet cluster, the statistics
+therefore consist mostly of the collector's own `CREATE TABLE IF NOT EXISTS`,
+`REFRESH TABLE`, `SELECT`, `INSERT`, and `UPDATE` statements. Take that into account when
+interpreting `calls`. Pointing `--reportdb` at a *separate cluster* avoids it, because the
+statistics are then written outside the cluster being observed. A `--reportdb` which only
+differs in the schema does not help, as those writes still show up in `sys.jobs_log`.
+:::
 
 How far the collector has come is recorded as a watermark, so a restarted collector picks
 up where it left off, instead of counting the same jobs again. Each cycle considers jobs
@@ -63,8 +84,11 @@ Per distinct statement, the collector maintains:
   execution. Recent executions therefore weigh much more heavily than an arithmetic mean
   over all executions would.
 - `nodes` — the nodes which have run the statement, without duplicates
-- `last_used` — when the statement was last seen
-- `username`, `query_type` — as reported by CrateDB
+- `last_used` — when the most recent execution of the statement *started*
+- `username`, `query_type` — as reported by CrateDB, taken from the execution which
+  introduced the statement. Neither is updated afterwards, so when the same statement is
+  run by several users, the record keeps the user which ran it first and does not grow a
+  second record for the others. Use `ctk info jobs` for a per-user breakdown.
 
 ## Tables
 
@@ -113,7 +137,8 @@ variables are recognized.
   cluster URL, and written to this one.
 - `--anonymize` — path to a decoder dictionary file for anonymizing SQL statements before
   they are stored; using the flag without a value defaults to `decoder_dictionary.json` in
-  the current working directory
+  the current working directory. The file does not need to exist: it is created on the
+  first run, and extended as further identifiers are encountered.
 
 `ctk cfr jobstats view`:
 - `--reportdb` / `-r` — a separate database URL to read the statistics from
@@ -128,8 +153,9 @@ address that database per `--cluster-url` here. `ui` serves the dashboard on
 ## Anonymization
 
 With `--anonymize`, statements are anonymized before they are stored, and the substitutions
-are recorded in the decoder dictionary file. Keep that file: it is the only way to make the
-collected statements legible again, using `view --deanonymize`.
+are recorded in the decoder dictionary file. The file is created on the first run and grows
+as new identifiers are encountered. Keep it: it is the only way to make the collected
+statements legible again, using `view --deanonymize`.
 
 ```shell
 ctk cfr jobstats collect --once --anonymize ./decoder_dictionary.json
@@ -148,4 +174,8 @@ Anonymization fails closed: when a statement cannot be anonymized, it is stored 
 `<redacted: <digest>>` rather than in clear text. Statistics per distinct statement remain
 meaningful, but such statements cannot be recovered with `--deanonymize`. The event is
 reported as a warning.
+
+Expect this to happen occasionally, and more often as the dictionary grows: the underlying
+`queryanonymizer` can fail with a `PatternError` on a statement it anonymized successfully
+when the dictionary was still small.
 :::
