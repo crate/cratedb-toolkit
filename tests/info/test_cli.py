@@ -5,6 +5,8 @@ from boltons.iterutils import get_path
 from click.testing import CliRunner
 
 from cratedb_toolkit.info.cli import cli
+from cratedb_toolkit.info.core import JobInfoContainer
+from tests.info.test_model import JOB_ELEMENT_NAMES
 
 
 @pytest.fixture
@@ -101,9 +103,75 @@ def test_info_jobs(request, runner_factory):
     assert "meta" in info
     assert "data" in info
 
-    data_keys = list(info["data"].keys())
-    assert "by_user" in data_keys
-    assert "top100_count" in data_keys
-    assert "top100_duration_individual" in data_keys
-    assert "top100_duration_total" in data_keys
-    assert "performance15min" in data_keys
+    # Both sections describe the very same elements.
+    assert sorted(info["data"]) == JOB_ELEMENT_NAMES
+    assert sorted(info["meta"]["elements"]) == JOB_ELEMENT_NAMES
+
+    # The elements which reduce to a single value.
+    assert isinstance(info["data"]["history_count"], int)
+    assert isinstance(info["data"]["running_count"], int)
+
+    # The elements which return rows.
+    assert isinstance(info["data"]["by_user"], list)
+    assert isinstance(info["data"]["top100_count"], list)
+
+
+def test_info_jobs_history(cratedb, runner_standalone):
+    """
+    Verify `ctk info jobs` reports the statements which have been invoked.
+    """
+
+    marker = "ctk-info-jobs-marker"
+    cratedb.database.run_sql(f"SELECT '{marker}' AS marker")
+
+    result = runner_standalone.invoke(cli, args="jobs", catch_exceptions=False)
+    assert result.exit_code == 0
+
+    data = json.loads(result.output)["data"]
+
+    assert data["history_count"] > 0
+    assert any(marker in record["stmt"] for record in data["history"])
+
+    # The query history is reported in chronological order, oldest first.
+    timestamps = [record["time"] for record in data["history"]]
+    assert timestamps == sorted(timestamps)
+
+    # The query frequency reports the 99th percentile of the query duration, per statement.
+    assert sorted(data["top100_count"][0]) == [
+        "avg_duration",
+        "max_duration",
+        "min_duration",
+        "p99",
+        "stmt",
+        "stmt_count",
+    ]
+
+    # Durations are reported in milliseconds.
+    assert sorted(data["top100_duration_individual"][0]) == ["duration", "stmt"]
+
+
+@pytest.mark.parametrize("element_name", JOB_ELEMENT_NAMES)
+def test_info_jobs_element(cratedb, element_name):
+    """
+    Verify each element of `ctk info jobs` runs against CrateDB on its own.
+
+    """
+
+    container = JobInfoContainer(adapter=cratedb.database)
+    element = container.elements.index[element_name]
+    container.evaluate_element(element)
+
+
+def test_info_serve(mocker):
+    """
+    Verify `ctk info serve` starts the HTTP service, and hands over its options.
+    """
+
+    pytest.importorskip("fastapi")
+    start = mocker.patch("cratedb_toolkit.info.http.start")
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": "crate://localhost:4200/"})
+    result = runner.invoke(cli, args="serve --listen 0.0.0.0:8042 --reload", catch_exceptions=False)
+    assert result.exit_code == 0
+
+    start.assert_called_once_with("0.0.0.0:8042", reload=True)
