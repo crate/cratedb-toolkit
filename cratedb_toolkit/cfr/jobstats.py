@@ -2,11 +2,14 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 
 # ruff: noqa: S608
+import hashlib
+import io
 import json
 import logging
 import os
 import time
 import typing as t
+from contextlib import redirect_stdout
 from uuid import uuid4
 
 import urllib3
@@ -19,9 +22,11 @@ logger = logging.getLogger(__name__)
 
 TRACING = False
 
+# How far back to look for jobs when no watermark has been recorded yet, in seconds.
+INITIAL_LOOKBACK_SECONDS = 600
 
 last_execution_ts = 0
-sys_jobs_log = {}
+sys_jobs_log: t.Dict[str, t.Dict[str, t.Any]] = {}
 bucket_list = [10, 50, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000]
 bucket_dict = {
     "10": 0,
@@ -37,15 +42,30 @@ bucket_dict = {
     "INF": 0,
 }
 
-stmt_log_table: str
-last_exec_table: str
-cursor: t.Any
-report_cursor: t.Any
-last_scrape: int
-interval: float
+# All of those are assigned by `boot()`.
+stmt_log_table: str = ""
+last_exec_table: str = ""
+cursor: t.Any = None
+report_cursor: t.Any = None
+last_scrape: int = 0
+interval: float = 10.0
 anonymize_sql: bool = False
 deanonymize_sql: bool = False  # Added global flag for deanonymization
-decoder_dict_path: str
+decoder_dict_path: str = ""
+
+
+def reset_state():
+    """
+    Discard all accumulated in-memory statistics.
+
+    The collector keeps its statistics in module-global state. Without resetting it,
+    a second `boot()` within the same process starts off with statements flagged as
+    already stored (`in_db=True`), which makes `write_stats_to_db` issue an `UPDATE`
+    against a table that has no such row, silently dropping the statistics.
+    """
+    global last_execution_ts
+    last_execution_ts = 0
+    sys_jobs_log.clear()
 
 
 def boot(
@@ -66,6 +86,7 @@ def boot(
         anonymize_sql, \
         deanonymize_sql, \
         decoder_dict_path
+    reset_state()
     anonymize_sql = anonymize_statements
     deanonymize_sql = deanonymize_statements
 
@@ -83,6 +104,7 @@ def boot(
         logger.info(f"SQL deanonymization is enabled, using dictionary: {decoder_dict_path}")
 
     interval = float(os.getenv("INTERVAL", 10))
+    initial_lookback = float(os.getenv("INITIAL_LOOKBACK_SECONDS", INITIAL_LOOKBACK_SECONDS))
     stmt_log_table = os.getenv("STMT_TABLE", f'"{schema}".jobstats_statements')
     last_exec_table = os.getenv("LAST_EXEC_TABLE", f'"{schema}".jobstats_last')
 
@@ -116,24 +138,47 @@ def boot(
         # If no separate reporting DB, use the same cursor for both
         report_cursor = cursor
 
-    last_scrape = int(time.time() * 1000) - int(interval * 60000)
-
     dbinit()
+
+    # Resume from the recorded watermark, so a restarted collector neither re-counts jobs
+    # it has already processed, nor misses jobs which ran while it was not running.
+    if isinstance(last_execution_ts, (int, float)) and last_execution_ts > 0:
+        last_scrape = int(last_execution_ts)
+        logger.info(f"Resuming from recorded watermark: {last_scrape}")
+    else:
+        last_scrape = int(time.time() * 1000) - int(initial_lookback * 1000)
+        logger.info(f"No watermark recorded yet, looking back {initial_lookback} seconds")
+
+
+def redacted_statement(statement: str) -> str:
+    """
+    Return a placeholder for a statement which could not be anonymized.
+    """
+    digest = hashlib.sha256(statement.encode("utf-8")).hexdigest()[:16]
+    return f"<redacted: {digest}>"
 
 
 def anonymize_statement(statement: str) -> str:
-    """Anonymize SQL statement using queryanonymizer."""
-    if anonymize_sql and anonymize is not None:
-        try:
-            # Load dictionary file each time
-            encoder_dict = {}
-            try:
-                with open(decoder_dict_path, "r") as f:
-                    encoder_dict = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError) as e:
-                logger.warning(f"Could not load encoder dictionary: {e}")
+    """
+    Anonymize SQL statement using queryanonymizer.
 
-            # Call anonymize and extract only the anonymized statement (first item)
+    When anonymization fails, the statement is redacted rather than stored in clear text.
+    """
+    if not anonymize_sql:
+        return statement
+    try:
+        # Load dictionary file each time
+        encoder_dict = {}
+        try:
+            with open(decoder_dict_path, "r") as f:
+                encoder_dict = json.load(f)
+        except FileNotFoundError:
+            logger.info(f"No decoder dictionary found yet, creating a new one: {decoder_dict_path}")
+        except json.JSONDecodeError as e:
+            logger.warning(f"Could not load encoder dictionary, continuing without it: {e}")
+
+        # Call anonymize and extract only the anonymized statement (first item).
+        with redirect_stdout(io.StringIO()):
             result = anonymize(
                 query=statement,
                 keywords_group="SQL",
@@ -143,13 +188,13 @@ def anonymize_statement(statement: str) -> str:
                 path_to_decoder_dictionary_file=decoder_dict_path,
                 custom_encoder_dictionary=encoder_dict,
             )
-            # Return only the anonymized statement string
-            if isinstance(result, tuple) and len(result) > 0:
-                return result[0]
-            return result
-        except Exception as e:
-            logger.warning(f"Failed to anonymize statement: {e}")
-    return statement
+        # Return only the anonymized statement string
+        if isinstance(result, tuple) and len(result) > 0:
+            return result[0]
+        return result
+    except Exception as e:
+        logger.warning(f"Failed to anonymize statement, redacting it instead: {e}")
+        return redacted_statement(statement)
 
 
 def deanonymize_statement(statement: str) -> str:
@@ -161,11 +206,16 @@ def deanonymize_statement(statement: str) -> str:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logger.warning(f"Could not load decoder dictionary: {e}")
 
-        # Call anonymize to decode the statement
-        result = deanonymize(
-            statement,
-            path_to_decoder_dictionary_file=decoder_dict_path,
-        )
+        # Call anonymize to decode the statement, again discarding its output on stdout.
+        try:
+            with redirect_stdout(io.StringIO()):
+                result = deanonymize(
+                    statement,
+                    path_to_decoder_dictionary_file=decoder_dict_path,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to deanonymize statement: {e}")
+            return statement
 
         # Return only the deanonymized statement string
         if isinstance(result, tuple) and len(result) > 0:
@@ -181,50 +231,60 @@ def dbinit():
         f"username TEXT, query_type TEXT, avg_duration FLOAT, nodes ARRAY(TEXT))"
     )
     report_cursor.execute(stmt)
+    # Refresh before reading, so statistics written by a previous run are seen.
+    report_cursor.execute(f"REFRESH TABLE {stmt_log_table}")
     stmt = f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used FROM {stmt_log_table}"
     report_cursor.execute(stmt)
-    init_stmts(report_cursor.fetchall())
+    init_stmts(fetch_records(report_cursor))
     stmt = f"CREATE TABLE IF NOT EXISTS {last_exec_table} (last_execution TIMESTAMP)"
     report_cursor.execute(stmt)
-    stmt = f"SELECT last_execution FROM {last_exec_table}"
+    report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
+    # Aggregate, so the outcome does not depend on the order records are returned in.
+    # The table can hold more than one record, for example after an interrupted startup.
+    stmt = f"SELECT MAX(last_execution) AS last_execution, COUNT(*) AS record_count FROM {last_exec_table}"
     report_cursor.execute(stmt)
-    init_last_execution(report_cursor.fetchall())
+    init_last_execution(fetch_records(report_cursor)[0])
 
 
-def init_last_execution(last_execution):
+def fetch_records(db_cursor) -> t.List[t.Dict[str, t.Any]]:
+    """
+    Return the result of the most recent query as records, keyed by column name.
+    """
+    column_names = [column[0] for column in db_cursor.description]
+    return [dict(zip(column_names, row)) for row in db_cursor.fetchall()]
+
+
+def init_last_execution(watermark: t.Dict[str, t.Any]):
+    """
+    Adopt the recorded watermark, and create it when it does not exist yet.
+    """
     global last_execution_ts
-    if len(last_execution) == 0:
-        last_execution_ts = 0
+    last_execution_ts = watermark.get("last_execution") or 0
+    if not watermark.get("record_count"):
         stmt = f"INSERT INTO {last_exec_table} (last_execution) VALUES (?)"
-        report_cursor.execute(stmt, (0,))
-    else:
-        last_execution_ts = last_execution[0][0]
+        report_cursor.execute(stmt, (last_execution_ts,))
+        # Refresh, so the `UPDATE` of `write_stats_to_db` finds the record just inserted.
+        report_cursor.execute(f"REFRESH TABLE {last_exec_table}")
 
 
-def init_stmts(stmts):
-    for stmt in stmts:
-        stmt_id = stmt[0]
-        stmt_column = stmt[1]
-        calls = stmt[2]
-        bucket = stmt[3]
-        user = stmt[4]
-        stmt_type = stmt[5]
-        avg_duration = stmt[6]
-        nodes = stmt[7]
-        last_used = stmt[8]
-
+def init_stmts(records: t.Iterable[t.Dict[str, t.Any]]):
+    """
+    Adopt statistics read from the database, without clobbering accumulated ones.
+    """
+    for record in records:
+        stmt_column = record["stmt"]
         if stmt_column not in sys_jobs_log:
             sys_jobs_log[stmt_column] = {
-                "id": stmt_id,
+                "id": record["id"],
                 "size": 0,
                 "info": [],
-                "calls": calls,
-                "bucket": bucket,
-                "user": user,
-                "type": stmt_type,
-                "avg_duration": avg_duration,
-                "nodes": nodes,
-                "last_used": last_used,
+                "calls": record["calls"],
+                "bucket": record["bucket"],
+                "user": record["username"],
+                "type": record["query_type"],
+                "avg_duration": record["avg_duration"],
+                "nodes": record["nodes"],
+                "last_used": record["last_used"],
                 "in_db": True,
                 "changed": False,
             }
@@ -241,6 +301,7 @@ def write_stats_to_db():
         f"UPDATE {stmt_log_table} SET calls = ?, avg_duration = ?, nodes = ?, bucket = ?, last_used = ? WHERE id = ?"
     )
     write_params = []
+    write_keys = []
     for key in sys_jobs_log.keys():
         if not sys_jobs_log[key]["in_db"]:
             write_params.append(
@@ -256,8 +317,7 @@ def write_stats_to_db():
                     sys_jobs_log[key]["last_used"],
                 ]
             )
-            sys_jobs_log[key]["in_db"] = True
-            sys_jobs_log[key]["changed"] = False
+            write_keys.append(key)
         elif sys_jobs_log[key]["changed"]:
             report_cursor.execute(
                 update_query_stmt,
@@ -272,7 +332,17 @@ def write_stats_to_db():
             )
             sys_jobs_log[key]["changed"] = False
     if len(write_params) > 0:
-        report_cursor.executemany(write_query_stmt, write_params)
+        results = report_cursor.executemany(write_query_stmt, write_params) or []
+
+        outcomes = list(results) + [None] * (len(write_params) - len(results))
+        for key, outcome in zip(write_keys, outcomes):
+            if outcome is not None and outcome.get("rowcount", 0) < 0:
+                logger.warning(
+                    f"Storing statistics failed, retrying on the next cycle: {outcome.get('error_message') or outcome}"
+                )
+                continue
+            sys_jobs_log[key]["in_db"] = True
+            sys_jobs_log[key]["changed"] = False
 
     stmt = f"UPDATE {last_exec_table} SET last_execution = ?"
     report_cursor.execute(stmt, (last_scrape,))
@@ -280,22 +350,21 @@ def write_stats_to_db():
 
 def read_stats():
     stmt = (
-        f"SELECT id, stmt, calls, avg_duration, bucket, username, query_type, nodes, last_used "
+        f"SELECT id, stmt, calls, bucket, username, query_type, avg_duration, nodes, last_used "
         f"FROM {stmt_log_table} ORDER BY calls DESC, avg_duration DESC;"
     )
     report_cursor.execute(stmt)
-    results = report_cursor.fetchall()
+    results = fetch_records(report_cursor)
 
     # Deanonymize statements if needed
     if deanonymize_sql and decoder_dict_path:
-        deanonymized_results = []
-        for row in results:
-            row_list = list(row)
-            if row_list[1]:  # Check if stmt (at index 1) exists
-                row_list[1] = deanonymize_statement(row_list[1])
-            deanonymized_results.append(tuple(row_list))
-        results = deanonymized_results
+        for record in results:
+            if record["stmt"]:
+                record["stmt"] = deanonymize_statement(record["stmt"])
 
+    # The records just read are authoritative. Without discarding what `dbinit` has read
+    # before, deanonymized statements would be reported next to their anonymized form.
+    sys_jobs_log.clear()
     init_stmts(results)
     return sys_jobs_log
 
@@ -343,7 +412,8 @@ def update_statistics(query_results):
         sys_jobs_log[stmt]["changed"] = True
         sys_jobs_log[stmt]["avg_duration"] = (sys_jobs_log[stmt]["avg_duration"] + duration) / 2
         sys_jobs_log[stmt]["bucket"] = assign_to_bucket(sys_jobs_log[stmt]["bucket"], duration)
-        sys_jobs_log[stmt]["last_used"] = started
+        # Keep the most recent execution, independently of the order records arrive in.
+        sys_jobs_log[stmt]["last_used"] = max(sys_jobs_log[stmt]["last_used"] or 0, started)
         sys_jobs_log[stmt]["calls"] += 1
         sys_jobs_log[stmt]["nodes"].append(node)
         sys_jobs_log[stmt]["nodes"] = list(set(sys_jobs_log[stmt]["nodes"]))  # only save unique nodes
@@ -362,8 +432,12 @@ def scrape_db():
         f"WHERE "
         f"stmt NOT LIKE '%sys.%' AND "
         f"stmt NOT LIKE '%information_schema.%' "
-        f"AND ended BETWEEN {last_scrape} AND {next_scrape} "
-        f"ORDER BY ended DESC"
+        # Half-open interval: The watermark itself has been processed already, so a job
+        # ending exactly on it must not be counted a second time.
+        f"AND ended > {last_scrape} AND ended <= {next_scrape} "
+        # Oldest first, so the *decaying* average of `update_statistics` ends up weighing
+        # the most recent execution most heavily.
+        f"ORDER BY ended ASC"
     )
 
     cursor.execute(stmt)
