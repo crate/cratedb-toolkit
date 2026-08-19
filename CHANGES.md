@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
   and collect arguments.
 - Breaking change: `ctk info jobs` reported the 99th percentile of the query duration as
