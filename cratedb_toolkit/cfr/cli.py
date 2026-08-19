@@ -30,6 +30,13 @@ def sys_export(ctx: click.Context, target: str):
     Export CrateDB system tables.
     """
     cluster_url = ctx.meta["cluster_url"]
+
+    if ctx.meta.get("scrub", False):
+        logger.warning(
+            "`--scrub` has no effect on `sys-export`: it blanks out information about the "
+            "local machine environment, not data collected from the cluster."
+        )
+
     try:
         target_path = path_from_url(target)
         stc = SystemTableExporter(dburi=cluster_url, target=target_path)
@@ -41,7 +48,7 @@ def sys_export(ctx: click.Context, target: str):
         path = stc.save()
 
         if archive is not None:
-            path = archive.make_tarfile()
+            path = archive.make_tarfile(source_path=path, arcname=f"{stc.info.cluster_name}-{path.name}")
             archive.close()
             logger.info(f"Created archive file {target}")
 
@@ -109,7 +116,7 @@ cli.add_command(job_statistics, name="jobstats")
 @click.option(
     "--anonymize",
     type=str,
-    is_flag=True,
+    is_flag=False,
     flag_value="decoder_dictionary.json",  # Use this value when flag is used without value
     default=None,  # No anonymization by default
     help="Path to the decoder dictionary file for anonymizing SQL statements",
@@ -196,7 +203,7 @@ def job_statistics_report(ctx: click.Context):
     import cratedb_toolkit.cfr.marimo
 
     address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
-    probe_database_schema(address, schema_name="stats")
+    probe_database_schema(address, schema_name=address.schema or "stats")
     os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     cratedb_toolkit.cfr.marimo.app.run()
 
@@ -214,7 +221,7 @@ def job_statistics_ui(ctx: click.Context):
     import cratedb_toolkit.cfr.marimo
 
     address = DatabaseAddress.from_string(ctx.meta["cluster_url"])
-    probe_database_schema(address, schema_name="stats")
+    probe_database_schema(address, schema_name=address.schema or "stats")
     os.environ["CRATEDB_CLUSTER_URL"] = address.dburi
     server = marimo.create_asgi_app()
     server = server.with_app(path="/", root=cratedb_toolkit.cfr.marimo.__file__)

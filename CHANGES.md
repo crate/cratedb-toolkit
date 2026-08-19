@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 2026/08/17 v0.1.0
+- Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
+  and collect arguments.
+- Breaking change: `ctk info jobs` reported the 99th percentile of the query duration as
+  `p90`. The field of the `top100_count` element is called `p99` now.
+- Documentation: Explained `ctk info jobs` and `ctk cfr jobstats`, and how they differ
 - Breaking change: Dropped support for Python 3.8 and 3.9, which have reached
   end-of-life. The minimum supported Python version is now 3.10.
 - Fixed a failing SQL statement during `ctk info cluster`
