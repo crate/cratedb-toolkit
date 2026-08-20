@@ -1,4 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "rangeStrategy": "widen",
+
+  "prConcurrentLimit": 3,
+
+  "packageRules": [
+    {
+      // `ty` is pinned in `optional-dependencies.develop`.
+      "matchPackageNames": ["ty"],
+      "enabled": false,
+    },
+    {
+      // Twelve separate `llama-index-llms-*` pins, each releasing often.
+      "matchPackageNames": ["llama-index-llms-**"],
+      "groupName": "llama-index",
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+    },
+  ],
 }
