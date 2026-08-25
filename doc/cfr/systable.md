@@ -62,6 +62,22 @@ Table names keep their bundle prefix, so `sys.jobs_log` is restored as
 `"case0815"."is-columns"`. The `ddl/` subtree is plain SQL for you to read or
 replay yourself; `sys-import` does not consume it.
 
+`sys-import` exits non-zero when any table did not restore in full. Every table is
+attempted regardless, so a partial restore is still usable, and each shortfall is
+logged with the cluster's own reason and the number of rows it accounts for.
+
+### Where a restored table differs from the system table
+
+A restored table exists to carry the exported rows, and a few columns hold values
+that CrateDB will not index. Those columns are declared unindexed in the bundle:
+`sys.segments.attributes`, `sys.sessions.settings` and `sys.users.session_settings`
+as `OBJECT(IGNORED)`, because their keys are named after codec and cluster settings
+and therefore contain dots, which an indexed object forbids in a sub-column name;
+and `sys.cluster.state`, which holds a compressed copy of the whole cluster state,
+with `INDEX OFF STORAGE WITH (columnstore = false)`, because it outgrows Lucene's
+maximum term length of 32766 bytes. The values round-trip verbatim, but filtering,
+sorting and aggregating on them is a full scan.
+
 ## Bundle layout
 
 ```text

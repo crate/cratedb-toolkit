@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+- Fixed `ctk cfr sys-import` losing rows without saying so. CrateDB answers a bulk
+  insert whose rows it rejected with HTTP 200 and a verdict per row, and those
+  verdicts went unread, so a table could restore empty underneath a success message.
+  Thanks, @hammerhead.
+- Breaking change: `ctk cfr sys-import` exits non-zero when a table did not restore
+  in full, naming the table and the cluster's own reason, and its summary counts only
+  the tables that did. Every table in the bundle is still attempted.
+- `ctk cfr sys-export` writes `OBJECT(IGNORED)` for the system columns keyed from
+  CrateDB's setting and codec namespaces (`sys.segments.attributes`,
+  `sys.sessions.settings`, `sys.users.session_settings`), and takes index and column
+  store off `sys.cluster.state`. Those values are the ones an indexed column rejects,
+  so a restored bundle holds them.
+- `ctk --debug cfr sys-import` reports failures with a traceback.
+
 ## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
   and collect arguments.
