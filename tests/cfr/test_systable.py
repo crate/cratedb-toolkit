@@ -1,8 +1,10 @@
 # ruff: noqa: E402
+import io
 import json
 import os.path
 import re
 import shutil
+import sys
 import tarfile
 from importlib.resources import files
 from pathlib import Path
@@ -63,6 +65,76 @@ def test_cfr_sys_export_success(cratedb, click_kwargs, tmp_path, caplog):
 
     assert len(schema_files) >= 19
     assert len(data_files) >= 10
+
+
+def test_cfr_sys_export_reports_the_row_count_it_read(cratedb, click_kwargs, tmp_path, caplog):
+    """
+    Verify `ctk cfr sys-export` reports the volume and duration of the tables it reads.
+
+    A system table's size is a property of the cluster, so an export that takes hours is
+    only diagnosable if the log says which table the rows and the time went to. The counts
+    are checked against a known change in the cluster, so a report of nothing read, or one
+    whose row counts never move, cannot pass.
+    """
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-export", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    reads = {
+        table: int(rows) for table, rows in re.findall(r"Read (\S+): (\d+) rows, ~\S+ in memory, [\d.]+s", caplog.text)
+    }
+
+    # Every system table the export walks is accounted for, whatever the cluster holds.
+    assert reads, f"No read was reported at all: {caplog.text[-2000:]}"
+    for tablename in ["sys.jobs_log", "sys.shards", "sys.allocations", "sys.nodes"]:
+        assert tablename in reads, f"Read of {tablename} not accounted for: {sorted(reads)}"
+
+    # The counts track the cluster rather than being shaped like counts: adding one
+    # relation moves `information_schema.tables` by exactly one.
+    assert reads["sys.nodes"] >= 1
+    tables_before = reads["information_schema.tables"]
+    cratedb.database.run_sql(f'CREATE TABLE "{TESTDRIVE_DATA_SCHEMA}".volume (id INT)')
+    caplog.clear()
+    result = runner.invoke(cli, args="--debug sys-export", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+    second = re.search(r"Read information_schema\.tables: (\d+) rows", caplog.text)
+    assert second, "The second export reported no read of information_schema.tables"
+    assert int(second.group(1)) == tables_before + 1
+
+
+def test_cfr_sys_export_progress_bar_names_the_table_in_flight(cratedb, click_kwargs, tmp_path):
+    """
+    Verify the export's progress bar carries the table it is reading.
+
+    The percentage on its own cannot be mapped back to a table without knowing the
+    schema's table count and ordering, which is what makes a stalled export unreportable.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from cratedb_toolkit.cfr.systable import SystemTableExporter
+
+    class TerminalLike(io.StringIO):
+        """Keep tqdm enabled: it silences itself when its stream is not a terminal."""
+
+        def isatty(self):
+            return True
+
+    recorder = TerminalLike()
+    stderr, sys.stderr = sys.stderr, recorder
+    try:
+        with tempfile.TemporaryDirectory() as staging:
+            SystemTableExporter(dburi=cratedb.database.dburi, target=Path(staging)).save()
+    finally:
+        sys.stderr = stderr
+
+    # Only the bar's own frames; the redirected log lines share the stream.
+    frames = [line for line in recorder.getvalue().split("\r") if line.startswith("Exporting sys:")]
+    assert frames, "The progress bar produced no output"
+    labelled = {line.rsplit(", ", 1)[-1].rstrip("] ") for line in frames if line.endswith("]")}
+    for tablename in ["allocations", "jobs_log", "shards"]:
+        assert tablename in labelled, f"Bar never named sys.{tablename}; it named {sorted(labelled)}"
 
 
 def test_cfr_sys_export_to_archive_file(cratedb, click_kwargs, tmp_path, caplog):

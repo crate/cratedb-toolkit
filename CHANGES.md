@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- `ctk cfr sys-export` names the table it is on in its progress bar, and records the
+  row count, in-memory size and duration of every read at debug level, so an export
+  that crawls says which system table it is crawling on.
 - Fixed `ctk cfr sys-import` losing rows without saying so. CrateDB answers a bulk
   insert whose rows it rejected with HTTP 200 and a verdict per row, and those
   verdicts went unread, so a table could restore empty underneath a success message.
