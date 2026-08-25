@@ -12,6 +12,8 @@
 - `ctk cfr sys-export` waits at most 120 seconds for a response. A log table that
   fails mid-way keeps the entries already read, listed in `manifest.json` under
   `data_partial`.
+- `ctk cfr sys-export` names the table it is reading in its progress bar, and logs
+  each read's row count, size and duration at debug level.
 - Fixed `ctk cfr sys-import` losing the rows of `sys.segments` and `sys.sessions`,
   of nodes with a dot in an attribute name, and of users with the
   `memory.operation_limit` session setting, while reporting success. Thanks,
