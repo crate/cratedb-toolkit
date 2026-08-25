@@ -267,6 +267,41 @@ def test_cfr_sys_import_reports_rejected_rows(cratedb, click_kwargs, tmp_path, c
     assert not re.search(r"Successfully imported [1-9]\d* system tables", caplog.text)
 
 
+def test_cfr_sys_import_restores_oversized_cluster_state(cratedb, click_kwargs, tmp_path):
+    """
+    A restored `sys-cluster` holds a state longer than Lucene's maximum term length.
+
+    The encoded cluster state grows with the number of nodes, tables and shards, so how
+    far past 32766 bytes it reaches is a property of whichever cluster is under test.
+    The length is supplied here instead, so the contract holds on any of them.
+    """
+
+    adapter = cratedb.database
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_TARGET": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-export", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    bundle = Path(json.loads(result.stdout)["path"]) / "sys"
+    if "state" not in (bundle / "schema" / "sys-cluster.sql").read_text():
+        pytest.skip("This CrateDB version does not report a cluster state")
+
+    cratedb.reset(tables=[item.stem for item in (bundle / "data").glob("*.jsonl")])
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_SOURCE": str(bundle)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-import", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    oversized = "s" * 40_000
+    adapter.run_sql('INSERT INTO "sys-cluster" (state) VALUES (:state)', {"state": oversized})
+    adapter.run_sql('REFRESH TABLE "sys-cluster"')
+    records = adapter.run_sql(
+        'SELECT state FROM "sys-cluster" WHERE length(state) = :length',
+        {"length": len(oversized)},
+        records=True,
+    )
+    assert [record["state"] for record in records] == [oversized]
+
+
 def test_cfr_sys_import_failure(cratedb, click_kwargs, tmp_path, caplog):
     """
     Verify `ctk cfr sys-import` failure.
