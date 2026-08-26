@@ -62,6 +62,43 @@ Table names keep their bundle prefix, so `sys.jobs_log` is restored as
 `"case0815"."is-columns"`. The `ddl/` subtree is plain SQL for you to read or
 replay yourself; `sys-import` does not consume it.
 
+Each table is recreated from the definition the bundle carries, so restoring twice into
+the same schema is safe and the bundle being restored always wins. A table never keeps a
+definition left behind by an earlier restore, so a bundle behaves the same way on a
+fresh cluster and on one already carrying an older restore of the same tables.
+
+`sys-import` exits non-zero when any table did not restore in full. Every table is
+attempted regardless, so a partial restore is still usable, and each shortfall is logged
+with the table, how many of its rows arrived, and whatever reasons the cluster gave.
+CrateDB does not explain every row it turns away, so some of those reasons read as
+`no reason reported`.
+
+A bundle written by an earlier release carries column definitions that cannot hold its
+own data, so restoring it reports incomplete tables and exits non-zero. The bundle is
+not repaired on import and there is no option to accept the loss: either export the
+bundle again from the source cluster, or correct the column definitions in the table's
+`.sql` file under `schema/`. Where a shortfall meets a column the bundle defines without
+the declaration CrateDB needs, the report names that column and that file, so it can be
+mended by hand.
+
+### Where a restored table differs from the system table
+
+A restored table exists to carry the exported rows, and a few columns hold values that
+CrateDB will not index. Those columns are declared unindexed in the bundle.
+
+`sys.segments.attributes`, `sys.sessions.settings` and `sys.users.session_settings`
+become `OBJECT(IGNORED)`: their keys are named after codec and cluster settings and
+therefore contain dots, which an indexed object forbids in a sub-column name.
+
+`sys.jobs.stmt`, `sys.jobs_log.stmt`, `sys.jobs_log.error`, `sys.operations_log.error`,
+`sys.sessions.last_statement` and `sys.cluster.state` get
+`INDEX OFF STORAGE WITH (columnstore = false)`: a SQL statement and a server error
+message both carry text of the user's choosing, and the encoded cluster state grows with
+the cluster, so any of them can pass Lucene's maximum term length of 32766 bytes.
+
+The values round-trip verbatim, but filtering, sorting and aggregating on them is a full
+scan.
+
 ## Bundle layout
 
 ```text

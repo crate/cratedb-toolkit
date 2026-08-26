@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+- Fixed `ctk cfr sys-import` losing rows without saying so. CrateDB answers a bulk
+  insert with HTTP 200 and a verdict per row whether or not it took every row, and
+  those verdicts went unread, so a table could restore empty underneath a success
+  message. Thanks, @hammerhead.
+- Breaking change: `ctk cfr sys-import` exits non-zero when a table did not restore in
+  full, naming the table, how many rows arrived, and whatever reasons the cluster gave;
+  its summary counts only the tables that did. Every table in the bundle is still
+  attempted.
+- `ctk cfr sys-import` recreates each table from the bundle's own definition, instead
+  of keeping one left behind by an earlier restore and deleting its rows. The bundle
+  being restored therefore always wins on the target, whatever it held before.
+- Bundles written by earlier releases carry column definitions that cannot hold their
+  own data, so `ctk cfr sys-import` reports those tables as incomplete and exits
+  non-zero rather than restoring them in part. Such a bundle is not repaired on import
+  and there is no option to accept the loss: export it again from the source cluster,
+  or correct the column definitions in the table's `.sql` file inside the bundle, which
+  the report names.
+- `ctk cfr sys-export` writes `OBJECT(IGNORED)` for the system columns keyed from
+  CrateDB's setting and codec namespaces (`sys.segments.attributes`,
+  `sys.sessions.settings`, `sys.users.session_settings`), and takes index and column
+  store off the columns holding a SQL statement, a server error message, or the cluster
+  state (`sys.jobs.stmt`, `sys.jobs_log.stmt`, `sys.jobs_log.error`,
+  `sys.operations_log.error`, `sys.sessions.last_statement`, `sys.cluster.state`).
+  Those values are the ones an indexed column rejects, so a restored bundle holds them.
+- `ctk --debug cfr sys-import` reports failures with a traceback.
+
 ## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
   and collect arguments.
