@@ -9,8 +9,10 @@ import typing as t
 
 import pytest
 
-from cratedb_toolkit.cfr import jobstats
-from cratedb_toolkit.model import DatabaseAddress
+pytest.importorskip("queryanonymizer", reason="Skipping tests because queryanonymizer is not installed")
+
+from cratedb_toolkit.cfr import jobstats  # noqa: E402
+from cratedb_toolkit.model import DatabaseAddress  # noqa: E402
 
 pytestmark = pytest.mark.cfr
 
