@@ -2,7 +2,17 @@
 name: "Tests: CrateDB Cloud"
 
 on:
+  # Only cluster-facing changes need the managed-service run as well.
   pull_request:
+    paths:
+    - '.github/workflows/cratedb-cloud.yml'
+    - 'cratedb_toolkit/cluster/**'
+    - 'cratedb_toolkit/info/**'
+    - 'cratedb_toolkit/shell/**'
+    - 'cratedb_toolkit/util/croud.py'
+    - 'tests/cluster/**'
+    - 'tests/info/**'
+    - 'tests/shell/**'
   push:
     branches: [ main ]
 
@@ -23,6 +33,10 @@ jobs:
   tests:
 
     if: ${{ ! github.event.pull_request.head.repo.fork }}
+
+    concurrency:
+      group: cratedb-cloud-testcluster
+      cancel-in-progress: false
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -61,11 +75,6 @@ jobs:
 
     - name: Set up project
       run: |
-
-        # Install sponge.
-        sudo apt-get install moreutils
-        # More
-        uv pip install pip
 
         # Install package in editable mode.
         uv pip install --editable='.[full,test,develop]'
