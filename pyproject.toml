@@ -104,7 +104,7 @@ dependencies = [
   "pyyaml<7",
   "requests>=2.28,<3",
   "sqlalchemy-cratedb>=0.43.1",
-  "sqlparse<0.6",
+  "sqlparse<0.7",
   "tqdm<5",
   "verlib2<0.4",
   "yarl<1.25",
