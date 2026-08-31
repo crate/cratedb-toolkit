@@ -51,14 +51,6 @@ jobs:
       # Do not tear down Testcontainers
       TC_KEEPALIVE: true
 
-    # https://docs.github.com/en/actions/using-containerized-services/about-service-containers
-    services:
-      cratedb:
-        image: crate/crate:nightly
-        ports:
-          - 4200:4200
-          - 5432:5432
-
     name: "
     Kinesis:
     Python ${{ matrix.python-version }} on OS ${{ matrix.os }}"
