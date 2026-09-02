@@ -13,7 +13,7 @@ from cratedb_toolkit.cfr.info import InfoRecorder
 from cratedb_toolkit.cfr.systable import Archive, SystemTableExporter, SystemTableImporter
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.app import make_cli
-from cratedb_toolkit.util.cli import docstring_format_verbatim, error_logger, make_command
+from cratedb_toolkit.util.cli import docstring_format_verbatim, error_logger, make_command, running_with_debug
 from cratedb_toolkit.util.data import jd, path_from_url
 from cratedb_toolkit.util.database import DatabaseAdapter
 
@@ -67,7 +67,7 @@ def sys_import(ctx: click.Context, source: str):
     """
     cluster_url = ctx.meta["cluster_url"]
     try:
-        stc = SystemTableImporter(dburi=cluster_url, source=path_from_url(source))
+        stc = SystemTableImporter(dburi=cluster_url, source=path_from_url(source), debug=running_with_debug(ctx))
         stc.load()
     except Exception as ex:
         error_logger(ctx)(ex)

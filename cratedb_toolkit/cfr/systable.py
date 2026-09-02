@@ -19,13 +19,13 @@ import datetime as dt
 import json
 import logging
 import os
+import re
 import tarfile
 import tempfile
 import typing as t
 from pathlib import Path
 
 import orjsonl
-from sqlalchemy_cratedb import insert_bulk
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 if t.TYPE_CHECKING:
@@ -79,6 +79,28 @@ class SystemTableKnowledge:
         (SYS_SCHEMA, "summits"): ("static dataset shipped with the server"),
     }
 
+    # Object columns keyed by names CrateDB refuses to index. Their keys come from the
+    # setting and codec namespaces, which use dots throughout, and CrateDB forbids a dot
+    # in the name of an indexed sub-column.
+    UNINDEXED_OBJECT_COLUMNS: t.Dict[t.Tuple[str, str], t.Tuple[str, ...]] = {
+        (SYS_SCHEMA, "segments"): ("attributes",),
+        (SYS_SCHEMA, "sessions"): ("settings",),
+        (SYS_SCHEMA, "users"): ("session_settings",),
+    }
+
+    # Text columns whose values outgrow Lucene's maximum term length of 32766 bytes.
+    # Anything holding a SQL statement or a server error message is unbounded, because
+    # both embed a value of the user's choosing: an error quotes the offending literal
+    # back verbatim. `sys.cluster.state` is a compressed, base64-encoded copy of the
+    # whole cluster state, and grows with the number of nodes, tables and shards.
+    UNINDEXED_TEXT_COLUMNS: t.Dict[t.Tuple[str, str], t.Tuple[str, ...]] = {
+        (SYS_SCHEMA, "cluster"): ("state",),
+        (SYS_SCHEMA, "jobs"): ("stmt",),
+        (SYS_SCHEMA, "jobs_log"): ("stmt", "error"),
+        (SYS_SCHEMA, "operations_log"): ("error",),
+        (SYS_SCHEMA, "sessions"): ("last_statement",),
+    }
+
 
 class ExportSettings:
     """
@@ -107,6 +129,30 @@ class ExportSettings:
     MANIFEST_FILENAME = "manifest.json"
 
 
+class UnindexedObject(sa.types.UserDefinedType):
+    """
+    An object column storing its keys without indexing them.
+
+    Keys never become sub-columns, so CrateDB's rules for sub-column names,
+    the ban on dots included, do not reach them.
+    """
+
+    def get_col_spec(self, **kw):
+        return "OBJECT(IGNORED)"
+
+
+class UnindexedText(sa.types.UserDefinedType):
+    """
+    A text column with neither an index nor a column store entry.
+
+    Values are not subject to Lucene's maximum term length, at the cost of being
+    unavailable to filters, sorting and aggregation.
+    """
+
+    def get_col_spec(self, **kw):
+        return "TEXT INDEX OFF STORAGE WITH (columnstore = false)"
+
+
 class SystemTableInspector:
     """
     Reflect schema information from CrateDB system tables.
@@ -129,8 +175,10 @@ class SystemTableInspector:
         out_schema: t.Optional[str] = None,
         with_drop_table: bool = False,
     ) -> str:
-        meta = sa.MetaData(schema=in_schema or SystemTableKnowledge.SYS_SCHEMA)
+        in_schema = in_schema or SystemTableKnowledge.SYS_SCHEMA
+        meta = sa.MetaData(schema=in_schema)
         table = sa.Table(tablename_in, meta, autoload_with=self.engine)
+        self.unindex_columns(table, schema=in_schema, tablename=tablename_in)
         table.schema = out_schema
         table.name = tablename_out
         sql = ""
@@ -138,6 +186,23 @@ class SystemTableInspector:
             sql += sa.schema.DropTable(table, if_exists=True).compile(self.engine).string.strip() + ";\n"
         sql += sa.schema.CreateTable(table, if_not_exists=True).compile(self.engine).string.strip() + ";\n"
         return sql
+
+    @staticmethod
+    def unindex_columns(table: sa.Table, schema: str, tablename: str) -> None:
+        """
+        Take the index off the columns holding values CrateDB declines to index.
+
+        A restored table exists to carry the exported rows, so where the two goals
+        conflict, holding the value wins over reproducing the system table's own
+        column definition.
+        """
+        objects = SystemTableKnowledge.UNINDEXED_OBJECT_COLUMNS.get((schema, tablename), ())
+        texts = SystemTableKnowledge.UNINDEXED_TEXT_COLUMNS.get((schema, tablename), ())
+        for column in table.columns:
+            if column.name in objects:
+                column.type = UnindexedObject()
+            elif column.name in texts:
+                column.type = UnindexedText()
 
 
 class SchemaCapture:
@@ -485,6 +550,67 @@ class SystemTableExporter(PathProvider):
         return counts
 
 
+class SystemTableImportError(Exception):
+    """
+    Raised when a bundle's tables did not all reach the cluster intact.
+    """
+
+
+class BulkInsertOutcome:
+    """
+    Tally what a bulk insert actually wrote.
+
+    CrateDB answers a bulk request with HTTP 200 and a verdict per row, whether or not
+    it took every row: a refused row carries a `rowcount` of -2, and an explanation only
+    some of the time. Neither the driver nor the SQLAlchemy layer above it treats such a
+    verdict as an error, so the number of rows written is the one dependable sign that a
+    batch arrived whole.
+    """
+
+    def __init__(self):
+        self.sent = 0
+        self.written = 0
+        self.reasons: t.Dict[str, int] = {}
+
+    @property
+    def missing(self) -> int:
+        """
+        How many of the rows handed over did not reach the table.
+        """
+        return self.sent - self.written
+
+    def insert(self, pd_table, conn, keys, data_iter) -> None:
+        """
+        Write one batch through CrateDB's bulk endpoint, recording its verdicts.
+
+        Shaped as an insertion method for `pandas.DataFrame.to_sql`, which calls it
+        once per chunk.
+        """
+        sql = str(pd_table.table.insert().compile(bind=conn))
+        data = list(data_iter)
+        self.sent += len(data)
+        cursor = conn._dbapi_connection.cursor()
+        try:
+            results = cursor.executemany(sql, data) or []
+        finally:
+            cursor.close()
+        for result in results:
+            rowcount = result.get("rowcount", 0)
+            if rowcount > 0:
+                self.written += rowcount
+            else:
+                reason = str(result.get("error", {}).get("message", "no reason reported"))
+                self.reasons[reason] = self.reasons.get(reason, 0) + 1
+
+    def reason_summary(self) -> str:
+        """
+        The cluster's explanations, each with how many rows it accounts for.
+        """
+        if not self.reasons:
+            return "the cluster reported no reason"
+        return "; ".join(f"{count}x {reason}" for reason, count in self.reasons.items())
+
+
 class SystemTableImporter:
     """
     Import schema and data about CrateDB system tables.
@@ -507,6 +633,32 @@ class SystemTableImporter:
         path_schema = self.source / ExportSettings.SCHEMA_PATH
         return sorted(item.stem for item in path_schema.glob("*.sql"))
 
+    @staticmethod
+    def undeclared_columns(tablename: str, schema_sql: str) -> t.List[str]:
+        """
+        The columns a bundle declares without the clause CrateDB needs to store them.
+
+        A bundle carries the column definitions its exporter rendered, so the remedy for
+        a value the target refuses can lie in the file rather than in the cluster.
+        """
+        source = None
+        for schema, prefix in ExportSettings.FILENAME_PREFIXES.items():
+            if tablename.startswith(prefix):
+                source = (schema, tablename[len(prefix) :])
+                break
+        if source is None:
+            return []
+
+        required = dict.fromkeys(SystemTableKnowledge.UNINDEXED_OBJECT_COLUMNS.get(source, ()), "OBJECT(IGNORED)")
+        required.update(dict.fromkeys(SystemTableKnowledge.UNINDEXED_TEXT_COLUMNS.get(source, ()), "INDEX OFF"))
+
+        undeclared = []
+        for column, declaration in required.items():
+            match = re.search(rf'^\s*"?{re.escape(column)}"?\s+(.*)$', schema_sql, re.MULTILINE)
+            if match and declaration not in match.group(1):
+                undeclared.append(column)
+        return undeclared
+
     def load(self):
         path_schema = self.source / ExportSettings.SCHEMA_PATH
         path_data = self.source / ExportSettings.DATA_PATH
@@ -517,12 +669,22 @@ class SystemTableImporter:
         logger.info(f"Importing system tables from: {self.source}")
 
         with logging_redirect_tqdm():
-            self._load(path_schema, path_data)
+            failures = self._load(path_schema, path_data)
 
-    def _load(self, path_schema: Path, path_data: Path):
+        if failures:
+            raise SystemTableImportError(f"Tables not restored in full: {', '.join(failures)}")
+
+    def _load(self, path_schema: Path, path_data: Path) -> t.List[str]:
+        """
+        Restore every table the bundle carries, and name the ones that did not make it.
+
+        Every table is attempted, whatever became of the ones before it: a bundle
+        restored in part is still worth reading, as long as its gaps are named.
+        """
         import pandas as pd
 
-        table_count = 0
+        restored = 0
+        failures: t.List[str] = []
         for tablename in tqdm(self.table_names()):
             path_table_schema = path_schema / f"{tablename}.sql"
             path_table_data = path_data / f"{tablename}.{self.data_format}"
@@ -531,29 +693,49 @@ class SystemTableImporter:
             if not path_table_data.exists() or path_table_data.stat().st_size == 0:
                 continue
 
-            table_count += 1
-
-            # Invoke SQL DDL.
-            schema_sql = path_table_schema.read_text()
-            self.adapter.run_sql(schema_sql)
-
-            # Truncate table.
-            self.adapter.run_sql(f"DELETE FROM {self.adapter.quote_relation_name(tablename)};")  # noqa: S608
-
-            # Load data.
+            outcome = BulkInsertOutcome()
             try:
+                # Recreate the table, so it carries the definition the bundle specifies
+                # rather than one left behind by an earlier restore.
+                schema_sql = path_table_schema.read_text()
+                self.adapter.run_sql(f"DROP TABLE IF EXISTS {self.adapter.quote_relation_name(tablename)};")
+                self.adapter.run_sql(schema_sql)
+
+                # Load data.
                 df: "pd.DataFrame" = pd.DataFrame.from_records(self.load_table(path_table_data))
                 df.to_sql(
                     name=tablename,
                     con=self.adapter.engine,
                     index=False,
                     if_exists="append",
-                    method=insert_bulk,
+                    method=outcome.insert,
                 )
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
+                failures.append(tablename)
+                continue
 
-        logger.info(f"Successfully imported {table_count} system tables")
+            if outcome.missing:
+                message = (
+                    f"Importing table incomplete: {tablename}. "
+                    f"The cluster took {outcome.written} of {outcome.sent} rows: "
+                    f"{outcome.reason_summary()}"
+                )
+                undeclared = self.undeclared_columns(tablename, schema_sql)
+                if undeclared:
+                    message += (
+                        f". This bundle defines {', '.join(undeclared)} without the declaration CrateDB needs "
+                        f"to store their values. Export the bundle again from the source cluster, or correct "
+                        f"the definition in {path_table_schema}"
+                    )
+                logger.error(message)
+                failures.append(tablename)
+                continue
+
+            restored += 1
+
+        logger.info(f"Successfully imported {restored} system tables")
+        return failures
 
     def load_table(self, path: Path) -> t.List:
         import polars as pl
