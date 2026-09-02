@@ -272,7 +272,7 @@ optional-dependencies.testing = [
   "pytest<10",
   "pytest-cov<8",
   "pytest-mock<4",
-  "testcontainers<4.15",
+  "testcontainers<4.16",
 ]
 urls.Changelog = "https://github.com/crate/cratedb-toolkit/blob/main/CHANGES.md"
 urls.Documentation = "https://cratedb-toolkit.readthedocs.io/"
