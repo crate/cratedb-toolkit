@@ -18,6 +18,7 @@ from click.testing import CliRunner
 import tests
 from cratedb_toolkit.cfr.cli import cli
 from cratedb_toolkit.cfr.systable import ExportSettings, SystemTableExporter
+from tests.conftest import TESTDRIVE_DATA_SCHEMA
 
 pytestmark = pytest.mark.cfr
 
@@ -39,6 +40,11 @@ def test_cfr_sys_export_read_timeout(dburi, expected):
 
 def filenames(path: Path):
     return sorted([item.name for item in path.iterdir()])
+
+
+def linecount(path: Path) -> int:
+    with path.open("r", encoding="utf-8") as f:
+        return sum(1 for _ in f)
 
 
 EXPORT_SUMMARY_PATTERN = r"Successfully exported \d+ tables from sys, information_schema"
@@ -207,6 +213,90 @@ def test_cfr_sys_import_success(cratedb, tmp_path, caplog):
 
     cratedb.database.run_sql('REFRESH TABLE "sys-operations"')
     assert cratedb.database.count_records("sys-operations") == 1
+
+
+def test_cfr_sys_import_restores_every_exported_row(cratedb, click_kwargs, tmp_path):
+    adapter = cratedb.database
+    probe = adapter.quote_relation_name(f"{TESTDRIVE_DATA_SCHEMA}.segment_source")
+
+    # A Lucene segment puts `sys.segments`, with its dotted `attributes` keys, into the bundle.
+    adapter.run_sql(f"CREATE TABLE {probe} (id INT, name TEXT)")
+    adapter.run_sql(f"INSERT INTO {probe} (id, name) VALUES (1, 'probe')")  # noqa: S608
+    adapter.run_sql(f"REFRESH TABLE {probe}")
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_TARGET": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-export", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    bundle = Path(json.loads(result.stdout)["path"]) / "sys"
+    exported = {item.stem: linecount(item) for item in sorted((bundle / "data").glob("*.jsonl"))}
+    if "sys-segments" not in exported:
+        pytest.skip("Cluster reported no segments to export")
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_SOURCE": str(bundle)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-import", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    restored = {}
+    for tablename in exported:
+        adapter.run_sql(f"REFRESH TABLE {adapter.quote_relation_name(tablename)}")
+        restored[tablename] = adapter.count_records(tablename)
+
+    assert restored == exported
+
+
+def test_cfr_sys_import_reports_rejected_rows(cratedb, click_kwargs, tmp_path, caplog):
+    """
+    A table whose rows the cluster refuses fails the import, naming the file to correct.
+    """
+
+    assets_path = files(tests.cfr) / "assets"
+    schema_path = tmp_path / "schema"
+    data_path = tmp_path / "data"
+    schema_path.mkdir()
+    data_path.mkdir()
+    shutil.copy(str(assets_path / "sys-segments.sql"), schema_path)
+    shutil.copy(str(assets_path / "sys-segments.jsonl"), data_path)
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_SOURCE": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-import", catch_exceptions=False)
+
+    assert result.exit_code == 1
+    assert "sys-segments" in caplog.text
+    assert not re.search(r"Successfully imported [1-9]\d* system tables", caplog.text)
+    assert "attributes" in caplog.text
+    assert "Export the bundle again from the source cluster" in caplog.text
+    assert str(schema_path / "sys-segments.sql") in caplog.text
+
+
+def test_cfr_sys_import_restores_oversized_cluster_state(cratedb, click_kwargs, tmp_path):
+    """
+    A restored `sys-cluster` holds a state longer than Lucene's maximum term length.
+    """
+
+    adapter = cratedb.database
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_TARGET": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-export", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    bundle = Path(json.loads(result.stdout)["path"]) / "sys"
+    if "state" not in (bundle / "schema" / "sys-cluster.sql").read_text():
+        pytest.skip("This CrateDB version does not report a cluster state")
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_SOURCE": str(bundle)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-import", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    oversized = "s" * 40_000
+    adapter.run_sql('INSERT INTO "sys-cluster" (state) VALUES (:state)', {"state": oversized})
+    adapter.run_sql('REFRESH TABLE "sys-cluster"')
+    records = adapter.run_sql(
+        'SELECT state FROM "sys-cluster" WHERE length(state) = :length',
+        {"length": len(oversized)},
+        records=True,
+    )
+    assert [record["state"] for record in records] == [oversized]
 
 
 def test_cfr_sys_import_failure(cratedb, click_kwargs, tmp_path, caplog):
