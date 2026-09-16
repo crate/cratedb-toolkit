@@ -13,6 +13,13 @@ from cratedb_toolkit.retention.cli import cli
 from tests.retention.conftest import TESTDRIVE_DATA_SCHEMA
 
 
+def toolkit_records(caplog) -> t.List[logging.LogRecord]:
+    """
+    The log records emitted by the application, without those of third-party libraries.
+    """
+    return [record for record in caplog.records if record.name.startswith("cratedb_toolkit")]
+
+
 def test_version():
     """
     CLI test: Invoke `cratedb-retention --version`.
@@ -43,7 +50,7 @@ def test_setup_brief(caplog, cratedb, settings):
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
-    assert 1 <= len(caplog.records) <= 2
+    assert toolkit_records(caplog) == []
 
 
 def test_setup_verbose(caplog, cratedb, settings):
@@ -62,8 +69,8 @@ def test_setup_verbose(caplog, cratedb, settings):
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
 
-    # TODO: Validate a few log messages, instead of just counting them.
-    assert 3 <= len(caplog.records) <= 15
+    messages = [record.getMessage() for record in toolkit_records(caplog)]
+    assert any("Installing retention policy bookkeeping table" in message for message in messages)
 
 
 def test_setup_dryrun(caplog, cratedb, settings):
