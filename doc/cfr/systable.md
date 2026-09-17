@@ -11,7 +11,8 @@ and {ref}`cluster-info` present curated or interpreted views for your own use.
 :::
 
 `sys-export` produces a **diagnostics bundle**: a raw copy of every `sys` and
-`information_schema` table, together with your own table and view definitions,
+`information_schema` table, the two logs cut to their newest entries,
+together with your own table and view definitions,
 and a `manifest.json` describing exactly what was and was not collected.
 `sys-import` loads the raw tables from such a bundle back into a cluster for
 analysis, one schema subtree at a time.
@@ -49,6 +50,23 @@ ctk cfr --cluster-url="crate://localhost:4200/" \
 Give the target a `.tgz` or `.tar.gz` name to receive a single archive file
 instead.
 
+`sys.jobs_log` and `sys.operations_log` are exported with their 1000 most recent
+entries. Every node keeps its own log, and reading all of them at once makes the
+node answering the export hold every node's log in memory. Use `--log-limit` to
+collect a different number.
+```shell
+ctk cfr --cluster-url="crate://localhost:4200/" \
+    sys-export --log-limit=5000 ./diagnostics.tgz
+```
+
+The entries come in pages of 1000, so a larger limit stays within reach of a busy
+cluster. When a page fails, the bundle keeps the entries that arrived, and
+`manifest.json` lists the table under `data_partial` with the error.
+
+Every read waits 120 seconds at most. A cluster that stops answering therefore
+ends the export with its failures recorded, instead of blocking it. Set
+`?timeout=` in the cluster URL for another deadline.
+
 Import a bundle's raw tables back into a cluster for analysis. Point `sys-import`
 at one per-schema subdirectory of the bundle — `sys` or `information_schema` —
 and give it a target schema to restore into.
@@ -82,9 +100,11 @@ replay yourself; `sys-import` does not consume it.
 version, the toolkit version, and an ISO 8601 timestamp with a UTC offset, so a
 bundle can be lined up against server logs. It also accounts for everything that
 is not in the bundle: `schema_failures` for tables whose `.sql` file is missing,
-`data_failures` for tables whose data could not be read, `definition_failures`
-for definitions that could not be captured, `data_skipped` for tables whose data
-is deliberately not collected, and `redactions` for values that were blanked out.
+`data_failures` for tables whose data could not be read, `data_partial` for
+tables whose data arrived incomplete, `definition_failures` for definitions that
+could not be captured, `data_skipped` for tables whose data is deliberately not
+collected, `log_limit` for how many log entries were collected, and `redactions`
+for values that were blanked out.
 
 ## What the bundle contains
 

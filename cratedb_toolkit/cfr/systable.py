@@ -35,6 +35,7 @@ import sqlalchemy as sa
 from tqdm import tqdm
 
 from cratedb_toolkit.info.core import InfoContainer
+from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.cli import error_logger
 from cratedb_toolkit.util.database import DatabaseAdapter
 
@@ -79,6 +80,13 @@ class SystemTableKnowledge:
         (SYS_SCHEMA, "summits"): ("static dataset shipped with the server"),
     }
 
+    # Logs each node keeps of its own recent entries. Read in full, they make one node
+    # hold every node's log at once.
+    LOG_TABLES: t.Tuple[t.Tuple[str, str], ...] = (
+        (SYS_SCHEMA, "jobs_log"),
+        (SYS_SCHEMA, "operations_log"),
+    )
+
 
 class ExportSettings:
     """
@@ -105,6 +113,14 @@ class ExportSettings:
 
     # The bundle's self-description.
     MANIFEST_FILENAME = "manifest.json"
+
+    # How many of the most recent entries to read from each log table, and how many
+    # of them one response carries.
+    LOG_LIMIT = 1000
+    LOG_PAGE_SIZE = 1000
+
+    # How long to wait for one response, in seconds.
+    READ_TIMEOUT = 120
 
 
 class SystemTableInspector:
@@ -226,10 +242,12 @@ class SystemTableExporter(PathProvider):
         dburi: str,
         target: t.Union[Path],
         data_format: DataFormat = "jsonl",
+        log_limit: int = ExportSettings.LOG_LIMIT,
     ):
         super().__init__(target)
-        self.dburi = dburi
+        self.dburi = self.with_timeout(dburi)
         self.data_format = data_format
+        self.log_limit = log_limit
         self.adapter = DatabaseAdapter(dburi=self.dburi)
         self.info = InfoContainer(adapter=self.adapter)
         self.inspector = SystemTableInspector(dburi=self.dburi)
@@ -238,8 +256,19 @@ class SystemTableExporter(PathProvider):
         self.data_failures: t.List[t.Dict[str, str]] = []
         self.definition_failures: t.List[t.Dict[str, str]] = []
         self.data_skipped: t.List[t.Dict[str, str]] = []
+        self.data_partial: t.List[t.Dict[str, t.Any]] = []
         self.table_count = 0
         self.data_file_count = 0
+
+    @staticmethod
+    def with_timeout(dburi: str) -> str:
+        """
+        Give every read a deadline, so a cluster that stops answering ends the export instead
+        of blocking it. An address carrying its own timeout keeps it.
+        """
+        address = DatabaseAddress.from_string(dburi)
+        address.uri.query_params.setdefault("timeout", str(ExportSettings.READ_TIMEOUT))
+        return address.dburi
 
     def cratedb_version(self) -> str:
         """
@@ -254,16 +283,73 @@ class SystemTableExporter(PathProvider):
         return "unknown"
 
     def read_table(self, tablename: str, schema: t.Optional[str] = None) -> "pl.DataFrame":
+        schema = schema or SystemTableKnowledge.SYS_SCHEMA
+        if (schema, tablename) in SystemTableKnowledge.LOG_TABLES:
+            return self.read_log(schema=schema, tablename=tablename)
+        return self.query(f'SELECT * FROM "{schema}"."{tablename}"')  # noqa: S608
+
+    def query(self, sql: str) -> "pl.DataFrame":
         import polars as pl
 
-        schema = schema or SystemTableKnowledge.SYS_SCHEMA
-        sql = f'SELECT * FROM "{schema}"."{tablename}"'  # noqa: S608
         logger.debug(f"Running SQL: {sql}")
         return pl.read_database(
-            query=sql,  # noqa: S608
+            query=sql,
             connection=self.adapter.connection,
             infer_schema_length=100_000,
         )
+
+    def read_log(self, schema: str, tablename: str) -> "pl.DataFrame":
+        """
+        Read the most recent entries of a log table, one page at a time.
+
+        A page is delimited by the time its oldest entry ended, so each node applies it to its
+        own log. `ORDER BY ended DESC LIMIT` instead makes every node send its own newest rows
+        for one node to merge.
+        """
+        import polars as pl
+
+        relation = f'"{schema}"."{tablename}"'
+        frames: t.List["pl.DataFrame"] = []
+        collected = 0
+        boundary: t.Optional[int] = None
+        while collected < self.log_limit:
+            size = min(ExportSettings.LOG_PAGE_SIZE, self.log_limit - collected)
+            cutoff = self.log_cutoff(relation, size=size, boundary=boundary)
+            conditions = [] if boundary is None else [f"ended < {boundary}"]
+            if cutoff is not None:
+                conditions.append(f"ended >= {cutoff}")
+            where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+            try:
+                frame = self.query(f"SELECT * FROM {relation}{where}")  # noqa: S608
+            except Exception as ex:
+                if not frames:
+                    raise
+                logger.warning(f"Could not read all of {schema}.{tablename}: {ex}")
+                self.data_partial.append(
+                    {
+                        "schema": schema,
+                        "table": tablename,
+                        "rows": collected,
+                        "reason": f"{type(ex).__name__}: {ex}",
+                    }
+                )
+                break
+            frames.append(frame)
+            collected += frame.height
+            # Without a cut-off, the page took whatever the log still held below the boundary.
+            if frame.is_empty() or cutoff is None:
+                break
+            boundary = cutoff
+        return pl.concat(frames, how="vertical_relaxed")
+
+    def log_cutoff(self, relation: str, size: int, boundary: t.Optional[int]) -> t.Optional[int]:
+        """
+        When did the oldest entry of a page of `size` end? `None` when the log holds fewer.
+        """
+        where = "" if boundary is None else f"WHERE ended < {boundary}"
+        sql = f"SELECT ended::bigint AS ended FROM {relation} {where} ORDER BY ended DESC LIMIT 1 OFFSET {size - 1}"  # noqa: S608
+        records = self.adapter.run_sql(sql, records=True)
+        return records[0]["ended"] if records else None
 
     def redact(self, frame: "pl.DataFrame", schema: str, tablename: str) -> "pl.DataFrame":
         """
@@ -320,7 +406,7 @@ class SystemTableExporter(PathProvider):
         schemas = ", ".join(SystemTableKnowledge.EXPORT_SCHEMAS)
         logger.info(
             f"Successfully exported {self.table_count} tables from {schemas} "
-            f"({self.data_file_count} with data, {len(self.data_skipped)} skipped, "
+            f"({self.data_file_count} with data, {len(self.data_partial)} partial, {len(self.data_skipped)} skipped, "
             f"{len(self.schema_failures)} schema and {len(self.data_failures)} data failures, "
             f"{len(self.definition_failures)} definition failures)"
         )
@@ -350,6 +436,8 @@ class SystemTableExporter(PathProvider):
             "data_failures": self.data_failures,
             "definition_failures": self.definition_failures,
             "data_skipped": self.data_skipped,
+            "data_partial": self.data_partial,
+            "log_limit": self.log_limit,
             "redactions": [
                 {"schema": schema, "table": table, "columns": list(columns)}
                 for (schema, table), columns in SystemTableKnowledge.REDACTED_COLUMNS.items()

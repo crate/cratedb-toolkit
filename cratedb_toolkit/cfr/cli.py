@@ -10,7 +10,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from cratedb_toolkit.cfr.info import InfoRecorder
-from cratedb_toolkit.cfr.systable import Archive, SystemTableExporter, SystemTableImporter
+from cratedb_toolkit.cfr.systable import Archive, ExportSettings, SystemTableExporter, SystemTableImporter
 from cratedb_toolkit.model import DatabaseAddress
 from cratedb_toolkit.util.app import make_cli
 from cratedb_toolkit.util.cli import docstring_format_verbatim, error_logger, make_command
@@ -24,8 +24,15 @@ cli = make_cli()
 
 @make_command(cli, "sys-export")
 @click.argument("target", envvar="CFR_TARGET", type=str, required=False, default="file://./cfr")
+@click.option(
+    "--log-limit",
+    type=click.IntRange(min=1),
+    default=ExportSettings.LOG_LIMIT,
+    show_default=True,
+    help="How many of the most recent entries to export from sys.jobs_log and sys.operations_log",
+)
 @click.pass_context
-def sys_export(ctx: click.Context, target: str):
+def sys_export(ctx: click.Context, target: str, log_limit: int):
     """
     Export CrateDB system tables.
     """
@@ -39,7 +46,7 @@ def sys_export(ctx: click.Context, target: str):
 
     try:
         target_path = path_from_url(target)
-        stc = SystemTableExporter(dburi=cluster_url, target=target_path)
+        stc = SystemTableExporter(dburi=cluster_url, target=target_path, log_limit=log_limit)
 
         archive = None
         if target_path.name.endswith(".tgz") or target_path.name.endswith(".tar.gz"):
