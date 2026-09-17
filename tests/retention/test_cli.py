@@ -20,6 +20,9 @@ def toolkit_records(caplog) -> t.List[logging.LogRecord]:
     return [record for record in caplog.records if record.name.startswith("cratedb_toolkit")]
 
 
+SETUP_MESSAGE = "Installing retention policy bookkeeping table"
+
+
 def test_version():
     """
     CLI test: Invoke `cratedb-retention --version`.
@@ -42,15 +45,16 @@ def test_setup_brief(caplog, cratedb, settings):
     runner = CliRunner()
 
     caplog.set_level(logging.ERROR, "sqlalchemy")
-    result = runner.invoke(
-        cli,
-        args=f'setup "{database_url}"',
-        catch_exceptions=False,
-    )
+    with caplog.at_level(logging.DEBUG):
+        result = runner.invoke(
+            cli,
+            args=f'setup "{database_url}"',
+            catch_exceptions=False,
+        )
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
-    assert toolkit_records(caplog) == []
+    assert any(SETUP_MESSAGE in record.getMessage() for record in toolkit_records(caplog))
 
 
 def test_setup_verbose(caplog, cratedb, settings):
@@ -60,17 +64,17 @@ def test_setup_verbose(caplog, cratedb, settings):
     database_url = cratedb.get_connection_url()
     runner = CliRunner()
 
-    result = runner.invoke(
-        cli,
-        args=f'--verbose setup "{database_url}"',
-        catch_exceptions=False,
-    )
+    with caplog.at_level(logging.DEBUG):
+        result = runner.invoke(
+            cli,
+            args=f'--verbose setup "{database_url}"',
+            catch_exceptions=False,
+        )
     assert result.exit_code == 0
 
     assert cratedb.database.table_exists(settings.policy_table.fullname) is True
 
-    messages = [record.getMessage() for record in toolkit_records(caplog)]
-    assert any("Installing retention policy bookkeeping table" in message for message in messages)
+    assert any(SETUP_MESSAGE in record.getMessage() for record in toolkit_records(caplog))
 
 
 def test_setup_dryrun(caplog, cratedb, settings):

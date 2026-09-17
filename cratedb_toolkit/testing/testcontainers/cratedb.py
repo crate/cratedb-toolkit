@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import os
 import typing as t
+from typing import Optional
 
 from testcontainers.community.cratedb import CrateDBContainer as UpstreamCrateDBContainer
 from testcontainers.core.wait_strategies import HttpWaitStrategy
@@ -54,6 +55,9 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
     CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "crate")
     CRATEDB_DB = os.environ.get("CRATEDB_DB", "doc")
     KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
+    # Seconds to wait for the HTTP interface after the container starts.
+    STARTUP_TIMEOUT = 60
+
     # `testcontainers` builds its command line from pairs; `cmd_opts` merges over these, by key.
     CMD_OPTS = [
         ("discovery.type", "single-node"),
@@ -64,11 +68,11 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
     def __init__(
         self,
         image: str = "crate/crate:nightly",
-        ports: t.Optional[dict] = None,
-        user: t.Optional[str] = None,
-        password: t.Optional[str] = None,
-        dbname: t.Optional[str] = None,
-        cmd_opts: t.Optional[dict] = None,
+        ports: Optional[dict] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+        dbname: Optional[str] = None,
+        cmd_opts: Optional[dict] = None,
         **kwargs,
     ) -> None:
         """
@@ -100,6 +104,8 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
 
         self.port_mapping = ports if ports else {4200: None}
         self.port_to_expose, _ = list(self.port_mapping.items())[0]
+        # Upstream's `port` is the same thing under another name; keep them from drifting apart.
+        self.port = self.port_to_expose
 
     @staticmethod
     def _build_cmd(opts: t.Sequence[t.Tuple[str, t.Any]]) -> str:
@@ -132,7 +138,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
         self._configure_ports()
         self._configure_credentials()
 
-    def get_connection_url(self, dialect: str = "crate", host: t.Optional[str] = None) -> str:  # ty: ignore[invalid-method-override]
+    def get_connection_url(self, dialect: str = "crate", host: Optional[str] = None) -> str:  # ty: ignore[invalid-method-override]
         """
         Return a connection URL to the DB
 
@@ -142,7 +148,7 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
         """
         # TODO: When using `db_name=self.CRATEDB_DB`:
         #       Connection.__init__() got an unexpected keyword argument 'database'
-        return self._create_connection_url(
+        return super()._create_connection_url(
             dialect=dialect,
             username=self.CRATEDB_USER,
             password=self.CRATEDB_PASSWORD,
@@ -152,7 +158,8 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrat
 
     def _connect(self):
         # The HTTP interface may be configured to a port other than the upstream default.
-        HttpWaitStrategy(self.port_to_expose).for_status_code(200).wait_until_ready(self)
+        strategy = HttpWaitStrategy(self.port_to_expose).for_status_code(200)
+        strategy.with_startup_timeout(self.STARTUP_TIMEOUT).wait_until_ready(self)
 
 
 class CrateDBTestAdapter:
@@ -162,8 +169,8 @@ class CrateDBTestAdapter:
     """
 
     def __init__(self, crate_version: str = "nightly", **kwargs):
-        self.cratedb: t.Optional[CrateDBContainer] = None
-        self._database: t.Optional[DatabaseAdapter] = None
+        self.cratedb: Optional[CrateDBContainer] = None
+        self._database: Optional[DatabaseAdapter] = None
         self.image: str = "crate/crate:{}".format(crate_version)
 
     @property
@@ -187,7 +194,7 @@ class CrateDBTestAdapter:
         if self.cratedb:
             self.cratedb.stop()
 
-    def reset(self, tables: t.Optional[list] = None, schemas: t.Optional[list] = None):
+    def reset(self, tables: Optional[list] = None, schemas: Optional[list] = None):
         """
         Drop tables from the given list, used for tests set up or tear down
         """
