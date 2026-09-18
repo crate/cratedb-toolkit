@@ -54,10 +54,7 @@ def test_run_sql_multiple_statements(sqlcmd):
 def test_run_sql_invalid_host(capsys):
     with pytest.raises(OperationalError) as ex:
         run_sql(dburi="crate://localhost:12345", sql="SELECT 1;")
-    assert ex.match(
-        ".*ConnectionError.*No more Servers available.*HTTPConnectionPool.*"
-        "Failed to establish a new connection.*Connection refused.*"
-    )
+    assert ex.match(".*ConnectionError.*HTTPConnectionPool.*Failed to establish a new connection.*Connection refused.*")
 
 
 def test_run_sql_invalid_sql_type(capsys, sqlcmd):

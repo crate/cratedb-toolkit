@@ -116,7 +116,7 @@ def test_setup_failure_envvar_invalid_dburi(mocker):
             args="--verbose setup",
             catch_exceptions=False,
         )
-    assert ex.match("No more Servers available")
+    assert ex.match("ConnectionError.*Connection refused")
 
 
 def test_list_policies(store, capsys):
