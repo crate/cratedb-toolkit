@@ -2,8 +2,10 @@ import base64
 import json
 import os
 import sys
+from importlib.metadata import version as package_version
 
 import pytest
+from verlib2 import Version
 
 pytestmark = pytest.mark.kinesis
 
@@ -11,6 +13,8 @@ pytest.importorskip("commons_codec", reason="Only works with commons-codec insta
 
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator  # noqa: E402
 from commons_codec.transform.dynamodb_model import PrimaryKeySchema  # noqa: E402
+
+CRATE_VERSION = Version(package_version("crate"))
 
 DYNAMODB_CDC_INSERT_NESTED = {
     "awsRegion": "us-east-1",
@@ -95,13 +99,14 @@ def reset_handler():
         pass
 
 
-def test_processor_kinesis_dms_no_records(reset_handler, mocker, caplog):
+def test_processor_kinesis_dms_no_records(cratedb, reset_handler, mocker, caplog):
     """
     Roughly verify that the unified Lambda handler works with AWS DMS.
     """
 
     # Configure environment variables.
     handler_environment = {
+        "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
         "MESSAGE_FORMAT": "dms",
     }
     mocker.patch.dict(os.environ, handler_environment)
@@ -112,6 +117,28 @@ def test_processor_kinesis_dms_no_records(reset_handler, mocker, caplog):
     handler(event, None)
 
     assert "Successfully processed 0 records" in caplog.messages
+
+
+@pytest.mark.skipif(
+    CRATE_VERSION < Version("2.3.0"),
+    reason="crate-python < 2.3.0 does not raise when no node is available",
+)
+def test_processor_kinesis_connection_failure(reset_handler, mocker, caplog):
+    """
+    Verify an unreachable sink database terminates the handler at import time.
+    """
+
+    handler_environment = {
+        "CRATEDB_CLUSTER_URL": "crate://localhost:12345",
+        "MESSAGE_FORMAT": "dms",
+    }
+    mocker.patch.dict(os.environ, handler_environment)
+
+    with pytest.raises(SystemExit) as ex:
+        import cratedb_toolkit.io.awslambda.kinesis  # noqa: F401
+
+    assert ex.value.code == 11
+    assert "Connection to sink database failed: crate://localhost:12345" in caplog.messages
 
 
 def test_processor_kinesis_dynamodb_insert_update(cratedb, reset_handler, mocker, caplog):
