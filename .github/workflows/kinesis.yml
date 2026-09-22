@@ -9,6 +9,7 @@ on:
     - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
+    - 'tests/io/test_awslambda.py'
     - 'pyproject.toml'
   push:
     branches: [ main ]
@@ -18,6 +19,7 @@ on:
     - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
+    - 'tests/io/test_awslambda.py'
     - 'pyproject.toml'
 
   # Allow job to be triggered manually.
