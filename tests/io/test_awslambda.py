@@ -95,13 +95,14 @@ def reset_handler():
         pass
 
 
-def test_processor_kinesis_dms_no_records(reset_handler, mocker, caplog):
+def test_processor_kinesis_dms_no_records(cratedb, reset_handler, mocker, caplog):
     """
     Roughly verify that the unified Lambda handler works with AWS DMS.
     """
 
     # Configure environment variables.
     handler_environment = {
+        "CRATEDB_CLUSTER_URL": cratedb.get_connection_url(),
         "MESSAGE_FORMAT": "dms",
     }
     mocker.patch.dict(os.environ, handler_environment)
