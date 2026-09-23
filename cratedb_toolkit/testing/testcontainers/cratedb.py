@@ -14,12 +14,11 @@ from __future__ import annotations
 
 import logging
 import os
-import re
+import typing as t
 from typing import Optional
 
-from testcontainers.core.generic import DbContainer
-from testcontainers.core.wait_strategies import LogMessageWaitStrategy
-from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.community.cratedb import CrateDBContainer as UpstreamCrateDBContainer
+from testcontainers.core.wait_strategies import HttpWaitStrategy
 
 from cratedb_toolkit.testing.testcontainers.util import DockerSkippingContainer, KeepaliveContainer, asbool
 from cratedb_toolkit.util.database import DatabaseAdapter
@@ -27,7 +26,7 @@ from cratedb_toolkit.util.database import DatabaseAdapter
 logger = logging.getLogger(__name__)
 
 
-class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer):
+class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, UpstreamCrateDBContainer):
     """
     CrateDB database container.
 
@@ -56,11 +55,15 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
     CRATEDB_PASSWORD = os.environ.get("CRATEDB_PASSWORD", "crate")
     CRATEDB_DB = os.environ.get("CRATEDB_DB", "doc")
     KEEPALIVE = asbool(os.environ.get("CRATEDB_KEEPALIVE", os.environ.get("TC_KEEPALIVE", False)))
-    CMD_OPTS = {
-        "discovery.type": "single-node",
-        "node.attr.storage": "hot",
-        "path.repo": "/tmp/snapshots",
-    }
+    # Seconds to wait for the HTTP interface after the container starts.
+    STARTUP_TIMEOUT = 60
+
+    # `testcontainers` builds its command line from pairs; `cmd_opts` merges over these, by key.
+    CMD_OPTS = [
+        ("discovery.type", "single-node"),
+        ("node.attr.storage", "hot"),
+        ("path.repo", "/tmp/snapshots"),
+    ]
 
     def __init__(
         self,
@@ -83,15 +86,17 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         :param user:  optional username to access the DB; if None, try `CRATEDB_USER` environment variable
         :param password: optional password to access the DB; if None, try `CRATEDB_PASSWORD` environment variable
         :param dbname: optional database name to access the DB; if None, try `CRATEDB_DB` environment variable
-        :param cmd_opts: an optional dict with CLI arguments to be passed to the DB entrypoint inside the container
+        :param cmd_opts: optional CLI arguments to be passed to the DB entrypoint inside the container,
+                         as a dict or as key-value pairs
         :param kwargs: misc keyword arguments
         """
         super().__init__(image=image, **kwargs)
 
         self._name = "testcontainers-cratedb"
 
-        cmd_opts = cmd_opts or {}
-        self._command = self._build_cmd({**self.CMD_OPTS, **cmd_opts})
+        options = dict(self.CMD_OPTS)
+        options.update(cmd_opts or {})
+        self._command = self._build_cmd(list(options.items()))
 
         self.CRATEDB_USER = user or self.CRATEDB_USER
         self.CRATEDB_PASSWORD = password or self.CRATEDB_PASSWORD
@@ -99,14 +104,16 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
 
         self.port_mapping = ports if ports else {4200: None}
         self.port_to_expose, _ = list(self.port_mapping.items())[0]
+        # Upstream's `port` is the same thing under another name; keep them from drifting apart.
+        self.port = self.port_to_expose
 
     @staticmethod
-    def _build_cmd(opts: dict) -> str:
+    def _build_cmd(opts: t.Sequence[t.Tuple[str, t.Any]]) -> str:
         """
         Return a string with command options concatenated and optimised for ES5 use
         """
         cmd = []
-        for key, val in opts.items():
+        for key, val in opts:
             if isinstance(val, bool):
                 val = str(val).lower()
             cmd.append(f"-C{key}={val}")
@@ -116,6 +123,8 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         """
         Bind all the ports exposed inside the container to the same port on the host
         """
+        # Upstream exposes 4200 and 5432; the mapping may move the HTTP interface elsewhere.
+        self.ports.clear()
         # If host_port is `None`, a random port to be generated
         for container_port, host_port in self.port_mapping.items():
             self.with_bind_ports(container=container_port, host=host_port)
@@ -128,9 +137,8 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
     def _configure(self) -> None:
         self._configure_ports()
         self._configure_credentials()
-        self._configure_wait_condition()
 
-    def get_connection_url(self, dialect: str = "crate", host: Optional[str] = None) -> str:
+    def get_connection_url(self, dialect: str = "crate", host: Optional[str] = None) -> str:  # ty: ignore[invalid-method-override]
         """
         Return a connection URL to the DB
 
@@ -149,16 +157,9 @@ class CrateDBContainer(DockerSkippingContainer, KeepaliveContainer, DbContainer)
         )
 
     def _connect(self):
-        if not self._wait_strategy:
-            raise ValueError("No wait strategy defined")
-        wait_for_logs(self, predicate=self._wait_strategy, timeout=15)
-
-    def _configure_wait_condition(self):
-        """Wait for CrateDB node to be fully started."""
-        # TODO: Better use a network connectivity health check?
-        #       In `testcontainers-java`, there is the `HttpWaitStrategy`.
-        # TODO: Provide a client instance.
-        self.waiting_for(LogMessageWaitStrategy(re.compile(r"o.e.n.Node.*started")))
+        # The HTTP interface may be configured to a port other than the upstream default.
+        strategy = HttpWaitStrategy(self.port_to_expose).for_status_code(200)
+        strategy.with_startup_timeout(self.STARTUP_TIMEOUT).wait_until_ready(self)
 
 
 class CrateDBTestAdapter:

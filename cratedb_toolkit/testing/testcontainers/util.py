@@ -112,7 +112,8 @@ class KeepaliveContainer(DockerContainer):
                 environment=self.env,
                 ports=self.ports or {},  # ty: ignore[invalid-argument-type]
                 name=self._name,
-                volumes=self.volumes,
+                # `dict` is invariant, so spell out the mount fields to keep the value type checkable.
+                volumes={host: {"bind": mount["bind"], "mode": mount["mode"]} for host, mount in self.volumes.items()},
                 **self._kwargs,
             )
             logger.info(f"Container created: {self._container.name}")

@@ -1,5 +1,11 @@
 # Changelog
 
+- Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for
+  Python. The `testing` extra requires `testcontainers[cratedb]>=4.15,<4.16`.
+  `CrateDBContainer.CMD_OPTS` holds key-value pairs instead of a dict, and the
+  `cmd_opts` argument still accepts both. Waiting for the HTTP interface is
+  bounded by `CrateDBContainer.STARTUP_TIMEOUT`, 60 seconds.
+
 ## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
   and collect arguments.
