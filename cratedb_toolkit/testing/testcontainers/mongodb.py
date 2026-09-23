@@ -11,12 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import os
+import re
 import time
 import typing as t
 
 import pymongo.errors
 from pymongo import MongoClient
 from testcontainers.core.exceptions import ContainerStartException
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 from testcontainers.mongodb import MongoDbContainer
 from yarl import URL
 
@@ -60,6 +62,11 @@ class MongoDbContainerWithKeepalive(DockerSkippingContainer, KeepaliveContainer,
 
     def get_connection_url(self):
         return super().get_connection_url()
+
+    def _connect(self) -> None:
+        # The image runs a localhost-only server to create the root user before the real one;
+        # both log "Waiting for connections", but only the real one listens on all interfaces.
+        LogMessageWaitStrategy(re.compile(r'"Listening on".*"address":"0\.0\.0\.0"')).wait_until_ready(self)
 
 
 class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
