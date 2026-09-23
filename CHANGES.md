@@ -13,8 +13,9 @@
   fails mid-way keeps the entries already read, listed in `manifest.json` under
   `data_partial`.
 - Fixed `ctk cfr sys-import` losing the rows of `sys.segments` and `sys.sessions`,
-  and of users with the `memory.operation_limit` session setting, while reporting
-  success. Thanks, @hammerhead.
+  of nodes with a dot in an attribute name, and of users with the
+  `memory.operation_limit` session setting, while reporting success. Thanks,
+  @hammerhead.
 - `ctk cfr sys-export` declares object columns with dotted keys as `OBJECT(IGNORED)`,
   and text columns that can outgrow an index entry without an index, so CrateDB
   accepts their values on import. Bundles written by earlier releases lack these

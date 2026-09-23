@@ -96,9 +96,10 @@ message names the file.
 
 ### Where a restored table differs from the system table
 
-`sys.segments.attributes`, `sys.sessions.settings` and `sys.users.session_settings`
-become `OBJECT(IGNORED)`: their keys are named after codec and cluster settings and
-contain dots, which an indexed object forbids in a sub-column name.
+`sys.nodes.attributes`, `sys.segments.attributes`, `sys.sessions.settings` and
+`sys.users.session_settings` become `OBJECT(IGNORED)`: their keys are node attribute,
+codec and setting names, which can contain dots, and an indexed object forbids a dot
+in a sub-column name.
 
 `sys.jobs.stmt`, `sys.jobs_log.stmt`, `sys.jobs_log.error`, `sys.operations_log.error`,
 `sys.sessions.last_statement` and `sys.cluster.state` get
