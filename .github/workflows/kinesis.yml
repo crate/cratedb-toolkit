@@ -5,19 +5,23 @@ on:
   pull_request:
     paths:
     - '.github/workflows/kinesis.yml'
+    - 'cratedb_toolkit/io/awslambda/**'
     - 'cratedb_toolkit/io/kinesis/**'
     - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
+    - 'tests/io/test_awslambda.py'
     - 'pyproject.toml'
   push:
     branches: [ main ]
     paths:
     - '.github/workflows/kinesis.yml'
+    - 'cratedb_toolkit/io/awslambda/**'
     - 'cratedb_toolkit/io/kinesis/**'
     - 'cratedb_toolkit/testing/testcontainers/floci.py'
     - 'cratedb_toolkit/testing/testcontainers/util.py'
     - 'tests/io/kinesis/**'
+    - 'tests/io/test_awslambda.py'
     - 'pyproject.toml'
 
   # Allow job to be triggered manually.
