@@ -66,7 +66,7 @@ class MongoDbContainerWithKeepalive(DockerSkippingContainer, KeepaliveContainer,
     def _connect(self) -> None:
         # The image runs a localhost-only server to create the root user before the real one;
         # both log "Waiting for connections", but only the real one listens on all interfaces.
-        LogMessageWaitStrategy(re.compile(r'"Listening on".*"0\.0\.0\.0"')).wait_until_ready(self)
+        LogMessageWaitStrategy(re.compile(r'"Listening on".*"0\.0\.0\.0[":]')).wait_until_ready(self)
 
 
 class MongoDbReplicasetContainer(MongoDbContainerWithKeepalive):
