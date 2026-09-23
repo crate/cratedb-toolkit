@@ -245,6 +245,26 @@ def test_cfr_sys_import_restores_every_exported_row(cratedb, click_kwargs, tmp_p
     assert restored == exported
 
 
+def test_cfr_sys_import_empties_a_table_exported_without_rows(cratedb, click_kwargs, tmp_path):
+    adapter = cratedb.database
+    adapter.run_sql('DROP TABLE IF EXISTS "sys-repositories"')
+    adapter.run_sql('CREATE TABLE "sys-repositories" (name TEXT)')
+    adapter.run_sql("""INSERT INTO "sys-repositories" (name) VALUES ('r1')""")
+    adapter.run_sql('REFRESH TABLE "sys-repositories"')
+
+    schema_path = tmp_path / "schema"
+    schema_path.mkdir()
+    (tmp_path / "data").mkdir()
+    (schema_path / "sys-repositories.sql").write_text('CREATE TABLE IF NOT EXISTS "sys-repositories" (name TEXT);')
+
+    runner = CliRunner(env={"CRATEDB_CLUSTER_URL": adapter.dburi, "CFR_SOURCE": str(tmp_path)}, **click_kwargs)
+    result = runner.invoke(cli, args="--debug sys-import", catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    adapter.run_sql('REFRESH TABLE "sys-repositories"')
+    assert adapter.count_records("sys-repositories") == 0
+
+
 def test_cfr_sys_import_reports_rejected_rows(cratedb, click_kwargs, tmp_path, caplog):
     """
     A table whose rows the cluster refuses fails the import, naming the file to correct.

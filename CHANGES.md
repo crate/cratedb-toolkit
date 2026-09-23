@@ -23,7 +23,9 @@
 - Breaking change: `ctk cfr sys-import` exits non-zero when a table is not fully
   restored. For each such table, it logs how many rows arrived and the error messages
   CrateDB returned.
-- `ctk cfr sys-import` drops and recreates each table from the bundle's definition.
+- `ctk cfr sys-import` drops and recreates each table from the bundle's definition,
+  so a table exported without rows is emptied instead of keeping the rows of an
+  earlier import.
 - `ctk --debug cfr sys-import` reports failures with a traceback.
 
 ## 2026/08/17 v0.1.0

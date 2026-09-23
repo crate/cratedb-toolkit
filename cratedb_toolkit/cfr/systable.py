@@ -744,10 +744,6 @@ class SystemTableImporter:
             path_table_schema = path_schema / f"{tablename}.sql"
             path_table_data = path_data / f"{tablename}.{self.data_format}"
 
-            # Skip import of non-existing or empty files.
-            if not path_table_data.exists() or path_table_data.stat().st_size == 0:
-                continue
-
             outcome = BulkInsertOutcome()
             try:
                 # The bundle's definition wins over one left behind by an earlier restore.
@@ -755,15 +751,16 @@ class SystemTableImporter:
                 self.adapter.run_sql(f"DROP TABLE IF EXISTS {self.adapter.quote_relation_name(tablename)};")
                 self.adapter.run_sql(schema_sql)
 
-                # Load data.
-                df: "pd.DataFrame" = pd.DataFrame.from_records(self.load_table(path_table_data))
-                df.to_sql(
-                    name=tablename,
-                    con=self.adapter.engine,
-                    index=False,
-                    if_exists="append",
-                    method=outcome.insert,
-                )
+                # The exporter writes no data file for a table without rows.
+                if path_table_data.exists() and path_table_data.stat().st_size > 0:
+                    df: "pd.DataFrame" = pd.DataFrame.from_records(self.load_table(path_table_data))
+                    df.to_sql(
+                        name=tablename,
+                        con=self.adapter.engine,
+                        index=False,
+                        if_exists="append",
+                        method=outcome.insert,
+                    )
             except Exception as ex:
                 error_logger(self.debug)(f"Importing table failed: {tablename}. Reason: {ex}")
                 failures.append(tablename)
