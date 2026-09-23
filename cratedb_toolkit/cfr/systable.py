@@ -90,6 +90,7 @@ class SystemTableKnowledge:
     # Object columns keyed by setting and codec names. Those contain dots, which
     # CrateDB forbids in the name of an indexed sub-column.
     UNINDEXED_OBJECT_COLUMNS: t.Dict[t.Tuple[str, str], t.Tuple[str, ...]] = {
+        (SYS_SCHEMA, "nodes"): ("attributes",),
         (SYS_SCHEMA, "segments"): ("attributes",),
         (SYS_SCHEMA, "sessions"): ("settings",),
         (SYS_SCHEMA, "users"): ("session_settings",),
