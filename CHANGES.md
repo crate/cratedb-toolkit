@@ -1,10 +1,17 @@
 # Changelog
 
+## Unreleased
 - Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for
   Python. The `testing` extra requires `testcontainers[cratedb]>=4.15,<4.16`.
   `CrateDBContainer.CMD_OPTS` holds key-value pairs instead of a dict, and the
   `cmd_opts` argument still accepts both. Waiting for the HTTP interface is
   bounded by `CrateDBContainer.STARTUP_TIMEOUT`, 60 seconds.
+- Fixed `ctk cfr sys-export` stalling on large clusters. It exports the 1000 most
+  recent entries of `sys.jobs_log` and `sys.operations_log`, a page at a time, and
+  `--log-limit` sets another number.
+- `ctk cfr sys-export` waits at most 120 seconds for a response. A log table that
+  fails mid-way keeps the entries already read, listed in `manifest.json` under
+  `data_partial`.
 
 ## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 

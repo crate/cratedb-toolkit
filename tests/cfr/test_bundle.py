@@ -8,6 +8,7 @@ counts, so they do not become version-specific.
 """
 
 import datetime as dt
+import itertools
 import json
 import tarfile
 from pathlib import Path
@@ -19,7 +20,12 @@ pytest.importorskip("polars", reason="Skipping tests because polars is not insta
 from click.testing import CliRunner  # noqa: E402
 
 from cratedb_toolkit.cfr.cli import cli  # noqa: E402
-from cratedb_toolkit.cfr.systable import SchemaCapture, SystemTableExporter, SystemTableKnowledge  # noqa: E402
+from cratedb_toolkit.cfr.systable import (  # noqa: E402
+    ExportSettings,
+    SchemaCapture,
+    SystemTableExporter,
+    SystemTableKnowledge,
+)
 from tests.cfr.conftest import FDW_PASSWORD  # noqa: E402
 
 REDACTION_MARKER = SystemTableKnowledge.REDACTION_MARKER
@@ -27,19 +33,19 @@ REDACTION_MARKER = SystemTableKnowledge.REDACTION_MARKER
 pytestmark = pytest.mark.cfr
 
 
-def run_export(cratedb, click_kwargs, target):
+def run_export(cratedb, click_kwargs, target, options=""):
     """
     Invoke `ctk cfr sys-export`, returning the Click result.
     """
     runner = CliRunner(env={"CRATEDB_CLUSTER_URL": cratedb.database.dburi, "CFR_TARGET": str(target)}, **click_kwargs)
-    return runner.invoke(cli, args=f"--debug sys-export {target}", catch_exceptions=False)
+    return runner.invoke(cli, args=f"--debug sys-export {options} {target}", catch_exceptions=False)
 
 
-def export_bundle(cratedb, click_kwargs, tmp_path):
+def export_bundle(cratedb, click_kwargs, tmp_path, options=""):
     """
     Produce a bundle as a directory tree, returning (bundle_path, manifest).
     """
-    result = run_export(cratedb, click_kwargs, tmp_path)
+    result = run_export(cratedb, click_kwargs, tmp_path, options)
     assert result.exit_code == 0, result.output
     bundle_path = Path(json.loads(result.stdout)["path"])
     manifest = json.loads((bundle_path / "manifest.json").read_text())
@@ -76,6 +82,63 @@ def test_summits_data_is_skipped_but_stated(cratedb, click_kwargs, tmp_path):
     assert skipped[("sys", "summits")], "a skip without a reason is a silent skip"
 
     assert "summits" not in {item["table"] for item in manifest["schema_failures"]}
+
+
+def test_log_tables_hold_only_the_most_recent_entries(cratedb, click_kwargs, tmp_path):
+    """
+    `sys.jobs_log` is cut to the newest `--log-limit` entries, and the manifest states the limit.
+    """
+    for number in range(20):
+        cratedb.database.run_sql(f"SELECT {number} AS log_limit_probe")
+
+    bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path, "--log-limit=5")
+
+    lines = (bundle_path / "sys" / "data" / "sys-jobs_log.jsonl").read_text().splitlines()
+    statements = [json.loads(line)["stmt"] for line in lines]
+    assert len(statements) >= 5
+    assert not [statement for statement in statements if "log_limit_probe" in statement]
+    assert manifest["log_limit"] == 5
+
+
+def test_log_pages_add_up_to_the_limit(cratedb, click_kwargs, tmp_path, monkeypatch):
+    """
+    A limit larger than one page is collected page by page, each entry once.
+    """
+    monkeypatch.setattr(ExportSettings, "LOG_PAGE_SIZE", 3)
+    for number in range(20):
+        cratedb.database.run_sql(f"SELECT {number} AS log_page_probe")
+
+    bundle_path, _ = export_bundle(cratedb, click_kwargs, tmp_path, "--log-limit=12")
+
+    lines = (bundle_path / "sys" / "data" / "sys-jobs_log.jsonl").read_text().splitlines()
+    identifiers = [json.loads(line)["id"] for line in lines]
+    assert len(identifiers) >= 12
+    assert len(set(identifiers)) == len(identifiers), "an entry was exported more than once"
+
+
+def test_pages_read_before_a_failure_are_kept(cratedb, click_kwargs, tmp_path, monkeypatch):
+    """
+    A page that fails leaves the entries already read in the bundle, and the manifest says so.
+    """
+    monkeypatch.setattr(ExportSettings, "LOG_PAGE_SIZE", 2)
+    read_page = SystemTableExporter.query
+    pages = itertools.count(1)
+
+    def fail_after_two_pages(self, sql):
+        if "jobs_log" in sql and next(pages) > 2:
+            raise RuntimeError("breaker tripped")
+        return read_page(self, sql)
+
+    monkeypatch.setattr(SystemTableExporter, "query", fail_after_two_pages)
+
+    bundle_path, manifest = export_bundle(cratedb, click_kwargs, tmp_path, "--log-limit=10")
+
+    lines = (bundle_path / "sys" / "data" / "sys-jobs_log.jsonl").read_text().splitlines()
+    assert lines, "the pages that arrived were thrown away"
+    partial = {(item["schema"], item["table"]): item for item in manifest["data_partial"]}
+    assert partial[("sys", "jobs_log")]["rows"] == len(lines)
+    assert "breaker tripped" in partial[("sys", "jobs_log")]["reason"]
+    assert ("sys", "jobs_log") not in {(item["schema"], item["table"]) for item in manifest["data_failures"]}
 
 
 def test_information_schema_is_exported(cratedb, click_kwargs, tmp_path):

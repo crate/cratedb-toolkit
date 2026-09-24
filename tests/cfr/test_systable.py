@@ -17,8 +17,24 @@ from click.testing import CliRunner
 
 import tests
 from cratedb_toolkit.cfr.cli import cli
+from cratedb_toolkit.cfr.systable import ExportSettings, SystemTableExporter
 
 pytestmark = pytest.mark.cfr
+
+
+@pytest.mark.parametrize(
+    "dburi, expected",
+    [
+        ("crate://localhost:4200/", f"timeout={ExportSettings.READ_TIMEOUT}"),
+        ("https://example.org:4200/", f"timeout={ExportSettings.READ_TIMEOUT}"),
+        ("crate://localhost:4200/?timeout=7", "timeout=7"),
+    ],
+)
+def test_cfr_sys_export_read_timeout(dburi, expected):
+    """
+    Every read has a deadline, and an address that brings its own keeps it.
+    """
+    assert expected in SystemTableExporter.with_timeout(dburi)
 
 
 def filenames(path: Path):
