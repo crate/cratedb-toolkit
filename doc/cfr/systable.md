@@ -80,6 +80,36 @@ Table names keep their bundle prefix, so `sys.jobs_log` is restored as
 `"case0815"."is-columns"`. The `ddl/` subtree is plain SQL for you to read or
 replay yourself; `sys-import` does not consume it.
 
+`sys-import` drops and recreates each table from the definition the bundle carries, so
+importing a bundle gives the same tables on a fresh cluster and on one that already
+holds an earlier import.
+
+Every table is imported, and the command exits non-zero when any table is not fully
+restored, because CrateDB rejected rows or an error stopped the table's import. For each
+such table, it logs how many rows arrived and the error messages CrateDB returned. Rows
+rejected without a message are counted as `no reason reported`.
+
+A bundle written by an earlier release defines some columns so that CrateDB rejects
+their values. There is no option to accept the loss: export the bundle again, or
+correct the column definitions in the table's `.sql` file under `schema/`. The error
+message names the file.
+
+### Where a restored table differs from the system table
+
+`sys.nodes.attributes`, `sys.segments.attributes`, `sys.sessions.settings` and
+`sys.users.session_settings` become `OBJECT(IGNORED)`: their keys are node attribute,
+codec and setting names, which can contain dots, and an indexed object forbids a dot
+in a sub-column name.
+
+`sys.jobs.stmt`, `sys.jobs_log.stmt`, `sys.jobs_log.error`, `sys.operations_log.error`,
+`sys.sessions.last_statement` and `sys.cluster.state` get
+`INDEX OFF STORAGE WITH (columnstore = false)`: statements and error messages carry text
+of the user's choosing, and the encoded cluster state grows with the cluster, so any of
+them can pass Lucene's maximum term length of 32766 bytes.
+
+The values are restored unchanged. Filters, sorting and aggregation still work on
+them, without an index.
+
 ## Bundle layout
 
 ```text

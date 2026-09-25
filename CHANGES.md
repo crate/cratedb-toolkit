@@ -12,6 +12,22 @@
 - `ctk cfr sys-export` waits at most 120 seconds for a response. A log table that
   fails mid-way keeps the entries already read, listed in `manifest.json` under
   `data_partial`.
+- Fixed `ctk cfr sys-import` losing the rows of `sys.segments` and `sys.sessions`,
+  of nodes with a dot in an attribute name, and of users with the
+  `memory.operation_limit` session setting, while reporting success. Thanks,
+  @hammerhead.
+- `ctk cfr sys-export` declares object columns with dotted keys as `OBJECT(IGNORED)`,
+  and text columns that can outgrow an index entry without an index, so CrateDB
+  accepts their values on import. Bundles written by earlier releases lack these
+  declarations: export the bundle again, or correct the `.sql` file named in the
+  error message.
+- Breaking change: `ctk cfr sys-import` exits non-zero when a table is not fully
+  restored. For each such table, it logs how many rows arrived and the error messages
+  CrateDB returned.
+- `ctk cfr sys-import` drops and recreates each table from the bundle's definition,
+  so a table exported without rows is emptied instead of keeping the rows of an
+  earlier import.
+- `ctk --debug cfr sys-import` reports failures with a traceback.
 
 ## 2026/08/17 v0.1.0
 - Fixed `ctk cfr jobstats` bugs related anonymization, views, ui, report 
