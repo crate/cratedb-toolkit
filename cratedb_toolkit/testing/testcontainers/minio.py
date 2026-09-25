@@ -22,7 +22,7 @@ class ExtendedMinioContainer(DockerSkippingContainer, ExtendedDockerContainer, M
     An extended Testcontainer for MinIO, emulating AWS S3.
 
     Features
-    - Use the `latest` OCI image from https://quay.io/.
+    - Use the `latest` OCI image from https://images.chainguard.dev/.
     - Provide convenience methods for getting the Docker-internal endpoint address.
 
     References
@@ -33,7 +33,7 @@ class ExtendedMinioContainer(DockerSkippingContainer, ExtendedDockerContainer, M
 
     def __init__(self, *args, **kwargs):
         # Use most recent stable release of MinIO.
-        image = "quay.io/minio/minio:latest"
+        image = "cgr.dev/chainguard/minio:latest"
         kwargs.setdefault("image", image)
         super().__init__(*args, **kwargs)
 
