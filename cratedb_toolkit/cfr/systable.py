@@ -22,10 +22,12 @@ import os
 import re
 import tarfile
 import tempfile
+import time
 import typing as t
 from pathlib import Path
 
 import orjsonl
+from boltons.strutils import bytes2human
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 if t.TYPE_CHECKING:
@@ -335,10 +337,21 @@ class SystemTableExporter(PathProvider):
         return "unknown"
 
     def read_table(self, tablename: str, schema: t.Optional[str] = None) -> "pl.DataFrame":
+        """
+        Read one system table, logging its row count, in-memory size and duration.
+        """
         schema = schema or SystemTableKnowledge.SYS_SCHEMA
+        started = time.monotonic()
         if (schema, tablename) in SystemTableKnowledge.LOG_TABLES:
-            return self.read_log(schema=schema, tablename=tablename)
-        return self.query(f'SELECT * FROM "{schema}"."{tablename}"')  # noqa: S608
+            frame = self.read_log(schema=schema, tablename=tablename)
+        else:
+            frame = self.query(f'SELECT * FROM "{schema}"."{tablename}"')  # noqa: S608
+        duration = time.monotonic() - started
+        logger.debug(
+            f"Read {schema}.{tablename}: {frame.height} rows, "
+            f"~{bytes2human(frame.estimated_size(), ndigits=1)} in memory, {duration:.3f}s"
+        )
+        return frame
 
     def query(self, sql: str) -> "pl.DataFrame":
         import polars as pl
@@ -517,15 +530,17 @@ class SystemTableExporter(PathProvider):
             self.data_failures.append({"schema": schema, "table": "*", "reason": f"{type(ex).__name__}: {ex}"})
             return
 
-        for tablename in tqdm(tablenames, desc=f"Exporting {schema}", disable=None):
-            logger.debug(f"Exporting table: {schema}.{tablename}")
-            self._save_table(
-                schema=schema,
-                tablename=tablename,
-                path_schema=path_schema,
-                path_data=path_data,
-                prefix=prefix,
-            )
+        with tqdm(tablenames, desc=f"Exporting {schema}", disable=None) as progress:
+            for tablename in progress:
+                progress.set_postfix_str(tablename)
+                logger.debug(f"Exporting table: {schema}.{tablename}")
+                self._save_table(
+                    schema=schema,
+                    tablename=tablename,
+                    path_schema=path_schema,
+                    path_data=path_data,
+                    prefix=prefix,
+                )
 
     def _save_table(self, schema: str, tablename: str, path_schema: Path, path_data: Path, prefix: str) -> None:
         """
@@ -581,22 +596,24 @@ class SystemTableExporter(PathProvider):
             self.definition_failures.append({"kind": "relations", "reason": f"{type(ex).__name__}: {ex}"})
             return counts
 
-        for relation in tqdm(relations, desc="Capturing definitions", disable=None):
-            schema = relation["table_schema"]
-            name = relation["table_name"]
-            # `SHOW CREATE TABLE` only works on regular tables. Views come from
-            # `information_schema.views` below; anything else is left alone.
-            if relation.get("table_type") != SystemTableKnowledge.BASE_TABLE_TYPE:
-                continue
-            try:
-                ddl = self.schema_capture.table_ddl(schema=schema, table=name)
-                (path_tables / f"{schema}.{name}.sql").write_text(ddl.rstrip() + "\n")
-                counts["tables"] += 1
-            except Exception as ex:
-                logger.warning(f"Could not capture definition of {schema}.{name}: {ex}")
-                self.definition_failures.append(
-                    {"kind": "table", "schema": schema, "name": name, "reason": f"{type(ex).__name__}: {ex}"}
-                )
+        with tqdm(relations, desc="Capturing definitions", disable=None) as progress:
+            for relation in progress:
+                schema = relation["table_schema"]
+                name = relation["table_name"]
+                progress.set_postfix_str(f"{schema}.{name}")
+                # `SHOW CREATE TABLE` only works on regular tables. Views come from
+                # `information_schema.views` below; anything else is left alone.
+                if relation.get("table_type") != SystemTableKnowledge.BASE_TABLE_TYPE:
+                    continue
+                try:
+                    ddl = self.schema_capture.table_ddl(schema=schema, table=name)
+                    (path_tables / f"{schema}.{name}.sql").write_text(ddl.rstrip() + "\n")
+                    counts["tables"] += 1
+                except Exception as ex:
+                    logger.warning(f"Could not capture definition of {schema}.{name}: {ex}")
+                    self.definition_failures.append(
+                        {"kind": "table", "schema": schema, "name": name, "reason": f"{type(ex).__name__}: {ex}"}
+                    )
 
         try:
             views = self.schema_capture.views()

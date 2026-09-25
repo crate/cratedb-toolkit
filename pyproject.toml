@@ -167,7 +167,7 @@ optional-dependencies.iceberg = [
 optional-dependencies.influxdb = [
   "cratedb-toolkit[io-base]",
   "influxio>=0.6,<1",
-  "sqlalchemy>=2",
+  "sqlalchemy>=2,<2.1",
 ]
 optional-dependencies.io = [
   "cratedb-toolkit[io-base]",
