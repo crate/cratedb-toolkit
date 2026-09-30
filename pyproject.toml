@@ -89,7 +89,7 @@ dependencies = [
   "attrs<27",
   "boltons<27",
   "cattrs<27",
-  "click<8.5",
+  "click<8.6",
   "click-aliases>=1.0.6,<2",
   "colorama<1",
   "colorlog",
