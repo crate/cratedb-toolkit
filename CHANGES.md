@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2026/09/30 v0.1.1
 - Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for
   Python. The `testing` extra requires `testcontainers[cratedb]>=4.15,<4.16`.
   `CrateDBContainer.CMD_OPTS` holds key-value pairs instead of a dict, and the
