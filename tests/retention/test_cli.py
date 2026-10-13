@@ -2,7 +2,9 @@
 # Distributed under the terms of the AGPLv3 license, see LICENSE.
 import logging
 import typing as t
+from uuid import uuid4
 
+import boto3
 import pytest
 from click.testing import CliRunner
 from docker.models.containers import Container
@@ -280,31 +282,37 @@ def test_run_reallocate(store, database, raw_metrics, raw_metrics_reallocate_pol
 
 
 def test_run_snapshot_aws_s3(
-    caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, minio, needs_sqlalchemy2
+    caplog, store, database, sensor_readings, sensor_readings_snapshot_policy, s3, needs_sqlalchemy2
 ):
     """
     Verify the "SNAPSHOT" strategy using an object storage with AWS S3 API.
     Invokes `cratedb-retention run --strategy=snapshot`.
     """
 
-    # Acquire runtime information from MinIO container. In order to let CrateDB talk to
-    # MinIO, we need its Docker-internal IP address (172.17.0.x), not the exposed one.
-    s3_endpoint = minio.get_real_host_address()
+    # CrateDB needs the container's Docker-internal address, while boto3 uses the mapped port.
+    s3_endpoint = s3.get_real_host_address()
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=s3.get_url(),
+        aws_access_key_id="test",
+        aws_secret_access_key="test",  # noqa: S106
+        region_name="us-east-1",
+    )
 
-    # Prepare a "bucket" on S3 storage.
-    minio.get_client().make_bucket("cratedb-cold-storage")
+    # A new bucket keeps snapshot listings independent when Floci is kept alive across runs.
+    bucket_name = f"cratedb-cold-storage-{uuid4().hex}"
+    s3_client.create_bucket(Bucket=bucket_name)
 
     # Create CrateDB repository on an object storage with AWS S3 API.
     # https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html#s3
-    s3_config = minio.get_config()
     database.ensure_repository_s3(
         name="export_cold",
         typename="s3",
         protocol="http",
         endpoint=s3_endpoint,
-        access_key=s3_config["access_key"],
-        secret_key=s3_config["secret_key"],
-        bucket="cratedb-cold-storage",
+        access_key="test",
+        secret_key="test",  # noqa: S106
+        bucket=bucket_name,
         drop=True,
     )
 
@@ -324,7 +332,9 @@ def test_run_snapshot_aws_s3(
     assert database.count_records(sensor_readings) == 4
 
     # Verify that the S3 bucket has been populated correctly, and that the snapshot has the right shape.
-    object_names = minio.list_object_names(bucket_name="cratedb-cold-storage")
+    listing = s3_client.list_objects_v2(Bucket=bucket_name, Delimiter="/")
+    object_names = [item["Key"] for item in listing.get("Contents", [])]
+    object_names.extend(item["Prefix"] for item in listing.get("CommonPrefixes", []))
     assert_snapshot_shape(object_names)
 
 

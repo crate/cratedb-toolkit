@@ -16,10 +16,10 @@ import re
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 from testcontainers.core.waiting_utils import wait_for_logs
 
-from cratedb_toolkit.testing.testcontainers.util import KeepaliveContainer
+from cratedb_toolkit.testing.testcontainers.util import ExtendedDockerContainer, KeepaliveContainer
 
 
-class FlociContainerWithKeepalive(KeepaliveContainer):
+class FlociContainerWithKeepalive(ExtendedDockerContainer, KeepaliveContainer):
     """
     A Testcontainer for Floci with improved configurability.
 
@@ -68,3 +68,7 @@ class FlociContainerWithKeepalive(KeepaliveContainer):
         host = self.get_container_host_ip()
         port = self.get_exposed_port(self.FLOCI_PORT)
         return f"http://{host}:{port}"
+
+    def get_real_host_address(self) -> str:
+        """Return the Docker-internal Floci endpoint as ``<host>:<port>``."""
+        return f"{self.get_real_host_ip()}:{self.FLOCI_PORT}"

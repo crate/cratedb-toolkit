@@ -254,6 +254,7 @@ optional-dependencies.settings = [
 ]
 optional-dependencies.test = [
   "azure-storage-blob<12.31",                   # Testcontainers: "ContainerClient" has no attribute "_format_url"
+  "boto3",
   "cratedb-toolkit[testing]",
   "httpx<0.29",
   "ipywidgets<9",
@@ -261,7 +262,7 @@ optional-dependencies.test = [
   "pueblo[dataframe,notebook,testing]>=0.0.11",
   "pydantic-core<3",
   "responses<0.27",
-  "testcontainers[azurite,minio]",
+  "testcontainers[azurite]",
   "types-docutils<0.23",
 ]
 optional-dependencies.test-mongodb = [
