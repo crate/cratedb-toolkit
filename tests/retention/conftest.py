@@ -7,7 +7,7 @@ from cratedb_toolkit.retention.model import JobSettings, RetentionPolicy, Retent
 from cratedb_toolkit.retention.setup.schema import setup_schema
 from cratedb_toolkit.retention.store import RetentionPolicyStore
 from cratedb_toolkit.testing.testcontainers.azurite import ExtendedAzuriteContainer
-from cratedb_toolkit.testing.testcontainers.minio import ExtendedMinioContainer
+from cratedb_toolkit.testing.testcontainers.floci import FlociContainerWithKeepalive
 from cratedb_toolkit.util.database import DatabaseAdapter, run_sql
 from tests.conftest import TESTDRIVE_DATA_SCHEMA, TESTDRIVE_EXT_SCHEMA, check_sqlalchemy2
 
@@ -196,18 +196,17 @@ def sensor_readings_snapshot_policy(store):
 
 
 @pytest.fixture(scope="session")
-def minio():
+def s3():
     """
     For testing the "SNAPSHOT" strategy against an Amazon Web Services S3 object storage API,
-    provide a MinIO service to the test suite.
+    provide a Floci service to the test suite.
 
     - https://en.wikipedia.org/wiki/Object_storage
     - https://en.wikipedia.org/wiki/Amazon_S3
-    - https://github.com/minio/minio
     - https://crate.io/docs/crate/reference/en/latest/sql/statements/create-repository.html
     """
-    with ExtendedMinioContainer() as minio:
-        yield minio
+    with FlociContainerWithKeepalive().with_name("testcontainers-s3-floci") as floci:
+        yield floci
 
 
 @pytest.fixture(scope="session")

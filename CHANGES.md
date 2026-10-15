@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Testing: S3 snapshot tests use Floci. The `test` extra adds `boto3` and drops
+  the MinIO dependency.
+- Breaking change: Removed `ExtendedMinioContainer` from
+  `cratedb_toolkit.testing.testcontainers.minio`.
+
 ## 2026/09/30 v0.1.1
 - Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for
   Python. The `testing` extra requires `testcontainers[cratedb]>=4.15,<4.16`.
