@@ -253,7 +253,7 @@ optional-dependencies.settings = [
   "docutils<0.24",
 ]
 optional-dependencies.test = [
-  "azure-storage-blob<12.31",                   # Testcontainers: "ContainerClient" has no attribute "_format_url"
+  "azure-storage-blob<12.32",                   # Testcontainers: "ContainerClient" has no attribute "_format_url"
   "boto3",
   "cratedb-toolkit[testing]",
   "httpx<0.29",
