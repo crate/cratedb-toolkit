@@ -142,6 +142,36 @@ a few examples are listed below.
 
 ## Checkpointing
 
+### Write errors
+
+The Python `KinesisRelay` class accepts `on_error="raise"` (the default) or
+`on_error="ignore"`:
+
+```python
+from cratedb_toolkit.io.kinesis.relay import KinesisRelay
+
+relay = KinesisRelay(
+    kinesis_url="kinesis+dynamodb://localhost:4566/demo?region=us-east-1",
+    cratedb_url="crate://localhost:4200/testdrive/demo",
+    on_error="ignore",
+)
+relay.start()
+```
+
+`raise` logs and propagates SQLAlchemy `ProgrammingError` and `OperationalError`
+from event execution, table refresh, or commit. `ignore` logs these errors and
+continues with the next event. Other database exceptions and setup failures
+propagate. Record decoding and translation retain their log-and-skip behavior.
+The setting is a constructor argument; the CLI and `kinesis_relay` wrapper do
+not expose a policy option.
+
+With `ignore`, a failed event returns normally to the consumer and checkpoint
+progress can advance past it. The failed operation is not retried and can be
+permanently skipped. A refresh or commit failure can occur after the event's
+SQL write has already taken effect.
+
+### Persistent checkpoints
+
 By default, the Kinesis CDC relay starts reading from the beginning of the
 stream (`TRIM_HORIZON`) on every restart. For long-running pipelines, this
 means re-ingesting records that were already written to CrateDB.
@@ -179,7 +209,9 @@ from the last checkpointed sequence number.
 :::{rubric} Delivery guarantee
 :::
 
-Checkpointed delivery is **at-least-once**. Records between the last flushed
+With the default `on_error="raise"`, checkpointed delivery is **at-least-once**.
+Opting into `ignore` permits checkpoint advancement past failed writes, so this
+guarantee does not apply to those operations. Records between the last flushed
 checkpoint and a crash will be replayed on restart. Relay SQL writes should
 use upsert or idempotent semantics (`INSERT ... ON CONFLICT`) to handle
 duplicate delivery gracefully.

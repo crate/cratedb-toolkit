@@ -119,6 +119,33 @@ You can use [Tikray Transformations] to change the shape of the data while being
 transferred. In order to add it to the pipeline, use the `--transformation`
 command line option.
 
+## Write errors
+
+The Python relay class accepts `on_error="ignore"` (the default) or
+`on_error="raise"`:
+
+```python
+from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
+
+relay = MongoDBCDCRelayCrateDB(
+    mongodb_url="mongodb://localhost/testdrive/demo",
+    cratedb_url="crate://localhost:4200/testdrive/demo",
+    tm=None,
+    on_error="raise",
+)
+relay.start()
+```
+
+`ignore` logs SQLAlchemy `ProgrammingError` and `OperationalError` failures
+from an event's SQL execution, then continues with the next event. `raise`
+logs and propagates the original error. Setup and translation failures, and
+other execution exceptions, propagate regardless of this setting.
+
+Wiring the declared `ignore` default changes the behavior of callers that omit
+the argument, including `ctk load mongodb+cdc://...`: these write failures are
+logged and skipped instead of stopping the relay. The setting is a constructor
+argument; the CLI and `mongodb_relay_cdc` wrapper do not expose a policy option.
+
 
 ## Appendix
 A few operations that are handy when exploring this exercise.

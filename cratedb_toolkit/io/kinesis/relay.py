@@ -31,7 +31,11 @@ class KinesisRelay:
         kinesis_url: str,
         cratedb_url: str,
         recipe: t.Union[RecipeDefinition, None] = None,
+        on_error: t.Literal["ignore", "raise"] = "raise",
     ):
+        if on_error not in ("ignore", "raise"):
+            raise ValueError(f"Unknown 'on_error' value: {on_error}")
+
         self.cratedb_address = DatabaseAddress.from_string(cratedb_url)
         cratedb_sqlalchemy_url, cratedb_table_address = self.cratedb_address.decode()
 
@@ -40,6 +44,7 @@ class KinesisRelay:
         self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
 
         self.recipe = recipe
+        self.on_error = on_error
 
         self.cratedb_table = None
         if self.kinesis_url.scheme.startswith("kinesis+dynamodb"):
@@ -172,7 +177,9 @@ class KinesisRelay:
             self.connection.commit()
         except (ProgrammingError, OperationalError):
             logger.exception("Executing query failed")
-            raise
+            if self.on_error == "raise":
+                raise
+            self.connection.rollback()
         else:
             self.progress_bar.update()
 
