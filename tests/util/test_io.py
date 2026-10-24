@@ -87,6 +87,24 @@ def test_read_json_preserves_http_session_config(json_server, monkeypatch):
     assert config == {"client_kwargs": {"headers": {"X-Test": "configured"}}}
 
 
+@pytest.mark.parametrize("limit", [1024, 128 * 1024])
+@pytest.mark.parametrize("session_option", [False, True])
+def test_read_json_preserves_configured_http_limit(json_server, monkeypatch, limit, session_option):
+    url, _ = json_server
+    options = {"max_field_size": limit}
+    config = {"client_kwargs": options} if session_option else options
+    monkeypatch.setitem(conf, "http", config)
+    if limit < 64 * 1024:
+        with pytest.raises(FileNotFoundError) as error:
+            list(read_json(f"{url}/redirect"))
+        assert isinstance(error.value.__cause__, aiohttp.ClientResponseError)
+        assert "1024" in error.value.__cause__.message
+    else:
+        assert list(read_json(f"{url}/over-info")) == [{"value": 42}]
+    assert options == {"max_field_size": limit}
+    assert config == ({"client_kwargs": {"max_field_size": limit}} if session_option else {"max_field_size": limit})
+
+
 @pytest.mark.parametrize("protocol", ["http", "https", "memory"])
 def test_read_json_preserves_storage_options(mocker, protocol):
     options = {"client_kwargs": {"headers": {"X-Test": "explicit"}}}
