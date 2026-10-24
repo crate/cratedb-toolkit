@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- I/O: JSON loading over HTTP accepts larger response headers, including GitHub
+  raw-file redirects, by setting aiohttp's `max_field_size` to 65,536 bytes.
+  The `io-base` extra requires aiohttp 3.9 or newer and fsspec 2024.5.0 or newer.
 - Testing: S3 snapshot tests use Floci. The `test` extra adds `boto3` and drops
   the MinIO dependency.
 - Breaking change: Removed `ExtendedMinioContainer` from
