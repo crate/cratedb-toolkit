@@ -434,15 +434,17 @@ class SystemTableExporter(PathProvider):
         ]
         return frame.with_columns(replacements) if replacements else frame
 
-    def dump_table(self, frame: "pl.DataFrame", file: t.Union[t.TextIO, None] = None):
+    def dump_table(self, frame: "pl.DataFrame", file: t.Optional[t.IO[t.Any]] = None):
         if self.data_format == "csv":
             # polars.exceptions.ComputeError: CSV format does not support nested data
             # return df.write_csv()  # noqa: ERA001
             return frame.to_pandas().to_csv(file)
         elif self.data_format in ["jsonl", "ndjson"]:
-            return frame.write_ndjson(file and file.buffer)
+            target = None if file is None else (file.buffer if hasattr(file, "buffer") else file)
+            return frame.write_ndjson(target)
         elif self.data_format in ["parquet", "pq"]:
-            return frame.write_parquet(file and file.buffer)  # ty: ignore[invalid-argument-type]
+            target = None if file is None else (file.buffer if hasattr(file, "buffer") else file)
+            return frame.write_parquet(target)
         else:
             raise NotImplementedError(f"Output format not implemented: {self.data_format}")
 
@@ -571,9 +573,12 @@ class SystemTableExporter(PathProvider):
             frame = self.redact(self.read_table(tablename=tablename, schema=schema), schema, tablename)
             if frame.is_empty():
                 return
-            mode = "wb" if self.data_format in ["parquet", "pq"] else "w"
-            with open(path_table_data, mode) as fh_data:
-                self.dump_table(frame=frame, file=t.cast(t.TextIO, fh_data))
+            if self.data_format in ["parquet", "pq"]:
+                with open(path_table_data, "wb") as fh_data_bin:
+                    self.dump_table(frame=frame, file=fh_data_bin)
+            else:
+                with open(path_table_data, "w") as fh_data_txt:
+                    self.dump_table(frame=frame, file=fh_data_txt)
             self.data_file_count += 1
         except Exception as ex:
             logger.warning(f"Could not export data of {schema}.{tablename}: {ex}")
