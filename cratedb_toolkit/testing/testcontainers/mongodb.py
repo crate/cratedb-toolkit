@@ -50,6 +50,9 @@ class MongoDbContainerWithKeepalive(DockerSkippingContainer, KeepaliveContainer,
     ) -> None:
         super().__init__(image=image, **kwargs)
         self.with_name(self.NAME)
+        # MongoDB 8.x refuses to start on Ubuntu's 7.0.x kernels.
+        # https://jira.mongodb.org/browse/SERVER-136848
+        self.with_env("GLIBC_TUNABLES", "glibc.pthread.rseq=1")
 
     def get_connection_client(self) -> MongoClient:
         return MongoClient(

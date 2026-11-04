@@ -5,6 +5,8 @@
   the MinIO dependency.
 - Breaking change: Removed `ExtendedMinioContainer` from
   `cratedb_toolkit.testing.testcontainers.minio`.
+- Testing: MongoDB containers set `GLIBC_TUNABLES=glibc.pthread.rseq=1`, so
+  MongoDB 8 starts on GitHub runners with Linux kernel 7.0.
 
 ## 2026/09/30 v0.1.1
 - Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for
