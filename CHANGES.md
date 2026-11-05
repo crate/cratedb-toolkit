@@ -1,6 +1,13 @@
 # Changelog
 
 ## Unreleased
+- I/O: MongoDB CDC honors its `on_error="ignore"|"raise"` setting. The declared
+  `ignore` default logs and skips per-event database write failures instead of
+  aborting, including when using `ctk load mongodb+cdc://...`. A lost
+  connection to CrateDB still stops the relay.
+- I/O: The Kinesis relay accepts `on_error="ignore"|"raise"`, defaulting to
+  `raise`. Opting into `ignore` permits checkpoint progress past failed writes,
+  but not past a lost connection to CrateDB.
 - Testing: S3 snapshot tests use Floci. The `test` extra adds `boto3` and drops
   the MinIO dependency.
 - Breaking change: Removed `ExtendedMinioContainer` from

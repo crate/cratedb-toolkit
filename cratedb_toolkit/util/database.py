@@ -12,6 +12,7 @@ from typing import Literal
 import sqlalchemy as sa
 import sqlparse
 from boltons.urlutils import URL
+from crate.client.exceptions import ConnectionError as CrateConnectionError
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.elements import AsBoolean
 from sqlalchemy_cratedb import insert_bulk
@@ -418,6 +419,24 @@ class DatabaseAdapter:
             self.engine.dispose()
         except Exception as e:
             logger.warning(f"Error disposing SQLAlchemy engine: {e}")
+
+
+def is_connection_error(error: BaseException) -> bool:
+    """
+    Whether a database error means CrateDB could not be reached.
+
+    The crate client raises `ConnectionError` when no server answers, and wraps it
+    in a `ProgrammingError` when the last server answers 502, 503 or 504 on an open
+    connection, so the original DBAPI error and its causes are all inspected.
+    """
+    current: t.Optional[BaseException] = getattr(error, "orig", None)
+    seen: t.Set[int] = set()
+    while current is not None and id(current) not in seen:
+        if isinstance(current, CrateConnectionError):
+            return True
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return False
 
 
 def sa_is_empty(thing):
