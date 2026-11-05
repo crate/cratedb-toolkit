@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- I/O: JSON loading over HTTP accepts larger response headers, including GitHub
+  raw-file redirects, by setting aiohttp's `max_field_size` to 65,536 bytes.
+  The `io-base` extra requires aiohttp 3.9 or newer and fsspec 2024.5.0 or newer.
 - I/O: MongoDB CDC honors its `on_error="ignore"|"raise"` setting. The declared
   `ignore` default logs and skips per-event database write failures instead of
   aborting, including when using `ctk load mongodb+cdc://...`. A lost
