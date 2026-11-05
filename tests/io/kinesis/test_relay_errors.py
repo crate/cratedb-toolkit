@@ -6,6 +6,7 @@ import pytest
 import sqlalchemy as sa
 from commons_codec.model import SkipOperation, SQLOperation
 from crate.client.exceptions import ConnectionError as CrateConnectionError
+from crate.client.exceptions import ProgrammingError as CrateProgrammingError
 from kinesis import Consumer
 from kinesis.checkpointers import MemoryCheckPointer
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -13,6 +14,20 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from cratedb_toolkit.io.kinesis.relay import KinesisRelay
 
 pytestmark = pytest.mark.kinesis
+
+
+def connection_error(shape):
+    """The two shapes a lost CrateDB connection takes once SQLAlchemy wraps it."""
+    if shape == "unreachable":
+        return OperationalError("query", {}, CrateConnectionError("No more Servers available"))
+    # The last server answered 502/503/504: the client chains its ConnectionError.
+    try:
+        try:
+            raise CrateConnectionError("No more Servers available, exception from last server: Service Unavailable")
+        except CrateConnectionError as cause:
+            raise CrateProgrammingError(str(cause)) from cause
+    except CrateProgrammingError as wrapped:
+        return ProgrammingError("query", {}, wrapped)
 
 
 @pytest.fixture
@@ -62,11 +77,12 @@ def test_kinesis_relay_write_error_policy(relay_factory, caplog, policy, stage, 
     assert "Executing query failed" in caplog.text
 
 
+@pytest.mark.parametrize("shape", ["unreachable", "server-unavailable"])
 @pytest.mark.parametrize("policy", [None, "ignore", "raise"])
 @pytest.mark.parametrize("stage", ["execute", "refresh", "commit"])
-def test_kinesis_relay_connection_error_propagates(relay_factory, caplog, policy, stage):
+def test_kinesis_relay_connection_error_propagates(relay_factory, caplog, policy, stage, shape):
     relay = relay_factory(**({"on_error": policy} if policy is not None else {}))
-    error = OperationalError("query", {}, CrateConnectionError("No more Servers available"))
+    error = connection_error(shape)
     if stage == "commit":
         relay.connection.commit.side_effect = error
     elif stage == "refresh":
@@ -75,7 +91,7 @@ def test_kinesis_relay_connection_error_propagates(relay_factory, caplog, policy
     else:
         relay.connection.execute.side_effect = error
 
-    with pytest.raises(OperationalError) as raised:
+    with pytest.raises(type(error)) as raised:
         relay.process_event({"id": "bad"})
     assert raised.value is error
     relay.connection.rollback.assert_not_called()

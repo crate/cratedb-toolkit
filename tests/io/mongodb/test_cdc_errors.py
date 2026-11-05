@@ -3,11 +3,26 @@ from unittest.mock import MagicMock
 import pytest
 from commons_codec.model import SQLOperation
 from crate.client.exceptions import ConnectionError as CrateConnectionError
+from crate.client.exceptions import ProgrammingError as CrateProgrammingError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
 
 pytestmark = pytest.mark.mongodb
+
+
+def connection_error(shape):
+    """The two shapes a lost CrateDB connection takes once SQLAlchemy wraps it."""
+    if shape == "unreachable":
+        return OperationalError("query", {}, CrateConnectionError("No more Servers available"))
+    # The last server answered 502/503/504: the client chains its ConnectionError.
+    try:
+        try:
+            raise CrateConnectionError("No more Servers available, exception from last server: Service Unavailable")
+        except CrateConnectionError as cause:
+            raise CrateProgrammingError(str(cause)) from cause
+    except CrateProgrammingError as wrapped:
+        return ProgrammingError("query", {}, wrapped)
 
 
 @pytest.fixture
@@ -48,15 +63,16 @@ def test_mongodb_cdc_write_error_policy(cdc_relay, caplog, policy, error_type):
     assert "Executing query failed" in caplog.text
 
 
+@pytest.mark.parametrize("shape", ["unreachable", "server-unavailable"])
 @pytest.mark.parametrize("policy", [None, "ignore", "raise"])
-def test_mongodb_cdc_connection_error_propagates(cdc_relay, caplog, policy):
+def test_mongodb_cdc_connection_error_propagates(cdc_relay, caplog, policy, shape):
     if policy is not None:
         cdc_relay.on_error = policy
     connection = cdc_relay.cratedb_adapter.engine.connect.return_value.__enter__.return_value
-    error = OperationalError("INSERT", {}, CrateConnectionError("No more Servers available"))
+    error = connection_error(shape)
     connection.execute.side_effect = [None, error, None]
 
-    with pytest.raises(OperationalError) as raised:
+    with pytest.raises(type(error)) as raised:
         cdc_relay.start()
     assert raised.value is error
     assert connection.execute.call_count == 2

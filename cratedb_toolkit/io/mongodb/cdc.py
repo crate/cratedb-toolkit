@@ -15,7 +15,6 @@ import pymongo.errors
 import sqlalchemy as sa
 from boltons.urlutils import URL
 from commons_codec.transform.mongodb import MongoDBCDCTranslator, MongoDBCrateDBConverter
-from crate.client.exceptions import ConnectionError as CrateConnectionError
 from pymongo.change_stream import CollectionChangeStream
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from tikray.model.collection import CollectionAddress
@@ -24,7 +23,7 @@ from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util.database import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter, is_connection_error
 from cratedb_toolkit.util.process import FixedBackoff
 
 logger = logging.getLogger(__name__)
@@ -102,7 +101,7 @@ class MongoDBCDCRelayCrateDB:
                     except (ProgrammingError, OperationalError) as ex:
                         logger.exception("Executing query failed")
                         # An unreachable database is not a per-event failure: skipping would drop every event.
-                        if self.on_error == "raise" or isinstance(ex.orig, CrateConnectionError):
+                        if self.on_error == "raise" or is_connection_error(ex):
                             raise
                         connection.rollback()
 

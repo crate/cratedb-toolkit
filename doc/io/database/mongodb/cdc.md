@@ -138,10 +138,12 @@ relay.start()
 
 `ignore` logs SQLAlchemy `ProgrammingError` and `OperationalError` failures
 from an event's SQL execution, then continues with the next event. `raise`
-logs and propagates the original error. Setup and translation failures, a
-lost connection to CrateDB (`crate.client.exceptions.ConnectionError`), and
-other execution exceptions propagate regardless of this setting, so an outage
-stops the relay instead of skipping every event.
+logs and propagates the original error. Setup and translation failures, and
+other execution exceptions, propagate regardless of this setting. So does
+losing CrateDB: no server answering, or the last server answering 502, 503 or
+504 (a `crate.client.exceptions.ConnectionError`, raised directly or as the
+cause of the error), so an outage stops the relay instead of skipping every
+event.
 
 Wiring the declared `ignore` default changes the behavior of callers that omit
 the argument, including `ctk load mongodb+cdc://...`: these write failures are

@@ -7,7 +7,6 @@ import sqlalchemy as sa
 from commons_codec.model import SkipOperation
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator
-from crate.client.exceptions import ConnectionError as CrateConnectionError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -17,7 +16,7 @@ from cratedb_toolkit.io.exception import SkipAdapterException
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase, KinesisStreamAdapter
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util.database import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter, is_connection_error
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +178,7 @@ class KinesisRelay:
         except (ProgrammingError, OperationalError) as ex:
             logger.exception("Executing query failed")
             # An unreachable database is not a per-event failure: skipping would drop every event.
-            if self.on_error == "raise" or isinstance(ex.orig, CrateConnectionError):
+            if self.on_error == "raise" or is_connection_error(ex):
                 raise
             self.connection.rollback()
         else:
