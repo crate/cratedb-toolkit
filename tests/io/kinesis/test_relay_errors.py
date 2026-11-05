@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 import sqlalchemy as sa
 from commons_codec.model import SkipOperation, SQLOperation
+from crate.client.exceptions import ConnectionError as CrateConnectionError
 from kinesis import Consumer
 from kinesis.checkpointers import MemoryCheckPointer
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -58,6 +59,27 @@ def test_kinesis_relay_write_error_policy(relay_factory, caplog, policy, stage, 
         relay.progress_bar.update.assert_called_once_with()
         assert relay.translator.to_sql.call_args.args[0]["id"] == "good"
         assert relay.connection.commit.call_count == (2 if stage == "commit" else 1)
+    assert "Executing query failed" in caplog.text
+
+
+@pytest.mark.parametrize("policy", [None, "ignore", "raise"])
+@pytest.mark.parametrize("stage", ["execute", "refresh", "commit"])
+def test_kinesis_relay_connection_error_propagates(relay_factory, caplog, policy, stage):
+    relay = relay_factory(**({"on_error": policy} if policy is not None else {}))
+    error = OperationalError("query", {}, CrateConnectionError("No more Servers available"))
+    if stage == "commit":
+        relay.connection.commit.side_effect = error
+    elif stage == "refresh":
+        relay.cratedb_table = '"testdrive"."demo"'
+        relay.connection.execute.side_effect = [None, error]
+    else:
+        relay.connection.execute.side_effect = error
+
+    with pytest.raises(OperationalError) as raised:
+        relay.process_event({"id": "bad"})
+    assert raised.value is error
+    relay.connection.rollback.assert_not_called()
+    relay.progress_bar.update.assert_not_called()
     assert "Executing query failed" in caplog.text
 
 

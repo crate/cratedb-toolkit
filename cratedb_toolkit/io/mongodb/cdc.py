@@ -15,6 +15,7 @@ import pymongo.errors
 import sqlalchemy as sa
 from boltons.urlutils import URL
 from commons_codec.transform.mongodb import MongoDBCDCTranslator, MongoDBCrateDBConverter
+from crate.client.exceptions import ConnectionError as CrateConnectionError
 from pymongo.change_stream import CollectionChangeStream
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from tikray.model.collection import CollectionAddress
@@ -98,9 +99,10 @@ class MongoDBCDCRelayCrateDB:
                 if operation:
                     try:
                         connection.execute(sa.text(operation.statement), operation.parameters)
-                    except (ProgrammingError, OperationalError):
+                    except (ProgrammingError, OperationalError) as ex:
                         logger.exception("Executing query failed")
-                        if self.on_error == "raise":
+                        # An unreachable database is not a per-event failure: skipping would drop every event.
+                        if self.on_error == "raise" or isinstance(ex.orig, CrateConnectionError):
                             raise
                         connection.rollback()
 

@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from commons_codec.model import SkipOperation
 from commons_codec.transform.aws_dms import DMSTranslatorCrateDB
 from commons_codec.transform.dynamodb import DynamoDBCDCTranslator
+from crate.client.exceptions import ConnectionError as CrateConnectionError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -175,9 +176,10 @@ class KinesisRelay:
                 self.connection.execute(sa.text(f"REFRESH TABLE {self.cratedb_table}"))
 
             self.connection.commit()
-        except (ProgrammingError, OperationalError):
+        except (ProgrammingError, OperationalError) as ex:
             logger.exception("Executing query failed")
-            if self.on_error == "raise":
+            # An unreachable database is not a per-event failure: skipping would drop every event.
+            if self.on_error == "raise" or isinstance(ex.orig, CrateConnectionError):
                 raise
             self.connection.rollback()
         else:

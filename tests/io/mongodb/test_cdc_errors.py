@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from commons_codec.model import SQLOperation
+from crate.client.exceptions import ConnectionError as CrateConnectionError
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from cratedb_toolkit.io.mongodb.cdc import MongoDBCDCRelayCrateDB
@@ -44,6 +45,22 @@ def test_mongodb_cdc_write_error_policy(cdc_relay, caplog, policy, error_type):
         assert connection.execute.call_count == 3
         assert connection.execute.call_args.args[1] == {"id": "good"}
         connection.rollback.assert_called_once_with()
+    assert "Executing query failed" in caplog.text
+
+
+@pytest.mark.parametrize("policy", [None, "ignore", "raise"])
+def test_mongodb_cdc_connection_error_propagates(cdc_relay, caplog, policy):
+    if policy is not None:
+        cdc_relay.on_error = policy
+    connection = cdc_relay.cratedb_adapter.engine.connect.return_value.__enter__.return_value
+    error = OperationalError("INSERT", {}, CrateConnectionError("No more Servers available"))
+    connection.execute.side_effect = [None, error, None]
+
+    with pytest.raises(OperationalError) as raised:
+        cdc_relay.start()
+    assert raised.value is error
+    assert connection.execute.call_count == 2
+    connection.rollback.assert_not_called()
     assert "Executing query failed" in caplog.text
 
 

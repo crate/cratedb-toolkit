@@ -160,8 +160,10 @@ relay.start()
 
 `raise` logs and propagates SQLAlchemy `ProgrammingError` and `OperationalError`
 from event execution, table refresh, or commit. `ignore` logs these errors and
-continues with the next event. Other database exceptions and setup failures
-propagate. Record decoding and translation retain their log-and-skip behavior.
+continues with the next event. A lost connection to CrateDB
+(`crate.client.exceptions.ConnectionError`), other database exceptions and setup
+failures propagate under either setting, so an outage stops the relay instead
+of checkpointing past every event. Record decoding and translation retain their log-and-skip behavior.
 The setting is a constructor argument; the CLI and `kinesis_relay` wrapper do
 not expose a policy option.
 
