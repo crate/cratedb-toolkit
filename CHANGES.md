@@ -4,10 +4,19 @@
 - I/O: JSON loading over HTTP accepts larger response headers, including GitHub
   raw-file redirects, by setting aiohttp's `max_field_size` to 65,536 bytes.
   The `io-base` extra requires aiohttp 3.9 or newer and fsspec 2024.5.0 or newer.
+- I/O: MongoDB CDC honors its `on_error="ignore"|"raise"` setting. The declared
+  `ignore` default logs and skips per-event database write failures instead of
+  aborting, including when using `ctk load mongodb+cdc://...`. A lost
+  connection to CrateDB still stops the relay.
+- I/O: The Kinesis relay accepts `on_error="ignore"|"raise"`, defaulting to
+  `raise`. Opting into `ignore` permits checkpoint progress past failed writes,
+  but not past a lost connection to CrateDB.
 - Testing: S3 snapshot tests use Floci. The `test` extra adds `boto3` and drops
   the MinIO dependency.
 - Breaking change: Removed `ExtendedMinioContainer` from
   `cratedb_toolkit.testing.testcontainers.minio`.
+- Testing: MongoDB containers set `GLIBC_TUNABLES=glibc.pthread.rseq=1`, so
+  MongoDB 8 starts on GitHub runners with Linux kernel 7.0.
 
 ## 2026/09/30 v0.1.1
 - Testing: `CrateDBContainer` builds on the CrateDB module of Testcontainers for

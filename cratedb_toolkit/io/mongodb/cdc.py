@@ -16,13 +16,14 @@ import sqlalchemy as sa
 from boltons.urlutils import URL
 from commons_codec.transform.mongodb import MongoDBCDCTranslator, MongoDBCrateDBConverter
 from pymongo.change_stream import CollectionChangeStream
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from tikray.model.collection import CollectionAddress
 
 from cratedb_toolkit.io.mongodb.adapter import mongodb_adapter_factory
 from cratedb_toolkit.io.mongodb.model import DocumentDict
 from cratedb_toolkit.io.mongodb.transform import TransformationManager
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util.database import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter, is_connection_error
 from cratedb_toolkit.util.process import FixedBackoff
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,9 @@ class MongoDBCDCRelayCrateDB:
         on_error: t.Literal["ignore", "raise"] = "ignore",
         debug: bool = True,
     ):
+        if on_error not in ("ignore", "raise"):
+            raise ValueError(f"Unknown 'on_error' value: {on_error}")
+
         self.mongodb_uri = URL(mongodb_url)
         self.cratedb_uri = URL(cratedb_url)
 
@@ -87,13 +91,19 @@ class MongoDBCDCRelayCrateDB:
         """
         Subscribe to change stream events, convert to SQL, and submit to CrateDB.
         """
-        # FIXME: Note that the function does not perform any sensible error handling yet.
         with self.cratedb_adapter.engine.connect() as connection:
             connection.execute(sa.text(self.cdc.sql_ddl))
             for event in self.consume():
                 operation = self.cdc.to_sql(event)
                 if operation:
-                    connection.execute(sa.text(operation.statement), operation.parameters)
+                    try:
+                        connection.execute(sa.text(operation.statement), operation.parameters)
+                    except (ProgrammingError, OperationalError) as ex:
+                        logger.exception("Executing query failed")
+                        # An unreachable database is not a per-event failure: skipping would drop every event.
+                        if self.on_error == "raise" or is_connection_error(ex):
+                            raise
+                        connection.rollback()
 
     def stop(self):
         self.stopping = True

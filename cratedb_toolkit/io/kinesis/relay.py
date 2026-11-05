@@ -16,7 +16,7 @@ from cratedb_toolkit.io.exception import SkipAdapterException
 from cratedb_toolkit.io.kinesis.adapter import KinesisAdapterBase, KinesisStreamAdapter
 from cratedb_toolkit.io.kinesis.model import RecipeDefinition
 from cratedb_toolkit.model import DatabaseAddress
-from cratedb_toolkit.util.database import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter, is_connection_error
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,11 @@ class KinesisRelay:
         kinesis_url: str,
         cratedb_url: str,
         recipe: t.Union[RecipeDefinition, None] = None,
+        on_error: t.Literal["ignore", "raise"] = "raise",
     ):
+        if on_error not in ("ignore", "raise"):
+            raise ValueError(f"Unknown 'on_error' value: {on_error}")
+
         self.cratedb_address = DatabaseAddress.from_string(cratedb_url)
         cratedb_sqlalchemy_url, cratedb_table_address = self.cratedb_address.decode()
 
@@ -40,6 +44,7 @@ class KinesisRelay:
         self.cratedb_adapter = DatabaseAdapter(str(cratedb_sqlalchemy_url), echo=False)
 
         self.recipe = recipe
+        self.on_error = on_error
 
         self.cratedb_table = None
         if self.kinesis_url.scheme.startswith("kinesis+dynamodb"):
@@ -170,9 +175,12 @@ class KinesisRelay:
                 self.connection.execute(sa.text(f"REFRESH TABLE {self.cratedb_table}"))
 
             self.connection.commit()
-        except (ProgrammingError, OperationalError):
+        except (ProgrammingError, OperationalError) as ex:
             logger.exception("Executing query failed")
-            raise
+            # An unreachable database is not a per-event failure: skipping would drop every event.
+            if self.on_error == "raise" or is_connection_error(ex):
+                raise
+            self.connection.rollback()
         else:
             self.progress_bar.update()
 
