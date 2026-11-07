@@ -394,3 +394,23 @@ def test_cfr_sys_import_failure(cratedb, click_kwargs, tmp_path, caplog):
     # Verify log output.
     assert "Failed to establish a new connection" in caplog.text or "Failed to resolve" in caplog.text
     assert result.output == ""
+
+
+@pytest.mark.parametrize("fmt", ["parquet", "pq"])
+def test_cfr_dump_table_parquet_binary_handle(tmp_path, fmt):
+    """
+    Verify `SystemTableExporter.dump_table` writes parquet data to a binary file handle (`wb`)
+    without raising AttributeError on `.buffer` (#727).
+    """
+    import polars as pl
+
+    exporter = object.__new__(SystemTableExporter)
+    exporter.data_format = fmt
+    frame = pl.DataFrame({"id": [1, 2], "name": ["node-a", "node-b"]})
+    out_file = tmp_path / f"sys-nodes.{fmt}"
+
+    with open(out_file, "wb") as fh:
+        exporter.dump_table(frame=frame, file=fh)
+
+    restored = pl.read_parquet(out_file)
+    assert restored.to_dict(as_series=False) == {"id": [1, 2], "name": ["node-a", "node-b"]}
