@@ -8,7 +8,13 @@ conf = pytest.importorskip("fsspec.config").conf
 pytest.importorskip("orjsonl")
 pytest.importorskip("upath")
 
-from cratedb_toolkit.util.io import read_json  # noqa: E402
+from cratedb_toolkit.util.io import HTTP_MAX_FIELD_SIZE, read_json  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def isolated_fsspec_conf(mocker):
+    """Start every test from an empty fsspec config, so local settings can't leak in."""
+    mocker.patch.dict(conf, clear=True)
 
 
 @pytest.fixture
@@ -74,7 +80,7 @@ def test_read_json_rejects_oversized_http_header(json_server, path):
         list(read_json(f"{url}/{path}"))
     cause = error.value.__cause__ if isinstance(error.value, FileNotFoundError) else error.value
     assert isinstance(cause, aiohttp.ClientResponseError)
-    assert "65536" in cause.message
+    assert str(HTTP_MAX_FIELD_SIZE) in cause.message
 
 
 def test_read_json_preserves_http_session_config(json_server, monkeypatch):
@@ -94,7 +100,7 @@ def test_read_json_preserves_configured_http_limit(json_server, monkeypatch, lim
     options = {"max_field_size": limit}
     config = {"client_kwargs": options} if session_option else options
     monkeypatch.setitem(conf, "http", config)
-    if limit < 64 * 1024:
+    if limit < HTTP_MAX_FIELD_SIZE:
         with pytest.raises(FileNotFoundError) as error:
             list(read_json(f"{url}/redirect"))
         assert isinstance(error.value.__cause__, aiohttp.ClientResponseError)
@@ -116,7 +122,7 @@ def test_read_json_preserves_storage_options(mocker, protocol):
     read_json("unused")
     expected: dict[str, object] = {"client_kwargs": {"headers": {"X-Test": "explicit"}}}
     if protocol in ("http", "https"):
-        expected["max_field_size"] = 64 * 1024
+        expected["max_field_size"] = HTTP_MAX_FIELD_SIZE
     fs.assert_called_once_with(protocol, **expected)
     assert options == {"client_kwargs": {"headers": {"X-Test": "explicit"}}}
 
