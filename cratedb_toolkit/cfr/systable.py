@@ -434,16 +434,20 @@ class SystemTableExporter(PathProvider):
         ]
         return frame.with_columns(replacements) if replacements else frame
 
-    def dump_table(self, frame: "pl.DataFrame", file: t.Optional[t.IO[t.Any]] = None):
+    def dump_table(self, frame: "pl.DataFrame", file: t.Union[t.IO[bytes], t.IO[str], None] = None):
         if self.data_format == "csv":
             # polars.exceptions.ComputeError: CSV format does not support nested data
             # return df.write_csv()  # noqa: ERA001
             return frame.to_pandas().to_csv(file)
         elif self.data_format in ["jsonl", "ndjson"]:
-            target = None if file is None else (file.buffer if hasattr(file, "buffer") else file)
+            if file is None:
+                return frame.write_ndjson()
+            target = t.cast(t.IO[bytes], file.buffer) if hasattr(file, "buffer") else file
             return frame.write_ndjson(target)
         elif self.data_format in ["parquet", "pq"]:
-            target = None if file is None else (file.buffer if hasattr(file, "buffer") else file)
+            if file is None:
+                return frame.write_parquet(None)  # ty: ignore[invalid-argument-type]
+            target = t.cast(t.IO[bytes], file.buffer) if hasattr(file, "buffer") else t.cast(t.IO[bytes], file)
             return frame.write_parquet(target)
         else:
             raise NotImplementedError(f"Output format not implemented: {self.data_format}")
