@@ -198,7 +198,7 @@ optional-dependencies.kinesis = [
   "aiobotocore<3.11",
   "async-kinesis>=2.4.0,<3",
   "boto3",
-  "botocore<1.44",
+  "botocore<1.45",
   "commons-codec>=0.0.24",
   "cratedb-toolkit[io-recipe]",
   "lorrystream[carabas]>=0.0.6",
